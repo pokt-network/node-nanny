@@ -11,7 +11,7 @@
       "experimentalDecorators": true,
       "allowJs": true,
       "outDir": "dist",
-      "rootDir": ".",
+      "rootDir": "src",
       "strict": false,
       "moduleResolution": "node"
     }
