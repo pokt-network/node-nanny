@@ -12,11 +12,15 @@ interface LogEvent {
 
 interface PutLogParams extends GroupStreamParams {
   logEvents: LogEvent[];
-  sequenceToken?: string;
+  sequenceToken?: string | null;
+}
+
+interface LogTokenResponse {
+  nextSequenceToken: string;
 }
 
 class Service {
-  client: AWS.CloudWatchLogs;
+  private client: AWS.CloudWatchLogs;
   constructor() {
     this.client = new AWS.CloudWatchLogs({
       region: "us-east-2", //should be dynamic in the future depending on availability zone
@@ -25,11 +29,12 @@ class Service {
 
   async doesLogGroupExist(name: string): Promise<boolean> {
     try {
-      const { logGroups } = await this.client.describeLogGroups({ logGroupNamePrefix: name }).promise();
+      const { logGroups } = await this.client
+        .describeLogGroups({ logGroupNamePrefix: name })
+        .promise();
       const [logGroup] = logGroups;
       return logGroup.logGroupName === name;
     } catch (error) {
-      console.error(error);
       return false;
     }
   }
@@ -54,7 +59,6 @@ class Service {
       const [logStream] = logStreams;
       return logStream.logStreamName === logStreamName;
     } catch (error) {
-      console.error(error);
       return false;
     }
   }
@@ -66,13 +70,22 @@ class Service {
     }
   }
 
-  async writeToLogStream({ logGroupName, logStreamName, logEvents, sequenceToken }: PutLogParams): Promise<object> {
+  async writeToLogStream({
+    logGroupName,
+    logStreamName,
+    logEvents,
+    sequenceToken,
+  }: PutLogParams): Promise<AWS.CloudWatchLogs.PutLogEventsResponse> {
     try {
-      return await this.client.putLogEvents({ logGroupName, logStreamName, logEvents, sequenceToken }).promise();
+      return await this.client
+        .putLogEvents({ logGroupName, logStreamName, logEvents, sequenceToken })
+        .promise();
     } catch (error) {
       throw new Error(`could not write to log stream ${error}`);
     }
   }
+
+  async getSequenceTokenforLogStream() {}
 }
 
 export { Service };
