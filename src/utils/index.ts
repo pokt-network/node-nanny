@@ -1,0 +1,1 @@
+export { hexToDec } from "./convert";
