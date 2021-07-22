@@ -17,6 +17,8 @@ class Service {
 
     https === true ? (url = `https://${ip}`) : (url = `http://${ip}:${port}`);
 
+    console.log(url)
+
     try {
       const { data } = await this.rpc.post(url, {
         jsonrpc: "2.0",
