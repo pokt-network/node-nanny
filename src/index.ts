@@ -17,7 +17,6 @@ class ProofOfConcept {
   private disovery: Discovery;
   private config: ConfigManager;
   private today: string;
-  private nextSequenceToken: string;
   constructor() {
     this.log = new CloudWatchLogs();
     this.external = new ExternalHeight();
@@ -25,7 +24,6 @@ class ProofOfConcept {
     this.disovery = new Discovery();
     this.config = new ConfigManager();
     this.today = new Date().toDateString();
-    this.nextSequenceToken = "";
   }
 
   async setupLogs(name) {
@@ -41,6 +39,8 @@ class ProofOfConcept {
     if (!streamExist) {
       await this.log.createLogStream({ logGroupName, logStreamName: this.today });
     }
+
+    return this.log.getSequenceTokenforLogStream({ logGroupName, logStreamName: this.today });
   }
 
   async checkNode({ name, type, ip, port, https }) {
@@ -64,16 +64,15 @@ class ProofOfConcept {
       delta: external - internal,
     });
 
-    await this.setupLogs(name);
+    const sequenceToken = await this.setupLogs(name);
 
-    const { nextSequenceToken } = await this.log.writeToLogStream({
+    await this.log.writeToLogStream({
       logGroupName,
       logStreamName: this.today,
       logEvents: [{ message, timestamp: Date.now() }],
-      sequenceToken: this.nextSequenceToken,
+      sequenceToken,
     });
-
-    this.nextSequenceToken = nextSequenceToken;
+    console.log("sync status captured", message);
   }
 
   async main() {
