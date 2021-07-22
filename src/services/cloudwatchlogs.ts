@@ -31,7 +31,6 @@ class Service {
       const [logGroup] = logGroups;
       return logGroup.logGroupName === name;
     } catch (error) {
-      console.error(error)
       return false;
     }
   }
@@ -55,7 +54,6 @@ class Service {
       const [logStream] = logStreams;
       return logStream.logStreamName === logStreamName;
     } catch (error) {
-      console.error(error)
       return false;
     }
   }
