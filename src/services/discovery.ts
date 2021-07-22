@@ -10,7 +10,7 @@ interface Nodes {
   https: string;
 }
 
-const sourcePath = path.resolve(__dirname, "../config/nodes.csv");
+const sourcePath = path.resolve(__dirname, "../../nodes.csv");
 
 class Service {
   async getListOfNodes(): Promise<Nodes[]> {
