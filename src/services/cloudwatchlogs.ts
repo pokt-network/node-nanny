@@ -15,10 +15,6 @@ interface PutLogParams extends GroupStreamParams {
   sequenceToken?: string | null;
 }
 
-interface LogTokenResponse {
-  nextSequenceToken: string;
-}
-
 class Service {
   private client: AWS.CloudWatchLogs;
   constructor() {
@@ -84,7 +80,7 @@ class Service {
     }
   }
 
-  async getSequenceTokenforLogStream({
+  async getSequenceTokenForLogStream({
     logGroupName,
     logStreamName: name,
   }: GroupStreamParams): Promise<string> {
@@ -96,7 +92,7 @@ class Service {
       const [{ logStreamName, uploadSequenceToken }] = logStreams;
 
       if (logStreamName !== name) {
-        throw new Error(`could not find specfic log stream but found similar stream name?`);
+        throw new Error(`could not find specfic log stream but found similar stream name`);
       }
       return uploadSequenceToken;
     } catch (error) {
