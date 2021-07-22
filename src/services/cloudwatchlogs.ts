@@ -92,7 +92,7 @@ class Service {
       const [{ logStreamName, uploadSequenceToken }] = logStreams;
 
       if (logStreamName !== name) {
-        throw new Error(`could not find specfic log stream but found similar stream name`);
+        throw new Error(`could not find specific log stream but found similar stream name`);
       }
       return uploadSequenceToken;
     } catch (error) {
