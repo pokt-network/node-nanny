@@ -23,7 +23,7 @@ class Service {
   private client: AWS.CloudWatchLogs;
   constructor() {
     this.client = new AWS.CloudWatchLogs({
-      region: "us-east-2", //should be dynamic in the future depending on availability zone
+      region: "us-east-2",
     });
   }
 
@@ -39,7 +39,6 @@ class Service {
     }
   }
 
-  //Todo: replace genenic <object> types with aws specific response types IE: <AWS.CloudWatchLogs.PutLogEventsResponse>
   async createLogGroup(logGroupName: string): Promise<object> {
     try {
       return await this.client.createLogGroup({ logGroupName }).promise();
@@ -85,7 +84,25 @@ class Service {
     }
   }
 
-  async getSequenceTokenforLogStream() {}
+  async getSequenceTokenforLogStream({
+    logGroupName,
+    logStreamName: name,
+  }: GroupStreamParams): Promise<string> {
+    try {
+      const { logStreams } = await this.client
+        .describeLogStreams({ logGroupName, logStreamNamePrefix: name })
+        .promise();
+
+      const [{ logStreamName, uploadSequenceToken }] = logStreams;
+
+      if (logStreamName !== name) {
+        throw new Error(`could not find specfic log stream but found similar stream name?`);
+      }
+      return uploadSequenceToken;
+    } catch (error) {
+      throw new Error(`could not find log stream ${error}`);
+    }
+  }
 }
 
 export { Service };
