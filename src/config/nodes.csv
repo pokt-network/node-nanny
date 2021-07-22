@@ -1,3 +1,3 @@
 name,type,ip,port,https
-Infura1,eth,mainnet.infura.io/v3/2ac9b9f3c4e84439bc8e733c1e50df50,443,true
-Infura2,eth,mainnet.infura.io/v3/81680d6ef6ec41c89ea58513961def0f,443,true
+ethereum-2a,eth-mainnet,10.0.0.162,8545,false
+ethereum-2b,eth-mainnet,10.0.1.106,8545,false
