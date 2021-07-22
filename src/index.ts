@@ -93,6 +93,7 @@ class ProofOfConcept {
       this.external.getBlockHeight(type),
     ]);
 
+    console.log("block height______________", internal, external)
     internal = hexToDec(internal);
     external = hexToDec(external);
 
@@ -109,6 +110,7 @@ class ProofOfConcept {
       status,
     });
 
+    console.log('message', message)
     const sequenceToken = await this.setupLogs(name);
 
     await this.log.writeToLogStream({
