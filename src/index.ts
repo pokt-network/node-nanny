@@ -21,11 +21,11 @@ enum SyncStatusErrorLevel {
 }
 
 enum ConfigParams {
-  SYNC = "Sync",
+  SYNC = "sync",
 }
 
 enum SupportedChains {
-  ETH = "Eth",
+  ETH = "eth-mainnet",
 }
 
 class ProofOfConcept {
