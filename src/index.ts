@@ -83,17 +83,15 @@ class ProofOfConcept {
 
   async checkNode({ name, type, ip, port, https }) {
     const logGroupName = `/Pocket/NodeMonitoring/${name}`;
-
     let [{ result: internal }, { result: external }] = await Promise.all([
       this.internal.getBlockHeight({
         ip,
-        https: Boolean(https),
+        https: https,
         port: Number(port),
       }),
       this.external.getBlockHeight(type),
     ]);
 
-    console.log("block height______________", internal, external)
     internal = hexToDec(internal);
     external = hexToDec(external);
 
@@ -110,7 +108,6 @@ class ProofOfConcept {
       status,
     });
 
-    console.log('message', message)
     const sequenceToken = await this.setupLogs(name);
 
     await this.log.writeToLogStream({
