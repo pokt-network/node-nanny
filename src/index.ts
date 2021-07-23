@@ -28,6 +28,11 @@ enum SupportedChains {
   ETH = "eth-mainnet",
 }
 
+enum Source {
+  CSV = "csv",
+  TAG = "tag",
+}
+
 class ProofOfConcept {
   private log: CloudWatchLogs;
   private external: ExternalHeight;
@@ -39,7 +44,7 @@ class ProofOfConcept {
     this.log = new CloudWatchLogs();
     this.external = new ExternalHeight();
     this.internal = new InternalHeight();
-    this.discovery = new Discovery();
+    this.discovery = new Discovery({ source: Source.TAG });
     this.config = new ConfigManager();
     this.today = new Date().toDateString();
   }
@@ -122,10 +127,11 @@ class ProofOfConcept {
   async main() {
     const nodes = await this.discovery.getListOfNodes();
     console.log("processing the following list of nodes");
-    console.table(nodes);
+    console.log(nodes);
+
     setInterval(async () => {
       for (const { name, type, ip, port, https } of nodes) {
-         await this.checkNode({ name, type, ip, port, https });
+        await this.checkNode({ name, type, ip, port, https });
       }
     }, 10000);
   }
