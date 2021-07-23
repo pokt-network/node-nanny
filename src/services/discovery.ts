@@ -63,7 +63,7 @@ class Service {
           const [, type] = Key.split("-");
           const name = `${instanceName}/${type.toLowerCase()}`;
           const port = Value;
-          nodes.push({ name, type, port, https: "false" });
+          nodes.push({ name, type, ip, port, https: "false" });
         }
       }
     }
