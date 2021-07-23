@@ -120,15 +120,12 @@ class ProofOfConcept {
   }
 
   async main() {
-    console.log("starting");
     const nodes = await this.discovery.getListOfNodes();
     console.log("processing the following list of nodes");
     console.table(nodes);
-
     setInterval(async () => {
       for (const { name, type, ip, port, https } of nodes) {
-        console.log({ name, type, ip, port, https });
-        await this.checkNode({ name, type, ip, port, https });
+         await this.checkNode({ name, type, ip, port, https });
       }
     }, 10000);
   }

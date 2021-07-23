@@ -31,7 +31,10 @@ class Service {
     }
   }
 
-  async getParamsByChain({ chain }) {}
+  async getParamsByChain({ chain }) {
+this.client.getParametersByPath()
+
+  }
 
   async getParamSummary() {}
 }
