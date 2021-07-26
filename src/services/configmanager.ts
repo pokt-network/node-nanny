@@ -1,5 +1,10 @@
 import AWS from "aws-sdk";
 
+enum ConfigPrefix {
+  COMMON_URL = "/pocket/monitoring/config/common/url",
+  CHAIN_HEALTH = "/pocket/monitoring/config/health",
+}
+
 class Service {
   private client: AWS.SSM;
   constructor() {
@@ -10,7 +15,7 @@ class Service {
     try {
       return await this.client
         .putParameter({
-          Name: `/Pocket/Monitoring/Config/${chain}/${param}`,
+          Name: `${ConfigPrefix.CHAIN_HEALTH}/${chain}/${param}`,
           Value: value,
           Overwrite: true,
           Type: "String",
@@ -22,7 +27,7 @@ class Service {
   }
 
   async getParam({ chain, param }) {
-    const key = `/Pocket/Monitoring/Config/${chain}/${param}`;
+    const key = `${ConfigPrefix.CHAIN_HEALTH}/${chain}/${param}`;
     try {
       const { Parameter } = await this.client.getParameter({ Name: key }).promise();
       return Parameter.Value;
@@ -32,11 +37,10 @@ class Service {
   }
 
   async getParamsByChain({ chain }) {
-this.client.getParametersByPath()
-
+    this.client.getParametersByPath();
   }
 
-  async getParamSummary() {}
+  async getAllParams() {}
 }
 
 export { Service };
