@@ -20,13 +20,13 @@ enum Prefix {
   BLOCKCHAIN = "blockchain",
   NAME = "Name",
 }
-const nodes = path.resolve(__dirname, "../../nodes.csv");
+const csvNodes = path.resolve(__dirname, "../../nodes.csv");
 
 class Service {
   private source: Source;
   private sourcePath: string;
   private client: AWS.EC2;
-  constructor({ source = Source.TAG, sourcePath = nodes }) {
+  constructor({ source = Source.TAG, sourcePath = csvNodes }) {
     this.source = source;
     this.sourcePath = sourcePath;
   }
@@ -55,9 +55,7 @@ class Service {
 
     for (const { Instances } of Reservations) {
       const [{ PrivateIpAddress: ip, Tags }] = Instances;
-
       const instanceName = this.getInstanceName(Tags);
-
       for (const { Key, Value } of Tags) {
         if (Key.includes(Prefix.BLOCKCHAIN)) {
           const [, type] = Key.split("-");
