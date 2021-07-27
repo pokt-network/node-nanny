@@ -124,10 +124,11 @@ export class Service {
 
     const internalHeight = hexToDec(internal.result);
     let { height: externalHeight, score: consensusScore } = external;
+    const numPeers = hexToDec(peers.result);
 
     return {
       ethSyncing,
-      peers,
+      peers: numPeers,
       height: {
         internalHeight,
         externalHeight,
