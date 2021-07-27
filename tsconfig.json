@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types": ["@types/node", "@types/jest"],
     "target": "es6",
     "module": "commonjs",
     "skipLibCheck": true,
@@ -13,7 +14,6 @@
     "rootDir": "src",
     "strict": false,
     "moduleResolution": "node",
-    "resolveJsonModule": true,
-    
+    "resolveJsonModule": true
   }
 }
