@@ -12,6 +12,7 @@ export class App {
 
   async main() {
     const nodes = await this.discover.getListOfNodes();
+    console.table(nodes)
     for (const { name, type, ip, port } of nodes) {
       const health = await this.health.getNodeHealth({ name, type, ip, port });
       console.log(name, health);
