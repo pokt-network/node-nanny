@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "types": ["@types/node", "@types/jest"],
+    "types": ["@types/jest"],
     "target": "es6",
     "module": "commonjs",
     "skipLibCheck": true,
