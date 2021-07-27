@@ -6,7 +6,7 @@ import { HealthTypes } from "./types";
 export class App {
   private discover: Discover;
   private health: Health;
-  supported: string[];
+  private supported: string[];
   constructor() {
     this.discover = new Discover({ source: DiscoverTypes.Source.TAG });
     this.health = new Health();
@@ -15,7 +15,7 @@ export class App {
 
   async main() {
     let nodes = await this.discover.getListOfNodes();
-    nodes = nodes.filter(({type})=> this.supported.includes(type))
+    nodes = nodes.filter(({type}) => this.supported.includes(type))
     console.table(nodes)
     for (const { name, type, ip, port } of nodes) {
       const health = await this.health.getNodeHealth({ name, type, ip, port });
