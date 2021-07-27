@@ -1,2 +1,2 @@
-export { Service } from "./alerts";
+export { Service } from "./service";
 export * as Types from "./types";
