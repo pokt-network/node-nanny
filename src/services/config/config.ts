@@ -1,11 +1,7 @@
 import AWS from "aws-sdk";
+import { ConfigPrefix } from "./types";
 
-enum ConfigPrefix {
-  COMMON_URL = "/pocket/monitoring/config/common/url",
-  CHAIN_HEALTH = "/pocket/monitoring/config/health",
-}
-
-class Service {
+export class Service {
   private client: AWS.SSM;
   constructor() {
     this.client = new AWS.SSM({ region: "us-east-2" });
@@ -36,11 +32,11 @@ class Service {
     }
   }
 
-  async getParamsByChain({ chain }) {
-    this.client.getParametersByPath();
+  async getParamByKey(key: ConfigPrefix) {
+    const { Parameter } = await this.client.getParameter({ Name: key }).promise();
+    const { Name, Value } = Parameter;
+    return { Name, Value };
   }
 
   async getAllParams() {}
 }
-
-export { Service };
