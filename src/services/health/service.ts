@@ -2,7 +2,6 @@ import axios, { AxiosInstance } from "axios";
 import { exec } from "child_process";
 
 import { Config } from "..";
-import { ConfigTypes } from "../../types";
 import { Errors, EthVariants, ExternalResponse, NCResponse } from "./types";
 import { hexToDec } from "../../utils";
 import { ExternalEndPoints } from "../config/types";
@@ -56,7 +55,7 @@ export class Service {
       const { data } = await this.rpc.post(url, {
         jsonrpc: "2.0",
         id: 1,
-        method: "parity_netPeers",
+        method: "net_peerCount",
         params: [],
       });
       return data;
@@ -114,39 +113,34 @@ export class Service {
   }
 
   private async getEthNodeHealth({ ip, port, type }) {
-    const supported = this.ethVariants.includes(type);
     const url = `http://${ip}:${port}`;
 
-    if (supported) {
-      const [internal, external, ethSyncing] = await Promise.all([
-        this.getBlockHeight(url),
-        this.getExternalBlockHeightByChain(type),
-        this.getEthSyncing(url),
-      ]);
+    const [internal, external, ethSyncing, peers] = await Promise.all([
+      this.getBlockHeight(url),
+      this.getExternalBlockHeightByChain(type),
+      this.getEthSyncing(url),
+      this.getPeers(url),
+    ]);
 
-      const internalHeight = hexToDec(internal.result);
-      let { height: externalHeight, score: consensusScore } = external;
+    const internalHeight = hexToDec(internal.result);
+    let { height: externalHeight, score: consensusScore } = external;
 
-      return {
-        ethSyncing,
-        height: {
-          internalHeight,
-          externalHeight,
-          delta: externalHeight - internalHeight,
-          consensusScore,
-        },
-      };
-    }
-    if (!supported) {
-      throw new Error("chain not supported");
-    }
+    return {
+      ethSyncing,
+      peers,
+      height: {
+        internalHeight,
+        externalHeight,
+        delta: externalHeight - internalHeight,
+        consensusScore,
+      },
+    };
   }
   async getNodeHealth({ name, type, ip, port }) {
     //todo change "type" to "chain" for consistency
     const isOnline = await this.isNodeOnline({ host: ip, port });
     const isEthVariant = this.ethVariants.includes(type);
     if (isOnline && isEthVariant) {
-      console.log(name)
       return await this.getEthNodeHealth({ ip, port, type });
     }
   }
