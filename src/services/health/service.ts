@@ -143,14 +143,10 @@ export class Service {
   }
   async getNodeHealth({ name, type, ip, port }) {
     //todo change "type" to "chain" for consistency
-
     const isOnline = await this.isNodeOnline({ host: ip, port });
-    if (!isOnline) {
-      return Errors.OFFLINE;
-    }
     const isEthVariant = this.ethVariants.includes(type);
-
-    if (isEthVariant) {
+    if (isOnline && isEthVariant) {
+      console.log(name)
       return await this.getEthNodeHealth({ ip, port, type });
     }
   }
