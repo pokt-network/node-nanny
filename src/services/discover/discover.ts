@@ -1,25 +1,8 @@
 import AWS from "aws-sdk";
 import csv from "csvtojson";
 import path from "path";
+import { Source, Prefix } from "./types";
 
-//todo cast https to bool
-interface Nodes {
-  name: string;
-  type: string;
-  ip: string;
-  port: string;
-  https: string;
-}
-
-enum Source {
-  CSV = "csv",
-  TAG = "tag",
-}
-
-enum Prefix {
-  BLOCKCHAIN = "blockchain",
-  NAME = "Name",
-}
 const csvNodes = path.resolve(__dirname, "../../nodes.csv");
 
 class Service {
