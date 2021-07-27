@@ -118,24 +118,23 @@ export class Service {
     const url = `http://${ip}:${port}`;
 
     if (supported) {
-      const [internal, external, ethSyncing, peers] = await Promise.all([
+      const [internal, external, ethSyncing] = await Promise.all([
         this.getBlockHeight(url),
         this.getExternalBlockHeightByChain(type),
         this.getEthSyncing(url),
-        this.getPeers(url),
       ]);
 
       const internalHeight = hexToDec(internal.result);
-      const { height: externalHeight, score: consensusScore } = external;
+      let { height: externalHeight, score: consensusScore } = external;
+
       return {
         ethSyncing,
         height: {
-          internal,
-          external,
+          internalHeight,
+          externalHeight,
           delta: externalHeight - internalHeight,
           consensusScore,
         },
-        peers,
       };
     }
     if (!supported) {
