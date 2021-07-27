@@ -1,9 +1,8 @@
 export interface Nodes {
   name: string;
-  type: string;
+  chain: string;
   ip: string;
   port: string;
-  https: string;
 }
 
 export enum Source {

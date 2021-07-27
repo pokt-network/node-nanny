@@ -112,12 +112,12 @@ export class Service {
     }
   }
 
-  private async getEthNodeHealth({ ip, port, type }) {
+  private async getEthNodeHealth({ ip, port, chain }) {
     const url = `http://${ip}:${port}`;
 
     const [internal, external, ethSyncing, peers] = await Promise.all([
       this.getBlockHeight(url),
-      this.getExternalBlockHeightByChain(type),
+      this.getExternalBlockHeightByChain(chain),
       this.getEthSyncing(url),
       this.getPeers(url),
     ]);
@@ -125,9 +125,10 @@ export class Service {
     const internalHeight = hexToDec(internal.result);
     let { height: externalHeight, score: consensusScore } = external;
     const numPeers = hexToDec(peers.result);
+    const ethSyncingResult = ethSyncing.result;
 
     return {
-      ethSyncing,
+      ethSyncing:  ethSyncingResult,
       peers: numPeers,
       height: {
         internalHeight,
@@ -137,12 +138,12 @@ export class Service {
       },
     };
   }
-  async getNodeHealth({ name, type, ip, port }) {
-    //todo change "type" to "chain" for consistency
+  async getNodeHealth({ chain, ip, port }) {
+    //todo change "chain" to "chain" for consistency
     const isOnline = await this.isNodeOnline({ host: ip, port });
-    const isEthVariant = this.ethVariants.includes(type);
+    const isEthVariant = this.ethVariants.includes(chain);
     if (isOnline && isEthVariant) {
-      return await this.getEthNodeHealth({ ip, port, type });
+      return await this.getEthNodeHealth({ ip, port, chain });
     }
   }
 }
