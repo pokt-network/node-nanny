@@ -6,7 +6,7 @@
   "author": "JonathonJulian <john@pokt.network>",
   "license": "MIT",
   "scripts": {
-    "start:dev": "ts-node ./src/index.ts",
+    "start:dev": "NODE_ENV=dev && nodemon ./dist/index.ts",
     "build": "tsc -b .",
     "build:watch": "tsc -b -w .",
     "test": "jest"

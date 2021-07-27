@@ -14,11 +14,11 @@ class Service {
     this.sourcePath = sourcePath;
   }
 
-  initEC2() {
+  private initEC2() {
     this.client = new AWS.EC2({ region: "us-east-2" });
   }
 
-  getInstanceName(tags) {
+  private getInstanceName(tags) {
     const [{ Value }] = tags.filter(({ Key }) => Key === Prefix.NAME);
     return Value;
   }
