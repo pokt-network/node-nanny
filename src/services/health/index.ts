@@ -1,2 +1,2 @@
-export { Service } from "./health";
+export { Service } from "./service";
 export * as Types from "./types";
