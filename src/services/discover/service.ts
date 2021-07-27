@@ -41,10 +41,10 @@ class Service {
       const instanceName = this.getInstanceName(Tags);
       for (const { Key, Value } of Tags) {
         if (Key.includes(Prefix.BLOCKCHAIN)) {
-          const [, type] = Key.split("-");
-          const name = `${instanceName}/${type.toLowerCase()}`;
+          const [, chain] = Key.split("-");
+          const name = `${instanceName}/${chain.toLowerCase()}`;
           const port = Value;
-          nodes.push({ name, type, ip, port, https: "false" });
+          nodes.push({ name, chain, ip, port });
         }
       }
     }
