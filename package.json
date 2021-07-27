@@ -1,6 +1,6 @@
 {
   "name": "node-monitoring",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "main": "dist/index.js",
   "repository": "https://github.com/pokt-foundation/node-monitoring.git",
   "author": "JonathonJulian <john@pokt.network>",
@@ -9,7 +9,7 @@
     "start:dev": "ts-node ./src/index.ts",
     "build": "tsc -b .",
     "build:watch": "tsc -b -w .",
-    "test" : "jest"
+    "test": "jest"
   },
   "bin": {
     "pkt-nodes": "./dist/cli/pkt-nodes.js"
@@ -32,6 +32,8 @@
     "aws-sdk": "^2.950.0",
     "axios": "^0.21.1",
     "csvtojson": "^2.0.10",
-    "dotenv": "^10.0.0"
+    "dd-trace": "^1.1.0",
+    "dotenv": "^10.0.0",
+    "hot-shots": "^8.5.0"
   }
 }
