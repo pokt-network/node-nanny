@@ -67,15 +67,18 @@ export class Service {
   private async getExternalBlockHeightByChain(chain: ExternalEndPoints): Promise<ExternalResponse> {
     let { Value } = await this.config.getParamByKey(ExternalEndPoints[chain]);
     const endpoints = Value.split(",");
-
     let results = endpoints.map((endpoint) => this.getBlockHeight(endpoint));
     const resolved = await Promise.all(results);
-
+    if (resolved.length == 1) {
+      const [{ results: height }] = resolved;
+      return { height: hexToDec(height) };
+    }
     const sorted = resolved.map(({ result }) => hexToDec(result)).sort();
     const last = sorted[sorted.length - 1];
     const secondLast = sorted[sorted.length - 2];
 
     if (!(last - secondLast === 1 || last - secondLast === 0)) {
+      //this needs some work to account for different chains such as BSC
       console.error(`could not get consensus ${sorted}`);
     }
 
@@ -131,7 +134,6 @@ export class Service {
     };
   }
   async getNodeHealth({ chain, ip, port }) {
-    //todo change "chain" to "chain" for consistency
     const isOnline = await this.isNodeOnline({ host: ip, port });
     if (!isOnline) return Errors.OFFLINE;
     const isEthVariant = this.ethVariants.includes(chain);
