@@ -5,11 +5,11 @@ export enum NCResponse {
 export enum EthVariants {
   ETH = "ETH",
   BSC = "BSC",
-  // POL = "POL",
   // RIN = "RIN",
   // ROP = "ROP",
   // GOE = "GOE",
   // KOV = "KOV",
+  // POL = "POL",
   // XDAI = "XDAI",
   // FUS = "FUS",
 }
