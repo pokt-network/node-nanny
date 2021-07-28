@@ -20,6 +20,14 @@ export class App {
     for (const { name, chain, ip, port } of nodes) {
       const health = await this.health.getNodeHealth({ chain, ip, port });
       response.push({ name, health });
+      const message = JSON.stringify(health);
+      const { logGroupName, logStreamName, sequenceToken } = await this.log.setupLogs(name);
+      await this.log.writeToLogStream({
+        logGroupName,
+        logStreamName,
+        sequenceToken,
+        logEvents: [{ message, timestamp: Date.now() }],
+      });
     }
     return response;
   }
