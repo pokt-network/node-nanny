@@ -1,12 +1,14 @@
-import { Discover, Health } from "./services";
+import { Discover, Health, Log } from "./services";
 import { DiscoverTypes, HealthTypes } from "./types";
 
 export class App {
   private discover: Discover;
   private health: Health;
+  private log: Log;
   private supported: string[];
   constructor() {
     this.discover = new Discover({ source: DiscoverTypes.Source.TAG });
+    this.log = new Log();
     this.health = new Health();
     this.supported = Object.keys(HealthTypes.EthVariants);
   }
