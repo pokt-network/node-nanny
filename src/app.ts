@@ -13,7 +13,6 @@ export class App {
 
   async main() {
     let nodes = await this.discover.getListOfNodes();
-    console.log(nodes)
     nodes = nodes.filter(({ chain }) => this.supported.includes(chain));
     console.table(nodes);
     for (const { name, chain, ip, port } of nodes) {
