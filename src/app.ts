@@ -16,6 +16,7 @@ export class App {
     nodes = nodes.filter(({ chain }) => this.supported.includes(chain));
     const response = [];
     for (const { name, chain, ip, port } of nodes) {
+      console.log(name)
       const health = await this.health.getNodeHealth({ chain, ip, port });
       response.push(health);
     }
