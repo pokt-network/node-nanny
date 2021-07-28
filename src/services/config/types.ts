@@ -5,4 +5,5 @@ export enum ConfigPrefix {
 
 export enum ExternalEndPoints {
   ETH = "/pocket/monitoring/config/externalEndpoints/eth",
+  BSC = "/pocket/monitoring/config/externalEndpoints/bsc",
 }
