@@ -9,7 +9,6 @@ const discovery = new Discover({ source: DiscoverTypes.Source.TAG });
 const commands = {
   "set-param": () => config.setParam({ chain: arg1, param: arg2, value: arg3 }),
   "get-param": () => config.getParam({ chain: arg1, param: arg2 }),
-  "get-nodes": () => discovery.getNodesListFromTags(),
 }
-  [command]()
-  .then(command === "get-nodes" ? console.table : console.log);
+[command]()
+  .then(console.log);

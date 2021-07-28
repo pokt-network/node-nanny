@@ -32,10 +32,18 @@ export class Service {
     }
   }
 
-  async getParamByKey(key: ConfigPrefix) {
-    const { Parameter } = await this.client.getParameter({ Name: key }).promise();
-    const { Name, Value } = Parameter;
-    return { Name, Value };
+  async getParamByKey(key: string) {
+    
+    try {
+      const { Parameter } = await this.client.getParameter({ Name: key }).promise();
+      const { Name, Value } = Parameter;
+      return { Name, Value };
+    } catch (error) {
+
+      console.log(error, '--------------------------', key)
+      
+    }
+
   }
 
   async getAllParams() {}
