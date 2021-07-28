@@ -72,17 +72,13 @@ export class Service {
     //fetch and wait for all to complete
     let results = endpoints.map((endpoint) => this.getBlockHeight(endpoint));
     const resolved = await Promise.all(results);
-    // consensus "score" is based on the number of dupe keys removed, ie number of identical values,
-    // best case is score of 1 means all numbers were the same
-    // worst case is score === length of results (3+) none were the same but still within +/- 1
-    const { size: score } = new Map(resolved.map(({ result }, index) => [hexToDec(result), index]));
 
     // if two highest are within +/- 1 return the highest number
     const sorted = resolved.map(({ result }) => hexToDec(result)).sort();
     const last = sorted[sorted.length - 1];
     const secondLast = sorted[sorted.length - 2];
     if (last - secondLast === 1 || last - secondLast === 0) {
-      return { height: last, score };
+      return { height: last };
     } else {
       throw new Error(`could not get consensus ${sorted}`);
     }
