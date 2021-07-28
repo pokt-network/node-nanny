@@ -118,7 +118,7 @@ export class Service {
     ]);
 
     const internalHeight = hexToDec(internal.result);
-    let { height: externalHeight, score: consensusScore } = external;
+    let { height: externalHeight } = external;
     const numPeers = hexToDec(peers.result);
     const ethSyncingResult = ethSyncing.result;
 
@@ -129,7 +129,6 @@ export class Service {
         internalHeight,
         externalHeight,
         delta: externalHeight - internalHeight,
-        consensusScore,
       },
     };
   }
