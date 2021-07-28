@@ -1,6 +1,6 @@
 import { Discover, Health, Log } from "./services";
 import { DiscoverTypes, HealthTypes } from "./types";
-
+import { wait } from "./utils";
 export class App {
   private discover: Discover;
   private health: Health;
@@ -18,10 +18,13 @@ export class App {
     nodes = nodes.filter(({ chain }) => this.supported.includes(chain));
     const response = [];
     for (const { name, chain, ip, port } of nodes) {
+      await wait(2000);
       const health = await this.health.getNodeHealth({ chain, ip, port });
+      console.info({ name, health });
       response.push({ name, health });
       const message = JSON.stringify(health);
       const { logGroupName, logStreamName, sequenceToken } = await this.log.setupLogs(name);
+
       await this.log.writeToLogStream({
         logGroupName,
         logStreamName,
