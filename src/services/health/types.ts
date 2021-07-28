@@ -3,7 +3,7 @@ export enum NCResponse {
 }
 
 export enum EthVariants {
- // ETH = "ETH",
+  ETH = "ETH",
   BSC = "BSC",
   // POL = "POL",
   // RIN = "RIN",
@@ -24,5 +24,4 @@ export enum Errors {
 
 export interface ExternalResponse {
   height: number;
-  score: number;
 }
