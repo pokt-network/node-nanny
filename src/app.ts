@@ -1,5 +1,5 @@
 import { Discover, Health } from "./services";
-import { DiscoverTypes, HealthTypes  } from "./types";
+import { DiscoverTypes, HealthTypes } from "./types";
 
 export class App {
   private discover: Discover;
@@ -14,10 +14,11 @@ export class App {
   async main() {
     let nodes = await this.discover.getListOfNodes();
     nodes = nodes.filter(({ chain }) => this.supported.includes(chain));
-    console.table(nodes);
+    const response = [];
     for (const { name, chain, ip, port } of nodes) {
       const health = await this.health.getNodeHealth({ chain, ip, port });
-      console.log(name, health);
+      response.push(health);
     }
+    return response;
   }
 }
