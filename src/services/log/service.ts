@@ -101,6 +101,10 @@ export class Service {
       await this.createLogStream({ logGroupName, logStreamName: this.today });
     }
     //Optimization, we should not have to call the describe method on every invocation since the next token is supply by the putLogs call
-    return this.getSequenceTokenForLogStream({ logGroupName, logStreamName: this.today });
+    return {
+      logGroupName,
+      logStreamName: this.today,
+      sequenceToken: await this.getSequenceTokenForLogStream({ logGroupName, logStreamName: this.today }),
+    };
   }
 }
