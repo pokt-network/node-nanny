@@ -68,12 +68,10 @@ export class Service {
     //get external endpoints from ssm
     let { Value } = await this.config.getParamByKey(ExternalEndPoints[chain]);
     const endpoints = Value.split(",");
-    console.log(endpoints);
 
     //fetch and wait for all to complete
     let results = endpoints.map((endpoint) => this.getBlockHeight(endpoint));
     const resolved = await Promise.all(results);
-    console.log("done");
     // consensus "score" is based on the number of dupe keys removed, ie number of identical values,
     // best case is score of 1 means all numbers were the same
     // worst case is score === length of results (3+) none were the same but still within +/- 1
@@ -86,7 +84,7 @@ export class Service {
     if (last - secondLast === 1 || last - secondLast === 0) {
       return { height: last, score };
     } else {
-      throw new Error("could not get consensus");
+      throw new Error(`could not get consensus ${sorted}`);
     }
   }
   private async nc({ host, port }): Promise<string> {
