@@ -3,16 +3,17 @@ export enum NCResponse {
 }
 
 export enum EthVariants {
-  ETH = "ETH",
+  //ETH = "ETH",
   BSC = "BSC",
-  RIN = "RIN",
-  ROP = "ROP",
-  GOE = "GOE",
-  KOV = "KOV",
-  POL = "POL",
-  XDAI = "XDAI",
-  FUS = "FUS",
+  // RIN = "RIN",
+  // ROP = "ROP",
+  // GOE = "GOE",
+  // KOV = "KOV",
+  // POL = "POL",
+  // XDAI = "XDAI",
+  // FUS = "FUS",
 }
+
 
 export enum NonEthVariants {
   AVA = "AVA",
@@ -24,4 +25,10 @@ export enum Errors {
 
 export interface ExternalResponse {
   height: number;
+}
+
+export enum BlockHeightVariance {
+  ETH = 1,
+  BSC = 15
+
 }
