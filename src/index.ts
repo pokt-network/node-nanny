@@ -12,7 +12,6 @@ const statsd = new StatsD({
 });
 
 setInterval(async () => {
-  const response = await app.main();
-  console.log(response);
+  await app.main();
   statsd.increment("process.interval");
 }, Config.INTERVAL);
