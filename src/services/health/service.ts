@@ -1,17 +1,14 @@
 import axios, { AxiosInstance } from "axios";
 import { exec } from "child_process";
 
-import { Config } from "..";
-import { Errors, EthVariants, ExternalResponse, NCResponse } from "./types";
+import { Errors, EthVariants, NCResponse, BlockHeightVariance } from "./types";
 import { hexToDec } from "../../utils";
-import { ExternalEndPoints } from "../config/types";
+
 
 export class Service {
-  private config: Config;
   private rpc: AxiosInstance;
   private ethVariants;
   constructor() {
-    this.config = new Config();
     this.rpc = this.initClient();
     this.ethVariants = Object.keys(EthVariants);
   }
@@ -64,26 +61,29 @@ export class Service {
     }
   }
 
-  private async getExternalBlockHeightByChain(chain: ExternalEndPoints): Promise<ExternalResponse> {
-    let { Value } = await this.config.getParamByKey(ExternalEndPoints[chain]);
-    const endpoints = Value.split(",");
-    let results = endpoints.map((endpoint) => this.getBlockHeight(endpoint));
-    const resolved = await Promise.all(results);
-    if (resolved.length == 1) {
-      const [{ results: height }] = resolved;
-      return { height: hexToDec(height) };
+  getBestBlockHeight({ readings, variance }) {
+    if (readings.length === 1) {
+      return readings[0];
     }
-    const sorted = resolved.map(({ result }) => hexToDec(result)).sort();
-    const last = sorted[sorted.length - 1];
-    const secondLast = sorted[sorted.length - 2];
-
-    if (!(last - secondLast === 1 || last - secondLast === 0)) {
-      //this needs some work to account for different chains such as BSC
-      console.error(`could not get consensus ${sorted}`);
+    const sorted = readings.sort()
+    const [last] = sorted.slice(-1);
+    const [secondLast] = sorted.slice(-2);
+    if (last - secondLast < variance) {
+      return sorted.pop()
+    } else {
+      throw Error(`block hight not within variance ${readings}`)
     }
-
-    return { height: last };
   }
+
+  async getReferenceBlockHeight({ endpoints, chain }): Promise<number> {
+    const results = endpoints.map((endpoint) => this.getBlockHeight(endpoint));
+    const resolved = await Promise.all(results);
+    const readings = resolved.map(({ result }) => hexToDec(result))
+    const variance = BlockHeightVariance[chain]
+    const height = this.getBestBlockHeight({ readings, variance })
+    return height
+  }
+
   private async nc({ host, port }): Promise<string> {
     return new Promise((resolve, reject) => {
       exec(`nc -vz -q 5 ${host} ${port}`, (error, stdout, stderr) => {
@@ -108,18 +108,22 @@ export class Service {
     }
   }
 
-  private async getEthNodeHealth({ ip, port, chain }) {
-    const url = `http://${ip}:${port}`;
-
-    const [internal, external, ethSyncing, peers] = await Promise.all([
+  private async getEthNodeHealth({ ip, port, chain, peer, external }) {
+    const refernceUrls = external;
+    if (peer) {
+      const { ip, port } = peer;
+      refernceUrls.push(`http://${ip}:${port}`)
+    }
+    const url = `http://${ip}:${port}`
+    const [internalBh, externalBh, ethSyncing, peers] = await Promise.all([
       this.getBlockHeight(url),
-      this.getExternalBlockHeightByChain(chain),
+      this.getReferenceBlockHeight({ endpoints: refernceUrls, chain }),
       this.getEthSyncing(url),
       this.getPeers(url),
     ]);
 
-    const internalHeight = hexToDec(internal.result);
-    let { height: externalHeight } = external;
+    const internalHeight = hexToDec(internalBh.result);
+    const externalHeight = externalBh;
     const numPeers = hexToDec(peers.result);
     const ethSyncingResult = ethSyncing.result;
 
@@ -131,14 +135,17 @@ export class Service {
         externalHeight,
         delta: externalHeight - internalHeight,
       },
-    };
+    }
   }
-  async getNodeHealth({ chain, ip, port }) {
+  async getNodeHealth({ node, peer, external }) {
+    const { ip, port, chain } = node;
     const isOnline = await this.isNodeOnline({ host: ip, port });
     if (!isOnline) return Errors.OFFLINE;
     const isEthVariant = this.ethVariants.includes(chain);
     if (isEthVariant) {
-      return await this.getEthNodeHealth({ ip, port, chain });
+      return await this.getEthNodeHealth({ ip, port, chain, peer, external });
     }
+
+    return {}
   }
 }
