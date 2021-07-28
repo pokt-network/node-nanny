@@ -9,7 +9,8 @@
     "start:dev": "NODE_ENV=dev && nodemon ./dist/index.ts",
     "build": "tsc -b .",
     "build:watch": "tsc -b -w .",
-    "test": "jest"
+    "test": "jest",
+    "test:dev": "jest --watch"
   },
   "bin": {
     "pkt-nodes": "./dist/cli/pkt-nodes.js"
