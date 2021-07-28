@@ -4,7 +4,7 @@ export enum NCResponse {
 
 export enum EthVariants {
   ETH = "ETH",
-  // BSC = "BSC",
+  BSC = "BSC",
   // POL = "POL",
   // RIN = "RIN",
   // ROP = "ROP",
