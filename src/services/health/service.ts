@@ -65,23 +65,21 @@ export class Service {
   }
 
   private async getExternalBlockHeightByChain(chain: ExternalEndPoints): Promise<ExternalResponse> {
-    //get external endpoints from ssm
     let { Value } = await this.config.getParamByKey(ExternalEndPoints[chain]);
     const endpoints = Value.split(",");
 
-    //fetch and wait for all to complete
     let results = endpoints.map((endpoint) => this.getBlockHeight(endpoint));
     const resolved = await Promise.all(results);
 
-    // if two highest are within +/- 1 return the highest number
     const sorted = resolved.map(({ result }) => hexToDec(result)).sort();
     const last = sorted[sorted.length - 1];
     const secondLast = sorted[sorted.length - 2];
-    if (last - secondLast === 1 || last - secondLast === 0) {
-      return { height: last };
-    } else {
-      throw new Error(`could not get consensus ${sorted}`);
+
+    if (!(last - secondLast === 1 || last - secondLast === 0)) {
+      console.error(`could not get consensus ${sorted}`);
     }
+
+    return { height: last };
   }
   private async nc({ host, port }): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -135,7 +133,7 @@ export class Service {
   async getNodeHealth({ chain, ip, port }) {
     //todo change "chain" to "chain" for consistency
     const isOnline = await this.isNodeOnline({ host: ip, port });
-    console.log("is Online", isOnline)
+    if (!isOnline) return Errors.OFFLINE;
     const isEthVariant = this.ethVariants.includes(chain);
     if (isEthVariant) {
       return await this.getEthNodeHealth({ ip, port, chain });

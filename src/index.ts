@@ -11,11 +11,8 @@ const statsd = new StatsD({
   globalTags: { env: process.env.NODE_ENV },
 });
 
-/*
 setInterval(async () => {
-  await app.main();
+  const response = app.main();
+  console.log(response);
   statsd.increment("process.interval");
 }, Config.INTERVAL);
-*/
-
-app.main().then(console.log);
