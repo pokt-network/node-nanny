@@ -1,0 +1,3 @@
+name,type,ip,port,https
+ethereum-2a,eth-mainnet,10.0.0.162,8545,false
+ethereum-2b,eth-mainnet,10.0.1.106,8545,false
