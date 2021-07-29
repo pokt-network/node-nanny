@@ -174,6 +174,7 @@ export class Service {
 
     if (delta > threshold) {
       status = ErrorStatus.ERROR;
+      conditions = ErrorConditions.UNSYNCHRONIZED
     }
     return {
       status,
