@@ -14,26 +14,24 @@ export class App {
 
   async main() {
     let nodes = await this.discover.getNodes();
-
-    
     const response = [];
     for (const { node, peer, external } of nodes) {
-      // await wait(2000);
-      // const health = await this.health.getNodeHealth({ chain, ip, port });
-      // console.info({ name, health });
-      // response.push({ name, health });
-      // const message = JSON.stringify(health);
-      // const { logGroupName, logStreamName, sequenceToken } = await this.log.setupLogs(name);
-
-      // await this.log.writeToLogStream({
-      //   logGroupName,
-      //   logStreamName,
-      //   sequenceToken,
-      //   logEvents: [{ message, timestamp: Date.now() }],
-      // });
+      await wait(2000);
+      const health = await this.health.getNodeHealth({ node, peer, external });
+      const { name } = node
+      console.info({ name, health });
+      response.push({ name, health });
+      const message = JSON.stringify(health);
+      const { logGroupName, logStreamName, sequenceToken } = await this.log.setupLogs(name);
+      await this.log.writeToLogStream({
+        logGroupName,
+        logStreamName,
+        sequenceToken,
+        logEvents: [{ message, timestamp: Date.now() }],
+      });
     }
     return response;
 
-    
+
   }
 }
