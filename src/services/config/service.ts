@@ -1,9 +1,13 @@
 import AWS from "aws-sdk";
+import { Alert } from "../../services";
+
 import { ConfigPrefix } from "./types";
 
 export class Service {
+  private alert: Alert;
   private client: AWS.SSM;
   constructor() {
+    this.alert = new Alert();
     this.client = new AWS.SSM({ region: "us-east-2" });
   }
 
@@ -18,7 +22,7 @@ export class Service {
         })
         .promise();
     } catch (error) {
-      throw new Error(`could not set paramter ${error}`);
+      this.alert.sendErrorAlert(`could not set parameter ${error}`);
     }
   }
 
@@ -28,22 +32,17 @@ export class Service {
       const { Parameter } = await this.client.getParameter({ Name: key }).promise();
       return Parameter.Value;
     } catch (error) {
-      throw new Error(`could not find parameter ${error}`);
+      this.alert.sendErrorAlert(`could not find parameter ${error}`);
     }
   }
 
   async getParamByKey(key: string) {
-
     try {
       const { Parameter } = await this.client.getParameter({ Name: key }).promise();
       const { Name, Value } = Parameter;
       return { Name, Value };
     } catch (error) {
-
-      throw new Error(`could not get parambykey`)
+      this.alert.sendErrorAlert(`could not get parambykey`);
     }
-
   }
-
-  async getAllParams() { }
 }

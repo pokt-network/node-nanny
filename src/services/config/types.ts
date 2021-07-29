@@ -1,7 +1,7 @@
 export enum ConfigPrefix {
   COMMON_URL = "/pocket/monitoring/config/common/url",
   CHAIN_HEALTH = "/pocket/monitoring/config/health",
-  EXTERNAL_ENDPOINT = "/pocket/monitoring/config/externalEndpoints"
+  EXTERNAL_ENDPOINT = "/pocket/monitoring/config/externalEndpoints",
 }
 
 export enum ExternalEndPoints {
@@ -14,4 +14,5 @@ export enum ExternalEndPoints {
   RIN = "/pocket/monitoring/config/externalEndpoints/rin",
   ROP = "/pocket/monitoring/config/externalEndpoints/eth",
   XDAI = "/pocket/monitoring/config/externalEndpoints/bsc",
+  AVA = "/pocket/monitoring/config/externalEndpoints/ava",
 }
