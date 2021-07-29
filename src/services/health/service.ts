@@ -1,14 +1,26 @@
 import axios, { AxiosInstance } from "axios";
 import { exec } from "child_process";
 
-import { Errors, EthVariants, NCResponse, BlockHeightVariance } from "./types";
+import { Alert } from "../../services";
+import {
+  ErrorConditions,
+  ErrorStatus,
+  EthVariants,
+  NCResponse,
+  BlockHeightVariance,
+  BlockHeightThreshold,
+  HealthResponse,
+} from "./types";
+
+import { DiscoverTypes } from "../../types";
 import { hexToDec } from "../../utils";
 
-
 export class Service {
+  private alert: Alert;
   private rpc: AxiosInstance;
   private ethVariants;
   constructor() {
+    this.alert = new Alert();
     this.rpc = this.initClient();
     this.ethVariants = Object.keys(EthVariants);
   }
@@ -29,7 +41,7 @@ export class Service {
       });
       return data;
     } catch (error) {
-      throw new Error(`could not contact blockchain node ${error}`);
+      this.alert.sendErrorAlert(`could not contact blockchain node ${error}`);
     }
   }
 
@@ -43,7 +55,7 @@ export class Service {
       });
       return data;
     } catch (error) {
-      throw new Error(`could not contact blockchain node ${error}`);
+      this.alert.sendErrorAlert(`could not contact blockchain node ${error}`);
     }
   }
 
@@ -57,32 +69,59 @@ export class Service {
       });
       return data;
     } catch (error) {
-      throw new Error(`could not contact blockchain node ${error}`);
+      this.alert.sendErrorAlert(`could not contact blockchain node ${error}`);
     }
   }
 
+  async getAvaHealth(url): Promise<HealthResponse> {
+    try {
+      const { data } = await this.rpc.post(`${url}/ext/health`, {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "health.getLiveness",
+      });
+
+      const { result } = data;
+      if (result.healthy) {
+        return {
+          conditions: ErrorConditions.HEALTHY,
+          status: ErrorStatus.OK,
+          health: result,
+        };
+      } else {
+        return {
+          conditions: ErrorConditions.UNSYNCHRONIZED,
+          status: ErrorStatus.ERROR,
+          health: result,
+        };
+      }
+    } catch (error) {
+      this.alert.sendErrorAlert(`could not contact blockchain node ${error}`);
+    }
+  }
   getBestBlockHeight({ readings, variance }) {
     if (readings.length === 1) {
       return readings[0];
     }
-    const sorted = readings.sort()
+    const sorted = readings.sort();
     const [last] = sorted.slice(-1);
     const [secondLast] = sorted.slice(-2);
     if (last - secondLast < variance) {
-      return sorted.pop()
+      return sorted.pop();
     } else {
-      throw Error(`block hight not within variance ${readings}`)
+      console.error(`block height not within variance ${readings}`);
+      return sorted.pop();
     }
   }
 
-  async getReferenceBlockHeight({ endpoints, chain }): Promise<number> {
+  private async getReferenceBlockHeight({ endpoints, chain }): Promise<number> {
     const results = endpoints.map((endpoint) => this.getBlockHeight(endpoint));
     const resolved = await Promise.all(results);
-    const readings = resolved.map(({ result }) => hexToDec(result))
-    const variance = BlockHeightVariance[chain]
-    console.log('beforegetBestBlockHeight', chain)
-    const height = this.getBestBlockHeight({ readings, variance })
-    return height
+    const readings = resolved.map(({ result }) => hexToDec(result));
+    const variance = BlockHeightVariance[chain];
+    console.log("getBestBlockHeight", chain);
+    const height = this.getBestBlockHeight({ readings, variance });
+    return height;
   }
 
   private async nc({ host, port }): Promise<string> {
@@ -109,13 +148,13 @@ export class Service {
     }
   }
 
-  private async getEthNodeHealth({ ip, port, chain, peer, external }) {
+  private async getEthNodeHealth({ ip, port, chain, peer, external }): Promise<HealthResponse> {
     const refernceUrls = external;
     if (peer) {
       const { ip, port } = peer;
-      refernceUrls.push(`http://${ip}:${port}`)
+      refernceUrls.push(`http://${ip}:${port}`);
     }
-    const url = `http://${ip}:${port}`
+    const url = `http://${ip}:${port}`;
     const [internalBh, externalBh, ethSyncing, peers] = await Promise.all([
       this.getBlockHeight(url),
       this.getReferenceBlockHeight({ endpoints: refernceUrls, chain }),
@@ -127,26 +166,54 @@ export class Service {
     const externalHeight = externalBh;
     const numPeers = hexToDec(peers.result);
     const ethSyncingResult = ethSyncing.result;
+    const delta = externalHeight - internalHeight;
 
+    let status = ErrorStatus.OK;
+    let conditions = ErrorConditions.HEALTHY;
+    const threshold = Number(BlockHeightThreshold[chain]);
+
+    if (delta > threshold) {
+      status = ErrorStatus.ERROR;
+    }
     return {
+      status,
+      conditions,
       ethSyncing: ethSyncingResult,
       peers: numPeers,
       height: {
         internalHeight,
         externalHeight,
-        delta: externalHeight - internalHeight,
+        delta,
       },
-    }
+    };
   }
-  async getNodeHealth({ node, peer, external }) {
+
+  async getNodeHealth({ node, peer, external }): Promise<HealthResponse> {
     const { ip, port, chain } = node;
     const isOnline = await this.isNodeOnline({ host: ip, port });
-    if (!isOnline) return Errors.OFFLINE;
+    const isPeerOnline = await this.isNodeOnline({ host: peer.ip, port: peer.port });
+
+    if (!isOnline) {
+      return {
+        status: ErrorStatus.ERROR,
+        conditions: ErrorConditions.OFFLINE,
+      };
+    }
+
+    if (!isPeerOnline) {
+      return {
+        status: ErrorStatus.ERROR,
+        conditions: ErrorConditions.PEER_OFFLINE,
+      };
+    }
+
     const isEthVariant = this.ethVariants.includes(chain);
     if (isEthVariant) {
       return await this.getEthNodeHealth({ ip, port, chain, peer, external });
     }
 
-    return {}
+    if (chain === DiscoverTypes.Supported.AVA) {
+      return await this.getAvaHealth(`http://${ip}:${port}`);
+    }
   }
 }

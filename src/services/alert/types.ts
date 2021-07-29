@@ -1,3 +1,9 @@
+export enum AlertChannel {
+  DISCORD = "discord",
+  PAGER_DUTY = "pd",
+  BOTH = "both",
+}
+ 
 export enum DiscordDetails {
   WEBHOOK_URL = "***REMOVED***",
 }
@@ -14,4 +20,14 @@ export enum IncidentLevel {
   HIGH = "high",
   MEDIUM = "medium",
   LOW = "low",
+}
+
+export enum Titles {
+  OFFLINE = "Node is offline",
+  UNSYNCHRONIZED = "Node is not synched",
+  MONITOR_ERROR = "Node monitor has encountered an issue",
+}
+
+export enum Messages {
+
 }
