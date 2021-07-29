@@ -14,3 +14,16 @@ export enum Prefix {
   BLOCKCHAIN = "blockchain",
   NAME = "Name",
 }
+
+export enum Supported{
+  AVA = "AVA",
+  ETH = "ETH",
+  BSC = "BSC",
+  RIN = "RIN",
+  ROP = "ROP",
+  GOE = "GOE",
+  KOV = "KOV",
+  POL = "POL",
+  XDAI = "XDAI",
+  FUS = "FUS",
+}
