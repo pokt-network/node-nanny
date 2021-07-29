@@ -1,25 +1,26 @@
 import AWS from "aws-sdk";
 import csv from "csvtojson";
 import path from "path";
-import { Source, Prefix } from "./types";
+import { Source, Prefix, Supported } from "./types";
 import { Config } from "../../services";
+import { Alert } from "../../services";
 import { ConfigTypes, HealthTypes } from "../../types";
 
 const csvNodes = path.resolve(__dirname, "../../nodes.csv");
 
 class Service {
+  private alert: Alert;
+  private client: AWS.EC2;
+  private config: Config;
   private source: Source;
   private sourcePath: string;
-
-  private client: AWS.EC2;
-  config: Config;
-  supported: string[];
+  private supported: string[];
   constructor({ source = Source.TAG, sourcePath = csvNodes }) {
+    this.alert = new Alert();
     this.config = new Config();
     this.source = source;
     this.sourcePath = sourcePath;
-    this.supported = Object.keys(HealthTypes.EthVariants);
-
+    this.supported = Object.keys(Supported);
   }
 
   private initEC2() {
@@ -31,66 +32,70 @@ class Service {
     return Value;
   }
   async getNodesFromEC2() {
-    const nodes = []
-    this.initEC2();
-    const { Reservations } = await this.client
-      .describeInstances({
-        Filters: [
-          {
-            Name: "tag:Type",
-            Values: ["node-host"],
-          },
-        ],
-      })
-      .promise();
+    try {
+      const nodes = [];
+      this.initEC2();
+      const { Reservations } = await this.client
+        .describeInstances({
+          Filters: [
+            {
+              Name: "tag:Type",
+              Values: ["node-host"],
+            },
+          ],
+        })
+        .promise();
 
-    for (const { Instances } of Reservations) {
-      const [{ PrivateIpAddress: ip, Tags }] = Instances;
-      const instanceName = this.getInstanceName(Tags);
-      for (const { Key, Value } of Tags) {
-        if (Key.includes(Prefix.BLOCKCHAIN)) {
-          const [, chain] = Key.split("-");
-          const name = `${instanceName}/${chain.toLowerCase()}`;
-          const port = Value;
-          nodes.push({ name, chain, ip, port });
+      for (const { Instances } of Reservations) {
+        const [{ PrivateIpAddress: ip, Tags }] = Instances;
+        const instanceName = this.getInstanceName(Tags);
+        for (const { Key, Value } of Tags) {
+          if (Key.includes(Prefix.BLOCKCHAIN) && Key.includes("-")) {
+            const [, chain] = Key.split("-");
+            const name = `${instanceName}/${chain.toLowerCase()}`;
+            const port = Value;
+            nodes.push({ name, chain, ip, port });
+          }
         }
       }
+      return nodes.filter(({ chain }) => this.supported.includes(chain));
+    } catch (error) {
+      this.alert.sendErrorAlert(`Error, check for issues with tags`);
     }
-    return nodes.filter(({ chain }) => this.supported.includes(chain));
-
   }
 
   findPeerNode({ current, all }) {
-    const { chain, ip } = current
+    const { chain, ip } = current;
     for (const node of all) {
       if (node.chain === chain && node.ip !== ip) {
         return node;
       }
     }
-    return {}
+    return {};
   }
 
   async findExternalNode(chain) {
     try {
-      const { Value } = await this.config.getParamByKey(`${ConfigTypes.ConfigPrefix.EXTERNAL_ENDPOINT}/${chain.toLowerCase()}`)
-      return Value.split(",")
+      const { Value } = await this.config.getParamByKey(
+        `${ConfigTypes.ConfigPrefix.EXTERNAL_ENDPOINT}/${chain.toLowerCase()}`,
+      );
+      return Value.split(",");
     } catch (error) {
-      throw new Error(`could not find external nodes, has this ${chain} been onboarded?`)
+      this.alert.sendErrorAlert(`could not find external nodes, has ${chain} been onboarded?`);
     }
   }
 
   async getNodesFromTags() {
-    let nodes = await this.getNodesFromEC2()
+    let nodes = await this.getNodesFromEC2();
     nodes = nodes.map(async (node) => {
       return {
         node,
         peer: this.findPeerNode({ current: node, all: nodes }),
-        external: await this.findExternalNode(node.chain)
-      }
+        external: await this.findExternalNode(node.chain),
+      };
+    });
 
-    })
-
-    return Promise.all(nodes)
+    return Promise.all(nodes);
   }
 
   async getNodes(): Promise<any> {

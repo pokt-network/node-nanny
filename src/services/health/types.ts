@@ -14,13 +14,22 @@ export enum EthVariants {
   FUS = "FUS",
 }
 
-
 export enum NonEthVariants {
   AVA = "AVA",
 }
 
-export enum Errors {
-  OFFLINE = -1,
+export enum ErrorConditions {
+  HEALTHY = "HEALTHY",
+  OFFLINE = "OFFLINE",
+  PEER_OFFLINE = "PEER_OFFLINE",
+  UNSYNCHRONIZED = "UNSYNCHRONIZED",
+}
+
+export enum ErrorStatus {
+  ERROR = "ERROR",
+  OK = "OK",
+  INFO = "INFO",
+  WARNING = "WARNING",
 }
 
 export interface ExternalResponse {
@@ -36,6 +45,36 @@ export enum BlockHeightVariance {
   POL = 5,
   XDAI = 5,
   FUS = 5,
-  BSC = 15
+  BSC = 15,
+}
 
+export enum BlockHeightThreshold {
+  ETH = 2,
+  RIN = 2,
+  ROP = 2,
+  GOE = 2,
+  KOV = 2,
+  POL = 2,
+  XDAI = 2,
+  FUS = 2,
+  BSC = 10,
+}
+
+export enum Messages {
+  OFFLINE = "This node is offfline!",
+}
+
+interface BlockHeight {
+  delta: number;
+  externalHeight: number;
+  internalHeight: number;
+}
+
+export interface HealthResponse {
+  conditions?: ErrorConditions;
+  ethSyncing?: any;
+  height?: BlockHeight;
+  peers?: number;
+  status: ErrorStatus;
+  health?: any;
 }

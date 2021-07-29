@@ -1,7 +1,7 @@
 import { api } from "@pagerduty/pdjs";
 import axios, { AxiosInstance } from "axios";
 
-import { DiscordDetails, PagerDutyDetails } from "./types";
+import { DiscordDetails, PagerDutyDetails, IncidentLevel, Messages, Titles } from "./types";
 
 export class Service {
   private dsClient: AxiosInstance;
@@ -19,7 +19,8 @@ export class Service {
     return instance;
   }
 
-  async sendDiscordMessage(content) {
+  private async sendDiscordMessage({ title, details }: { title: Titles; details: any }) {
+    const content = `${title} \n ${details}`;
     try {
       const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_URL, { content });
       return status === 204;
@@ -27,7 +28,7 @@ export class Service {
       throw new Error(`could not send alert to Discord ${error}`);
     }
   }
-  async createIncident({ title, urgency, details }) {
+  private async createIncident({ title, details, urgency = IncidentLevel.HIGH }) {
     try {
       const { data } = await this.pdClient.post("/incidents", {
         data: {
@@ -52,6 +53,31 @@ export class Service {
       return data;
     } catch (error) {
       throw new Error(`could not create pd incident ${error}`);
+    }
+  }
+
+  private async sendToBoth({ title, details }: { title: Titles; details: any }) {
+    await this.createIncident({ title, details });
+    await this.sendDiscordMessage({ title, details });
+    return true;
+  }
+  async sendAlert({ channel, title, details }) {
+    return {
+      discord: async () => await this.sendDiscordMessage({ title, details }),
+      pd: async () => await this.createIncident({ title, details }),
+      both: async () => await this.sendToBoth({ title, details }),
+    }[channel]();
+  }
+
+  async sendErrorAlert(error) {
+    try {
+      await this.sendDiscordMessage({
+        title: Titles.MONITOR_ERROR,
+        details: JSON.stringify(error),
+      });
+      return true;
+    } catch (error) {
+      throw new Error(`could not send error message to discord ${error}`);
     }
   }
 }
