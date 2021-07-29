@@ -80,6 +80,7 @@ export class Service {
     const resolved = await Promise.all(results);
     const readings = resolved.map(({ result }) => hexToDec(result))
     const variance = BlockHeightVariance[chain]
+    console.log('beforegetBestBlockHeight', chain)
     const height = this.getBestBlockHeight({ readings, variance })
     return height
   }

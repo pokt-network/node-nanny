@@ -33,18 +33,17 @@ export class Service {
   }
 
   async getParamByKey(key: string) {
-    
+
     try {
       const { Parameter } = await this.client.getParameter({ Name: key }).promise();
       const { Name, Value } = Parameter;
       return { Name, Value };
     } catch (error) {
 
-      console.log(error, '--------------------------', key)
-      
+      throw new Error(`could not get parambykey`)
     }
 
   }
 
-  async getAllParams() {}
+  async getAllParams() { }
 }
