@@ -1,10 +1,13 @@
 import AWS from "aws-sdk";
+import { Alert } from "../../services";
 import { GroupStreamParams, PutLogParams, LogGroupPrefix } from "./types";
 
 export class Service {
+  private alert: Alert;
   private client: AWS.CloudWatchLogs;
   private today: string;
   constructor() {
+    this.alert = new Alert();
     this.today = new Date().toDateString();
     this.client = new AWS.CloudWatchLogs({
       region: "us-east-2",
@@ -27,7 +30,7 @@ export class Service {
     try {
       return await this.client.createLogGroup({ logGroupName }).promise();
     } catch (error) {
-      throw new Error(`could not create log group ${error}`);
+      this.alert.sendErrorAlert(`could not create log group ${error}`);
     }
   }
 
@@ -49,7 +52,7 @@ export class Service {
     try {
       return await this.client.createLogStream({ logGroupName, logStreamName }).promise();
     } catch (error) {
-      throw new Error(`could not create log stream ${error}`);
+      this.alert.sendErrorAlert(`could not create log stream ${error}`);
     }
   }
 
@@ -64,7 +67,7 @@ export class Service {
         .putLogEvents({ logGroupName, logStreamName, logEvents, sequenceToken })
         .promise();
     } catch (error) {
-      throw new Error(`could not write to log stream ${error}`);
+      this.alert.sendErrorAlert(`could not write to log stream ${error}`);
     }
   }
 
@@ -80,11 +83,13 @@ export class Service {
       const [{ logStreamName, uploadSequenceToken }] = logStreams;
 
       if (logStreamName !== name) {
-        throw new Error(`could not find specific log stream but found similar stream name`);
+        this.alert.sendErrorAlert(
+          `could not find specific log stream but found similar stream name`,
+        );
       }
       return uploadSequenceToken;
     } catch (error) {
-      throw new Error(`could not find log stream ${error}`);
+      this.alert.sendErrorAlert(`could not find log stream ${error}`);
     }
   }
   async setupLogs(name) {
@@ -104,7 +109,10 @@ export class Service {
     return {
       logGroupName,
       logStreamName: this.today,
-      sequenceToken: await this.getSequenceTokenForLogStream({ logGroupName, logStreamName: this.today }),
+      sequenceToken: await this.getSequenceTokenForLogStream({
+        logGroupName,
+        logStreamName: this.today,
+      }),
     };
   }
 }

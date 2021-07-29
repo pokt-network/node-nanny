@@ -7,6 +7,7 @@ export const wait = async (ms: number): Promise<void> => {
 export const hexToDec = (hexString) => {
   return parseInt(hexString, 16);
 };
+
 export const compare = (a, b, field) => {
   const A = a[field].toUpperCase();
   const B = b[field].toUpperCase();
