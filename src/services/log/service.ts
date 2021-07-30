@@ -1,6 +1,7 @@
 import AWS from "aws-sdk";
 import { Alert } from "../../services";
 import { GroupStreamParams, PutLogParams, LogGroupPrefix } from "./types";
+import { wait } from "../../utils";
 
 export class Service {
   private alert: Alert;
@@ -14,7 +15,7 @@ export class Service {
     });
   }
 
-  private async doesLogGroupExist(name: string): Promise<boolean> {
+  async doesLogGroupExist(name: string): Promise<boolean> {
     try {
       const { logGroups } = await this.client
         .describeLogGroups({ logGroupNamePrefix: name })
@@ -26,7 +27,7 @@ export class Service {
     }
   }
 
-  private async createLogGroup(logGroupName: string): Promise<object> {
+  async createLogGroup(logGroupName: string): Promise<object> {
     try {
       return await this.client.createLogGroup({ logGroupName }).promise();
     } catch (error) {
@@ -34,10 +35,7 @@ export class Service {
     }
   }
 
-  private async doesLogStreamExist({
-    logGroupName,
-    logStreamName,
-  }: GroupStreamParams): Promise<boolean> {
+  async doesLogStreamExist({ logGroupName, logStreamName }: GroupStreamParams): Promise<boolean> {
     try {
       const { logStreams } = await this.client
         .describeLogStreams({
@@ -51,10 +49,7 @@ export class Service {
       return false;
     }
   }
-  private async createLogStream({
-    logGroupName,
-    logStreamName,
-  }: GroupStreamParams): Promise<object> {
+  async createLogStream({ logGroupName, logStreamName }: GroupStreamParams): Promise<object> {
     try {
       return await this.client.createLogStream({ logGroupName, logStreamName }).promise();
     } catch (error) {
@@ -62,7 +57,7 @@ export class Service {
     }
   }
 
-  private async writeToLogStream({
+  async writeToLogStream({
     logGroupName,
     logStreamName,
     logEvents,
@@ -73,7 +68,7 @@ export class Service {
         .putLogEvents({ logGroupName, logStreamName, logEvents, sequenceToken })
         .promise();
     } catch (error) {
-      console.error(`could not write to log stream ${error}`);
+      this.alert.sendErrorAlert(`could not write to log stream ${error}`);
     }
   }
 
@@ -111,7 +106,6 @@ export class Service {
     if (!streamExist) {
       await this.createLogStream({ logGroupName, logStreamName: this.today });
     }
-    //Optimization, we should not have to call the describe method on every invocation since the next token is supply by the putLogs call
     return {
       logGroupName,
       logStreamName: this.today,
@@ -123,6 +117,7 @@ export class Service {
   }
 
   async write({ message, name }) {
+    await wait(1000);
     const { logGroupName, logStreamName, sequenceToken } = await this.setupLogs(name);
     return await this.writeToLogStream({
       logGroupName,
