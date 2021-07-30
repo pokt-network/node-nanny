@@ -1,6 +1,7 @@
 import AWS from "aws-sdk";
 import { Alert } from "../../services";
 import { GroupStreamParams, PutLogParams, LogGroupPrefix } from "./types";
+import { wait } from "../../utils";
 
 export class Service {
   private alert: Alert;
@@ -67,7 +68,7 @@ export class Service {
         .putLogEvents({ logGroupName, logStreamName, logEvents, sequenceToken })
         .promise();
     } catch (error) {
-      console.error(`could not write to log stream ${error}`);
+      this.alert.sendErrorAlert(`could not write to log stream ${error}`);
     }
   }
 
@@ -105,7 +106,6 @@ export class Service {
     if (!streamExist) {
       await this.createLogStream({ logGroupName, logStreamName: this.today });
     }
-    //Optimization, we should not have to call the describe method on every invocation since the next token is supply by the putLogs call
     return {
       logGroupName,
       logStreamName: this.today,
@@ -117,6 +117,7 @@ export class Service {
   }
 
   async write({ message, name }) {
+    await wait(1000);
     const { logGroupName, logStreamName, sequenceToken } = await this.setupLogs(name);
     return await this.writeToLogStream({
       logGroupName,
