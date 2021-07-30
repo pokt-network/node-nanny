@@ -50,13 +50,13 @@ export enum BlockHeightVariance {
 
 export enum BlockHeightThreshold {
   ETH = 2,
-  RIN = 2,
-  ROP = 2,
-  GOE = 2,
-  KOV = 2,
+  RIN = 10,
+  ROP = 10,
+  GOE = 10,
+  KOV = 10,
   POL = 10,
-  XDAI = 2,
-  FUS = 2,
+  XDAI = 5,
+  FUS = 3,
   BSC = 10,
 }
 

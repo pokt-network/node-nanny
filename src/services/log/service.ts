@@ -34,7 +34,10 @@ export class Service {
     }
   }
 
- private async doesLogStreamExist({ logGroupName, logStreamName }: GroupStreamParams): Promise<boolean> {
+  private async doesLogStreamExist({
+    logGroupName,
+    logStreamName,
+  }: GroupStreamParams): Promise<boolean> {
     try {
       const { logStreams } = await this.client
         .describeLogStreams({
@@ -48,7 +51,10 @@ export class Service {
       return false;
     }
   }
- private async createLogStream({ logGroupName, logStreamName }: GroupStreamParams): Promise<object> {
+  private async createLogStream({
+    logGroupName,
+    logStreamName,
+  }: GroupStreamParams): Promise<object> {
     try {
       return await this.client.createLogStream({ logGroupName, logStreamName }).promise();
     } catch (error) {
@@ -56,7 +62,7 @@ export class Service {
     }
   }
 
- private async writeToLogStream({
+  private async writeToLogStream({
     logGroupName,
     logStreamName,
     logEvents,
@@ -67,7 +73,7 @@ export class Service {
         .putLogEvents({ logGroupName, logStreamName, logEvents, sequenceToken })
         .promise();
     } catch (error) {
-      this.alert.sendErrorAlert(`could not write to log stream ${error}`);
+      console.error(`could not write to log stream ${error}`);
     }
   }
 
@@ -117,8 +123,8 @@ export class Service {
   }
 
   async write({ message, name }) {
-    const { logGroupName, logStreamName, sequenceToken } = await this.setupLogs(name); // move to logs service
-    await this.writeToLogStream({
+    const { logGroupName, logStreamName, sequenceToken } = await this.setupLogs(name);
+    return await this.writeToLogStream({
       logGroupName,
       logStreamName,
       sequenceToken,
