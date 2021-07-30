@@ -54,7 +54,7 @@ export enum BlockHeightThreshold {
   ROP = 2,
   GOE = 2,
   KOV = 2,
-  POL = 2,
+  POL = 10,
   XDAI = 2,
   FUS = 2,
   BSC = 10,
