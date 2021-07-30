@@ -28,17 +28,9 @@ export class App {
       let message = JSON.stringify(health);
       response.push({ name, message });
 
-      const { logGroupName, logStreamName, sequenceToken } = await this.log.setupLogs(name); // move to logs service
-
-      await this.log.writeToLogStream({
-        logGroupName,
-        logStreamName,
-        sequenceToken,
-        logEvents: [{ message, timestamp: Date.now() }],
-      });
+      await this.log.write({ message, name });
 
       if (health.status === HealthTypes.ErrorStatus.ERROR) {
-
         if (health.conditions === HealthTypes.ErrorConditions.OFFLINE) {
           await this.alert.sendAlert({
             channel: AlertTypes.AlertChannel.BOTH,
@@ -51,9 +43,7 @@ export class App {
           await this.alert.sendAlert({
             channel: AlertTypes.AlertChannel.DISCORD,
             title: AlertTypes.Titles.OFFLINE,
-            details: `Node ${name}'s peer ${
-              peer.name
-            } is currently offline`,
+            details: `Node ${name}'s peer ${peer.name} is currently offline`,
           });
         }
 
@@ -61,7 +51,7 @@ export class App {
           await this.alert.sendAlert({
             channel: AlertTypes.AlertChannel.DISCORD,
             title: AlertTypes.Titles.UNSYNCHRONIZED,
-            details: `Node ${name} is currently not in synch ts:${new Date().toUTCString()}`,
+            details: `Node ${name} is currently not in synch ${message}}`,
           });
         }
       }
