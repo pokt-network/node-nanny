@@ -14,7 +14,7 @@ export class Service {
     });
   }
 
-  private async doesLogGroupExist(name: string): Promise<boolean> {
+  async doesLogGroupExist(name: string): Promise<boolean> {
     try {
       const { logGroups } = await this.client
         .describeLogGroups({ logGroupNamePrefix: name })
@@ -26,7 +26,7 @@ export class Service {
     }
   }
 
-  private async createLogGroup(logGroupName: string): Promise<object> {
+  async createLogGroup(logGroupName: string): Promise<object> {
     try {
       return await this.client.createLogGroup({ logGroupName }).promise();
     } catch (error) {
@@ -34,10 +34,7 @@ export class Service {
     }
   }
 
-  private async doesLogStreamExist({
-    logGroupName,
-    logStreamName,
-  }: GroupStreamParams): Promise<boolean> {
+  async doesLogStreamExist({ logGroupName, logStreamName }: GroupStreamParams): Promise<boolean> {
     try {
       const { logStreams } = await this.client
         .describeLogStreams({
@@ -51,10 +48,7 @@ export class Service {
       return false;
     }
   }
-  private async createLogStream({
-    logGroupName,
-    logStreamName,
-  }: GroupStreamParams): Promise<object> {
+  async createLogStream({ logGroupName, logStreamName }: GroupStreamParams): Promise<object> {
     try {
       return await this.client.createLogStream({ logGroupName, logStreamName }).promise();
     } catch (error) {
@@ -62,7 +56,7 @@ export class Service {
     }
   }
 
-  private async writeToLogStream({
+  async writeToLogStream({
     logGroupName,
     logStreamName,
     logEvents,
