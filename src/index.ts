@@ -3,7 +3,7 @@ import StatsD from "hot-shots";
 import "./tracer";
 
 enum Config {
-  INTERVAL = 10000,
+  INTERVAL = 15000,
 }
 
 const app = new App();
