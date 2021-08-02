@@ -13,7 +13,7 @@ import {
 } from "./types";
 
 import { DiscoverTypes } from "../../types";
-import { hexToDec } from "../../utils";
+import { hexToDec, wait } from "../../utils";
 
 export class Service {
   private alert: Alert;
@@ -41,7 +41,7 @@ export class Service {
       });
       return data;
     } catch (error) {
-      this.alert.sendErrorAlert(`could not contact blockchain node ${error}`);
+      console.error(`could not contact blockchain node ${error}`);
     }
   }
 
@@ -55,7 +55,7 @@ export class Service {
       });
       return data;
     } catch (error) {
-      this.alert.sendErrorAlert(`could not contact blockchain node ${error}`);
+      console.error(`could not contact blockchain node ${error}`);
     }
   }
 
@@ -69,7 +69,7 @@ export class Service {
       });
       return data;
     } catch (error) {
-      this.alert.sendErrorAlert(`could not contact blockchain node ${error}`);
+      console.error(`could not contact blockchain node ${error}`);
     }
   }
 
@@ -96,9 +96,19 @@ export class Service {
         };
       }
     } catch (error) {
-      this.alert.sendErrorAlert(`could not contact blockchain node ${error}`);
+      console.error(`could not contact blockchain node ${error}`);
     }
   }
+
+  async getPocketHeight(url) {
+    try {
+      const { data } = await this.rpc.post(`${url}/v1/query/height`, {});
+      return data;
+    } catch (error) {
+      console.error(`could not contact pocket node ${error}`);
+    }
+  }
+
   getBestBlockHeight({ readings, variance }) {
     if (readings.length === 1) {
       return readings[0];
@@ -191,16 +201,9 @@ export class Service {
 
   async getPocketTopHeight(peers) {}
 
-  async getPocketHealth(nodes) {
-    const health = [];
+  async getPocketHealthQuickScan(nodes) {}
 
-    for (const node of nodes) {
-    }
-
-    return health;
-  }
-
-  async getDataNodesHealth(nodes) {}
+  async getPocketHealth(nodes) {}
 
   async getNodeHealth({ node, peer, external }): Promise<HealthResponse> {
     const { ip, port, chain } = node;
