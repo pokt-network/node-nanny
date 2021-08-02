@@ -17,6 +17,7 @@ test.skip("can compute best case block number", async () => {
 
 test.only("can get health from pocket nodes", async () => {
   const { pocketNodes } = await discover.getNodes();
+
   const response = await health.getPocketHealth(pocketNodes)
 
   console.log(response)
