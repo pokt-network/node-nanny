@@ -174,7 +174,7 @@ export class Service {
 
     if (delta > threshold) {
       status = ErrorStatus.ERROR;
-      conditions = ErrorConditions.UNSYNCHRONIZED
+      conditions = ErrorConditions.UNSYNCHRONIZED;
     }
     return {
       status,
@@ -188,6 +188,10 @@ export class Service {
       },
     };
   }
+
+  async getPocketTopHeight() {}
+
+  async getPocketNodeHealth(url) {}
 
   async getNodeHealth({ node, peer, external }): Promise<HealthResponse> {
     const { ip, port, chain } = node;
