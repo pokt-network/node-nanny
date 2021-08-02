@@ -4,7 +4,7 @@ import path from "path";
 import { Source, Prefix, Supported } from "./types";
 import { Config } from "../../services";
 import { Alert } from "../../services";
-import { ConfigTypes, HealthTypes } from "../../types";
+import { ConfigTypes } from "../../types";
 
 const csvNodes = path.resolve(__dirname, "../../nodes.csv");
 
@@ -15,12 +15,14 @@ class Service {
   private source: Source;
   private sourcePath: string;
   private supported: string[];
+  private pocketHosts: string[];
   constructor({ source = Source.TAG, sourcePath = csvNodes }) {
     this.alert = new Alert();
     this.config = new Config();
     this.source = source;
     this.sourcePath = sourcePath;
     this.supported = Object.keys(Supported);
+    this.pocketHosts = Object.values(ConfigTypes.PocketHosts);
   }
 
   private initEC2() {
@@ -85,7 +87,7 @@ class Service {
     }
   }
 
-  async getNodesFromTags() {
+  async getDataNodesFromTags() {
     let nodes = await this.getNodesFromEC2();
     nodes = nodes.map(async (node) => {
       return {
@@ -98,9 +100,54 @@ class Service {
     return Promise.all(nodes);
   }
 
+  async getPocketPeers({ current }) {
+    let other;
+
+    for (const host of this.pocketHosts) {
+      if (current !== host) {
+        other = host;
+      }
+    }
+
+    const { Value } = await this.config.getParamByKey(
+      `${ConfigTypes.ConfigPrefix.POCKET_NODES}/${other}`,
+    );
+    let nodes = Value.split(",");
+    nodes.shift();
+
+    return nodes;
+  }
+  async getPocketNodes() {
+    const output = [];
+
+    for (const host of this.pocketHosts) {
+      const { Value } = await this.config.getParamByKey(
+        `${ConfigTypes.ConfigPrefix.POCKET_NODES}/${host}`,
+      );
+
+      let nodes = Value.split(",");
+
+      const [instance] = nodes;
+
+      nodes.shift();
+
+      for (const url of nodes) {
+        output.push({
+          host: instance,
+          url,
+          peer: await this.getPocketPeers({ current: host }),
+        });
+      }
+    }
+
+    return output;
+  }
+
   async getNodes(): Promise<any> {
     if (this.source === Source.TAG) {
-      return await this.getNodesFromTags();
+      const dataNodes = await this.getDataNodesFromTags();
+      const pocketNodes = await this.getPocketNodes();
+      return { dataNodes, pocketNodes };
     }
     if (this.source === Source.CSV) {
       return await csv().fromFile(this.sourcePath);
