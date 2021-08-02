@@ -189,9 +189,18 @@ export class Service {
     };
   }
 
-  async getPocketTopHeight() {}
+  async getPocketTopHeight(peers) {}
 
-  async getPocketNodeHealth(url) {}
+  async getPocketHealth(nodes) {
+    const health = [];
+
+    for (const node of nodes) {
+    }
+
+    return health;
+  }
+
+  async getDataNodesHealth(nodes) {}
 
   async getNodeHealth({ node, peer, external }): Promise<HealthResponse> {
     const { ip, port, chain } = node;
