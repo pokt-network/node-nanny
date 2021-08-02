@@ -5,6 +5,12 @@ export interface Nodes {
   port: string;
 }
 
+export interface PocketNodes {
+  url: string;
+  port: string;
+  host: string;
+}
+
 export enum Source {
   CSV = "csv",
   TAG = "tag",
@@ -15,7 +21,7 @@ export enum Prefix {
   NAME = "Name",
 }
 
-export enum Supported{
+export enum Supported {
   AVA = "AVA",
   ETH = "ETH",
   BSC = "BSC",
