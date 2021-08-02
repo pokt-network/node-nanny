@@ -199,11 +199,30 @@ export class Service {
     };
   }
 
-  async getPocketTopHeight(peers) {}
+  async getPocketHealthQuickScan(nodes) {
+    const allHeight: number[] = await Promise.all(
+      nodes.map(async ({ url }) => {
+        const { height } = await this.getPocketHeight(url);
+        return height;
+      }),
+    );
 
-  async getPocketHealthQuickScan(nodes) {}
+    const [last] = allHeight.slice(-1);
+    const status = allHeight.sort().every((height) => last - height < BlockHeightVariance.POK);
 
-  async getPocketHealth(nodes) {}
+    return status ? { OK: true, allHeight } : { OK: false, allHeight };
+  }
+
+  async getPocketHealth(nodes) {
+    const isPocketHealthyQuickScan = await this.getPocketHealthQuickScan(nodes);
+    console.log(isPocketHealthyQuickScan)
+    if (isPocketHealthyQuickScan.OK) {
+      return {
+        status: ErrorStatus.OK,
+        conditions: ErrorConditions.HEALTHY,
+      };
+    }
+  }
 
   async getNodeHealth({ node, peer, external }): Promise<HealthResponse> {
     const { ip, port, chain } = node;
