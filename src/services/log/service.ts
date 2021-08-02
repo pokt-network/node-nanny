@@ -31,7 +31,7 @@ export class Service {
     try {
       return await this.client.createLogGroup({ logGroupName }).promise();
     } catch (error) {
-      this.alert.sendErrorAlert(`could not create log group ${error}`);
+      console.error(`could not create log group ${error}`);
     }
   }
 
@@ -53,7 +53,7 @@ export class Service {
     try {
       return await this.client.createLogStream({ logGroupName, logStreamName }).promise();
     } catch (error) {
-      this.alert.sendErrorAlert(`could not create log stream ${error}`);
+      console.error(`could not create log stream ${error}`);
     }
   }
 
@@ -68,7 +68,7 @@ export class Service {
         .putLogEvents({ logGroupName, logStreamName, logEvents, sequenceToken })
         .promise();
     } catch (error) {
-      this.alert.sendErrorAlert(`could not write to log stream ${error}`);
+      console.error(`could not write to log stream ${error}`);
     }
   }
 
@@ -84,13 +84,13 @@ export class Service {
       const [{ logStreamName, uploadSequenceToken }] = logStreams;
 
       if (logStreamName !== name) {
-        this.alert.sendErrorAlert(
+        console.error(
           `could not find specific log stream but found similar stream name`,
         );
       }
       return uploadSequenceToken;
     } catch (error) {
-      this.alert.sendErrorAlert(`could not find log stream ${error}`);
+      console.error(`could not find log stream ${error}`);
     }
   }
   private async setupLogs(name) {
