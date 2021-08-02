@@ -12,27 +12,15 @@ test.skip("can compute best case block number", async () => {
 
 test.skip("can compute best case block number", async () => {
   const response = await health.getAvaHealth(`http://10.0.0.149:9650`);
-  console.log(response);
   expect(1).toEqual(1);
 });
 
 test.only("can get health from pocket nodes", async () => {
   const { pocketNodes } = await discover.getNodes();
+  const response = await health.getPocketHealth(pocketNodes)
 
-  console.log(pocketNodes)
+  console.log(response)
+  expect(1).toEqual(1)
 });
 
-const mockNodes = [
-  {
-    name: "shared-2a/ava",
-    chain: "AVA",
-    ip: "10.0.0.149",
-    port: "9650",
-  },
-  {
-    name: "shared-2b/ava",
-    chain: "AVA",
-    ip: "10.0.1.208",
-    port: "9650",
-  },
-];
+
