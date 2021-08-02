@@ -46,6 +46,7 @@ export enum BlockHeightVariance {
   XDAI = 5,
   FUS = 5,
   BSC = 15,
+  POK = 3
 }
 
 export enum BlockHeightThreshold {
