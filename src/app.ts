@@ -14,7 +14,18 @@ export class App {
   }
 
   async main() {
-    let nodes = await this.discover.getNodes();
+    let { dataNodes, pocketNodes } = await this.discover.getNodes();
+
+    console.log("checking pocket nodes");
+
+    const pocketHealth = await this.health.getPocketHealth(pocketNodes);
+
+    console.log("checking data nodes");
+    const dataNodeHealth = await this.health.getDataNodesHealth(dataNodes);
+
+    console.log(pocketHealth);
+
+    /*
     const response = [];
     for (const { node, peer, external } of nodes) {
       const { name } = node;
@@ -57,5 +68,6 @@ export class App {
       }
     }
     return response;
+    */
   }
 }
