@@ -1,17 +1,16 @@
 import { App } from "./app";
 import StatsD from "hot-shots";
-import "./tracer";
-
-enum Config {
-  INTERVAL = 15000,
-}
+//  import "./tracer";
 
 const app = new App();
 const statsd = new StatsD({
   globalTags: { env: process.env.NODE_ENV },
 });
 
-setInterval(async () => {
+const run = async () => {
   await app.main();
   statsd.increment("process.interval");
-}, Config.INTERVAL);
+  await run();
+};
+
+run();
