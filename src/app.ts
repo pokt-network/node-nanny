@@ -20,11 +20,9 @@ export class App {
 
     const pocketHealth = await this.health.getPocketHealth(pocketNodes);
 
-    /*
-
-        console.log("checking data nodes");
+    console.log("checking data nodes")
     const response = [];
-    for (const { node, peer, external } of nodes) {
+    for (const { node, peer, external } of dataNodes) {
       const { name } = node;
 
       await wait(3000);
@@ -55,16 +53,15 @@ export class App {
           });
         }
 
-        if (health.conditions === HealthTypes.ErrorConditions.UNSYNCHRONIZED) {
+        if (health.conditions === HealthTypes.ErrorConditions.NOT_SYNCHRONIZED) {
           await this.alert.sendAlert({
             channel: AlertTypes.AlertChannel.DISCORD,
-            title: AlertTypes.Titles.UNSYNCHRONIZED,
+            title: AlertTypes.Titles.NOT_SYNCHRONIZED,
             details: `Node ${name} is currently not in synch ${message}}`,
           });
         }
       }
     }
     return response;
-    */
   }
 }
