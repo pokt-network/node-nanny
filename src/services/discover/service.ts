@@ -100,47 +100,27 @@ class Service {
     return Promise.all(nodes);
   }
 
-  async getPocketPeers({ current }) {
-    let other;
-
-    for (const host of this.pocketHosts) {
-      if (current !== host) {
-        other = host;
-      }
-    }
-
-    const { Value } = await this.config.getParamByKey(
-      `${ConfigTypes.ConfigPrefix.POCKET_NODES}/${other}`,
-    );
-    let nodes = Value.split(",");
-    nodes.shift();
-
-    return nodes;
-  }
   async getPocketNodes() {
-    const output = [];
+    return Promise.all(
+      this.pocketHosts.map(async (host) => {
+        const { Value } = await this.config.getParamByKey(
+          `${ConfigTypes.ConfigPrefix.POCKET_NODES}/${host}`,
+        );
 
-    for (const host of this.pocketHosts) {
-      const { Value } = await this.config.getParamByKey(
-        `${ConfigTypes.ConfigPrefix.POCKET_NODES}/${host}`,
-      );
+        let nodes = Value.split(",");
+        const [instance] = nodes;
+        nodes.shift();
 
-      let nodes = Value.split(",");
-
-      const [instance] = nodes;
-
-      nodes.shift();
-
-      for (const url of nodes) {
-        output.push({
-          host: instance,
-          url,
-          peer: await this.getPocketPeers({ current: host }),
+        const nodesWithName = nodes.map((node) => {
+          return { url: node, name: node.split("//")[1].split(".")[0] };
         });
-      }
-    }
 
-    return output;
+        return {
+          host: instance,
+          nodes: nodesWithName,
+        };
+      }),
+    );
   }
 
   async getNodes(): Promise<any> {

@@ -14,6 +14,7 @@ import {
 
 import { DiscoverTypes } from "../../types";
 import { hexToDec, wait } from "../../utils";
+import { isArray } from "util";
 
 export class Service {
   private alert: Alert;
@@ -30,7 +31,6 @@ export class Service {
     instance.defaults.headers.common["Content-Type"] = "application/json";
     return instance;
   }
-
   private async getBlockHeight(url) {
     try {
       const { data } = await this.rpc.post(url, {
@@ -100,16 +100,18 @@ export class Service {
     }
   }
 
- private async getPocketHeight(url) {
+  private async getPocketHeight(url) {
     try {
       const { data } = await this.rpc.post(`${url}/v1/query/height`, {});
       return data;
     } catch (error) {
       console.error(`could not contact pocket node ${error}`);
+      // this is instead of nc check as the number of pocket nodes will take too long
+      return { height: 0 };
     }
   }
 
- private getBestBlockHeight({ readings, variance }) {
+  private getBestBlockHeight({ readings, variance }) {
     if (readings.length === 1) {
       return readings[0];
     }
@@ -199,49 +201,68 @@ export class Service {
     };
   }
 
-  private async getPocketHealthDeepScan({ nodes, highest }) {
-    const badNodes = [];
-    for (const node of nodes) {
-      const { height } = await this.getPocketHeight(node.url);
-      if (highest - height < BlockHeightVariance.POK) {
-        badNodes.push(node);
+  getHighestPocketHeight(readings): number {
+    let allHeight = [];
+    for (const { nodes } of readings) {
+      for (const { height } of nodes) {
+        allHeight.push(height);
       }
     }
-    return badNodes;
-  }
+    const sorted = allHeight.sort();
 
-  private async getPocketHealthQuickScan(nodes) {
-    const allHeight = await Promise.all(
-      nodes.map(async ({ url }) => await this.getPocketHeight(url)),
-    );
-    const sorted = allHeight.map(({ height }: { height: number }) => height).sort();
     const [highest] = sorted.slice(-1);
-    const status = sorted.every((height) => highest - height < BlockHeightVariance.POK);
-    return status ? { OK: true, highest: highest } : { OK: false, highest: highest };
+
+    return highest;
   }
 
-  async getPocketHealth(nodes) {
-    const isPocketHealthyQuickScan = await this.getPocketHealthQuickScan(nodes);
-    if (isPocketHealthyQuickScan.OK) {
-      return {
-        status: ErrorStatus.OK,
-        conditions: ErrorConditions.HEALTHY,
-      };
-    } else {
-      const { highest } = isPocketHealthyQuickScan;
-      const deepScan = await this.getPocketHealthDeepScan({
-        nodes,
-        highest,
-      });
+  async computePocketResults({ readings }) {
+    const results = [];
+    const highest = this.getHighestPocketHeight(readings);
+    for (const { host, nodes } of readings) {
+      if (results.findIndex((result) => result.host === host) === -1) {
+        results.push({ host, status: "", badNodes: [] });
+      }
 
-      return {
-        status: ErrorStatus.ERROR,
-        conditions: ErrorConditions.NOT_SYNCHRONIZED,
-        details: deepScan,
-      };
+      const index = readings.findIndex((reading) => reading.host === host);
+
+      for (const node of nodes) {
+        if (highest - node.height > BlockHeightVariance.POK) {
+          results[index].badNodes.push(node);
+        }
+      }
+
+      if (results[index].badNodes.length > 0) {
+        results[index].status = ErrorConditions.NOT_SYNCHRONIZED;
+      } else {
+        results[index].status = ErrorConditions.HEALTHY;
+      }
     }
+    return results;
   }
 
+  async getPocketHealth(hosts) {
+    const allNodes = [];
+    for (const host of hosts) {
+      for (const url of host.nodes) {
+        allNodes.push(url);
+      }
+    }
+      const readings = [];
+
+      for (const { host, nodes } of hosts) {
+        if (readings.findIndex((reading) => reading.host === host) === -1) {
+          readings.push({ host, nodes: [] });
+        }
+
+        const index = readings.findIndex((reading) => reading.host === host);
+        for (const { name, url } of nodes) {
+          const { height } = await this.getPocketHeight(url);
+          readings[index].nodes.push({ name, height });
+        }
+      }
+      return this.computePocketResults({ readings });
+  
+  }
   async getNodeHealth({ node, peer, external }): Promise<HealthResponse> {
     const { ip, port, chain } = node;
     const isOnline = await this.isNodeOnline({ host: ip, port });
