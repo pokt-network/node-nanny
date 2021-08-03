@@ -90,7 +90,7 @@ export class Service {
         };
       } else {
         return {
-          conditions: ErrorConditions.UNSYNCHRONIZED,
+          conditions: ErrorConditions.NOT_SYNCHRONIZED,
           status: ErrorStatus.ERROR,
           health: result,
         };
@@ -100,7 +100,7 @@ export class Service {
     }
   }
 
-  async getPocketHeight(url) {
+ private async getPocketHeight(url) {
     try {
       const { data } = await this.rpc.post(`${url}/v1/query/height`, {});
       return data;
@@ -109,7 +109,7 @@ export class Service {
     }
   }
 
-  getBestBlockHeight({ readings, variance }) {
+ private getBestBlockHeight({ readings, variance }) {
     if (readings.length === 1) {
       return readings[0];
     }
@@ -159,15 +159,15 @@ export class Service {
   }
 
   private async getEthNodeHealth({ ip, port, chain, peer, external }): Promise<HealthResponse> {
-    const refernceUrls = external;
+    const referenceUrls = external;
     if (peer) {
       const { ip, port } = peer;
-      refernceUrls.push(`http://${ip}:${port}`);
+      referenceUrls.push(`http://${ip}:${port}`);
     }
     const url = `http://${ip}:${port}`;
     const [internalBh, externalBh, ethSyncing, peers] = await Promise.all([
       this.getBlockHeight(url),
-      this.getReferenceBlockHeight({ endpoints: refernceUrls, chain }),
+      this.getReferenceBlockHeight({ endpoints: referenceUrls, chain }),
       this.getEthSyncing(url),
       this.getPeers(url),
     ]);
@@ -184,7 +184,7 @@ export class Service {
 
     if (delta > threshold) {
       status = ErrorStatus.ERROR;
-      conditions = ErrorConditions.UNSYNCHRONIZED;
+      conditions = ErrorConditions.NOT_SYNCHRONIZED;
     }
     return {
       status,
@@ -199,28 +199,45 @@ export class Service {
     };
   }
 
-  async getPocketHealthQuickScan(nodes) {
-    const allHeight: number[] = await Promise.all(
-      nodes.map(async ({ url }) => {
-        const { height } = await this.getPocketHeight(url);
-        return height;
-      }),
+  private async getPocketHealthDeepScan({ nodes, highest }) {
+    const badNodes = [];
+    for (const node of nodes) {
+      const { height } = await this.getPocketHeight(node.url);
+      if (highest - height < BlockHeightVariance.POK) {
+        badNodes.push(node);
+      }
+    }
+    return badNodes;
+  }
+
+  private async getPocketHealthQuickScan(nodes) {
+    const allHeight = await Promise.all(
+      nodes.map(async ({ url }) => await this.getPocketHeight(url)),
     );
-
-    const sorted = allHeight.sort();
-    const [last] = sorted.slice(-1);
-    const status = sorted.every((height) => last - height < BlockHeightVariance.POK);
-
-    return status ? { OK: true, allHeight } : { OK: false, allHeight };
+    const sorted = allHeight.map(({ height }: { height: number }) => height).sort();
+    const [highest] = sorted.slice(-1);
+    const status = sorted.every((height) => highest - height < BlockHeightVariance.POK);
+    return status ? { OK: true, highest: highest } : { OK: false, highest: highest };
   }
 
   async getPocketHealth(nodes) {
     const isPocketHealthyQuickScan = await this.getPocketHealthQuickScan(nodes);
-    console.log(isPocketHealthyQuickScan);
     if (isPocketHealthyQuickScan.OK) {
       return {
         status: ErrorStatus.OK,
         conditions: ErrorConditions.HEALTHY,
+      };
+    } else {
+      const { highest } = isPocketHealthyQuickScan;
+      const deepScan = await this.getPocketHealthDeepScan({
+        nodes,
+        highest,
+      });
+
+      return {
+        status: ErrorStatus.ERROR,
+        conditions: ErrorConditions.NOT_SYNCHRONIZED,
+        details: deepScan,
       };
     }
   }

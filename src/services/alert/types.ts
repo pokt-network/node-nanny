@@ -24,7 +24,7 @@ export enum IncidentLevel {
 
 export enum Titles {
   OFFLINE = "Node is offline",
-  UNSYNCHRONIZED = "Node is not synched",
+  NOT_SYNCHRONIZED = "Node is not synched",
   MONITOR_ERROR = "Node monitor has encountered an issue",
 }
 
