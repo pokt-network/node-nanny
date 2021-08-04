@@ -30,6 +30,6 @@ export enum Supported {
   GOE = "GOE",
   KOV = "KOV",
   POL = "POL",
- XDAI = "XDAI",
- FUS = "FUS",
+  XDAI = "XDAI",
+  FUS = "FUS",
 }
