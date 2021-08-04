@@ -10,7 +10,7 @@
     "build": "tsc -b .",
     "build:watch": "tsc -b -w .",
     "test": "jest",
-    "test:dev": "jest --watch"
+    "test:dev": "jest --watch --testTimeout=50000"
   },
   "bin": {
     "pkt-nodes": "./dist/cli/pkt-nodes.js"
