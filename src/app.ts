@@ -16,43 +16,26 @@ export class App {
   async main() {
     let { dataNodes, pocketNodes } = await this.discover.getNodes();
 
-    const pocketHealth = await this.health.getPocketHealth(pocketNodes);
+    const pocketHealth = await this.health.getPocketNodesHealth(pocketNodes);
 
-    console.log(pocketHealth)
+    const dataHealth = await this.health.getDataNodesHealth(dataNodes);
 
-    await wait(10000);
+    const allHealth = pocketHealth.concat(dataHealth);
 
-    return true;
-    /*
-    const response = [];
-    for (const { node, peer, external } of dataNodes) {
-      const { name } = node;
-
-      await wait(3000);
-
-      const health = await this.health.getNodeHealth({ node, peer, external });
-
-      console.info({ name, health });
-
+    for (const health of allHealth) {
+      await wait(1000);
       let message = JSON.stringify(health);
-      response.push({ name, message });
-
+      const { name } = health;
+      console.info({ name, health });
+      
       await this.log.write({ message, name });
 
       if (health.status === HealthTypes.ErrorStatus.ERROR) {
         if (health.conditions === HealthTypes.ErrorConditions.OFFLINE) {
           await this.alert.sendAlert({
-            channel: AlertTypes.AlertChannel.BOTH,
-            title: AlertTypes.Titles.OFFLINE,
-            details: `Node ${name} is currently offline`,
-          });
-        }
-
-        if (health.conditions === HealthTypes.ErrorConditions.PEER_OFFLINE) {
-          await this.alert.sendAlert({
             channel: AlertTypes.AlertChannel.DISCORD,
             title: AlertTypes.Titles.OFFLINE,
-            details: `Node ${name}'s peer ${peer.name} is currently offline`,
+            details: `Node ${name} is currently offline`,
           });
         }
 
@@ -65,8 +48,6 @@ export class App {
         }
       }
     }
-    return response;
-
-    */
+    return;
   }
 }

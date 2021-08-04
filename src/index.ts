@@ -1,6 +1,6 @@
 import { App } from "./app";
 import StatsD from "hot-shots";
-//  import "./tracer";
+import "./tracer";
 
 const app = new App();
 const statsd = new StatsD({

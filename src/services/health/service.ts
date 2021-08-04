@@ -1,7 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import { exec } from "child_process";
 
-import { Alert } from "../../services";
 import {
   ErrorConditions,
   ErrorStatus,
@@ -13,15 +12,12 @@ import {
 } from "./types";
 
 import { DiscoverTypes } from "../../types";
-import { hexToDec, wait } from "../../utils";
-import { isArray } from "util";
+import { hexToDec } from "../../utils";
 
 export class Service {
-  private alert: Alert;
   private rpc: AxiosInstance;
   private ethVariants;
   constructor() {
-    this.alert = new Alert();
     this.rpc = this.initClient();
     this.ethVariants = Object.keys(EthVariants);
   }
@@ -41,7 +37,7 @@ export class Service {
       });
       return data;
     } catch (error) {
-      console.error(`could not contact blockchain node ${error}`);
+      console.error(`could not contact blockchain node ${error} ${url}`);
     }
   }
 
@@ -55,7 +51,7 @@ export class Service {
       });
       return data;
     } catch (error) {
-      console.error(`could not contact blockchain node ${error}`);
+      console.error(`could not contact blockchain node ${error} ${url}`);
     }
   }
 
@@ -69,11 +65,11 @@ export class Service {
       });
       return data;
     } catch (error) {
-      console.error(`could not contact blockchain node ${error}`);
+      console.error(`could not contact blockchain node ${error} ${url}`);
     }
   }
 
-  async getAvaHealth(url): Promise<HealthResponse> {
+  private async getAvaHealth({ name, url }): Promise<HealthResponse> {
     try {
       const { data } = await this.rpc.post(`${url}/ext/health`, {
         jsonrpc: "2.0",
@@ -84,19 +80,21 @@ export class Service {
       const { result } = data;
       if (result.healthy) {
         return {
+          name,
           conditions: ErrorConditions.HEALTHY,
           status: ErrorStatus.OK,
           health: result,
         };
       } else {
         return {
+          name,
           conditions: ErrorConditions.NOT_SYNCHRONIZED,
           status: ErrorStatus.ERROR,
           health: result,
         };
       }
     } catch (error) {
-      console.error(`could not contact blockchain node ${error}`);
+      console.error(`could not contact blockchain node ${error} ${url}`);
     }
   }
 
@@ -105,7 +103,7 @@ export class Service {
       const { data } = await this.rpc.post(`${url}/v1/query/height`, {});
       return data;
     } catch (error) {
-      console.error(`could not contact pocket node ${error}`);
+      console.error(`could not contact pocket node ${error} ${url}`);
       // this is instead of nc check as the number of pocket nodes will take too long
       return { height: 0 };
     }
@@ -131,14 +129,13 @@ export class Service {
     const resolved = await Promise.all(results);
     const readings = resolved.map(({ result }) => hexToDec(result));
     const variance = BlockHeightVariance[chain];
-    console.log("getBestBlockHeight", chain);
     const height = this.getBestBlockHeight({ readings, variance });
     return height;
   }
 
   private async nc({ host, port }): Promise<string> {
     return new Promise((resolve, reject) => {
-      exec(`nc -vz -q 5 ${host} ${port}`, (error, stdout, stderr) => {
+      exec(`nc -vz -q 2 ${host} ${port}`, (error, stdout, stderr) => {
         if (error) {
           reject(`error: ${error.message}`);
         }
@@ -160,7 +157,7 @@ export class Service {
     }
   }
 
-  private async getEthNodeHealth({ ip, port, chain, peer, external }): Promise<HealthResponse> {
+  private async getEthNodeHealth({ name, ip, port, chain, peer, external }): Promise<{}> {
     const referenceUrls = external;
     if (peer) {
       const { ip, port } = peer;
@@ -173,7 +170,6 @@ export class Service {
       this.getEthSyncing(url),
       this.getPeers(url),
     ]);
-
     const internalHeight = hexToDec(internalBh.result);
     const externalHeight = externalBh;
     const numPeers = hexToDec(peers.result);
@@ -188,7 +184,9 @@ export class Service {
       status = ErrorStatus.ERROR;
       conditions = ErrorConditions.NOT_SYNCHRONIZED;
     }
+
     return {
+      name,
       status,
       conditions,
       ethSyncing: ethSyncingResult,
@@ -201,7 +199,7 @@ export class Service {
     };
   }
 
-  getHighestPocketHeight(readings): number {
+  private getHighestPocketHeight(readings): number {
     let allHeight = [];
     for (const { nodes } of readings) {
       for (const { height } of nodes) {
@@ -215,12 +213,12 @@ export class Service {
     return highest;
   }
 
-  async computePocketResults({ readings }) {
+  private async computePocketResults({ readings }) {
     const results = [];
     const highest = this.getHighestPocketHeight(readings);
     for (const { host, nodes } of readings) {
       if (results.findIndex((result) => result.host === host) === -1) {
-        results.push({ host, status: "", badNodes: [] });
+        results.push({ status: "", badNodes: [] });
       }
 
       const index = readings.findIndex((reading) => reading.host === host);
@@ -232,42 +230,23 @@ export class Service {
       }
 
       if (results[index].badNodes.length > 0) {
-        results[index].status = ErrorConditions.NOT_SYNCHRONIZED;
+        results[index].status = ErrorStatus.ERROR;
+        results[index].conditions = ErrorConditions.NOT_SYNCHRONIZED;
+        results[index].details = results[index].badNodes;
       } else {
-        results[index].status = ErrorConditions.HEALTHY;
+        results[index].status = ErrorStatus.OK;
+        results[index].conditions = ErrorConditions.HEALTHY;
       }
+      results[index].name = host;
     }
+
     return results;
   }
 
-  async getPocketHealth(hosts) {
-    const allNodes = [];
-    for (const host of hosts) {
-      for (const url of host.nodes) {
-        allNodes.push(url);
-      }
-    }
-      const readings = [];
-
-      for (const { host, nodes } of hosts) {
-        if (readings.findIndex((reading) => reading.host === host) === -1) {
-          readings.push({ host, nodes: [] });
-        }
-
-        const index = readings.findIndex((reading) => reading.host === host);
-        for (const { name, url } of nodes) {
-          const { height } = await this.getPocketHeight(url);
-          readings[index].nodes.push({ name, height });
-        }
-      }
-      return this.computePocketResults({ readings });
-  
-  }
-  async getNodeHealth({ node, peer, external }): Promise<HealthResponse> {
-    const { ip, port, chain } = node;
+  private async getDataNodeHealth({ node, peer, external }): Promise<any> {
+    const { name, ip, port, chain } = node;
     const isOnline = await this.isNodeOnline({ host: ip, port });
     const isPeerOnline = await this.isNodeOnline({ host: peer.ip, port: peer.port });
-
     if (!isOnline) {
       return {
         status: ErrorStatus.ERROR,
@@ -284,11 +263,40 @@ export class Service {
 
     const isEthVariant = this.ethVariants.includes(chain);
     if (isEthVariant) {
-      return await this.getEthNodeHealth({ ip, port, chain, peer, external });
+      try {
+        return await this.getEthNodeHealth({ name, ip, port, chain, peer, external });
+      } catch (error) {
+        console.error(error);
+      }
     }
 
     if (chain === DiscoverTypes.Supported.AVA) {
-      return await this.getAvaHealth(`http://${ip}:${port}`);
+      return await this.getAvaHealth({ name, url: `http://${ip}:${port}` });
     }
+  }
+
+  async getDataNodesHealth(nodes) {
+    return await Promise.all(
+      nodes.map(
+        async ({ node, peer, external }) => await this.getDataNodeHealth({ node, peer, external }),
+      ),
+    );
+  }
+
+  async getPocketNodesHealth(hosts) {
+    const readings = [];
+    for (const { host, nodes } of hosts) {
+      if (readings.findIndex((reading) => reading.host === host) === -1) {
+        readings.push({ host, nodes: [] });
+      }
+
+      const index = readings.findIndex((reading) => reading.host === host);
+
+      for (const { name, url } of nodes) {
+        const { height } = await this.getPocketHeight(url);
+        readings[index].nodes.push({ name, height });
+      }
+    }
+    return this.computePocketResults({ readings });
   }
 }
