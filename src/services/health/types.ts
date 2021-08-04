@@ -72,6 +72,7 @@ interface BlockHeight {
 }
 
 export interface HealthResponse {
+  name: string;
   conditions?: ErrorConditions;
   ethSyncing?: any;
   height?: BlockHeight;
