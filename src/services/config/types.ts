@@ -20,4 +20,5 @@ export enum ExternalEndPoints {
 export enum PocketHosts {
   A = "a",
   B = "b",
+  C = "c",
 }
