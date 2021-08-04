@@ -21,9 +21,12 @@ export class App {
     const dataHealth = await this.health.getDataNodesHealth(dataNodes);
 
     const allHealth = pocketHealth.concat(dataHealth);
+    //console.log(pocketHealth)
+
+
 
     for (const health of allHealth) {
-      await wait(1000);
+      await wait(200);
       let message = JSON.stringify(health);
       const { name } = health;
       console.info({ name, health });
