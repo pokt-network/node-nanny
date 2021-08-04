@@ -1,6 +1,7 @@
 import { Alert, Discover, Health, Log } from "./services";
 import { DiscoverTypes, HealthTypes, AlertTypes } from "./types";
 import { wait } from "./utils";
+
 export class App {
   private alert: Alert;
   private discover: Discover;
@@ -21,16 +22,13 @@ export class App {
     const dataHealth = await this.health.getDataNodesHealth(dataNodes);
 
     const allHealth = pocketHealth.concat(dataHealth);
-    //console.log(pocketHealth)
-
-
 
     for (const health of allHealth) {
-      await wait(200);
+      await wait(500);
       let message = JSON.stringify(health);
       const { name } = health;
       console.info({ name, health });
-      
+
       await this.log.write({ message, name });
 
       if (health.status === HealthTypes.ErrorStatus.ERROR) {
