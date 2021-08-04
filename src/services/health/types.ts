@@ -22,7 +22,7 @@ export enum ErrorConditions {
   HEALTHY = "HEALTHY",
   OFFLINE = "OFFLINE",
   PEER_OFFLINE = "PEER_OFFLINE",
-  UNSYNCHRONIZED = "UNSYNCHRONIZED",
+  NOT_SYNCHRONIZED = "NOT_SYNCHRONIZED",
 }
 
 export enum ErrorStatus {
@@ -46,6 +46,7 @@ export enum BlockHeightVariance {
   XDAI = 5,
   FUS = 5,
   BSC = 15,
+  POK = 3,
 }
 
 export enum BlockHeightThreshold {
@@ -71,10 +72,12 @@ interface BlockHeight {
 }
 
 export interface HealthResponse {
+  name: string;
   conditions?: ErrorConditions;
   ethSyncing?: any;
   height?: BlockHeight;
   peers?: number;
   status: ErrorStatus;
   health?: any;
+  details?: any;
 }
