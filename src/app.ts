@@ -14,48 +14,40 @@ export class App {
   }
 
   async main() {
-    let nodes = await this.discover.getNodes();
-    const response = [];
-    for (const { node, peer, external } of nodes) {
-      const { name } = node;
+    let { dataNodes, pocketNodes } = await this.discover.getNodes();
 
-      await wait(3000);
+    const pocketHealth = await this.health.getPocketNodesHealth(pocketNodes);
 
-      const health = await this.health.getNodeHealth({ node, peer, external });
+    const dataHealth = await this.health.getDataNodesHealth(dataNodes);
 
-      console.info({ name, health });
+    const allHealth = pocketHealth.concat(dataHealth);
 
+    for (const health of allHealth) {
+      await wait(1000);
       let message = JSON.stringify(health);
-      response.push({ name, message });
-
+      const { name } = health;
+      console.info({ name, health });
+      
       await this.log.write({ message, name });
 
       if (health.status === HealthTypes.ErrorStatus.ERROR) {
         if (health.conditions === HealthTypes.ErrorConditions.OFFLINE) {
           await this.alert.sendAlert({
-            channel: AlertTypes.AlertChannel.BOTH,
+            channel: AlertTypes.AlertChannel.DISCORD,
             title: AlertTypes.Titles.OFFLINE,
             details: `Node ${name} is currently offline`,
           });
         }
 
-        if (health.conditions === HealthTypes.ErrorConditions.PEER_OFFLINE) {
+        if (health.conditions === HealthTypes.ErrorConditions.NOT_SYNCHRONIZED) {
           await this.alert.sendAlert({
             channel: AlertTypes.AlertChannel.DISCORD,
-            title: AlertTypes.Titles.OFFLINE,
-            details: `Node ${name}'s peer ${peer.name} is currently offline`,
-          });
-        }
-
-        if (health.conditions === HealthTypes.ErrorConditions.UNSYNCHRONIZED) {
-          await this.alert.sendAlert({
-            channel: AlertTypes.AlertChannel.DISCORD,
-            title: AlertTypes.Titles.UNSYNCHRONIZED,
+            title: AlertTypes.Titles.NOT_SYNCHRONIZED,
             details: `Node ${name} is currently not in synch ${message}}`,
           });
         }
       }
     }
-    return response;
+    return;
   }
 }
