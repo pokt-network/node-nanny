@@ -117,6 +117,7 @@ export class Service {
   }
 
   async write({ message, name }) {
+    await wait(1000);
     const { logGroupName, logStreamName, sequenceToken } = await this.setupLogs(name);
     return await this.writeToLogStream({
       logGroupName,
