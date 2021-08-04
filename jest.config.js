@@ -2,5 +2,6 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  testTimeout: 100000000
+  testTimeout: 100000000,
+  transformIgnorePatterns: ['^.+\\.js$']
 };
