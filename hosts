@@ -32,6 +32,28 @@
 10.0.1.90 mainnet-23.nodes.pokt.network
 10.0.1.90 mainnet-24.nodes.pokt.network
 
+#Instance i-05c2f91cf1cecad70 (bisontrails-2a)
+
+10.0.0.129 bt-1.nodes.pokt.network
+10.0.0.129 bt-2.nodes.pokt.network
+10.0.0.129 bt-3.nodes.pokt.network
+10.0.0.129 bt-4.nodes.pokt.network
+10.0.0.129 bt-5.nodes.pokt.network
+10.0.0.129 bt-6.nodes.pokt.network
+10.0.0.129 bt-7.nodes.pokt.network
+10.0.0.129 bt-8.nodes.pokt.network
+10.0.0.129 bt-9.nodes.pokt.network
+10.0.0.129 bt-10.nodes.pokt.network
+10.0.0.129 bt-11.nodes.pokt.network
+10.0.0.129 bt-12.nodes.pokt.network
+10.0.0.129 bt-13.nodes.pokt.network
+10.0.0.129 bt-14.nodes.pokt.network
+10.0.0.129 bt-15.nodes.pokt.network
+10.0.0.129 bt-16.nodes.pokt.network
+10.0.0.129 bt-17.nodes.pokt.network
+10.0.0.129 bt-18.nodes.pokt.network
+10.0.0.129 bt-19.nodes.pokt.network
+10.0.0.129 bt-20.nodes.pokt.network
 
 # The following lines are desirable for IPv6 capable hosts
 ::1 ip6-localhost ip6-loopback
