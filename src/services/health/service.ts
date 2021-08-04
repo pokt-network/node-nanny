@@ -170,6 +170,7 @@ export class Service {
       this.getEthSyncing(url),
       this.getPeers(url),
     ]);
+
     const internalHeight = hexToDec(internalBh.result);
     const externalHeight = externalBh;
     const numPeers = hexToDec(peers.result);
@@ -264,14 +265,16 @@ export class Service {
     const isEthVariant = this.ethVariants.includes(chain);
     if (isEthVariant) {
       try {
-        return await this.getEthNodeHealth({ name, ip, port, chain, peer, external });
+        const eth = await this.getEthNodeHealth({ name, ip, port, chain, peer, external });
+        return eth;
       } catch (error) {
         console.error(error);
       }
     }
 
     if (chain === DiscoverTypes.Supported.AVA) {
-      return await this.getAvaHealth({ name, url: `http://${ip}:${port}` });
+      const ava = await this.getAvaHealth({ name, url: `http://${ip}:${port}` });
+      return ava;
     }
   }
 
