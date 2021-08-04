@@ -102,6 +102,7 @@ class Service {
 
   async getPocketNodes() {
     return Promise.all(
+      //todo: get all params with pocket suffix instead of looking at enum
       this.pocketHosts.map(async (host) => {
         const { Value } = await this.config.getParamByKey(
           `${ConfigTypes.ConfigPrefix.POCKET_NODES}/${host}`,
