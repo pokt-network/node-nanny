@@ -250,6 +250,7 @@ export class Service {
     const isPeerOnline = await this.isNodeOnline({ host: peer.ip, port: peer.port });
     if (!isOnline) {
       return {
+        name,
         status: ErrorStatus.ERROR,
         conditions: ErrorConditions.OFFLINE,
       };
@@ -257,6 +258,7 @@ export class Service {
 
     if (!isPeerOnline) {
       return {
+        name,
         status: ErrorStatus.ERROR,
         conditions: ErrorConditions.PEER_OFFLINE,
       };
