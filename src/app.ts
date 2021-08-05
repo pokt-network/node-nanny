@@ -24,28 +24,28 @@ export class App {
     const allHealth = pocketHealth.concat(dataHealth);
 
     for (const health of allHealth) {
-      await wait(500);
-      let message = JSON.stringify(health);
-      const { name } = health;
-      console.info({ name, health });
+      if (health) {
+        await wait(500);
+        let message = JSON.stringify(health);
+        const { name } = health;
+        console.info({ name, health });
+        await this.log.write({ message, name });
+        if (health.status === HealthTypes.ErrorStatus.ERROR) {
+          if (health.conditions === HealthTypes.ErrorConditions.OFFLINE) {
+            await this.alert.sendAlert({
+              channel: AlertTypes.AlertChannel.DISCORD,
+              title: AlertTypes.Titles.OFFLINE,
+              details: `Node ${name} is currently offline`,
+            });
+          }
 
-      await this.log.write({ message, name });
-
-      if (health.status === HealthTypes.ErrorStatus.ERROR) {
-        if (health.conditions === HealthTypes.ErrorConditions.OFFLINE) {
-          await this.alert.sendAlert({
-            channel: AlertTypes.AlertChannel.DISCORD,
-            title: AlertTypes.Titles.OFFLINE,
-            details: `Node ${name} is currently offline`,
-          });
-        }
-
-        if (health.conditions === HealthTypes.ErrorConditions.NOT_SYNCHRONIZED) {
-          await this.alert.sendAlert({
-            channel: AlertTypes.AlertChannel.DISCORD,
-            title: AlertTypes.Titles.NOT_SYNCHRONIZED,
-            details: `Node ${name} is currently not in synch ${message}}`,
-          });
+          if (health.conditions === HealthTypes.ErrorConditions.NOT_SYNCHRONIZED) {
+            await this.alert.sendAlert({
+              channel: AlertTypes.AlertChannel.DISCORD,
+              title: AlertTypes.Titles.NOT_SYNCHRONIZED,
+              details: `Node ${name} is currently not in synch ${message}}`,
+            });
+          }
         }
       }
     }
