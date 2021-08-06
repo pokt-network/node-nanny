@@ -1,7 +1,15 @@
+import { WARNING } from "@datadog/datadog-api-client/dist/packages/datadog-api-client-v1/models/EventAlertType";
 import { api } from "@pagerduty/pdjs";
 import axios, { AxiosInstance } from "axios";
 
-import { DiscordDetails, PagerDutyDetails, IncidentLevel, Messages, Titles } from "./types";
+import {
+  DiscordDetails,
+  PagerDutyDetails,
+  IncidentLevel,
+  DataDogAlertColor,
+  Titles,
+  LinkTitles,
+} from "./types";
 
 export class Service {
   private dsClient: AxiosInstance;
@@ -13,7 +21,6 @@ export class Service {
 
   private initDsClient() {
     const instance = axios.create();
-    instance.defaults.baseURL = DiscordDetails.WEBHOOK_URL;
     instance.defaults.headers.common["Content-Type"] = "application/json";
 
     return instance;
@@ -56,6 +63,29 @@ export class Service {
     }
   }
 
+  async sendRichDiscordMessage({ title, msg, color, type, monitor, logs }) {
+    const embeds = [
+      {
+        title,
+        color,
+        fields: [
+          {
+            name: type.toUpperCase(),
+            value: msg,
+          },
+        ],
+      },
+      monitor,
+      logs,
+    ];
+    try {
+      const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_URL, { embeds });
+      return status === 204;
+    } catch (error) {
+      throw new Error(`could not send alert to Discord ${error}`);
+    }
+  }
+
   private async sendToBoth({ title, details }: { title: Titles; details: any }) {
     await this.createIncident({ title, details });
     await this.sendDiscordMessage({ title, details });
@@ -79,5 +109,39 @@ export class Service {
     } catch (error) {
       throw new Error(`could not send error message to discord ${error}`);
     }
+  }
+
+  async processWebhook(rawMessage) {
+    //todo make this better
+    let { type, title, msg } = rawMessage;
+    let color = DataDogAlertColor[type.toUpperCase()];
+    const split = msg.split("\n");
+    let [links] = split.splice(-1);
+    split.splice(0, 3);
+    msg = split;
+    msg.length = 3;
+    msg[1] = "\n";
+    msg = msg.join("");
+
+    links = links.split("·");
+    let [monitor, , logs] = links;
+
+    let [monitorURl] = monitor.split("(").splice(-1);
+    monitor = monitorURl.split(")")[0];
+
+    let [logsURl] = logs.split("(").splice(-1);
+    logs = logsURl.split(")")[0];
+
+    monitor = {
+      title: LinkTitles.MONITOR,
+      url: monitor,
+    };
+
+    logs = {
+      title: LinkTitles.LOGS,
+      url: logs,
+    };
+
+    return this.sendRichDiscordMessage({ title, msg, color, type, monitor, logs });
   }
 }
