@@ -6,6 +6,7 @@ export enum AlertChannel {
  
 export enum DiscordDetails {
   WEBHOOK_URL = "***REMOVED***",
+  WEBHOOK_TEST= "***REMOVED***"
 }
 
 export enum PagerDutyDetails {
@@ -28,6 +29,13 @@ export enum Titles {
   MONITOR_ERROR = "Node monitor has encountered an issue",
 }
 
-export enum Messages {
+export enum DataDogAlertColor {
+  ERROR = 15548997,
+  SUCCESS = 3066993,
+  WARNING = 16776960,
+}
 
+export enum LinkTitles {
+  MONITOR = "Monitor Status",
+  LOGS = "Related Logs",
 }

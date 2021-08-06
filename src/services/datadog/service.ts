@@ -41,7 +41,7 @@ export class Service {
           thresholds: { critical, warning },
         },
         query: `logs("status:error source:\\"${logGroup}\\"").index("*").rollup("count").last("5m") > 2`,
-        message: "@webhook-Discord",
+        message: "@webhook-API-Production",
       },
     };
 
