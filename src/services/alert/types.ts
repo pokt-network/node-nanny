@@ -5,7 +5,8 @@ export enum AlertChannel {
 }
  
 export enum DiscordDetails {
-  WEBHOOK_URL = "https://discord.com/api/webhooks/869233265628827658/tb5qc_Uq8IPrT8cfYUZ6SPWj8VINcaSU6F1kgxv5meDtBcgOv8DS1HmOIf2QLDv2lEKx",
+  WEBHOOK_URL = "https://discord.com/api/webhooks/873322545040994345/zI03qrMhIwcB_SEQK2QRDXdfLRif2pEFe4AzOQrmpriXogB6-ubEbyPDmkHY4Z1-dBlm",
+  WEBHOOK_TEST= "https://discord.com/api/webhooks/873283996862283787/x5__JNbgMcvSHEw3NxI9J5Sj5241VwoEY2vGAuWCQdefQQr5vTNYNM3nIeEoLAVYnYMb"
 }
 
 export enum PagerDutyDetails {
@@ -28,6 +29,13 @@ export enum Titles {
   MONITOR_ERROR = "Node monitor has encountered an issue",
 }
 
-export enum Messages {
+export enum DataDogAlertColor {
+  ERROR = 15548997,
+  SUCCESS = 3066993,
+  WARNING = 16776960,
+}
 
+export enum LinkTitles {
+  MONITOR = "Monitor Status",
+  LOGS = "Related Logs",
 }
