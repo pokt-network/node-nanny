@@ -2,12 +2,8 @@ version: 0.0
 os: linux
 files:
   - source: .
-    destination: /home/ubuntu/run/
+    destination: /home/ubuntu/run
 hooks:
-  AfterInstall:
-    - location: init.sh
-      timeout: 10000
-      runas: ubuntu
   ApplicationStart:
     - location: start.sh
       timeout: 10000
