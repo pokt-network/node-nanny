@@ -5,7 +5,7 @@ files:
     destination: /home/ubuntu/run/
 hooks:
   AfterInstall:
-    - location: stop.sh
+    - location: init.sh
       timeout: 10000
       runas: ubuntu
   ApplicationStart:
