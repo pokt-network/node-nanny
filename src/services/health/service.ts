@@ -278,19 +278,27 @@ export class Service {
     const isEthVariant = this.ethVariants.includes(chain);
     if (isEthVariant) {
       try {
-        const eth = await this.getEthNodeHealth({ name, ip, port, chain, peer, external });
-        return eth;
+        return await this.getEthNodeHealth({ name, ip, port, chain, peer, external });
       } catch (error) {
-        throw new Error(`could not get eth data node health ${error}`);
+        return {
+          name,
+          status: ErrorStatus.ERROR,
+          conditions: ErrorConditions.NO_RESPONSE,
+          details: error,
+        };
       }
     }
 
     if (chain === DiscoverTypes.Supported.AVA) {
       try {
-        const ava = await this.getAvaHealth({ name, url: `http://${ip}:${port}` });
-        return ava;
+        return await this.getAvaHealth({ name, url: `http://${ip}:${port}` });
       } catch (error) {
-        throw new Error(`could not get ava data node health ${error}`);
+        return {
+          name,
+          status: ErrorStatus.ERROR,
+          conditions: ErrorConditions.NO_RESPONSE,
+          details: error,
+        };
       }
     }
   }
