@@ -1,0 +1,14 @@
+version: 0.0
+os: ubuntu
+files:
+  - source: .
+    destination: /home/ubuntu/run/
+hooks:
+  AfterInstall:
+    - location: stop.sh
+      timeout: 10000
+      runas: ubuntu
+  ApplicationStart:
+    - location: start.sh
+      timeout: 10000
+      runas: ubuntu
