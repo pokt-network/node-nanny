@@ -1,7 +1,6 @@
 import AWS from "aws-sdk";
 import { Alert } from "../../services";
 import { GroupStreamParams, PutLogParams, LogGroupPrefix } from "./types";
-import { wait } from "../../utils";
 
 export class Service {
   private alert: Alert;
@@ -31,11 +30,14 @@ export class Service {
     try {
       return await this.client.createLogGroup({ logGroupName }).promise();
     } catch (error) {
-      console.error(`could not create log group ${error}`);
+      throw new Error(`could not create log group ${error}`);
     }
   }
 
-  private async doesLogStreamExist({ logGroupName, logStreamName }: GroupStreamParams): Promise<boolean> {
+  private async doesLogStreamExist({
+    logGroupName,
+    logStreamName,
+  }: GroupStreamParams): Promise<boolean> {
     try {
       const { logStreams } = await this.client
         .describeLogStreams({
@@ -53,7 +55,7 @@ export class Service {
     try {
       return await this.client.createLogStream({ logGroupName, logStreamName }).promise();
     } catch (error) {
-      console.error(`could not create log stream ${error}`);
+      throw new Error(`could not create log stream ${error}`);
     }
   }
 
@@ -68,7 +70,7 @@ export class Service {
         .putLogEvents({ logGroupName, logStreamName, logEvents, sequenceToken })
         .promise();
     } catch (error) {
-      console.error(`could not write to log stream ${error}`);
+      throw new Error(`could not write to log stream ${error}`);
     }
   }
 
@@ -84,13 +86,11 @@ export class Service {
       const [{ logStreamName, uploadSequenceToken }] = logStreams;
 
       if (logStreamName !== name) {
-        console.error(
-          `could not find specific log stream but found similar stream name`,
-        );
+        throw new Error(`could not find specific log stream but found similar stream name`);
       }
       return uploadSequenceToken;
     } catch (error) {
-      console.error(`could not find log stream ${error}`);
+      throw new Error(`could not find log stream ${error}`);
     }
   }
   private async setupLogs(name) {
@@ -117,7 +117,6 @@ export class Service {
   }
 
   async write({ message, name }) {
-    await wait(1000);
     const { logGroupName, logStreamName, sequenceToken } = await this.setupLogs(name);
     return await this.writeToLogStream({
       logGroupName,
