@@ -25,11 +25,12 @@ export enum Supported {
   AVA = "AVA",
   ETH = "ETH",
   BSC = "BSC",
+  POL = "POL",
+  FUS = "FUS",
+  XDAI = "XDAI",
   RIN = "RIN",
   ROP = "ROP",
   GOE = "GOE",
   KOV = "KOV",
-  POL = "POL",
-  XDAI = "XDAI",
-  FUS = "FUS",
+  
 }
