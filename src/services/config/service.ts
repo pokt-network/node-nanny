@@ -22,7 +22,7 @@ export class Service {
         })
         .promise();
     } catch (error) {
-      this.alert.sendErrorAlert(`could not set parameter ${error}`);
+      throw new Error(`could not set parameter ${error}`);
     }
   }
 
@@ -32,7 +32,7 @@ export class Service {
       const { Parameter } = await this.client.getParameter({ Name: key }).promise();
       return Parameter.Value;
     } catch (error) {
-      this.alert.sendErrorAlert(`could not find parameter ${error}`);
+      throw new Error(`could not find parameter ${error}`);
     }
   }
 
@@ -42,7 +42,7 @@ export class Service {
       const { Name, Value } = Parameter;
       return { Name, Value };
     } catch (error) {
-      this.alert.sendErrorAlert(`could not get parambykey`);
+      throw new Error(`could not get parambykey ${key}`);
     }
   }
 }
