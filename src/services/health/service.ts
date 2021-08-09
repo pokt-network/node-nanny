@@ -23,9 +23,10 @@ export class Service {
   }
 
   private initClient() {
-    const instance = axios.create();
-    instance.defaults.headers.common["Content-Type"] = "application/json";
-    return instance;
+    return axios.create({
+      timeout: 10000,
+      headers: { "Content-Type": "application/json" },
+    });
   }
   private async getBlockHeight(url) {
     try {
@@ -37,7 +38,7 @@ export class Service {
       });
       return data;
     } catch (error) {
-      console.error(`could not contact blockchain node ${error} ${url}`);
+      throw new Error(`could not contact blockchain node ${error} ${url}`);
     }
   }
 
@@ -65,7 +66,7 @@ export class Service {
       });
       return data;
     } catch (error) {
-      console.error(`could not contact blockchain node ${error} ${url}`);
+      throw new Error(`could not contact blockchain node ${error} ${url}`);
     }
   }
 
@@ -94,7 +95,7 @@ export class Service {
         };
       }
     } catch (error) {
-      console.error(`could not contact blockchain node ${error} ${url}`);
+      throw new Error(`could not contact blockchain node ${error} ${url}`);
     }
   }
 
@@ -125,18 +126,23 @@ export class Service {
   }
 
   private async getReferenceBlockHeight({ endpoints, chain }): Promise<number> {
-    const results = endpoints.map((endpoint) => this.getBlockHeight(endpoint));
-    const resolved = await Promise.all(results);
-    const readings = resolved.map(({ result }) => hexToDec(result));
-    const variance = BlockHeightVariance[chain];
-    const height = this.getBestBlockHeight({ readings, variance });
-    return height;
+    try {
+      const results = endpoints.map((endpoint) => this.getBlockHeight(endpoint));
+      const resolved = await Promise.all(results);
+      const readings = resolved.map(({ result }) => hexToDec(result));
+      const variance = BlockHeightVariance[chain];
+      const height = this.getBestBlockHeight({ readings, variance });
+      return height;
+    } catch (error) {
+      throw new Error(`could not get reference block height`);
+    }
   }
 
   private async nc({ host, port }): Promise<string> {
     return new Promise((resolve, reject) => {
       exec(`nc -vz -q 2 ${host} ${port}`, (error, stdout, stderr) => {
         if (error) {
+          console.error(`nc ${error}`);
           reject(`error: ${error.message}`);
         }
         if (stderr) {
@@ -164,40 +170,45 @@ export class Service {
       referenceUrls.push(`http://${ip}:${port}`);
     }
     const url = `http://${ip}:${port}`;
-    const [internalBh, externalBh, ethSyncing, peers] = await Promise.all([
-      this.getBlockHeight(url),
-      this.getReferenceBlockHeight({ endpoints: referenceUrls, chain }),
-      this.getEthSyncing(url),
-      this.getPeers(url),
-    ]);
 
-    const internalHeight = hexToDec(internalBh.result);
-    const externalHeight = externalBh;
-    const numPeers = hexToDec(peers.result);
-    const ethSyncingResult = ethSyncing.result;
-    const delta = externalHeight - internalHeight;
+    try {
+      const [internalBh, externalBh, ethSyncing, peers] = await Promise.all([
+        this.getBlockHeight(url),
+        this.getReferenceBlockHeight({ endpoints: referenceUrls, chain }),
+        this.getEthSyncing(url),
+        this.getPeers(url),
+      ]);
 
-    let status = ErrorStatus.OK;
-    let conditions = ErrorConditions.HEALTHY;
-    const threshold = Number(BlockHeightThreshold[chain]);
+      const internalHeight = hexToDec(internalBh.result);
+      const externalHeight = externalBh;
+      const numPeers = hexToDec(peers.result);
+      const ethSyncingResult = ethSyncing.result;
+      const delta = externalHeight - internalHeight;
 
-    if (delta > threshold) {
-      status = ErrorStatus.ERROR;
-      conditions = ErrorConditions.NOT_SYNCHRONIZED;
+      let status = ErrorStatus.OK;
+      let conditions = ErrorConditions.HEALTHY;
+      const threshold = Number(BlockHeightThreshold[chain]);
+
+      if (delta > threshold) {
+        status = ErrorStatus.ERROR;
+        conditions = ErrorConditions.NOT_SYNCHRONIZED;
+      }
+
+      return {
+        name,
+        status,
+        conditions,
+        ethSyncing: ethSyncingResult,
+        peers: numPeers,
+        height: {
+          internalHeight,
+          externalHeight,
+          delta,
+        },
+      };
+    } catch (error) {
+      throw new Error(`could not get eth health ${error}`);
     }
-
-    return {
-      name,
-      status,
-      conditions,
-      ethSyncing: ethSyncingResult,
-      peers: numPeers,
-      height: {
-        internalHeight,
-        externalHeight,
-        delta,
-      },
-    };
   }
 
   private getHighestPocketHeight(readings): number {
@@ -270,13 +281,17 @@ export class Service {
         const eth = await this.getEthNodeHealth({ name, ip, port, chain, peer, external });
         return eth;
       } catch (error) {
-        console.error(error);
+        throw new Error(`could not get eth data node health ${error}`);
       }
     }
 
     if (chain === DiscoverTypes.Supported.AVA) {
-      const ava = await this.getAvaHealth({ name, url: `http://${ip}:${port}` });
-      return ava;
+      try {
+        const ava = await this.getAvaHealth({ name, url: `http://${ip}:${port}` });
+        return ava;
+      } catch (error) {
+        throw new Error(`could not get ava data node health ${error}`);
+      }
     }
   }
 
