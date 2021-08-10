@@ -1,0 +1,17 @@
+sudo service datadog-agent restart
+sudo usermod -a -G docker dd-agent
+sudo nano /etc/datadog-agent/conf.d/docker.d/conf.yaml.default
+instances:
+
+  - url: "unix://var/run/docker.sock"
+    new_tag_names: true
+
+sudo nano /etc/datadog-agent/datadog.yaml
+logs_enabled: true
+listeners:
+    - name: docker
+config_providers:
+    - name: docker
+      polling: true
+logs_config:
+    container_collect_all: true
