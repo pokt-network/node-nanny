@@ -268,14 +268,22 @@ export class Service {
         }
       }
 
-      if (results[index].badNodes.length > 0) {
-        results[index].status = ErrorStatus.ERROR;
-        results[index].conditions = ErrorConditions.NOT_SYNCHRONIZED;
+      if (results[index].badNodes.length === 1) {
+        results[index].status = ErrorStatus.WARNING;
+        results[index].conditions = ErrorConditions.NO_RESPONSE_ONE_NODE;
         results[index].details = results[index].badNodes;
-      } else {
+      }
+      if (results[index].badNodes.length > 1) {
+        results[index].status = ErrorStatus.ERROR;
+        results[index].conditions = ErrorConditions.NO_RESPONSE;
+        results[index].details = results[index].badNodes;
+      }
+
+      if (results[index].badNodes.length === 0) {
         results[index].status = ErrorStatus.OK;
         results[index].conditions = ErrorConditions.HEALTHY;
       }
+
       results[index].name = host;
     }
 
