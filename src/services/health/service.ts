@@ -110,6 +110,23 @@ export class Service {
     }
   }
 
+  private async isRpcResponding({ url, chain }): Promise<boolean> {
+    try {
+      if (chain === DiscoverTypes.Supported.AVA) {
+        await this.rpc.post(`${url}/ext/health`, {
+          jsonrpc: "2.0",
+          id: 1,
+          method: "health.getLiveness",
+        });
+      } else {
+        await this.getBlockHeight(url);
+      }
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
   private getBestBlockHeight({ readings, variance }) {
     if (readings.length === 1) {
       return readings[0];
@@ -153,7 +170,7 @@ export class Service {
     });
   }
 
-  private async isNodeOnline({ host, port }) {
+  private async isNodeListening({ host, port }) {
     try {
       const nc = await this.nc({ host, port });
       let status = nc.split(" ");
@@ -163,12 +180,22 @@ export class Service {
     }
   }
 
-  private async getEthNodeHealth({ name, ip, port, chain, peer, external }): Promise<{}> {
+  private async getEthNodeHealth({
+    name,
+    ip,
+    port,
+    chain,
+    peer,
+    external,
+    isPeerOnline,
+  }): Promise<{}> {
     const referenceUrls = external;
-    if (peer) {
+
+    if (isPeerOnline) {
       const { ip, port } = peer;
       referenceUrls.push(`http://${ip}:${port}`);
     }
+
     const url = `http://${ip}:${port}`;
 
     try {
@@ -257,9 +284,17 @@ export class Service {
 
   private async getDataNodeHealth({ node, peer, external }): Promise<any> {
     const { name, ip, port, chain } = node;
-    const isOnline = await this.isNodeOnline({ host: ip, port });
-    const isPeerOnline = await this.isNodeOnline({ host: peer.ip, port: peer.port });
-    if (!isOnline) {
+
+    const isNodeListening = await this.isNodeListening({ host: ip, port });
+
+    const isRpcResponding = await this.isRpcResponding({ url: `http://${ip}:${port}`, chain });
+
+    const isPeerRpcResponding = await this.isRpcResponding({
+      url: `http://${peer.ip}:${peer.port}`,
+      chain,
+    });
+
+    if (!isNodeListening) {
       return {
         name,
         status: ErrorStatus.ERROR,
@@ -267,25 +302,28 @@ export class Service {
       };
     }
 
-    if (!isPeerOnline) {
+    if (!isRpcResponding) {
       return {
         name,
         status: ErrorStatus.ERROR,
-        conditions: ErrorConditions.PEER_OFFLINE,
+        conditions: ErrorConditions.NO_RESPONSE,
       };
     }
 
     const isEthVariant = this.ethVariants.includes(chain);
     if (isEthVariant) {
       try {
-        return await this.getEthNodeHealth({ name, ip, port, chain, peer, external });
-      } catch (error) {
-        return {
+        return await this.getEthNodeHealth({
           name,
-          status: ErrorStatus.ERROR,
-          conditions: ErrorConditions.NO_RESPONSE,
-          details: error,
-        };
+          ip,
+          port,
+          chain,
+          peer,
+          external,
+          isPeerOnline: isPeerRpcResponding,
+        });
+      } catch (error) {
+        throw new Error(`could not get eth node health ${error}`);
       }
     }
 
