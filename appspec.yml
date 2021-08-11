@@ -5,6 +5,6 @@ files:
     destination: /home/ubuntu/run
 hooks:
   ApplicationStart:
-    - location: start.sh
+    - location: ./scripts/start.sh
       timeout: 10000
       runas: ubuntu
