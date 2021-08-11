@@ -17,6 +17,15 @@ app.post("/webhook/datadog/monitor", async ({ body }, res) => {
   }
 });
 
+app.post("/webhook/datadog/monitor/rebootpilot", async ({ body }, res) => {
+  try {
+    await alert.processWebhook(body);
+    res.json({ done: true });
+  } catch (error) {
+    res.sendStatus(500);
+  }
+});
+
 app.listen(port, () => {
   console.log(`Webhook api listening at http://localhost:${port}`);
 });
