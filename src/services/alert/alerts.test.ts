@@ -3,8 +3,9 @@ import { AlertChannel, Titles } from "./types";
 
 const alert = new Service();
 
-test.only("", async () => {
-  await alert.processWebhook(recoveredMessage);
+test("stop docker container then start with compose", async () => {
+const res =  await alert.rebootNode({name:"goe1"});
+console.log(res)
   expect(3).toBe(3);
 });
 
