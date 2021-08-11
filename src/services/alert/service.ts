@@ -1,6 +1,7 @@
-import { WARNING } from "@datadog/datadog-api-client/dist/packages/datadog-api-client-v1/models/EventAlertType";
 import { api } from "@pagerduty/pdjs";
 import axios, { AxiosInstance } from "axios";
+import { exec } from "child_process";
+import path from "path";
 
 import {
   DiscordDetails,
@@ -111,6 +112,9 @@ export class Service {
     }
   }
 
+  async processWebhookforReboot(rawMessage) {
+    console.log(rawMessage);
+  }
   async processWebhook(rawMessage) {
     //todo make this better
     let { type, title, msg } = rawMessage;
@@ -143,5 +147,21 @@ export class Service {
     };
 
     return this.sendRichDiscordMessage({ title, msg, color, type, monitor, logs });
+  }
+
+  rebootNode(name) {
+    const script = path.resolve(__dirname, "../../../scripts/agent_reboot.sh");
+    return new Promise((resolve, reject) => {
+      exec(`sh ${script} ${name}`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`nc ${error}`);
+          reject(`error: ${error.message}`);
+        }
+        if (stderr) {
+          resolve(stderr);
+        }
+        resolve(stdout);
+      });
+    });
   }
 }
