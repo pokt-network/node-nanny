@@ -16,9 +16,3 @@ export enum ExternalEndPoints {
   XDAI = "/pocket/monitoring/config/externalEndpoints/bsc",
   AVA = "/pocket/monitoring/config/externalEndpoints/ava",
 }
-
-export enum PocketHosts {
-  A = "a",
-  B = "b",
- // C = "c",
-}
