@@ -15,14 +15,12 @@ class Service {
   private source: Source;
   private sourcePath: string;
   private supported: string[];
-  private pocketHosts: string[];
   constructor({ source = Source.TAG, sourcePath = csvNodes }) {
     this.alert = new Alert();
     this.config = new Config();
     this.source = source;
     this.sourcePath = sourcePath;
     this.supported = Object.keys(Supported);
-    this.pocketHosts = Object.values(ConfigTypes.PocketHosts);
   }
 
   private initEC2() {
@@ -101,27 +99,21 @@ class Service {
   }
 
   async getPocketNodes() {
-    return Promise.all(
-      //todo: get all params with pocket suffix instead of looking at enum
-      this.pocketHosts.map(async (host) => {
-        const { Value } = await this.config.getParamByKey(
-          `${ConfigTypes.ConfigPrefix.POCKET_NODES}/${host}`,
-        );
+    const supported = await this.config.getParamsByPrefix(ConfigTypes.ConfigPrefix.POCKET_NODES);
+    return supported.map(({ Value }) => {
+      let nodes = Value.split(",");
+      const [instance] = nodes;
+      nodes.shift();
 
-        let nodes = Value.split(",");
-        const [instance] = nodes;
-        nodes.shift();
+      const nodesWithName = nodes.map((node) => {
+        return { url: node, name: node.split("//")[1].split(".")[0] };
+      });
 
-        const nodesWithName = nodes.map((node) => {
-          return { url: node, name: node.split("//")[1].split(".")[0] };
-        });
-
-        return {
-          host: instance,
-          nodes: nodesWithName,
-        };
-      }),
-    );
+      return {
+        host: instance,
+        nodes: nodesWithName,
+      };
+    });
   }
 
   async getNodes(): Promise<any> {

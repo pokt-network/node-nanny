@@ -1,13 +1,10 @@
 import AWS from "aws-sdk";
-import { Alert } from "../../services";
 
 import { ConfigPrefix } from "./types";
 
 export class Service {
-  private alert: Alert;
   private client: AWS.SSM;
   constructor() {
-    this.alert = new Alert();
     this.client = new AWS.SSM({ region: "us-east-2" });
   }
 
@@ -42,7 +39,18 @@ export class Service {
       const { Name, Value } = Parameter;
       return { Name, Value };
     } catch (error) {
-      throw new Error(`could not get parambykey ${key}`);
+      throw new Error(`could not get parambykey ${key} ${error}`);
+    }
+  }
+
+  async getParamsByPrefix(suffix: string) {
+    try {
+      const { Parameters } = await this.client.getParametersByPath({ Path: suffix }).promise(); //getParameter({ Name: key }).promise();
+      return Parameters.map(({ Name, Value }) => {
+        return { Name, Value };
+      });
+    } catch (error) {
+      throw new Error(`could not get params by prefix${error}`);
     }
   }
 }
