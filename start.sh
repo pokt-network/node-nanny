@@ -4,5 +4,5 @@ cd /home/ubuntu/run
 pm2 kill
 yarn
 yarn build
-pm2 start dist/index.js
+pm2 start dist --cron-restart="0 * * * *"
 pm2 start dist/api
