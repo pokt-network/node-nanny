@@ -3,6 +3,7 @@ import axios, { AxiosInstance } from "axios";
 import { exec } from "child_process";
 import path from "path";
 
+import { DataDog } from "..";
 import {
   DiscordDetails,
   PagerDutyDetails,
@@ -14,11 +15,13 @@ import {
 } from "./types";
 
 export class Service {
+  private dd: DataDog;
   private dsClient: AxiosInstance;
   private agentClient: AxiosInstance;
   private pdClient: any;
   constructor() {
     this.agentClient = this.initAgentClient();
+    this.dd = new DataDog();
     this.dsClient = this.initDsClient();
     this.pdClient = api({ token: process.env.PAGER_DUTY_API_KEY });
   }
@@ -120,14 +123,15 @@ export class Service {
     }
   }
 
-  async processWebhookforReboot({ title, type }) {
+  async processWebhookforReboot({ title, type, id }) {
     if (type === "error") {
-      let [, node] = title.split("*");
-      const host = node.split("_")[2];
-      node = node.split("_")[1];
+      let namespace = title.split("*")[1];
+      const [, node, host] = namespace.split("_");
       let url = HostsForReboot[host.split("")[1].toUpperCase()];
+
       url = `http://${url}:3001/webhook/datadog/monitor/reboot`;
 
+      console.log(url);
       await this.dsClient.post(DiscordDetails.WEBHOOK_URL, {
         embeds: [
           {
@@ -143,6 +147,9 @@ export class Service {
         ],
       });
 
+      const minutes = 10;
+      await this.dd.muteMonitor({ id, minutes });
+
       try {
         const { data } = await this.agentClient.post(url, { name: node });
         const { info } = data;
@@ -154,7 +161,7 @@ export class Service {
             fields: [
               {
                 name: type.toUpperCase(),
-                value: `${node} ${host} was unresponsive or offline, it has been rebooted \n ${info}`,
+                value: `${node} ${host} was unresponsive or offline, it has been rebooted \n ${info} \n the monitor will be on  mute for the next ${minutes} minutes`,
               },
             ],
           },
@@ -163,7 +170,7 @@ export class Service {
         const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_URL, { embeds });
         return status === 204;
       } catch (error) {
-        throw new Error(`could not process webhook`);
+        throw new Error(`could not process webhook ${error}`);
       }
     }
   }
