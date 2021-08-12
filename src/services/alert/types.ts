@@ -41,6 +41,6 @@ export enum LinkTitles {
 }
 
 export enum HostsForReboot {
-  SHARED_A = "ip-10-0-0-149.us-east-2.compute.internal",
-  SHARED_B = "ip-10-0-1-208.us-east-2.compute.internal",
+  A = "ip-10-0-0-149.us-east-2.compute.internal",
+  B = "ip-10-0-1-208.us-east-2.compute.internal",
 }
