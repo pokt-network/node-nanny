@@ -4,8 +4,8 @@ import { AlertChannel, Titles } from "./types";
 const alert = new Service();
 
 test("stop docker container then start with compose", async () => {
-const res =  await alert.rebootNode({name:"goe1"});
-console.log(res)
+//const res =  await alert.rebootNode({name:"goe1"});
+//console.log(res)
   expect(3).toBe(3);
 });
 
