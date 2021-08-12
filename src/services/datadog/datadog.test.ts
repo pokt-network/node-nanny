@@ -4,7 +4,11 @@ import { DiscoverTypes } from "../../types";
 
 const service = new Service();
 const discover = new Discover({ source: DiscoverTypes.Source.TAG });
-test.only("", async () => {
+test.only("should mute monitor", async () => {
+  // const response = await service.muteMonitor({id:"1845218", minutes: 10});
+
+  // console.log(response)
+
   // let { dataNodes, pocketNodes } = await discover.getNodes();
   // const dataNames = dataNodes.map(({ node }) => {
   //   return {
@@ -19,11 +23,10 @@ test.only("", async () => {
   //     logGroup: `/pocket/nodemonitoring/${host}`
   //   }
   // })
-  
+
   // const names = pocketNames.concat(dataNames)
 
   // await service.createMonitors(names)
-  
+
   expect(3).toBe(3);
 });
-
