@@ -9,6 +9,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.post("/webhook/datadog/monitor/reboot", async ({ body }, res) => {
+  console.log(body)
+  /*
   if (!body.name) {
     res.sendStatus(404);
   }
@@ -19,8 +21,8 @@ app.post("/webhook/datadog/monitor/reboot", async ({ body }, res) => {
   } catch (error) {
     res.sendStatus(500);
   }
+  */
 });
-
 app.listen(port, () => {
   console.log(`Webhook api listening at http://localhost:${port}`);
 });

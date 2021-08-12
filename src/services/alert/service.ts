@@ -14,17 +14,24 @@ import {
 
 export class Service {
   private dsClient: AxiosInstance;
+  private agentClient: AxiosInstance;
   private pdClient: any;
   constructor() {
+    this.agentClient = this.initAgentClient();
     this.dsClient = this.initDsClient();
     this.pdClient = api({ token: process.env.PAGER_DUTY_API_KEY });
   }
 
   private initDsClient() {
-    const instance = axios.create();
-    instance.defaults.headers.common["Content-Type"] = "application/json";
+    return axios.create({
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
-    return instance;
+  private initAgentClient() {
+    return axios.create({
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   private async sendDiscordMessage({ title, details }: { title: Titles; details: any }) {
@@ -64,7 +71,7 @@ export class Service {
     }
   }
 
-  async sendRichDiscordMessage({ title, msg, color, type, monitor, logs }) {
+  async sendRichDiscordMessage({ title, msg, color, type, monitor = null, logs = null }) {
     const embeds = [
       {
         title,
@@ -114,6 +121,8 @@ export class Service {
 
   async processWebhookforReboot(rawMessage) {
     console.log(rawMessage);
+
+    const name = "";
   }
   async processWebhook(rawMessage) {
     //todo make this better
