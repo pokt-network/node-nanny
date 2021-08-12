@@ -88,7 +88,7 @@ export class Service {
       logs,
     ];
     try {
-      const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_TEST, { embeds });
+      const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_URL, { embeds });
       return status === 204;
     } catch (error) {
       throw new Error(`could not send alert to Discord ${error}`);
@@ -128,7 +128,7 @@ export class Service {
       let url = HostsForReboot[host.split("")[1].toUpperCase()];
       url = `http://${url}:3001/webhook/datadog/monitor/reboot`;
 
-      await this.dsClient.post(DiscordDetails.WEBHOOK_TEST, {
+      await this.dsClient.post(DiscordDetails.WEBHOOK_URL, {
         embeds: [
           {
             title,
@@ -160,7 +160,7 @@ export class Service {
           },
         ];
 
-        const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_TEST, { embeds });
+        const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_URL, { embeds });
         return status === 204;
       } catch (error) {
         throw new Error(`could not process webhook`);
