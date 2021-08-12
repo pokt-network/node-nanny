@@ -331,7 +331,12 @@ export class Service {
           isPeerOnline: isPeerRpcResponding,
         });
       } catch (error) {
-        throw new Error(`could not get eth node health ${error}`);
+        return {
+          name,
+          status: ErrorStatus.ERROR,
+          conditions: ErrorConditions.NO_RESPONSE,
+          details: error,
+        };
       }
     }
 
