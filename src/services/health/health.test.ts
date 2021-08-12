@@ -5,7 +5,7 @@ import { BlockHeightVariance } from "./types";
 //const health = new Service();
 //const discover = new Discover({ source: DiscoverTypes.Source.TAG });
 
-test.skip("", async () => {
+test("", async () => {
 
   expect(1).toEqual(1)
 });
