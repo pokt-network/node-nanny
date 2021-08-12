@@ -1,5 +1,8 @@
 import { v1 } from "@datadog/datadog-api-client";
-import * as fs from "fs";
+import axios, { AxiosInstance } from "axios";
+import { config } from "dotenv";
+
+config();
 
 enum LogTypes {
   LOG = "log alert",
@@ -16,16 +19,28 @@ interface LogGroupList {
 }
 
 export class Service {
-  private client: v1.MonitorsApi;
+  private sdkClient: v1.MonitorsApi;
+  private restClient: AxiosInstance;
   constructor() {
-    this.client = this.init();
+    this.sdkClient = this.initSdk();
+    this.restClient = this.initRest();
   }
 
-  private init(): v1.MonitorsApi {
+  private initSdk(): v1.MonitorsApi {
     const configuration = v1.createConfiguration();
     return new v1.MonitorsApi(configuration);
   }
 
+  private initRest() {
+    return axios.create({
+      headers: {
+        "Content-Type": "application/json",
+        "DD-API-KEY": process.env.DD_API_KEY,
+        "DD-APPLICATION-KEY": process.env.DD_APP_KEY,
+      },
+      baseURL: "https://api.datadoghq.eu/api/v1",
+    });
+  }
   async createMonitor({
     name,
     type = LogTypes.LOG,
@@ -45,15 +60,18 @@ export class Service {
       },
     };
 
-    return await this.client.createMonitor(params);
+    return await this.sdkClient.createMonitor(params);
   }
 
+  async getMonitor(id) {
+    return await this.sdkClient.getMonitor({ monitorId: id });
+  }
   async getAllMonitors() {
-    return this.client.listMonitors();
+    return await this.sdkClient.listMonitors();
   }
   async deleteMonitor({ monitorId }) {
     console.log(monitorId);
-    return this.client.deleteMonitor({ monitorId });
+    return await this.sdkClient.deleteMonitor({ monitorId });
   }
 
   async clearAllMonitors() {
@@ -65,8 +83,24 @@ export class Service {
   async createMonitors(list: LogGroupList[]): Promise<boolean> {
     for (const { name, logGroup } of list) {
       const monitor = await this.createMonitor({ name, logGroup });
-      console.log(monitor)
     }
     return true;
+  }
+
+  async muteMonitor({ id, minutes }) {
+    const currentDate = new Date();
+    const futureDate = new Date(currentDate.getTime() + minutes * 60000);
+    const ts = parseInt((new Date(futureDate).getTime() / 1000).toFixed(0));
+    try {
+      const { options } = await this.getMonitor(id);
+      if (options.silenced.hasOwnProperty("*")) {
+        console.log(`already muted`);
+        return -1;
+      }
+      const { data } = await this.restClient.post(`/monitor/${id}/mute?end=${ts}`);
+      return data;
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 }
