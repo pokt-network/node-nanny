@@ -3,10 +3,10 @@ export enum AlertChannel {
   PAGER_DUTY = "pd",
   BOTH = "both",
 }
- 
+
 export enum DiscordDetails {
   WEBHOOK_URL = "***REMOVED***",
-  WEBHOOK_TEST= "***REMOVED***"
+  WEBHOOK_TEST = "***REMOVED***",
 }
 
 export enum PagerDutyDetails {
@@ -38,4 +38,9 @@ export enum DataDogAlertColor {
 export enum LinkTitles {
   MONITOR = "Monitor Status",
   LOGS = "Related Logs",
+}
+
+export enum HostsForReboot {
+  SHARED_A = "ip-10-0-0-149.us-east-2.compute.internal",
+  SHARED_B = "ip-10-0-1-208.us-east-2.compute.internal",
 }
