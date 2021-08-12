@@ -10,6 +10,7 @@ import {
   DataDogAlertColor,
   Titles,
   LinkTitles,
+  HostsForReboot,
 } from "./types";
 
 export class Service {
@@ -87,7 +88,7 @@ export class Service {
       logs,
     ];
     try {
-      const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_URL, { embeds });
+      const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_TEST, { embeds });
       return status === 204;
     } catch (error) {
       throw new Error(`could not send alert to Discord ${error}`);
@@ -119,10 +120,52 @@ export class Service {
     }
   }
 
-  async processWebhookforReboot(rawMessage) {
-    console.log(rawMessage);
+  async processWebhookforReboot({ title, type }) {
+    if (type === "error") {
+      let [, node] = title.split("*");
+      const host = node.split("_")[2];
+      node = node.split("_")[1];
+      let url = HostsForReboot[host.split("")[1].toUpperCase()];
+      url = `http://${url}:3001/webhook/datadog/monitor/reboot`;
 
-    const name = "";
+      await this.dsClient.post(DiscordDetails.WEBHOOK_TEST, {
+        embeds: [
+          {
+            title,
+            color: DataDogAlertColor.ERROR,
+            fields: [
+              {
+                name: type.toUpperCase(),
+                value: `${node} ${host} was unresponsive or offline, rebooting...`,
+              },
+            ],
+          },
+        ],
+      });
+
+      try {
+        const { data } = await this.agentClient.post(url, { name: node });
+        const { info } = data;
+
+        const embeds = [
+          {
+            title,
+            color: DataDogAlertColor.SUCCESS,
+            fields: [
+              {
+                name: type.toUpperCase(),
+                value: `${node} ${host} was unresponsive or offline, it has been rebooted \n ${info}`,
+              },
+            ],
+          },
+        ];
+
+        const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_TEST, { embeds });
+        return status === 204;
+      } catch (error) {
+        throw new Error(`could not process webhook`);
+      }
+    }
   }
   async processWebhook(rawMessage) {
     //todo make this better
