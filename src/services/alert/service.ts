@@ -146,30 +146,33 @@ export class Service {
         ],
       });
 
-      try {
-        const minutes = 10;
-        await this.dd.muteMonitor({ id, minutes });
-        const { data } = await this.agentClient.post(url, { name: node });
-        const { info } = data;
+      if (!(await (await this.dd.getMonitor(id)).options.silenced)) {
+        try {
+          const minutes = 10;
+          await this.dd.muteMonitor({ id, minutes });
+          const { data } = await this.agentClient.post(url, { name: node });
+          const { info } = data;
 
-        const embeds = [
-          {
-            title,
-            color: DataDogAlertColor.SUCCESS,
-            fields: [
-              {
-                name: type.toUpperCase(),
-                value: `${node} ${host} was unresponsive or offline, it has been rebooted \n ${info} \n the monitor will be on  mute for the next ${minutes} minutes`,
-              },
-            ],
-          },
-        ];
+          const embeds = [
+            {
+              title,
+              color: DataDogAlertColor.SUCCESS,
+              fields: [
+                {
+                  name: type.toUpperCase(),
+                  value: `${node} ${host} was unresponsive or offline, it has been rebooted \n ${info} \n the monitor will be on  mute for the next ${minutes} minutes`,
+                },
+              ],
+            },
+          ];
 
-        const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_URL, { embeds });
-        return status === 204;
-      } catch (error) {
-        throw new Error(`could not process webhook ${error}`);
+          const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_URL, { embeds });
+          return status === 204;
+        } catch (error) {
+          throw new Error(`could not process webhook ${error}`);
+        }
       }
+      return;
     }
   }
   async processWebhook(rawMessage) {
