@@ -41,7 +41,7 @@ export class Service {
   private async sendDiscordMessage({ title, details }: { title: Titles; details: any }) {
     const content = `${title} \n ${details}`;
     try {
-      const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_URL, { content });
+      const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_TEST, { content });
       return status === 204;
     } catch (error) {
       throw new Error(`could not send alert to Discord ${error}`);
@@ -91,7 +91,7 @@ export class Service {
       logs,
     ];
     try {
-      const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_URL, { embeds });
+      const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_TEST, { embeds });
       return status === 204;
     } catch (error) {
       throw new Error(`could not send alert to Discord ${error}`);
@@ -124,7 +124,6 @@ export class Service {
   }
 
   async processWebhookforReboot({ title, type, id }) {
-    console.log({ title, type, id });
     if (type === "error") {
       let namespace = title.split("*")[1];
       const [, node, host] = namespace.split("_");
@@ -132,49 +131,50 @@ export class Service {
 
       url = `http://${url}:3001/webhook/datadog/monitor/reboot`;
 
-      console.log(url);
-      await this.dsClient.post(DiscordDetails.WEBHOOK_URL, {
-        embeds: [
-          {
-            title,
-            color: DataDogAlertColor.ERROR,
-            fields: [
-              {
-                name: type.toUpperCase(),
-                value: `${node} ${host} was unresponsive or offline, rebooting...`,
-              },
-            ],
-          },
-        ],
-      });
+      let isMuted = await (await this.dd.getMonitor(id)).options.silenced;
 
-      if (!(await this.dd.getMonitor(id)).options.silenced) {
+      if (!isMuted.hasOwnProperty("*")) {
+        await this.dsClient.post(DiscordDetails.WEBHOOK_TEST, {
+          embeds: [
+            {
+              title,
+              color: DataDogAlertColor.ERROR,
+              fields: [
+                {
+                  name: type.toUpperCase(),
+                  value: `${node} ${host} was unresponsive or offline, rebooting...`,
+                },
+              ],
+            },
+          ],
+        });
+
         try {
           const minutes = 10;
           await this.dd.muteMonitor({ id, minutes });
           const { data } = await this.agentClient.post(url, { name: node });
           const { info } = data;
 
-          const embeds = [
-            {
-              title,
-              color: DataDogAlertColor.SUCCESS,
-              fields: [
-                {
-                  name: type.toUpperCase(),
-                  value: `${node} ${host} was unresponsive or offline, it has been rebooted \n ${info} \n the monitor will be on  mute for the next ${minutes} minutes`,
-                },
-              ],
-            },
-          ];
-
-          const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_URL, { embeds });
+          const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_TEST, {
+            embeds: [
+              {
+                title,
+                color: DataDogAlertColor.SUCCESS,
+                fields: [
+                  {
+                    name: type.toUpperCase(),
+                    value: `${node} ${host} was unresponsive or offline, it has been rebooted \n ${info} \n the monitor will be on  mute for the next ${minutes} minutes`,
+                  },
+                ],
+              },
+            ],
+          });
           return status === 204;
         } catch (error) {
           throw new Error(`could not process webhook ${error}`);
         }
       }
-      return;
+      return false;
     }
   }
   async processWebhook(rawMessage) {
