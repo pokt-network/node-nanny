@@ -41,7 +41,7 @@ export class Service {
   private async sendDiscordMessage({ title, details }: { title: Titles; details: any }) {
     const content = `${title} \n ${details}`;
     try {
-      const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_TEST, { content });
+      const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_URL, { content });
       return status === 204;
     } catch (error) {
       throw new Error(`could not send alert to Discord ${error}`);
@@ -91,7 +91,7 @@ export class Service {
       logs,
     ];
     try {
-      const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_TEST, { embeds });
+      const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_URL, { embeds });
       return status === 204;
     } catch (error) {
       throw new Error(`could not send alert to Discord ${error}`);
@@ -134,7 +134,7 @@ export class Service {
       let isMuted = await (await this.dd.getMonitor(id)).options.silenced;
 
       if (!isMuted.hasOwnProperty("*")) {
-        await this.dsClient.post(DiscordDetails.WEBHOOK_TEST, {
+        await this.dsClient.post(DiscordDetails.WEBHOOK_URL, {
           embeds: [
             {
               title,
@@ -155,7 +155,7 @@ export class Service {
           const { data } = await this.agentClient.post(url, { name: node });
           const { info } = data;
 
-          const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_TEST, {
+          const { status } = await this.dsClient.post(DiscordDetails.WEBHOOK_URL, {
             embeds: [
               {
                 title,
