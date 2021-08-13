@@ -132,6 +132,7 @@ export class Service {
 
       url = `http://${url}:3001/webhook/datadog/monitor/reboot`;
 
+      console.log(url);
       await this.dsClient.post(DiscordDetails.WEBHOOK_URL, {
         embeds: [
           {
