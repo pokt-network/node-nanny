@@ -18,9 +18,10 @@ app.post("/webhook/datadog/monitor", async ({ body }, res) => {
 });
 
 app.post("/webhook/datadog/monitor/rebootpilot", async ({ body }, res) => {
+  console.log(body)
   try {
     await alert.processWebhookforReboot(body);
-    return res.json({ done: true });
+    return res.json({ done: true }).sendStatus(200);
   } catch (error) {
     return res.sendStatus(500);
   }
