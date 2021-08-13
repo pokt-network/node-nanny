@@ -11,18 +11,18 @@ app.use(express.json());
 app.post("/webhook/datadog/monitor", async ({ body }, res) => {
   try {
     await alert.processWebhook(body);
-    res.json({ done: true });
+    return res.json({ done: true });
   } catch (error) {
-    res.sendStatus(500);
+    return res.sendStatus(500);
   }
 });
 
 app.post("/webhook/datadog/monitor/rebootpilot", async ({ body }, res) => {
   try {
     await alert.processWebhookforReboot(body);
-    res.json({ done: true });
+    return res.json({ done: true });
   } catch (error) {
-    res.sendStatus(500);
+    return res.sendStatus(500);
   }
 });
 

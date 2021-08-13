@@ -131,7 +131,6 @@ export class Service {
 
       url = `http://${url}:3001/webhook/datadog/monitor/reboot`;
 
-      console.log(url);
       await this.dsClient.post(DiscordDetails.WEBHOOK_URL, {
         embeds: [
           {
@@ -147,10 +146,9 @@ export class Service {
         ],
       });
 
-      const minutes = 10;
-      await this.dd.muteMonitor({ id, minutes });
-
       try {
+        const minutes = 10;
+        await this.dd.muteMonitor({ id, minutes });
         const { data } = await this.agentClient.post(url, { name: node });
         const { info } = data;
 
