@@ -41,7 +41,6 @@ export enum LinkTitles {
 }
 
 export enum HostsForReboot {
-  A = "ip-10-0-0-55.us-east-2.compute.internal", //"ip-10-0-0-149.us-east-2.compute.internal",
-  B = "ip-10-0-0-55.us-east-2.compute.internal", //"ip-10-0-1-208.us-east-2.compute.internal",
+  A = "ip-10-0-0-149.us-east-2.compute.internal",
+  B = "ip-10-0-1-208.us-east-2.compute.internal",
 }
-//ip-10-0-0-55.us-east-2.compute.internal
