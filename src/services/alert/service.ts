@@ -124,6 +124,7 @@ export class Service {
   }
 
   async processWebhookforReboot({ title, type, id }) {
+    console.log({ title, type, id });
     if (type === "error") {
       let namespace = title.split("*")[1];
       const [, node, host] = namespace.split("_");
@@ -146,7 +147,7 @@ export class Service {
         ],
       });
 
-      if (!(await (await this.dd.getMonitor(id)).options.silenced)) {
+      if (!(await this.dd.getMonitor(id)).options.silenced) {
         try {
           const minutes = 10;
           await this.dd.muteMonitor({ id, minutes });
