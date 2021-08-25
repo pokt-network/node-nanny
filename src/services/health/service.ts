@@ -24,7 +24,7 @@ export class Service {
 
   private initClient() {
     return axios.create({
-      timeout: 10000,
+      timeout: 1000,
       headers: { "Content-Type": "application/json" },
     });
   }
@@ -52,7 +52,7 @@ export class Service {
       });
       return data;
     } catch (error) {
-      console.error(`could not contact blockchain node ${error} ${url}`);
+      throw new Error(`could not contact blockchain node ${error} ${url}`);
     }
   }
 
@@ -105,7 +105,6 @@ export class Service {
       return data;
     } catch (error) {
       console.error(`could not contact pocket node ${error} ${url}`);
-      // this is instead of nc check as the number of pocket nodes will take too long
       return { height: 0 };
     }
   }

@@ -1,22 +1,6 @@
-import { v1 } from "@datadog/datadog-api-client";
 import axios, { AxiosInstance } from "axios";
-import { config } from "dotenv";
-
-config();
-
-enum LogTypes {
-  LOG = "log alert",
-}
-
-enum Thresholds {
-  CRITICAL = 2.0,
-  WARNING = 1.0,
-}
-
-interface LogGroupList {
-  name: string;
-  logGroup: string;
-}
+import { v1 } from "@datadog/datadog-api-client";
+import { ApiDetails, AlertColor, LogTypes, LogGroupList, Thresholds, Webhooks } from "./types";
 
 export class Service {
   private sdkClient: v1.MonitorsApi;
@@ -38,7 +22,7 @@ export class Service {
         "DD-API-KEY": process.env.DD_API_KEY,
         "DD-APPLICATION-KEY": process.env.DD_APP_KEY,
       },
-      baseURL: "https://api.datadoghq.eu/api/v1",
+      baseURL: ApiDetails.BASE_URL,
     });
   }
   async createMonitor({
@@ -47,6 +31,7 @@ export class Service {
     logGroup,
     critical = Thresholds.CRITICAL,
     warning = Thresholds.WARNING,
+    webhook = Webhooks.API_PRODUCTION,
   }) {
     const params: v1.MonitorsApiCreateMonitorRequest = {
       body: {
@@ -56,7 +41,7 @@ export class Service {
           thresholds: { critical, warning },
         },
         query: `logs("status:error source:\\"${logGroup}\\"").index("*").rollup("count").last("5m") > 2`,
-        message: "@webhook-API-Production",
+        message: webhook,
       },
     };
 
@@ -82,7 +67,7 @@ export class Service {
 
   async createMonitors(list: LogGroupList[]): Promise<boolean> {
     for (const { name, logGroup } of list) {
-      const monitor = await this.createMonitor({ name, logGroup });
+      await this.createMonitor({ name, logGroup });
     }
     return true;
   }
@@ -94,7 +79,6 @@ export class Service {
     try {
       const { options } = await this.getMonitor(id);
       if (options.silenced.hasOwnProperty("*")) {
-        console.log(`already muted`);
         return -1;
       }
       const { data } = await this.restClient.post(`/monitor/${id}/mute?end=${ts}`);
@@ -102,5 +86,14 @@ export class Service {
     } catch (error) {
       throw new Error(error);
     }
+  }
+
+  parseWebhookMessage({ msg, id, transition, type, title }) {
+    let [, , host, node, event] = msg.split("\n");
+    const color = AlertColor[type.toUpperCase()];
+    host = host.split("host_")[1];
+    node = node.split("node_")[1];
+    event = event.split("event_")[1];
+    return { event, color, host, node, id, transition, type, title };
   }
 }

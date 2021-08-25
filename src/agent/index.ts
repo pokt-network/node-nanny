@@ -1,5 +1,5 @@
 import express from "express";
-import { Service } from "..";
+import { Service } from "../services/alert";
 
 const alert = new Service();
 const app = express();
@@ -9,10 +9,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.post("/webhook/datadog/monitor/reboot", async ({ body }, res) => {
-  const { name } = body;
   try {
-    const info = await alert.rebootNode(name);
-    return res.json({ done: true, info });
+    return res.json({ done: true });
   } catch (error) {
     throw new Error(error);
   }

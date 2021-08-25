@@ -1,10 +1,8 @@
 import { Service } from "./service";
-import { AlertChannel, Titles } from "./types";
 
 const alert = new Service();
 
 test("stop docker container then start with compose", async () => {
-  //const res = await alert.processWebhookforReboot(criticalError);
   // console.log(res);
   expect(3).toBe(3);
 });

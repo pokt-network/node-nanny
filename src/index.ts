@@ -1,6 +1,9 @@
-import { App } from "./app";
+import { config } from "dotenv";
 import StatsD from "hot-shots";
+import { App } from "./app";
 import "./tracer";
+
+config();
 
 const app = new App();
 const statsd = new StatsD({
