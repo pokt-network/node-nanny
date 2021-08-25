@@ -53,4 +53,8 @@ export class Service {
       throw new Error(`could not get params by prefix${error}`);
     }
   }
+  async getMonitorId({ chain, host }) {
+    const key = `/pocket/monitoring/config/monitor/${chain}/${host}`;
+    return await this.getParamByKey(key);
+  }
 }

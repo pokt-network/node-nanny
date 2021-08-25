@@ -1,6 +1,6 @@
 import { Service } from "./service";
 
-const alert = new Service();
+const event = new Service();
 
 test("", async () => {
   expect(3).toBe(3);

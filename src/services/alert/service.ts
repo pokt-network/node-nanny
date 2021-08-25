@@ -1,8 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import { DiscordDetails, DiscordInput } from "./types";
-
-const WEBHOOK_URL =
-  process.env.NODE_ENV === "dev" ? DiscordDetails.WEBHOOK_TEST : DiscordDetails.WEBHOOK_URL;
+import { SendMessageInput } from "./types";
 
 export class Service {
   private dsClient: AxiosInstance;
@@ -16,10 +13,10 @@ export class Service {
     });
   }
 
-  async sendDiscordMessage({ title, color, fields }: DiscordInput): Promise<boolean> {
+  async sendDiscordMessage({ title, color, fields, channel }: SendMessageInput): Promise<boolean> {
     const embeds = [{ title, color, fields }];
     try {
-      const { status } = await this.dsClient.post(WEBHOOK_URL, { embeds });
+      const { status } = await this.dsClient.post(channel, { embeds });
       return status === 204;
     } catch (error) {
       throw new Error(`could not send alert to Discord ${error}`);

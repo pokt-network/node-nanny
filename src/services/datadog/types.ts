@@ -24,3 +24,8 @@ export enum AlertColor {
   SUCCESS = 3066993,
   WARNING = 16776960,
 }
+
+export enum Status{
+  ALERT = 'Alert',
+  OK = 'OK'
+}

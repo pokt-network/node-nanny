@@ -51,11 +51,16 @@ export class Service {
   async getMonitor(id) {
     return await this.sdkClient.getMonitor({ monitorId: id });
   }
+
+  async getMonitorStatus(id) {
+    const { overallState } = await this.getMonitor(id);
+    return overallState;
+  }
+
   async getAllMonitors() {
     return await this.sdkClient.listMonitors();
   }
   async deleteMonitor({ monitorId }) {
-    console.log(monitorId);
     return await this.sdkClient.deleteMonitor({ monitorId });
   }
 
@@ -89,11 +94,12 @@ export class Service {
   }
 
   parseWebhookMessage({ msg, id, transition, type, title }) {
-    let [, , host, node, event] = msg.split("\n");
+    let [, , chain, host, container, event] = msg.split("\n");
     const color = AlertColor[type.toUpperCase()];
+    chain = chain.split("chain_")[1];
     host = host.split("host_")[1];
-    node = node.split("node_")[1];
+    container = container.split("container_")[1];
     event = event.split("event_")[1];
-    return { event, color, host, node, id, transition, type, title };
+    return { event, color, host, chain, container, id, transition, type, title };
   }
 }
