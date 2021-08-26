@@ -23,9 +23,24 @@ export enum AlertColor {
   ERROR = 15548997,
   SUCCESS = 3066993,
   WARNING = 16776960,
+  INFO = 3447003,
 }
 
-export enum Status{
-  ALERT = 'Alert',
-  OK = 'OK'
+export enum Status {
+  ALERT = "Alert",
+  OK = "OK",
+}
+
+export interface WebhookInput {}
+
+export interface WebhookOutput {
+  event: string;
+  color: number;
+  chain: string;
+  host: string;
+  container: string;
+  id: string;
+  transition: string;
+  type: string;
+  title: string;
 }

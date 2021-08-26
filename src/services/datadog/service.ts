@@ -1,6 +1,14 @@
 import axios, { AxiosInstance } from "axios";
 import { v1 } from "@datadog/datadog-api-client";
-import { ApiDetails, AlertColor, LogTypes, LogGroupList, Thresholds, Webhooks } from "./types";
+import {
+  ApiDetails,
+  AlertColor,
+  LogTypes,
+  LogGroupList,
+  Thresholds,
+  Webhooks,
+  WebhookOutput,
+} from "./types";
 
 export class Service {
   private sdkClient: v1.MonitorsApi;
@@ -65,6 +73,7 @@ export class Service {
   }
 
   async clearAllMonitors() {
+    /** add an exclusion list here so dont nuke the other guys monitors! */
     const list = await this.getAllMonitors();
     const ids = list.map(({ id }) => id);
     return await Promise.all(ids.map(async (monitorId) => await this.deleteMonitor({ monitorId })));
@@ -93,13 +102,14 @@ export class Service {
     }
   }
 
-  parseWebhookMessage({ msg, id, transition, type, title }) {
-    let [, , chain, host, container, event] = msg.split("\n");
+  parseWebhookMessage({ msg, id, transition, type, title, link }) {
+    let [, , chain, host, container, event, backend] = msg.split("\n");
     const color = AlertColor[type.toUpperCase()];
     chain = chain.split("chain_")[1];
     host = host.split("host_")[1];
     container = container.split("container_")[1];
     event = event.split("event_")[1];
-    return { event, color, host, chain, container, id, transition, type, title };
+    backend = backend.split("backend_")[1];
+    return { event, color, host, chain, container, id, transition, type, title, backend, link };
   }
 }
