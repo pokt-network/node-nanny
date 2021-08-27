@@ -14,6 +14,7 @@ export class Service {
 
   private async getStatus(backend) {
     const raw = await this.getCurrentStateByChainCommand(backend);
+    console.log(raw)
     const lines = raw.split("\n");
     const [, , a, b] = lines;
     const aStatusNum = Number(a.split(" ")[5]);
@@ -37,6 +38,7 @@ export class Service {
   }
   private async enableServerCommand({ backend, host }) {
     const cmd = `echo "enable server ${backend}/${host}" | nc -v localhost 9999`;
+    console.log(cmd)
     return new Promise((resolve, reject) => {
       exec(cmd, (error, stdout) => {
         if (error) {
@@ -50,6 +52,8 @@ export class Service {
   async disableServer({ backend, host, chain }) {
     console.log(backend, host);
     const currentStatus = await this.getStatus(backend);
+console.log(currentStatus)
+
     if (currentStatus.allOnline) {
       return await this.disableServerCommand({ backend, host });
       //add some follow up checks here, make sure right one removed
