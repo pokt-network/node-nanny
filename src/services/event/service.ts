@@ -58,7 +58,11 @@ export class Service {
     }
   }
 
+<<<<<<< HEAD
   getDockerEndpoint({ chain, host }):string{
+=======
+  getDockerEndpoint({ chain, host }) {
+>>>>>>> e4fb23b0134abe2bda0974404179b70a47a25286
     for (const prop in Hosts) {
       const [node] = prop.split("_");
       if (chain.toUpperCase() === node) {
@@ -310,7 +314,7 @@ export class Service {
         }
 
         const url = this.getDockerEndpoint({ chain, host });
-        const reboot = await this.agent.post(`http://${url}/webhook/docker/reboot`, {
+        const reboot = await this.agent.post(`http://${url}:3000/webhook/docker/reboot`, {
           name: container,
         });
         await this.dd.muteMonitor({ id, minutes: 5 });
