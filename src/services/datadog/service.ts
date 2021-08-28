@@ -7,7 +7,7 @@ import {
   LogGroupList,
   Thresholds,
   Webhooks,
-  WebhookOutput,
+  EventTransitions,
 } from "./types";
 
 export class Service {
@@ -103,13 +103,22 @@ export class Service {
   }
 
   parseWebhookMessage({ msg, id, transition, type, title, link }) {
-    let [, , chain, host, container, event, backend] = msg.split("\n");
-    const color = AlertColor[type.toUpperCase()];
+    let event;
+
+    let [, , chain, host, container, backend] = msg.split("\n");
+
+    if (transition !== EventTransitions.RE_TRIGGERED) {
+      event = msg.split("\n")[6];
+      console.log(event);
+    } else {
+      event = msg.split("\n")[13];
+    }
+
     chain = chain.split("chain_")[1];
     host = host.split("host_")[1];
     container = container.split("container_")[1];
     event = event.split("event_")[1];
     backend = backend.split("backend_")[1];
-    return { event, color, host, chain, container, id, transition, type, title, backend, link };
+    return { event, host, chain, container, id, transition, type, title, backend, link };
   }
 }
