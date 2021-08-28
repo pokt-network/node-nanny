@@ -1,2 +1,2 @@
 //exclude these hosts from reboot
-export const exclude = []
+export const exclude = ["bsc"];

@@ -31,16 +31,13 @@ export enum Status {
   OK = "OK",
 }
 
-export interface WebhookInput {}
+export enum EventTransitions {
+  TRIGGERED = "Triggered",
+  RE_TRIGGERED = "Re-Triggered",
+  RECOVERED = "Recovered",
+}
 
-export interface WebhookOutput {
-  event: string;
-  color: number;
-  chain: string;
-  host: string;
-  container: string;
-  id: string;
-  transition: string;
-  type: string;
-  title: string;
+export enum EventTypes {
+  ERROR = "error",
+  SUCCESS = "success",
 }
