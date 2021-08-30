@@ -18,6 +18,7 @@ export enum Thresholds {
 
 export enum Webhooks {
   API_PRODUCTION = "@webhook-API-Production",
+  API_DEV = "@webhook-Events_Dev"
 }
 export enum AlertColor {
   ERROR = 15548997,
