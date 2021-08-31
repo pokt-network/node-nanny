@@ -1,6 +1,9 @@
 import express from "express";
+import { config } from "dotenv";
+
 import { Reboot, HAProxy } from "../services";
 
+config();
 const reboot = new Reboot();
 const lb = new HAProxy();
 const app = express();

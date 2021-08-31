@@ -19,7 +19,7 @@ export class Service {
       const { Parameter } = await this.client.getParameter({ Name: key }).promise();
       return Parameter.Value;
     } catch (error) {
-      return false
+      return false;
     }
   }
 
@@ -58,7 +58,22 @@ export class Service {
       throw new Error(`could not set parameter ${error}`);
     }
   }
-
+  
+  async setParameter({ key, value }) {
+    console.log(key, value)
+    try {
+      return await this.client
+        .putParameter({
+          Name: key,
+          Value: String(value),
+          Overwrite: true,
+          Type: "String",
+        })
+        .promise();
+    } catch (error) {
+      throw new Error(`could not set parameter ${error}`);
+    }
+  }
   async setNodeStatus({ chain, host, status }) {
     const response = await this.setParam({
       chain: `${host}_${chain}`,
@@ -68,8 +83,7 @@ export class Service {
     return response;
   }
 
-
-  async getNodeStatus({ chain, host }){
+  async getNodeStatus({ chain, host }) {
     const response = await this.getParam({
       chain: `${host}_${chain}`,
       param: "status",

@@ -7,7 +7,6 @@ config();
 
 test("should construct event object from dd string", async () => {
   const response = await dd.parseWebhookMessage(retrigger);
-  console.log(response)
   expect(response).toHaveProperty("event");
   expect(response).toHaveProperty("host");
   expect(response).toHaveProperty("chain");
@@ -24,6 +23,10 @@ test("should get status of dd monitor", async () => {
   const response = await dd.getMonitorStatus("1867792");
   expect(Object.values(Status)).toContain(response);
 });
+
+test("should store dd tags in ssm", async ()=> {
+//  await dd.storeMonitorIds()
+})
 
 const event = {
   msg:

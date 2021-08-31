@@ -1,19 +1,16 @@
 import axios, { AxiosInstance } from "axios";
 import { v1 } from "@datadog/datadog-api-client";
-import {
-  ApiDetails,
-  AlertColor,
-  LogTypes,
-  LogGroupList,
-  Thresholds,
-  Webhooks,
-  EventTransitions,
-} from "./types";
 
+import { ApiDetails, EventTransitions } from "./types";
+import { Config } from "..";
+
+import { wait } from "../../utils";
 export class Service {
+  private config: Config;
   private sdkClient: v1.MonitorsApi;
   private restClient: AxiosInstance;
   constructor() {
+    this.config = new Config();
     this.sdkClient = this.initSdk();
     this.restClient = this.initRest();
   }
@@ -33,61 +30,6 @@ export class Service {
       baseURL: ApiDetails.BASE_URL,
     });
   }
-  async createMonitor({
-    name,
-    type = LogTypes.LOG,
-    logGroup,
-    critical = Thresholds.CRITICAL,
-    warning = Thresholds.WARNING,
-    webhook = Webhooks.API_DEV,
-  }) {
-    const params: v1.MonitorsApiCreateMonitorRequest = {
-      body: {
-        name,
-        type,
-        options: {
-          thresholds: {
-            critical: 1,
-            warning: null,
-            comparison: ">",
-            period: {
-              name: "1 minute average",
-              value: "last_1m",
-              text: "1 minute",
-              no_data_timeframe: 2,
-              seconds: 60,
-              digit: 1,
-              unit: "minutes",
-              tense: "last",
-            },
-            timeAggregator: "avg",
-          },
-
-          enable_logs_sample: true,
-          notify_audit: false,
-          aggregation: {
-            metric: "count",
-            type: "count",
-          },
-          restriction_query: null,
-          locked: true,
-          renotify_interval: 10,
-          include_tags: true,
-          silenced: {},
-          notify_no_data: false,
-          groupby_simple_monitor: false,
-          escalation_message:
-            "@webhook-Events_Dev\nchain_xdai\nhost_2a\ncontainer_dai1\nbackend_daimainnet\nevent_{{@conditions.name}}_NOT_RESOLVED",
-          new_group_delay: 60,
-        },
-        query: `logs("status:error source:\\"${logGroup}\\"").index("*").rollup("count").last("5m") > 2`,
-        message:
-          "@webhook-Events_Dev\nchain_xdai\nhost_2a\ncontainer_dai1\nbackend_daimainnet\nevent_{{@conditions.name}}",
-      },
-    };
-
-    return await this.sdkClient.createMonitor(params);
-  }
 
   async getMonitor(id) {
     return await this.sdkClient.getMonitor({ monitorId: id });
@@ -101,22 +43,13 @@ export class Service {
   async getAllMonitors() {
     return await this.sdkClient.listMonitors();
   }
+
+  async getMonitorsByTag(monitorTags) {
+    return await this.sdkClient.listMonitors({ monitorTags });
+  }
+
   async deleteMonitor({ monitorId }) {
     return await this.sdkClient.deleteMonitor({ monitorId });
-  }
-
-  async clearAllMonitors() {
-    /** add an exclusion list here so dont nuke the other guys monitors! */
-    const list = await this.getAllMonitors();
-    const ids = list.map(({ id }) => id);
-    return await Promise.all(ids.map(async (monitorId) => await this.deleteMonitor({ monitorId })));
-  }
-
-  async createMonitors(list: LogGroupList[]): Promise<boolean> {
-    for (const { name, logGroup } of list) {
-      await this.createMonitor({ name, logGroup });
-    }
-    return true;
   }
 
   async muteMonitor({ id, minutes }) {
@@ -154,51 +87,24 @@ export class Service {
     backend = backend.split("backend_")[1];
     return { event, host, chain, container, id, transition, type, title, backend, link };
   }
-}
-const monitor = {
-  id: 1867792,
-  name: "Template",
-  type: "log alert",
-  query:
-    'logs("status:error source:\\"/pocket/nodemonitoring/shared-2b/kov\\"").index("*").rollup("count").by("@conditions").last("1m") > 1',
-  message:
-    "@webhook-Events_Dev\nchain_xdai\nhost_2a\ncontainer_dai1\nbackend_daimainnet\nevent_{{@conditions.name}}",
-  tags: ["template"],
-  options: {
-    thresholds: {
-      critical: 1,
-      warning: null,
-      comparison: ">",
-      period: {
-        name: "1 minute average",
-        value: "last_1m",
-        text: "1 minute",
-        no_data_timeframe: 2,
-        seconds: 60,
-        digit: 1,
-        unit: "minutes",
-        tense: "last",
-      },
-      timeAggregator: "avg",
-    },
 
-    enable_logs_sample: true,
-    notify_audit: false,
-    aggregation: {
-      metric: "count",
-      type: "count",
-      groupBy: ["log_conditions"],
-    },
-    restriction_query: null,
-    locked: true,
-    renotify_interval: 10,
-    include_tags: true,
-    silenced: {},
-    notify_no_data: false,
-    groupby_simple_monitor: false,
-    escalation_message:
-      "@webhook-Events_Dev\nchain_xdai\nhost_2a\ncontainer_dai1\nbackend_daimainnet\nevent_{{@conditions.name}}_NOT_RESOLVED",
-    new_group_delay: 60,
-  },
-  priority: null,
-};
+  async storeMonitorIds() {
+    const monitors = await this.getMonitorsByTag("Smart_Monitor");
+
+    const ids = monitors.map((monitor) => {
+      return {
+        id: monitor.id,
+        chain: monitor.message.split("\n")[1].split("_")[1],
+        host: monitor.message.split("\n")[2].split("_")[1],
+      };
+    });
+
+    for (const { id, chain, host } of ids) {
+      const key = `/pocket/monitoring/config/monitor/${chain}/${host.toUpperCase()}`;
+      await wait(1000)
+      await this.config.setParameter({ key, value: id });
+
+      console.log(key);
+    }
+  }
+}

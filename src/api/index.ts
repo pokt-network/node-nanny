@@ -1,6 +1,8 @@
 import express from "express";
+import { config } from "dotenv";
 import { Event } from "../services";
 
+config();
 const event = new Event();
 const app = express();
 const port = 3000;
