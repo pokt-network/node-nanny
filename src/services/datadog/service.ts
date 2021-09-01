@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import { v1 } from "@datadog/datadog-api-client";
+import { v1, v2 } from "@datadog/datadog-api-client";
 
 import { ApiDetails, EventTransitions } from "./types";
 import { Config } from "..";
@@ -9,8 +9,10 @@ export class Service {
   private config: Config;
   private sdkClient: v1.MonitorsApi;
   private restClient: AxiosInstance;
+  private ddlogs: v2.LogsApi;
   constructor() {
     this.config = new Config();
+    this.ddlogs = this.logsInitSdk();
     this.sdkClient = this.initSdk();
     this.restClient = this.initRest();
   }
@@ -19,6 +21,11 @@ export class Service {
     const configuration = v1.createConfiguration();
     return new v1.MonitorsApi(configuration);
   }
+  private logsInitSdk(): v2.LogsApi {
+    const configuration = v2.createConfiguration();
+    return new v2.LogsApi(configuration);
+  }
+
 
   private initRest() {
     return axios.create({
@@ -46,6 +53,30 @@ export class Service {
 
   async getMonitorsByTag(monitorTags) {
     return await this.sdkClient.listMonitors({ monitorTags });
+  }
+
+  async getLogs({ instance, container }) {
+
+    let params: v2.LogsApiListLogsRequest = {
+      body: {
+        filter: {
+          from: "now-5m",
+          query: `host:${instance} container_name:${container}`,
+          to: "now",
+        },
+        options: {
+          timeOffset: -8,
+        },
+        sort: "timestamp",
+      },
+    };
+
+
+
+    return await (await this.ddlogs.listLogs(params)).data.map(({ attributes }) => {
+      const { timestamp, service, message } = attributes
+      return {timestamp, service, message}
+    })
   }
 
   async deleteMonitor({ monitorId }) {

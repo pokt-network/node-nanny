@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 
-import { DataDog, Alert, Config, Reboot } from "..";
+import { DataDog, Alert, Config, Health } from "..";
 import { AlertColor } from "../datadog/types";
 import {
   DataDogMonitorStatus,
@@ -12,8 +12,10 @@ import {
   LoadBalancerStatus,
   Hosts,
   SupportedBlockChains,
+  InstanceIds
 } from "./types";
 import { exclude } from "./exclude";
+import { VALUE } from "@datadog/datadog-api-client/dist/packages/datadog-api-client-v1/models/TimeseriesWidgetLegendColumn";
 /**
  * This class functions as an event consumer for DataDog alerts.
  * Events are dependant on parsing format in parseWebhookMessage in the DataDog Service
@@ -24,11 +26,13 @@ export class Service {
   private alert: Alert;
   private config: Config;
   private dd: DataDog;
+  private health: Health;
   constructor() {
     this.agent = this.initAgentClient();
     this.alert = new Alert();
     this.config = new Config();
     this.dd = new DataDog();
+    this.health = new Health()
   }
 
   private initAgentClient() {
@@ -39,10 +43,8 @@ export class Service {
   private async isPeerOk({ chain, host }) {
     const hosts = Object.keys(LoadBalancerHosts);
     const peer = hosts.filter((h) => !(h == host.toUpperCase(host))).join("");
-    console.log({chain, host, peer})
     const { Value: monitorId } = await this.config.getMonitorId({ chain, host: peer });
 
-    console.log(await this.dd.getMonitorStatus(monitorId))
     return (await this.dd.getMonitorStatus(monitorId)) !== DataDogMonitorStatus.ALERT;
   }
   async disableServer({ hostname, backend, host }) {
@@ -71,6 +73,25 @@ export class Service {
 
     return;
   }
+
+  getHostId({ chain, host }): string {
+    for (const prop in InstanceIds) {
+      const [node] = prop.split("_");
+      if (chain.toUpperCase() === node) {
+        return InstanceIds[`${node}_${host}`];
+      }
+      return InstanceIds[`shared_${host}`];
+    }
+
+    return;
+  }
+
+  async getBestNode() {
+
+
+    //
+  }
+
   async processEvent(raw) {
     const {
       event,
@@ -85,19 +106,6 @@ export class Service {
       link,
     } = await this.dd.parseWebhookMessage(raw);
 
-    console.log({
-      event,
-      chain,
-      host,
-      container,
-      id,
-      transition,
-      type,
-      title,
-      backend,
-      link,
-    });
-
     const status = await this.config.getNodeStatus({ chain, host });
 
     if (!status) {
@@ -106,6 +114,23 @@ export class Service {
 
     if (transition === EventTransitions.TRIGGERED) {
       if (type === EventTypes.ERROR) {
+
+        const logs = await this.dd.getLogs({ instance: await this.getHostId({ chain, host }), container })
+
+        const fields = logs.map(({ service, timestamp, message }) => {
+          return {
+            name: `${timestamp}-${service}`,
+            value: `${`${message}`}`
+          }
+        })
+
+        await this.alert.sendDiscordMessage({
+          title,
+          color: AlertColor.INFO,
+          channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
+          fields
+        });
+
         if (event === BlockChainMonitorEvents.OFFLINE) {
           await this.alert.sendDiscordMessage({
             title,
@@ -131,11 +156,7 @@ export class Service {
               {
                 name: "Warning",
                 value: `${chain}/${host} status is ${event} \n 
-              The load balancer will automatically prevent traffic from being sent to this node. \n
-              If it does not recover in 10 minutes it will be rebooted. \n
-              Reboots only apply to Docker containers. \n
-              Please manually reboot non-Docker nodes host if there is a second alert for ${chain}/${host} \n
-              See event ${link}`,
+                        See event ${link}`,
               },
             ],
           });
@@ -156,6 +177,10 @@ export class Service {
             });
 
             if (!await this.isPeerOk({ chain, host })) {
+
+
+
+
               await this.alert.sendDiscordMessage({
                 title,
                 color: AlertColor.ERROR,
@@ -167,7 +192,12 @@ export class Service {
                   },
                 ],
               });
+
+
+
               return;
+
+
             }
 
             await this.alert.sendDiscordMessage({
@@ -328,7 +358,7 @@ export class Service {
         }
 
         const url = this.getDockerEndpoint({ chain, host });
-        const reboot = await this.agent.post(`http://${url}:3001/webhook/docker/reboot`, {
+        const { data: reboot } = await this.agent.post(`http://${url}:3001/webhook/docker/reboot`, {
           name: container,
         });
         await this.dd.muteMonitor({ id, minutes: 5 });
@@ -348,7 +378,6 @@ export class Service {
 
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED_NOT_RESOLVED) {
         //check lb status
-
         return await this.alert.sendDiscordMessage({
           title,
           color: AlertColor.ERROR,

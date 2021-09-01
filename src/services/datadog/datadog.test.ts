@@ -24,8 +24,13 @@ test("should get status of dd monitor", async () => {
   expect(Object.values(Status)).toContain(response);
 });
 
-test("should store dd tags in ssm", async ()=> {
-//  await dd.storeMonitorIds()
+test("should store dd tags in ssm", async () => {
+  //  await dd.storeMonitorIds()
+})
+
+test("should get logs from datadog", async () => {
+  const logs = await dd.getLogs({ instance: "i-0fb709e897295a622", container: "goe1" })
+
 })
 
 const event = {
