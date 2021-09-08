@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 
-import { DataDog, Alert, Config, Health } from "..";
+import { DataDog, Alert, Config } from "..";
 import { AlertColor } from "../datadog/types";
 import {
   DataDogMonitorStatus,
@@ -15,7 +15,6 @@ import {
   InstanceIds
 } from "./types";
 import { exclude } from "./exclude";
-import { VALUE } from "@datadog/datadog-api-client/dist/packages/datadog-api-client-v1/models/TimeseriesWidgetLegendColumn";
 /**
  * This class functions as an event consumer for DataDog alerts.
  * Events are dependant on parsing format in parseWebhookMessage in the DataDog Service
@@ -26,13 +25,11 @@ export class Service {
   private alert: Alert;
   private config: Config;
   private dd: DataDog;
-  private health: Health;
   constructor() {
     this.agent = this.initAgentClient();
     this.alert = new Alert();
     this.config = new Config();
     this.dd = new DataDog();
-    this.health = new Health()
   }
 
   private initAgentClient() {
@@ -41,6 +38,7 @@ export class Service {
     });
   }
   private async isPeerOk({ chain, host }) {
+    //find a better way to determine peer
     const hosts = Object.keys(LoadBalancerHosts);
     const peer = hosts.filter((h) => !(h == host.toUpperCase(host))).join("");
     const { Value: monitorId } = await this.config.getMonitorId({ chain, host: peer });
@@ -48,15 +46,17 @@ export class Service {
     return (await this.dd.getMonitorStatus(monitorId)) !== DataDogMonitorStatus.ALERT;
   }
   async disableServer({ hostname, backend, host }) {
+    //should hit both lbs
     try {
-      await this.agent.post(`http://${hostname}:3001/webhook/lb/disable`, { backend, host });
+      return await this.agent.post(`http://${hostname}:3001/webhook/lb/disable`, { backend, host });
     } catch (error) {
       throw new Error(`could not contact agent to disable ${error}`);
     }
   }
   async enableServer({ hostname, backend, host }) {
+    //should hit both lbs
     try {
-      await this.agent.post(`http://${hostname}:3001/webhook/lb/enable`, { backend, host });
+      return await this.agent.post(`http://${hostname}:3001/webhook/lb/enable`, { backend, host });
     } catch (error) {
       throw new Error(`could not contact agent to enable ${error}`);
     }
@@ -68,28 +68,29 @@ export class Service {
       if (chain.toUpperCase() === node) {
         return Hosts[`${node}_${host.toUpperCase()}`];
       }
-      return Hosts[`SHARED_${host.toUpperCase()}`];
     }
-
-    return;
+    return Hosts[`SHARED_${host.toUpperCase()}`];
   }
 
   getHostId({ chain, host }): string {
     for (const prop in InstanceIds) {
       const [node] = prop.split("_");
-      if (chain.toUpperCase() === node) {
+      if (chain === node) {
         return InstanceIds[`${node}_${host}`];
       }
-      return InstanceIds[`shared_${host}`];
-    }
 
-    return;
+    }
+    return InstanceIds[`shared_${host}`];
   }
 
-  async getBestNode() {
-
-
-    //
+  async getBlockHeightDifference({ chain, host }) {
+    const hosts = Object.keys(LoadBalancerHosts);
+    const peer = hosts.filter((h) => !(h == host.toUpperCase(host))).join("").toLowerCase();
+    let logs = await this.dd.getHealthLogs({ chain, host })
+    const peerLogs = await this.dd.getHealthLogs({ chain, host: peer })
+    logs = logs.concat(peerLogs)
+    logs = logs.sort((a, b) => a.delta - b.delta)
+    return { best: logs[0], worst: logs[logs.length - 1] }
   }
 
   async processEvent(raw) {
@@ -106,6 +107,20 @@ export class Service {
       link,
     } = await this.dd.parseWebhookMessage(raw);
 
+
+    console.log({
+      event,
+      chain,
+      host,
+      container,
+      id,
+      transition,
+      type,
+      title,
+      backend,
+      link,
+    })
+
     const status = await this.config.getNodeStatus({ chain, host });
 
     if (!status) {
@@ -113,24 +128,109 @@ export class Service {
     }
 
     if (transition === EventTransitions.TRIGGERED) {
-      if (type === EventTypes.ERROR) {
 
-        const logs = await this.dd.getLogs({ instance: await this.getHostId({ chain, host }), container })
+      const instance = await this.getHostId({ chain, host })
+      const logs = await this.dd.getContainerLogs({ instance, container })
 
-        const fields = logs.map(({ service, timestamp, message }) => {
-          return {
-            name: `${timestamp}-${service}`,
-            value: `${`${message}`}`
+      const fields = logs.map(({ service, timestamp, message }) => {
+        return {
+          name: `${timestamp}-${service}`,
+          value: `${`${message}`}`
+        }
+      })
+
+      await this.alert.sendDiscordMessage({
+        title,
+        color: AlertColor.INFO,
+        channel: DiscordChannel.WEBHOOK_LOGS,
+        fields
+      });
+
+
+      //Not Syncronized and the node is in operation
+      if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
+        if (status === LoadBalancerStatus.ONLINE) {
+          await this.alert.sendDiscordMessage({
+            title,
+            color: AlertColor.ERROR,
+            channel: DiscordChannel.WEBHOOK_CRITICAL,
+            fields: [
+              {
+                name: "Error",
+                value: `${chain}/${host} is ${event} \n See event ${link}`,
+              },
+            ],
+          });
+
+          // if (!await this.isPeerOk({ chain, host })) {
+          //   //Both nodes are out of sync
+          //   let { worst, best } = await this.getBlockHeightDifference({ chain, host })
+          //   const hostname = LoadBalancerHosts[host.toUpperCase()];
+          //   try {
+          //     const res = await this.disableServer({ hostname, backend, host: worst.host });
+          //     await this.config.setNodeStatus({ chain, host, status: LoadBalancerStatus.OFFLINE });
+          //     await this.alert.sendDiscordMessage({
+          //       title,
+          //       color: AlertColor.INFO,
+          //       channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
+          //       fields: [
+          //         {
+          //           name: "Looking for best node",
+          //           value: `Removed ${chain}/${worst.host} from load balancer, it will be restored once healthy again \n
+          //           The best node is ${best.delta} blocks out of sync \n
+          //           Confirm action => link http://ec2-18-118-59-87.us-east-2.compute.amazonaws.com:8050/;up?scope=${backend}
+          //           `,
+          //         },
+          //       ],
+          //     });
+          //   } catch (error) {
+          //     await this.alert.sendDiscordMessage({
+          //       title,
+          //       color: AlertColor.ERROR,
+          //       channel: DiscordChannel.WEBHOOK_ERRORS,
+          //       fields: [
+          //         {
+          //           name: "error",
+          //           value: `could not remove server ${error}`,
+          //         },
+          //       ],
+          //     });
+          //   }
+          // }
+
+          try {
+            const hostname = LoadBalancerHosts[host.toUpperCase()];
+            await this.disableServer({ hostname, backend, host });
+            await this.config.setNodeStatus({ chain, host, status: LoadBalancerStatus.OFFLINE });
+            await this.alert.sendDiscordMessage({
+              title,
+              color: AlertColor.INFO,
+              channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
+              fields: [
+                {
+                  name: "Removing node from rotation",
+                  value: `Removed ${chain}/${host} from load balancer, it will be restored once healthy again \n
+                    View Status: http://ec2-18-118-59-87.us-east-2.compute.amazonaws.com:8050/;up?scope=${backend}
+                  `,
+                },
+              ],
+            });
+          } catch (error) {
+            await this.alert.sendDiscordMessage({
+              title,
+              color: AlertColor.ERROR,
+              channel: DiscordChannel.WEBHOOK_ERRORS,
+              fields: [
+                {
+                  name: "error",
+                  value: `could not remove server ${error}`,
+                },
+              ],
+            });
           }
-        })
+        }
 
-        await this.alert.sendDiscordMessage({
-          title,
-          color: AlertColor.INFO,
-          channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
-          fields
-        });
-
+        //node is offline
         if (event === BlockChainMonitorEvents.OFFLINE) {
           await this.alert.sendDiscordMessage({
             title,
@@ -147,122 +247,39 @@ export class Service {
             ],
           });
         }
-        if (event === BlockChainMonitorEvents.NO_RESPONSE) {
-          await this.alert.sendDiscordMessage({
-            title,
-            color: AlertColor.WARNING,
-            channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
-            fields: [
-              {
-                name: "Warning",
-                value: `${chain}/${host} status is ${event} \n 
-                        See event ${link}`,
-              },
-            ],
-          });
-        }
-
-        if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
-          if (status === LoadBalancerStatus.ONLINE) {
-            await this.alert.sendDiscordMessage({
-              title,
-              color: AlertColor.ERROR,
-              channel: DiscordChannel.WEBHOOK_CRITICAL,
-              fields: [
-                {
-                  name: "Error",
-                  value: `${chain}/${host} is ${event} \n See event ${link}`,
-                },
-              ],
-            });
-
-            if (!await this.isPeerOk({ chain, host })) {
-
-
-
-
-              await this.alert.sendDiscordMessage({
-                title,
-                color: AlertColor.ERROR,
-                channel: DiscordChannel.WEBHOOK_CRITICAL,
-                fields: [
-                  {
-                    name: "CRITICAL ERROR!",
-                    value: `Both ${chain} nodes are unhealthy`,
-                  },
-                ],
-              });
-
-
-
-              return;
-
-
-            }
-
-            await this.alert.sendDiscordMessage({
-              title,
-              color: AlertColor.INFO,
-              channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
-              fields: [
-                {
-                  name: "Fixing",
-                  value: `Removing ${chain}/${host} from load balancer`,
-                },
-              ],
-            });
-
-            const hostname = LoadBalancerHosts[host.toUpperCase()];
-
-            try {
-              await this.disableServer({ hostname, backend, host });
-              await this.config.setNodeStatus({ chain, host, status: LoadBalancerStatus.OFFLINE });
-              await this.alert.sendDiscordMessage({
-                title,
-                color: AlertColor.INFO,
-                channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
-                fields: [
-                  {
-                    name: "Fixing",
-                    value: `Removed ${chain}/${host} from load balancer, it will be restored once healthy again`,
-                  },
-                ],
-              });
-            } catch (error) {
-              await this.alert.sendDiscordMessage({
-                title,
-                color: AlertColor.ERROR,
-                channel: DiscordChannel.WEBHOOK_CRITICAL,
-                fields: [
-                  {
-                    name: "error",
-                    value: `could not remove server ${error}`,
-                  },
-                ],
-              });
-            }
-            return;
-          }
-
-          if (status === LoadBalancerStatus.OFFLINE) {
-            await this.alert.sendDiscordMessage({
-              title,
-              color: AlertColor.ERROR,
-              channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
-              fields: [
-                {
-                  name: "error",
-                  value: "Node is still out of synch",
-                },
-              ],
-            });
-          }
-        }
+      }
+      if (event === BlockChainMonitorEvents.NO_RESPONSE) {
+        await this.alert.sendDiscordMessage({
+          title,
+          color: AlertColor.WARNING,
+          channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
+          fields: [
+            {
+              name: "Warning",
+              value: `${chain}/${host} status is ${event} \n 
+              See event ${link}`,
+            },
+          ],
+        });
+      }
+      if (status === LoadBalancerStatus.OFFLINE) {
+        await this.alert.sendDiscordMessage({
+          title,
+          color: AlertColor.WARNING,
+          channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
+          fields: [
+            {
+              name: "error",
+              value: "Node is still out of synch",
+            },
+          ],
+        });
       }
     }
 
+
     if (transition === EventTransitions.RECOVERED) {
-      if (event === BlockChainMonitorEvents.HEALTHY) {
+      if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
         if (status === LoadBalancerStatus.ONLINE) {
           //this case is for when NO_RESPONSE recovers
           await this.alert.sendDiscordMessage({
@@ -281,6 +298,7 @@ export class Service {
         if (status === LoadBalancerStatus.OFFLINE) {
           //this case is to put the node back into rotation
           await this.config.setNodeStatus({ chain, host, status: LoadBalancerStatus.ONLINE });
+
           await this.alert.sendDiscordMessage({
             title,
             color: AlertColor.INFO,
@@ -300,12 +318,14 @@ export class Service {
 
             await this.alert.sendDiscordMessage({
               title,
-              color: AlertColor.INFO,
+              color: AlertColor.SUCCESS,
               channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
               fields: [
                 {
-                  name: "Fixed!",
-                  value: `Added ${chain}/${host} back to load balancer`,
+                  name: "Restored",
+                  value: `Added ${chain}/${host} back to load balancer \n
+                  View Status: http://ec2-18-118-59-87.us-east-2.compute.amazonaws.com:8050/;up?scope=${backend}
+                `,
                 },
               ],
             });
@@ -313,11 +333,11 @@ export class Service {
             await this.alert.sendDiscordMessage({
               title,
               color: AlertColor.ERROR,
-              channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
+              channel: DiscordChannel.WEBHOOK_ERRORS,
               fields: [
                 {
                   name: "error",
-                  value: `could not remove server ${error}`,
+                  value: `could not restore server ${error}`,
                 },
               ],
             });
@@ -326,7 +346,7 @@ export class Service {
           await this.alert.sendDiscordMessage({
             title,
             color: AlertColor.SUCCESS,
-            channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
+            channel: DiscordChannel.WEBHOOK_CRITICAL,
             fields: [
               {
                 name: "Success",
@@ -335,10 +355,40 @@ export class Service {
             ],
           });
         }
+
+      }
+
+      if (event === BlockChainMonitorEvents.NO_RESPONSE) {
+        return await this.alert.sendDiscordMessage({
+          title,
+          color: AlertColor.SUCCESS,
+          channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
+          fields: [
+            {
+              name: "Restored",
+              value: `${chain}/${host} is now responding to requests`,
+            },
+          ],
+        });
       }
     }
 
+
+    //Retriggered 
     if (transition === EventTransitions.RE_TRIGGERED) {
+      if (event == BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
+        return await this.alert.sendDiscordMessage({
+          title,
+          color: AlertColor.WARNING,
+          channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
+          fields: [
+            {
+              name: "Alert",
+              value: `${chain}/${host} is still out of sync`,
+            },
+          ],
+        });
+      }
       if (
         event === BlockChainMonitorEvents.NO_RESPONSE_NOT_RESOLVED ||
         event === BlockChainMonitorEvents.OFFLINE
@@ -347,7 +397,7 @@ export class Service {
           return await this.alert.sendDiscordMessage({
             title,
             color: AlertColor.INFO,
-            channel: DiscordChannel.WEBHOOK_CRITICAL,
+            channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
             fields: [
               {
                 name: "Alert",
@@ -357,7 +407,8 @@ export class Service {
           });
         }
 
-        const url = this.getDockerEndpoint({ chain, host });
+        const url = this.getDockerEndpoint({ chain, host })
+
         const { data: reboot } = await this.agent.post(`http://${url}:3001/webhook/docker/reboot`, {
           name: container,
         });
@@ -376,20 +427,6 @@ export class Service {
         });
       }
 
-      if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED_NOT_RESOLVED) {
-        //check lb status
-        return await this.alert.sendDiscordMessage({
-          title,
-          color: AlertColor.ERROR,
-          channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
-          fields: [
-            {
-              name: "Alert",
-              value: `${chain}/${host} is still not synchronized and will remain out of rotation`,
-            },
-          ],
-        });
-      }
     }
   }
 }

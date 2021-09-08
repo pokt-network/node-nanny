@@ -28,8 +28,15 @@ test("should store dd tags in ssm", async () => {
   //  await dd.storeMonitorIds()
 })
 
-test("should get logs from datadog", async () => {
-  const logs = await dd.getLogs({ instance: "i-0fb709e897295a622", container: "goe1" })
+test("should get container logs from datadog", async () => {
+  const logs = await dd.getContainerLogs({ instance: "i-0fb709e897295a622", container: "goe1" })
+
+})
+
+test("should get health logs from datadog", async () => {
+  const logs = await dd.getHealthLogs({ host: "2a", chain: "bsc" })
+
+  //console.log(logs)
 
 })
 

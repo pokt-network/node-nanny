@@ -55,8 +55,7 @@ export class Service {
     return await this.sdkClient.listMonitors({ monitorTags });
   }
 
-  async getLogs({ instance, container }) {
-
+  async getContainerLogs({ instance, container }) {
     let params: v2.LogsApiListLogsRequest = {
       body: {
         filter: {
@@ -67,16 +66,34 @@ export class Service {
         options: {
           timeOffset: -8,
         },
-        sort: "timestamp",
+        sort: "-timestamp",
       },
     };
 
-
-
     return await (await this.ddlogs.listLogs(params)).data.map(({ attributes }) => {
       const { timestamp, service, message } = attributes
-      return {timestamp, service, message}
+      return { timestamp, service, message }
     })
+  }
+
+  async getHealthLogs({ chain, host }) {
+    let params: v2.LogsApiListLogsRequest = {
+      body: {
+        filter: {
+          from: "now-2m",
+          query: `service:"/pocket/nodemonitoring/binance-${host}/${chain}"`,
+          to: "now",
+        },
+        options: {
+          timeOffset: -8,
+        },
+        sort: "timestamp",
+      },
+    };
+    return await (await this.ddlogs.listLogs(params)).data.map(({ attributes }) => {
+      return { host, condition: attributes.attributes.conditions, status: attributes.attributes.status, delta: attributes.attributes.height.delta }
+    })
+
   }
 
   async deleteMonitor({ monitorId }) {
@@ -100,17 +117,7 @@ export class Service {
   }
 
   parseWebhookMessage({ msg, id, transition, type, title, link }) {
-    let event;
-
-    let [, , chain, host, container, backend] = msg.split("\n");
-
-    if (transition !== EventTransitions.RE_TRIGGERED) {
-      event = msg.split("\n")[6];
-      console.log(event);
-    } else {
-      event = msg.split("\n")[13];
-    }
-
+    let [, , chain, host, container, backend, event] = msg.split("\n");
     chain = chain.split("chain_")[1];
     host = host.split("host_")[1];
     container = container.split("container_")[1];
@@ -134,8 +141,6 @@ export class Service {
       const key = `/pocket/monitoring/config/monitor/${chain}/${host.toUpperCase()}`;
       await wait(1000)
       await this.config.setParameter({ key, value: id });
-
-      console.log(key);
     }
   }
 }

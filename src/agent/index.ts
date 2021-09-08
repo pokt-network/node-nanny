@@ -26,11 +26,13 @@ app.post("/webhook/docker/reboot", async ({ body }, res) => {
 
 app.post("/webhook/lb/disable", async ({ body }, res) => {
   const { backend, host } = body;
+  console.log(body)
   try {
     const status = await lb.disableServer({ backend, host });
     console.log(status)
     return res.json({ done: true });
   } catch (error) {
+    console.log(error)
     return res.status(500).send(error);
   }
 });
