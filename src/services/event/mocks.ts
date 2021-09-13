@@ -1,6 +1,6 @@
 import { BlockChainMonitorEvents, EventTransitions, EventTypes } from "./types";
 
-const constructEvent = ({ chain, host, container, backend, event, transition, type, name }) => {
+const constructEvent = ({ chain, host, container, backend, event, transition, type, name, id }) => {
     return {
         msg: '%%%\n' +
             '@webhook-Events_Dev\n' +
@@ -24,7 +24,7 @@ const constructEvent = ({ chain, host, container, backend, event, transition, ty
             '- - -\n' +
             '\n' +
             '[[Monitor Status](https://app.datadoghq.eu/monitors/2096310?to_ts=1631036310000&group=%40conditions%3ANOT_SYNCHRONIZED&from_ts=1631035410000)] · [[Edit Monitor](https://app.datadoghq.eu/monitors#2096310/edit)] · [[Related Logs](https://app.datadoghq.eu/logs/analytics?index=%2A&to_ts=1631036310000&agg_t=count&agg_m=count&agg_q=%40conditions&from_ts=1631035410000&live=false&query=status%3Aerror+source%3A%22%2Fpocket%2Fnodemonitoring%2Fbinance-2b%2Fbsc%22)]',
-        id: '2096310',
+        id,
         transition,
         type,
         title: `[${transition} on {@conditions:${event}}] ${name}`,
@@ -147,23 +147,23 @@ const nodes = [
     //     host: "2b",
     //     container: "goe1",
     //     backend: "ethgoerli",
-    // },
+    // // },
     {
-        id: "2096277",
+        id: "2098084",//"2096277",
         name: "Binance Smart Chain Archival US-East-2 Host A",
         chain: "bsc",
         host: "2a",
         container: "bsa1",
         backend: "bscmainnet",
     },
-    // {
-    //     id: "2096310",
-    //     name: "Binance Smart Chain Archival US-East-2 Host B",
-    //     chain: "bsc",
-    //     host: "2b",
-    //     container: "bsa1",
-    //     backend: "bscmainnet",
-    // },
+    {
+        id: "2098084",//"2096310",
+        name: "Binance Smart Chain Archival US-East-2 Host B",
+        chain: "bsc",
+        host: "2b",
+        container: "bsa1",
+        backend: "bscmainnet",
+    },
 
     // {
     //     name: "Avalanche US-East-2 Host A",
@@ -187,16 +187,21 @@ const events = [BlockChainMonitorEvents.NOT_SYNCHRONIZED]
 const generateMockEvents = () => {
     const output = []
     for (const event of events) {
-        for (const { name, chain, host, container, backend } of nodes) {
-            output.push(constructEvent({
-                name, chain, host, container, backend, event, transition: EventTransitions.TRIGGERED, type: EventTypes.ERROR
-            }))
+        for (const { name, chain, host, container, backend, id } of nodes) {
+
+            // output.push(constructEvent({
+            //     name, chain, host, container, backend, event, transition: EventTransitions.TRIGGERED, type: EventTypes.ERROR, id
+            // }))
+
+
             // output.push(constructEvent({
             //     name, chain, host, container, backend, event, transition: EventTransitions.RE_TRIGGERED, type: EventTypes.ERROR
             // }))
-            // output.push(constructEvent({
-            //     name, chain, host, container, backend, event, transition: EventTransitions.RECOVERED, type: EventTypes.SUCCESS
-            // }))
+
+
+            output.push(constructEvent({
+                name, chain, host, container, backend, event, transition: EventTransitions.RECOVERED, type: EventTypes.SUCCESS, id
+            }))
         }
     }
     return output
