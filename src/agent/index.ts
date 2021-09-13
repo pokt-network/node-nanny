@@ -48,6 +48,18 @@ app.post("/webhook/lb/enable", async ({ body }, res) => {
   }
 });
 
+
+app.post("/webhook/lb/status", async ({ body }, res) => {
+  const { backend } = body;
+  try {
+    const status = await lb.getStatus(backend)
+    return res.json({ status });
+  } catch (error) {
+    return res.status(500).send(error);
+  }
+});
+
+
 app.listen(port, () => {
   console.log(`Webhook api listening at http://localhost:${port}`);
 });

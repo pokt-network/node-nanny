@@ -36,147 +36,149 @@ const constructEvent = ({ chain, host, container, backend, event, transition, ty
 
 
 const nodes = [
+    // {
+    //     name: "xDai Mainnet US-East-2 Host A",
+    //     chain: "xdai",
+    //     host: "2b",
+    //     container: "dai1",
+    //     backend: "daimainnet",
+    // },
+    // {
+    //     name: "xDai Mainnet US-East-2 Host B",
+    //     chain: "xdai",
+    //     host: "2b",
+    //     container: "dai1",
+    //     backend: "daimainnet",
+    // },
+    // {
+    //     name: "Polygon Mainnet US-East-2 Host A",
+    //     chain: "pol",
+    //     host: "2a",
+    //     container: "pol1",
+    //     backend: "polymainnet",
+    // },
+    // {
+    //     name: "Polygon Mainnet US-East-2 Host B",
+    //     chain: "pol",
+    //     host: "2b",
+    //     container: "pol1",
+    //     backend: "polymainnet",
+    // },
+    // {
+    //     name: "Fuse Mainnet US-East-2 Host A",
+    //     chain: "fus",
+    //     host: "2a",
+    //     container: "fusa1",
+    //     backend: "fusemainnet",
+    // },
+    // {
+    //     name: "Fuse Mainnet US-East-2 Host B",
+    //     chain: "fus",
+    //     host: "2b",
+    //     container: "fusa1",
+    //     backend: "fusemainnet",
+    // },
+    // {
+    //     name: "Ethereum Ropsten US-East-2 Host A",
+    //     chain: "rop",
+    //     host: "2a",
+    //     container: "rop1",
+    //     backend: "ethropsten",
+    // },
+    // {
+    //     name: "Ethereum Ropsten US-East-2 Host B",
+    //     chain: "rop",
+    //     host: "2b",
+    //     container: "rop1",
+    //     backend: "ethropsten",
+    // },
+    // {
+    //     name: "Ethereum Rinkeby US-East-2 Host A",
+    //     chain: "rin",
+    //     host: "2a",
+    //     container: "rin1",
+    //     backend: "ethrinkeby",
+    // },
+    // {
+    //     name: "Ethereum Rinkeby US-East-2 Host B",
+    //     chain: "rin",
+    //     host: "2b",
+    //     container: "rin1",
+    //     backend: "ethrinkeby",
+    // },
+    // {
+    //     name: "Ethereum Mainnet US-East-2 Host A",
+    //     chain: "eth",
+    //     host: "2a",
+    //     container: "eri-rpc1",
+    //     backend: "ethmainnet",
+    // },
+    // {
+    //     name: "Ethereum Mainnet US-East-2 Host B",
+    //     chain: "eth",
+    //     host: "2b",
+    //     container: "eri-rpc1",
+    //     backend: "ethmainnet",
+    // },
+    // {
+    //     name: "Ethereum Kovan US-East-2 Host A",
+    //     chain: "kov",
+    //     host: "2a",
+    //     container: "kov1",
+    //     backend: "ethkovan",
+    // },
+    // {
+    //     name: "Ethereum Kovan US-East-2 Host B",
+    //     chain: "kov",
+    //     host: "2b",
+    //     container: "kov1",
+    //     backend: "ethkovan",
+    // },
+    // {
+    //     name: "Ethereum Goerli US-East-2 Host A",
+    //     chain: "goe",
+    //     host: "2a",
+    //     container: "goe1",
+    //     backend: "ethgoerli",
+    // },
+    // {
+    //     name: "Ethereum Goerli US-East-2 Host B",
+    //     chain: "goe",
+    //     host: "2b",
+    //     container: "goe1",
+    //     backend: "ethgoerli",
+    // },
     {
-        name: "xDai Mainnet US-East-2 Host A",
-        chain: "xdai",
-        host: "2b",
-        container: "dai1",
-        backend: "daimainnet",
-    },
-    {
-        name: "xDai Mainnet US-East-2 Host B",
-        chain: "xdai",
-        host: "2b",
-        container: "dai1",
-        backend: "daimainnet",
-    },
-    {
-        name: "Polygon Mainnet US-East-2 Host A",
-        chain: "pol",
-        host: "2a",
-        container: "pol1",
-        backend: "polymainnet",
-    },
-    {
-        name: "Polygon Mainnet US-East-2 Host B",
-        chain: "pol",
-        host: "2b",
-        container: "pol1",
-        backend: "polymainnet",
-    },
-    {
-        name: "Fuse Mainnet US-East-2 Host A",
-        chain: "fus",
-        host: "2a",
-        container: "fusa1",
-        backend: "fusemainnet",
-    },
-    {
-        name: "Fuse Mainnet US-East-2 Host B",
-        chain: "fus",
-        host: "2b",
-        container: "fusa1",
-        backend: "fusemainnet",
-    },
-    {
-        name: "Ethereum Ropsten US-East-2 Host A",
-        chain: "rop",
-        host: "2a",
-        container: "rop1",
-        backend: "ethropsten",
-    },
-    {
-        name: "Ethereum Ropsten US-East-2 Host B",
-        chain: "rop",
-        host: "2b",
-        container: "rop1",
-        backend: "ethropsten",
-    },
-    {
-        name: "Ethereum Rinkeby US-East-2 Host A",
-        chain: "rin",
-        host: "2a",
-        container: "rin1",
-        backend: "ethrinkeby",
-    },
-    {
-        name: "Ethereum Rinkeby US-East-2 Host B",
-        chain: "rin",
-        host: "2b",
-        container: "rin1",
-        backend: "ethrinkeby",
-    },
-    {
-        name: "Ethereum Mainnet US-East-2 Host A",
-        chain: "eth",
-        host: "2a",
-        container: "eri-rpc1",
-        backend: "ethmainnet",
-    },
-    {
-        name: "Ethereum Mainnet US-East-2 Host B",
-        chain: "eth",
-        host: "2b",
-        container: "eri-rpc1",
-        backend: "ethmainnet",
-    },
-    {
-        name: "Ethereum Kovan US-East-2 Host A",
-        chain: "kov",
-        host: "2a",
-        container: "kov1",
-        backend: "ethkovan",
-    },
-    {
-        name: "Ethereum Kovan US-East-2 Host B",
-        chain: "kov",
-        host: "2b",
-        container: "kov1",
-        backend: "ethkovan",
-    },
-    {
-        name: "Ethereum Goerli US-East-2 Host A",
-        chain: "goe",
-        host: "2a",
-        container: "goe1",
-        backend: "ethgoerli",
-    },
-    {
-        name: "Ethereum Goerli US-East-2 Host B",
-        chain: "goe",
-        host: "2b",
-        container: "goe1",
-        backend: "ethgoerli",
-    },
-    {
+        id: "2096277",
         name: "Binance Smart Chain Archival US-East-2 Host A",
         chain: "bsc",
         host: "2a",
         container: "bsa1",
         backend: "bscmainnet",
     },
-    {
-        name: "Binance Smart Chain Archival US-East-2 Host B",
-        chain: "bsc",
-        host: "2b",
-        container: "bsa1",
-        backend: "bscmainnet",
-    },
+    // {
+    //     id: "2096310",
+    //     name: "Binance Smart Chain Archival US-East-2 Host B",
+    //     chain: "bsc",
+    //     host: "2b",
+    //     container: "bsa1",
+    //     backend: "bscmainnet",
+    // },
 
-    {
-        name: "Avalanche US-East-2 Host A",
-        chain: "ava",
-        host: "2a",
-        container: "ava1",
-        backend: "avaxmainnet",
-    },
-    {
-        name: "Avalanche US-East-2 Host B",
-        chain: "ava",
-        host: "2b",
-        container: "ava1",
-        backend: "avaxmainnet",
-    }
+    // {
+    //     name: "Avalanche US-East-2 Host A",
+    //     chain: "ava",
+    //     host: "2a",
+    //     container: "ava1",
+    //     backend: "avaxmainnet",
+    // },
+    // {
+    //     name: "Avalanche US-East-2 Host B",
+    //     chain: "ava",
+    //     host: "2b",
+    //     container: "ava1",
+    //     backend: "avaxmainnet",
+    // }
 ]
 
 const events = [BlockChainMonitorEvents.NOT_SYNCHRONIZED]
@@ -189,12 +191,12 @@ const generateMockEvents = () => {
             output.push(constructEvent({
                 name, chain, host, container, backend, event, transition: EventTransitions.TRIGGERED, type: EventTypes.ERROR
             }))
-            output.push(constructEvent({
-                name, chain, host, container, backend, event, transition: EventTransitions.RE_TRIGGERED, type: EventTypes.ERROR
-            }))
-            output.push(constructEvent({
-                name, chain, host, container, backend, event, transition: EventTransitions.RECOVERED, type: EventTypes.SUCCESS
-            }))
+            // output.push(constructEvent({
+            //     name, chain, host, container, backend, event, transition: EventTransitions.RE_TRIGGERED, type: EventTypes.ERROR
+            // }))
+            // output.push(constructEvent({
+            //     name, chain, host, container, backend, event, transition: EventTransitions.RECOVERED, type: EventTypes.SUCCESS
+            // }))
         }
     }
     return output

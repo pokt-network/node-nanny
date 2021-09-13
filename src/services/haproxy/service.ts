@@ -12,18 +12,6 @@ export class Service {
     });
   }
 
-  private async getStatus(backend) {
-    const raw = await this.getCurrentStateByChainCommand(backend);
-    const lines = raw.split("\n");
-    const [, , a, b] = lines;
-    const aStatusNum = Number(a.split(" ")[5]);
-    const bStatusNum = Number(b.split(" ")[5]);
-    const aStatus = aStatusNum === 2;
-    const bStatus = bStatusNum === 2;
-    const allOnline = aStatus === true && bStatus === true;
-    return { aStatus, bStatus, allOnline };
-  }
-
   private async disableServerCommand({ backend, host }) {
     const cmd = `echo "disable server ${backend}/${host}" | nc -v localhost 9999`;
     return new Promise((resolve, reject) => {
@@ -45,6 +33,18 @@ export class Service {
         resolve(stdout);
       });
     });
+  }
+
+  async getStatus(backend) {
+    const raw = await this.getCurrentStateByChainCommand(backend);
+    const lines = raw.split("\n");
+    const [, , a, b] = lines;
+    const aStatusNum = Number(a.split(" ")[5]);
+    const bStatusNum = Number(b.split(" ")[5]);
+    const aStatus = aStatusNum === 2;
+    const bStatus = bStatusNum === 2;
+    const allOnline = aStatus === true && bStatus === true;
+    return { aStatus, bStatus, allOnline };
   }
 
   async disableServer({ backend, host }) {

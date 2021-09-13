@@ -8,10 +8,18 @@ export { Webhooks as DiscordChannel } from "../alert/types";
 export { ErrorConditions as BlockChainMonitorEvents } from "../health/types";
 export { Supported as SupportedBlockChains } from "../discover/types";
 
-export enum LoadBalancerHosts {
+export enum LoadBalancerHostsInternal {
   "2A" = "ip-10-0-0-85.us-east-2.compute.internal", //"ip-10-0-0-149.us-east-2.compute.internal"q
   "2B" = "ip-10-0-0-102.us-east-2.compute.internal"//"ip-10-0-0-85.us-east-2.compute.internal", //"ip-10-0-1-208.us-east-2.compute.internal",
 }
+
+
+export enum LoadBalancerHostsExternal {
+  SHARED_2A = "ec2-18-118-59-87.us-east-2.compute.amazonaws.com", //"ip-10-0-0-149.us-east-2.compute.internal"
+  SHARED_2B = "ec2-3-20-117-224.us-east-2.compute.amazonaws.com"
+}
+
+
 
 export enum Hosts {
   ETH_2A = "ip-10-0-0-85.us-east-2.compute.internal", //"ip-10-0-0-162.us-east-2.compute.internal",
@@ -35,3 +43,5 @@ export enum InstanceIds {
   eth_2a = 'i-0a05159d1539777ac',
   eth_2b = 'i-0ad7ab2f78cf8e72c',
 }
+
+

@@ -1,5 +1,4 @@
 import axios, { AxiosInstance } from "axios";
-
 import { DataDog, Alert, Config } from "..";
 import { AlertColor } from "../datadog/types";
 import {
@@ -8,7 +7,8 @@ import {
   BlockChainMonitorEvents,
   EventTransitions,
   EventTypes,
-  LoadBalancerHosts,
+  LoadBalancerHostsInternal,
+  LoadBalancerHostsExternal,
   LoadBalancerStatus,
   Hosts,
   SupportedBlockChains,
@@ -39,29 +39,38 @@ export class Service {
   }
   private async isPeerOk({ chain, host }) {
     //find a better way to determine peer
-    const hosts = Object.keys(LoadBalancerHosts);
+    const hosts = Object.keys(LoadBalancerHostsInternal);
     const peer = hosts.filter((h) => !(h == host.toUpperCase(host))).join("");
     const { Value: monitorId } = await this.config.getMonitorId({ chain, host: peer });
 
     return (await this.dd.getMonitorStatus(monitorId)) !== DataDogMonitorStatus.ALERT;
   }
-  async disableServer({ hostname, backend, host }) {
-    //should hit both lbs
+  async disableServer({ backend, host }) {
     try {
-      return await this.agent.post(`http://${hostname}:3001/webhook/lb/disable`, { backend, host });
+      return await Promise.all([
+        this.agent.post(`http://${LoadBalancerHostsInternal["2A"]}:3001/webhook/lb/disable`, { backend, host }),
+        this.agent.post(`http://${LoadBalancerHostsInternal["2B"]}:3001/webhook/lb/disable`, { backend, host })
+      ])
     } catch (error) {
       throw new Error(`could not contact agent to disable ${error}`);
     }
   }
-  async enableServer({ hostname, backend, host }) {
-    //should hit both lbs
+  async enableServer({ backend, host }) {
     try {
-      return await this.agent.post(`http://${hostname}:3001/webhook/lb/enable`, { backend, host });
+      return await Promise.all([
+        this.agent.post(`http://${LoadBalancerHostsInternal["2A"]}:3001/webhook/lb/enable`, { backend, host }),
+        this.agent.post(`http://${LoadBalancerHostsInternal["2B"]}:3001/webhook/lb/enable`, { backend, host })
+      ])
     } catch (error) {
       throw new Error(`could not contact agent to enable ${error}`);
     }
   }
-
+  async getBackendStatus(backend) {
+    return await Promise.all([
+      this.agent.post(`http://${LoadBalancerHostsInternal["2A"]}:3001/webhook/lb/enable`, { backend }),
+      this.agent.post(`http://${LoadBalancerHostsInternal["2B"]}:3001/webhook/lb/enable`, { backend })
+    ])
+  }
   getDockerEndpoint({ chain, host }): string {
     for (const prop in Hosts) {
       const [node] = prop.split("_");
@@ -84,7 +93,7 @@ export class Service {
   }
 
   async getBlockHeightDifference({ chain, host }) {
-    const hosts = Object.keys(LoadBalancerHosts);
+    const hosts = Object.keys(LoadBalancerHostsInternal);
     const peer = hosts.filter((h) => !(h == host.toUpperCase(host))).join("").toLowerCase();
     let logs = await this.dd.getHealthLogs({ chain, host })
     const peerLogs = await this.dd.getHealthLogs({ chain, host: peer })
@@ -93,6 +102,13 @@ export class Service {
     return { best: logs[0], worst: logs[logs.length - 1] }
   }
 
+
+  getHAProxyMessage(backend) {
+    return `HAProxy status\n
+    2A: http://${LoadBalancerHostsExternal.SHARED_2A}:8050/;up?scope=${backend} \n
+    2B: http://${LoadBalancerHostsExternal.SHARED_2B}:8050/;up?scope=${backend} 
+    `
+  }
   async processEvent(raw) {
     const {
       event,
@@ -107,19 +123,6 @@ export class Service {
       link,
     } = await this.dd.parseWebhookMessage(raw);
 
-
-    console.log({
-      event,
-      chain,
-      host,
-      container,
-      id,
-      transition,
-      type,
-      title,
-      backend,
-      link,
-    })
 
     const status = await this.config.getNodeStatus({ chain, host });
 
@@ -162,45 +165,31 @@ export class Service {
             ],
           });
 
-          // if (!await this.isPeerOk({ chain, host })) {
-          //   //Both nodes are out of sync
-          //   let { worst, best } = await this.getBlockHeightDifference({ chain, host })
-          //   const hostname = LoadBalancerHosts[host.toUpperCase()];
-          //   try {
-          //     const res = await this.disableServer({ hostname, backend, host: worst.host });
-          //     await this.config.setNodeStatus({ chain, host, status: LoadBalancerStatus.OFFLINE });
-          //     await this.alert.sendDiscordMessage({
-          //       title,
-          //       color: AlertColor.INFO,
-          //       channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
-          //       fields: [
-          //         {
-          //           name: "Looking for best node",
-          //           value: `Removed ${chain}/${worst.host} from load balancer, it will be restored once healthy again \n
-          //           The best node is ${best.delta} blocks out of sync \n
-          //           Confirm action => link http://ec2-18-118-59-87.us-east-2.compute.amazonaws.com:8050/;up?scope=${backend}
-          //           `,
-          //         },
-          //       ],
-          //     });
-          //   } catch (error) {
-          //     await this.alert.sendDiscordMessage({
-          //       title,
-          //       color: AlertColor.ERROR,
-          //       channel: DiscordChannel.WEBHOOK_ERRORS,
-          //       fields: [
-          //         {
-          //           name: "error",
-          //           value: `could not remove server ${error}`,
-          //         },
-          //       ],
-          //     });
-          //   }
-          // }
+          if (!await this.isPeerOk({ chain, host })) {
+            //Both nodes are out of sync
+            let { worst, best } = await this.getBlockHeightDifference({ chain, host })
+            await this.disableServer({ backend, host: worst.host });
+            await this.config.setNodeStatus({ chain, host, status: LoadBalancerStatus.OFFLINE });
+            await this.alert.sendDiscordMessage({
+              title,
+              color: AlertColor.INFO,
+              channel: DiscordChannel.WEBHOOK_NON_CRITICAL,
+              fields: [
+                {
+                  name: "Looking for best node",
+                  value: `Removed ${chain}/${worst.host} from load balancer, it will be restored once healthy again \n
+                  The best node is ${best.delta} blocks out of sync \n
+                  ${this.getHAProxyMessage(backend)}
+                  `,
+                },
+              ],
+            });
+
+            return;
+          }
 
           try {
-            const hostname = LoadBalancerHosts[host.toUpperCase()];
-            await this.disableServer({ hostname, backend, host });
+            await this.disableServer({ backend, host });
             await this.config.setNodeStatus({ chain, host, status: LoadBalancerStatus.OFFLINE });
             await this.alert.sendDiscordMessage({
               title,
@@ -210,7 +199,7 @@ export class Service {
                 {
                   name: "Removing node from rotation",
                   value: `Removed ${chain}/${host} from load balancer, it will be restored once healthy again \n
-                    View Status: http://ec2-18-118-59-87.us-east-2.compute.amazonaws.com:8050/;up?scope=${backend}
+                    ${this.getHAProxyMessage(backend)}
                   `,
                 },
               ],
@@ -298,7 +287,6 @@ export class Service {
         if (status === LoadBalancerStatus.OFFLINE) {
           //this case is to put the node back into rotation
           await this.config.setNodeStatus({ chain, host, status: LoadBalancerStatus.ONLINE });
-
           await this.alert.sendDiscordMessage({
             title,
             color: AlertColor.INFO,
@@ -311,11 +299,8 @@ export class Service {
             ],
           });
 
-          const hostname = LoadBalancerHosts[host.toUpperCase()];
-
           try {
-            await this.enableServer({ hostname, backend, host });
-
+            await this.enableServer({ backend, host });
             await this.alert.sendDiscordMessage({
               title,
               color: AlertColor.SUCCESS,
@@ -324,7 +309,7 @@ export class Service {
                 {
                   name: "Restored",
                   value: `Added ${chain}/${host} back to load balancer \n
-                  View Status: http://ec2-18-118-59-87.us-east-2.compute.amazonaws.com:8050/;up?scope=${backend}
+                  ${this.getHAProxyMessage(backend)}
                 `,
                 },
               ],

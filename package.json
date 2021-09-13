@@ -16,7 +16,7 @@
     "build:watch": "tsc -b -w .",
     "test": "jest",
     "test:dev": "jest --watch --testTimeout=1000000",
-    "test:events": "ts-node ./src/services/event/tst.ts"
+    "test:events": "ts-node ./src/services/event/test.event.ts"
   },
   "bin": {
     "pkt-nodes": "./dist/cli/pkt-nodes.js"
