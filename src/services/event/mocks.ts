@@ -120,13 +120,14 @@ const nodes = [
     //     container: "eri-rpc1",
     //     backend: "ethmainnet",
     // },
-    // {
-    //     name: "Ethereum Kovan US-East-2 Host A",
-    //     chain: "kov",
-    //     host: "2a",
-    //     container: "kov1",
-    //     backend: "ethkovan",
-    // },
+    {
+        id: "2098084",
+        name: "Ethereum Kovan US-East-2 Host A",
+        chain: "kov",
+        host: "2a",
+        container: "kov1",
+        backend: "ethkovan",
+    },
     // {
     //     name: "Ethereum Kovan US-East-2 Host B",
     //     chain: "kov",
@@ -141,29 +142,31 @@ const nodes = [
     //     container: "goe1",
     //     backend: "ethgoerli",
     // },
-    // {
-    //     name: "Ethereum Goerli US-East-2 Host B",
-    //     chain: "goe",
-    //     host: "2b",
-    //     container: "goe1",
-    //     backend: "ethgoerli",
-    // // },
     {
-        id: "2098084",//"2096277",
-        name: "Binance Smart Chain Archival US-East-2 Host A",
-        chain: "bsc",
-        host: "2a",
-        container: "bsa1",
-        backend: "bscmainnet",
-    },
-    {
-        id: "2098084",//"2096310",
-        name: "Binance Smart Chain Archival US-East-2 Host B",
-        chain: "bsc",
+        id: "2098084",
+        name: "Ethereum Goerli US-East-2 Host B",
+        chain: "goe",
         host: "2b",
-        container: "bsa1",
-        backend: "bscmainnet",
-    },
+        container: "goe1",
+        backend: "ethgoerli",
+    }
+    // // },
+    // {
+    //     id: "2098084",//"2096277",
+    //     name: "Binance Smart Chain Archival US-East-2 Host A",
+    //     chain: "bsc",
+    //     host: "2a",
+    //     container: "bsa1",
+    //     backend: "bscmainnet",
+    // },
+    // {
+    //     id: "2098084",//"2096310",
+    //     name: "Binance Smart Chain Archival US-East-2 Host B",
+    //     chain: "bsc",
+    //     host: "2b",
+    //     container: "bsa1",
+    //     backend: "bscmainnet",
+    // },
 
     // {
     //     name: "Avalanche US-East-2 Host A",
@@ -181,7 +184,7 @@ const nodes = [
     // }
 ]
 
-const events = [BlockChainMonitorEvents.NOT_SYNCHRONIZED]
+const events = [BlockChainMonitorEvents.NO_RESPONSE]
 
 
 const generateMockEvents = () => {
@@ -189,19 +192,19 @@ const generateMockEvents = () => {
     for (const event of events) {
         for (const { name, chain, host, container, backend, id } of nodes) {
 
-            // output.push(constructEvent({
-            //     name, chain, host, container, backend, event, transition: EventTransitions.TRIGGERED, type: EventTypes.ERROR, id
-            // }))
-
-
-            // output.push(constructEvent({
-            //     name, chain, host, container, backend, event, transition: EventTransitions.RE_TRIGGERED, type: EventTypes.ERROR
-            // }))
+            output.push(constructEvent({
+                name, chain, host, container, backend, event, transition: EventTransitions.TRIGGERED, type: EventTypes.ERROR, id
+            }))
 
 
             output.push(constructEvent({
-                name, chain, host, container, backend, event, transition: EventTransitions.RECOVERED, type: EventTypes.SUCCESS, id
+                name, chain, host, container, backend, event, transition: EventTransitions.RE_TRIGGERED, type: EventTypes.ERROR, id
             }))
+
+
+            // output.push(constructEvent({
+            //     name, chain, host, container, backend, event, transition: EventTransitions.RECOVERED, type: EventTypes.SUCCESS, id
+            // }))
         }
     }
     return output

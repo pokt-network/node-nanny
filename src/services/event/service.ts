@@ -49,8 +49,8 @@ export class Service {
   async disableServer({ backend, host, chain }) {
     try {
       const status = await this.getBackendStatus(backend)
-      if (status === true) {
-        //todo find a better way than having to manage state, get status from lb instead
+      if (status === LoadBalancerStatus.ONLINE) {
+
         await this.config.setNodeStatus({ chain, host, status: LoadBalancerStatus.OFFLINE });
 
         return await Promise.all([
@@ -80,9 +80,8 @@ export class Service {
   async getBackendStatus(backend) {
     const { data: a } = await this.agent.post(`http://${LoadBalancerHostsInternal["2A"]}:3001/webhook/lb/status`, { backend })
     const { data: b } = await this.agent.post(`http://${LoadBalancerHostsInternal["2B"]}:3001/webhook/lb/status`, { backend })
-
     if (b.status.allOnline && b.status.allOnline) {
-      return true
+      return LoadBalancerStatus.ONLINE
     } else {
       return { a, b }
     }
@@ -155,7 +154,6 @@ export class Service {
       container,
       id,
       transition,
-      type,
       title,
       backend,
       link,
@@ -206,8 +204,7 @@ export class Service {
             let { worst, best } = await this.getBlockHeightDifference({ chain, host })
             const status = await this.getBackendStatus(backend)
 
-            //todo: change true to something more explicit 
-            if (status === true) {
+            if (status === LoadBalancerStatus.ONLINE) {
               await this.disableServer({ chain, backend, host: worst.host });
               return await this.alert.sendDiscordMessage({
                 title,
@@ -262,11 +259,9 @@ export class Service {
             });
           } catch (error) {
             return await this.sendError({ title, text: `could not remove server ${error}` })
-
           }
         }
 
-        //node is offline
         if (event === BlockChainMonitorEvents.OFFLINE) {
           await this.alert.sendDiscordMessage({
             title,
@@ -293,7 +288,9 @@ export class Service {
             {
               name: "Warning",
               value: `${chain}/${host} status is ${event} \n 
-              See event ${link}`,
+              See event ${link} \n
+              ${this.getHAProxyMessage(backend)}
+              `,
             },
           ],
         });
@@ -313,14 +310,13 @@ export class Service {
       }
     }
 
-    //recovered
     if (transition === EventTransitions.RECOVERED) {
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
         if (!await this.isPeerOk({ chain, host })) {
           //one has recoved but bad node may be primary, swap them in this case
           const peer = this.getPeer(host);
           const status = await this.getBackendStatus(backend)
-          if (status !== true) {
+          if (status !== LoadBalancerStatus.ONLINE) {
             await this.enableServer({ backend, host, chain })
             await this.disableServer({ backend, host: peer, chain })
           }
@@ -417,7 +413,6 @@ export class Service {
       }
     }
 
-
     //Retriggered 
     if (transition === EventTransitions.RE_TRIGGERED) {
       if (event == BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
@@ -434,7 +429,7 @@ export class Service {
         });
       }
       if (
-        event === BlockChainMonitorEvents.NO_RESPONSE_NOT_RESOLVED ||
+        event === BlockChainMonitorEvents.NO_RESPONSE ||
         event === BlockChainMonitorEvents.OFFLINE
       ) {
         if (exclude.includes(chain)) {
@@ -453,9 +448,12 @@ export class Service {
 
         const url = this.getDockerEndpoint({ chain, host })
 
-        const { data: reboot } = await this.agent.post(`http://${url}:3001/webhook/docker/reboot`, {
+        const { data } = await this.agent.post(`http://${url}:3001/webhook/docker/reboot`, {
           name: container,
         });
+
+        const { reboot } = data
+
         await this.dd.muteMonitor({ id, minutes: 5 });
 
         return await this.alert.sendDiscordMessage({
@@ -465,12 +463,13 @@ export class Service {
           fields: [
             {
               name: "Rebooting",
-              value: `${reboot}`,
+              value: `rebooting ${chain}/${host} \n
+              ${reboot}
+              `,
             },
           ],
         });
       }
-
     }
   }
 }

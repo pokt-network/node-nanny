@@ -17,8 +17,7 @@ app.post("/webhook/docker/reboot", async ({ body }, res) => {
   const { name } = body;
   try {
     const status = await reboot.rebootDockerContainerFromAgent(name);
-    console.log(status)
-    return res.json({ done: true });
+    return res.json({ reboot: status });
   } catch (error) {
     throw new Error(error);
   }
@@ -26,11 +25,9 @@ app.post("/webhook/docker/reboot", async ({ body }, res) => {
 
 app.post("/webhook/lb/disable", async ({ body }, res) => {
   const { backend, host } = body;
-  console.log(body)
   try {
     const status = await lb.disableServer({ backend, host });
-    console.log(status)
-    return res.json({ done: true });
+    return res.json({ status });
   } catch (error) {
     console.log(error)
     return res.status(500).send(error);
@@ -41,8 +38,7 @@ app.post("/webhook/lb/enable", async ({ body }, res) => {
   const { backend, host } = body;
   try {
     const status = await lb.enableServer({ backend, host });
-    console.log(status)
-    return res.json({ done: true });
+    return res.json({ status });
   } catch (error) {
     return res.status(500).send(error);
   }
