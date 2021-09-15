@@ -15,3 +15,11 @@ config_providers:
       polling: true
 logs_config:
     container_collect_all: true
+
+
+
+aws iam create-role --role-name CWLtoKinesisRoleEUS1 --assume-role-policy-document file://~/TrustPolicyForCWL.json
+
+aws iam put-role-policy  --role-name CWLtoKinesisRoleEUS1 --policy-name Permissions-Policy-For-CWL  --policy-document file://~/PermissionsForCWL.json
+
+aws logs put-subscription-filter --log-group-name "/ecs/dashboard-mainnet-backend" --filter-name "DDFilter" --filter-pattern "" --destination-arn "arn:aws:firehose:eu-west-1:059424750518:deliverystream/EcsLogsTodataDog" --role-arn "arn:aws:iam::059424750518:role/CWLtoKinesisRoleEUW1" --region eu-west-1
