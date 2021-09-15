@@ -30,3 +30,10 @@ export enum IncidentLevel {
   MEDIUM = "medium",
   LOW = "low",
 }
+
+export enum AlertColor {
+  ERROR = 15548997,
+  SUCCESS = 3066993,
+  WARNING = 16776960,
+  INFO = 3447003,
+}

@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /home/ubuntu/node-deploy/mock
+cd /home/ubuntu/node-deploy/shared
 docker stop $1
 sleep 2
 echo "waiting for shutdown"

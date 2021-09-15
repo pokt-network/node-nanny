@@ -29,7 +29,6 @@ app.post("/webhook/lb/disable", async ({ body }, res) => {
     const status = await lb.disableServer({ backend, host });
     return res.json({ status });
   } catch (error) {
-    console.log(error)
     return res.status(500).send(error);
   }
 });

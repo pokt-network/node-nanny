@@ -1,7 +1,7 @@
 import { api } from "@pagerduty/pdjs";
 import axios, { AxiosInstance } from "axios";
-import { SendMessageInput, PagerDutyDetails, IncidentLevel } from "./types";
-
+import { AlertColor, SendMessageInput, PagerDutyDetails, IncidentLevel } from "./types";
+import { DataDogTypes, AlertTypes } from "../../types"
 export class Service {
   private dsClient: AxiosInstance;
   private pdClient: any;
@@ -25,6 +25,91 @@ export class Service {
       throw new Error(`could not send alert to Discord ${error}`);
     }
   }
+
+
+  async sendErrorChannel({title ,message}){
+    return await this.sendDiscordMessage({
+      title,
+      color: AlertColor.ERROR,
+      channel: AlertTypes.Webhooks.WEBHOOK_ERRORS,
+      fields: [
+        {
+          name: "error",
+          value: message,
+        },
+      ],
+    });
+  }
+
+  async sendErrorCritical({ title, message }) {
+    return await this.sendDiscordMessage({
+      title,
+      color: DataDogTypes.AlertColor.ERROR,
+      channel: AlertTypes.Webhooks.WEBHOOK_CRITICAL,
+      fields: [
+        {
+          name: "Error",
+          value: message,
+        }
+      ]
+    });
+  }
+
+  async sendLogs({ title, fields }) {
+    return await this.sendDiscordMessage({
+      title,
+      color: AlertColor.INFO,
+      channel: AlertTypes.Webhooks.WEBHOOK_LOGS,
+      fields
+    });
+  }
+
+
+
+  async sendInfo({ title, message }) {
+
+    return await this.sendDiscordMessage({
+      title,
+      color: AlertColor.INFO,
+      channel: AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
+      fields: [
+        {
+          name: "Info",
+          value: message
+        },
+      ],
+    });
+
+  }
+
+  async sendWarn({ title, message }) {
+    return await this.sendDiscordMessage({
+      title,
+      color: AlertColor.WARNING,
+      channel: AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
+      fields: [
+        {
+          name: "Warning",
+          value: message
+        },
+      ],
+    });
+  }
+
+  async sendSuccess({ title, message }) {
+    return await this.sendDiscordMessage({
+      title,
+      color: AlertColor.SUCCESS,
+      channel: AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
+      fields: [
+        {
+          name: "Success",
+          value: message
+        },
+      ],
+    });
+  }
+
   async createPagerDutyIncident({ title, details, urgency = IncidentLevel.HIGH }) {
     try {
       const { data } = await this.pdClient.post("/incidents", {
