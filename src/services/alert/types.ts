@@ -1,12 +1,20 @@
-export enum AlertChannel {
-  DISCORD = "discord",
-  PAGER_DUTY = "pd",
-  BOTH = "both",
+export enum Webhooks {
+  WEBHOOK_CRITICAL = "https://discord.com/api/webhooks/880886405402865695/zzeJxcvdTPHzcdJWiTRHaPPsyTgF2n298bYh8G3wNqQB0b-to_tmaTUQYyM-V6010Tvr",
+  WEBHOOK_NON_CRITICAL = "https://discord.com/api/webhooks/880219881881092116/XBTKuSSf4ZSIpF736FRwsoRaS6vzJhkbPgRANw-NPVmI4DrsZf4CGCJu-fdpbR57SbmV",
+  WEBHOOK_LOGS = "https://discord.com/api/webhooks/882767668019593216/O9Txt1yQoUuo8wqIOOx5HFAOwCMhVOWmjFQJEHhDdagGh7cYy3t9SMDo_dMuXUBc8hzp",
+  WEBHOOK_ERRORS = "https://discord.com/api/webhooks/883392489166344192/fj-2aKNTSMbXghSLKbiuovnsvl50yyIEsT95DXVOI-e9qsC2v8xMK1AXaGlrpew_EGcM",
+  WEBHOOK_TEST = "https://discord.com/api/webhooks/873283996862283787/x5__JNbgMcvSHEw3NxI9J5Sj5241VwoEY2vGAuWCQdefQQr5vTNYNM3nIeEoLAVYnYMb",
 }
 
-export enum DiscordDetails {
-  WEBHOOK_URL = "https://discord.com/api/webhooks/873322545040994345/zI03qrMhIwcB_SEQK2QRDXdfLRif2pEFe4AzOQrmpriXogB6-ubEbyPDmkHY4Z1-dBlm",
-  WEBHOOK_TEST = "https://discord.com/api/webhooks/873283996862283787/x5__JNbgMcvSHEw3NxI9J5Sj5241VwoEY2vGAuWCQdefQQr5vTNYNM3nIeEoLAVYnYMb",
+interface SendMessageFields {
+  name: string;
+  value: string;
+}
+export interface SendMessageInput {
+  channel: Webhooks;
+  title: string;
+  color: number;
+  fields: SendMessageFields[];
 }
 
 export enum PagerDutyDetails {
@@ -23,24 +31,9 @@ export enum IncidentLevel {
   LOW = "low",
 }
 
-export enum Titles {
-  OFFLINE = "Node is offline",
-  NOT_SYNCHRONIZED = "Node is not synched",
-  MONITOR_ERROR = "Node monitor has encountered an issue",
-}
-
-export enum DataDogAlertColor {
+export enum AlertColor {
   ERROR = 15548997,
   SUCCESS = 3066993,
   WARNING = 16776960,
-}
-
-export enum LinkTitles {
-  MONITOR = "Monitor Status",
-  LOGS = "Related Logs",
-}
-
-export enum HostsForReboot {
-  A = "ip-10-0-0-149.us-east-2.compute.internal",
-  B = "ip-10-0-1-208.us-east-2.compute.internal",
+  INFO = 3447003,
 }

@@ -8,19 +8,9 @@ export class Service {
     this.client = new AWS.SSM({ region: "us-east-2" });
   }
 
-  async setParam({ chain, param, value }) {
-    try {
-      return await this.client
-        .putParameter({
-          Name: `${ConfigPrefix.CHAIN_HEALTH}/${chain}/${param}`,
-          Value: value,
-          Overwrite: true,
-          Type: "String",
-        })
-        .promise();
-    } catch (error) {
-      throw new Error(`could not set parameter ${error}`);
-    }
+  async getMonitorId({ chain, host }) {
+    const key = `/pocket/monitoring/config/monitor/${chain}/${host}`;
+    return await this.getParamByKey(key);
   }
 
   async getParam({ chain, param }) {
@@ -29,7 +19,7 @@ export class Service {
       const { Parameter } = await this.client.getParameter({ Name: key }).promise();
       return Parameter.Value;
     } catch (error) {
-      throw new Error(`could not find parameter ${error}`);
+      return false;
     }
   }
 
@@ -52,5 +42,52 @@ export class Service {
     } catch (error) {
       throw new Error(`could not get params by prefix${error}`);
     }
+  }
+
+  async setParam({ chain, param, value }) {
+    try {
+      return await this.client
+        .putParameter({
+          Name: `${ConfigPrefix.CHAIN_HEALTH}/${chain}/${param}`,
+          Value: value,
+          Overwrite: true,
+          Type: "String",
+        })
+        .promise();
+    } catch (error) {
+      throw new Error(`could not set parameter ${error}`);
+    }
+  }
+  
+  async setParameter({ key, value }) {
+    console.log(key, value)
+    try {
+      return await this.client
+        .putParameter({
+          Name: key,
+          Value: String(value),
+          Overwrite: true,
+          Type: "String",
+        })
+        .promise();
+    } catch (error) {
+      throw new Error(`could not set parameter ${error}`);
+    }
+  }
+  async setNodeStatus({ chain, host, status }) {
+    const response = await this.setParam({
+      chain: `${host}_${chain}`,
+      param: "status",
+      value: status,
+    });
+    return response;
+  }
+
+  async getNodeStatus({ chain, host }) {
+    const response = await this.getParam({
+      chain: `${host}_${chain}`,
+      param: "status",
+    });
+    return response;
   }
 }
