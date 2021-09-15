@@ -1,12 +1,20 @@
-export enum AlertChannel {
-  DISCORD = "discord",
-  PAGER_DUTY = "pd",
-  BOTH = "both",
+export enum Webhooks {
+  WEBHOOK_CRITICAL = "***REMOVED***",
+  WEBHOOK_NON_CRITICAL = "***REMOVED***",
+  WEBHOOK_LOGS = "***REMOVED***",
+  WEBHOOK_ERRORS = "https://discord.com/api/webhooks/883392489166344192/fj-2aKNTSMbXghSLKbiuovnsvl50yyIEsT95DXVOI-e9qsC2v8xMK1AXaGlrpew_EGcM",
+  WEBHOOK_TEST = "***REMOVED***",
 }
 
-export enum DiscordDetails {
-  WEBHOOK_URL = "***REMOVED***",
-  WEBHOOK_TEST = "***REMOVED***",
+interface SendMessageFields {
+  name: string;
+  value: string;
+}
+export interface SendMessageInput {
+  channel: Webhooks;
+  title: string;
+  color: number;
+  fields: SendMessageFields[];
 }
 
 export enum PagerDutyDetails {
@@ -23,24 +31,9 @@ export enum IncidentLevel {
   LOW = "low",
 }
 
-export enum Titles {
-  OFFLINE = "Node is offline",
-  NOT_SYNCHRONIZED = "Node is not synched",
-  MONITOR_ERROR = "Node monitor has encountered an issue",
-}
-
-export enum DataDogAlertColor {
+export enum AlertColor {
   ERROR = 15548997,
   SUCCESS = 3066993,
   WARNING = 16776960,
-}
-
-export enum LinkTitles {
-  MONITOR = "Monitor Status",
-  LOGS = "Related Logs",
-}
-
-export enum HostsForReboot {
-  A = "ip-10-0-0-149.us-east-2.compute.internal",
-  B = "ip-10-0-1-208.us-east-2.compute.internal",
+  INFO = 3447003,
 }

@@ -3,20 +3,17 @@ import csv from "csvtojson";
 import path from "path";
 import { Source, Prefix, Supported } from "./types";
 import { Config } from "../../services";
-import { Alert } from "../../services";
 import { ConfigTypes } from "../../types";
 
 const csvNodes = path.resolve(__dirname, "../../nodes.csv");
 
 class Service {
-  private alert: Alert;
   private client: AWS.EC2;
   private config: Config;
   private source: Source;
   private sourcePath: string;
   private supported: string[];
   constructor({ source = Source.TAG, sourcePath = csvNodes }) {
-    this.alert = new Alert();
     this.config = new Config();
     this.source = source;
     this.sourcePath = sourcePath;
@@ -60,7 +57,7 @@ class Service {
       }
       return nodes.filter(({ chain }) => this.supported.includes(chain));
     } catch (error) {
-      this.alert.sendErrorAlert(`Error, check for issues with tags`);
+      throw new Error(`Error, check for issues with tags`);
     }
   }
 
@@ -81,7 +78,7 @@ class Service {
       );
       return Value.split(",");
     } catch (error) {
-      this.alert.sendErrorAlert(`could not find external nodes, has ${chain} been onboarded?`);
+      throw new Error(`could not find external nodes, has ${chain} been on-boarded?`);
     }
   }
 
