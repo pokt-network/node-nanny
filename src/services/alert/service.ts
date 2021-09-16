@@ -109,6 +109,20 @@ export class Service {
       ],
     });
   }
+  
+  async sendSuccessToCritical({ title, message }) {
+    return await this.sendDiscordMessage({
+      title,
+      color: AlertColor.SUCCESS,
+      channel: AlertTypes.Webhooks.WEBHOOK_CRITICAL,
+      fields: [
+        {
+          name: "Success",
+          value: message
+        },
+      ],
+    });
+  }
 
   async createPagerDutyIncident({ title, details, urgency = IncidentLevel.HIGH }) {
     try {
