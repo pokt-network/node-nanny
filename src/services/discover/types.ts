@@ -25,6 +25,7 @@ export enum Supported {
   AVA = "AVA",
   ETH = "ETH",
   BSC = "BSC",
+  BSCTST = "BSCTST",
   POL = "POL",
   FUS = "FUS",
   XDAI = "XDAI",
