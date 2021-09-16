@@ -5,7 +5,10 @@ import { Source, Prefix, Supported } from "./types";
 import { Config } from "../../services";
 import { ConfigTypes } from "../../types";
 
-const csvNodes = path.resolve(__dirname, "../../nodes.csv");
+
+
+
+const csvNodes = path.resolve(__dirname, "../../../nodes.csv");
 
 class Service {
   private client: AWS.EC2;
@@ -95,6 +98,61 @@ class Service {
     return Promise.all(nodes);
   }
 
+
+  /**
+   * 
+   *      {
+            node: {
+              name: 'shared-2a/kov',
+              chain: 'KOV',
+              ip: '10.0.0.79',
+              port: '8548'
+            },
+            peer: {
+              name: 'shared-2b/kov',
+              chain: 'KOV',
+              ip: '10.0.1.208',
+              port: '8548'
+            },
+            external: [
+              '***REMOVED***'
+            ]
+          },
+   * 
+   */
+  async getDataNodesfromCsv() {
+    const raw = await csv().fromFile(csvNodes);
+    const list = ['a', 'b']
+
+    const output = []
+
+    for (const item of raw) {
+      let peerItem = list.filter((p) => !(p === item.peer)).join('')
+      const peerIndex = raw.findIndex((i) => {
+        return i.peer === peerItem && item.chain === i.chain
+      })
+
+      const peer = raw[peerIndex]
+
+      output.push({
+        node: {
+          name: item.name,
+          chain: item.chain,
+          ip: item.ip,
+          port: item.port
+        },
+        peer: {
+          name: peer.name,
+          chain: peer.chain,
+          ip: peer.ip,
+          port: peer.port
+        },
+        external: item.external.split(';')
+      })
+    }
+    return output;
+  }
+
   async getPocketNodes() {
     const supported = await this.config.getParamsByPrefix(ConfigTypes.ConfigPrefix.POCKET_NODES);
     return supported.map(({ Value }) => {
@@ -114,14 +172,11 @@ class Service {
   }
 
   async getNodes(): Promise<any> {
-    if (this.source === Source.TAG) {
-      const dataNodes = await this.getDataNodesFromTags();
-      const pocketNodes = await this.getPocketNodes();
-      return { dataNodes, pocketNodes };
-    }
-    if (this.source === Source.CSV) {
-      return await csv().fromFile(this.sourcePath);
-    }
+    let dataNodes = await this.getDataNodesFromTags();
+    const csvDataNodes = await this.getDataNodesfromCsv()
+    const pocketNodes = await this.getPocketNodes();
+    dataNodes = dataNodes.concat(csvDataNodes);
+    return { dataNodes, pocketNodes };
   }
 }
 
