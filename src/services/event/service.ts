@@ -44,6 +44,7 @@ export class Service {
   async disableServer({ backend, host, chain }) {
     try {
       const status = await this.getBackendStatus(backend)
+
       if (status === LoadBalancerStatus.ONLINE) {
 
         await this.config.setNodeStatus({ chain, host, status: LoadBalancerStatus.OFFLINE });
@@ -273,7 +274,9 @@ export class Service {
           //this case is to put the node back into rotation
           await this.alert.sendInfo({
             title, message: `Node is in Synch \n
-            ${chain}/${host} will be added back to the load balancer`
+            ${chain}/${host} will be added back to the load balancer \n
+            ${this.getHAProxyMessage(backend)}
+            `
           })
 
           await this.enableServer({ backend, host, chain });
@@ -283,7 +286,7 @@ export class Service {
             Added ${chain}/${host} back to load balancer \n`
           })
 
-          return await this.alert.sendSuccess({
+          return await this.alert.sendSuccessToCritical({
             title, message: "Node restored to operation"
           })
         }
