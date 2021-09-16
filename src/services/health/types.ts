@@ -5,6 +5,7 @@ export enum NCResponse {
 export enum EthVariants {
   ETH = "ETH",
   BSC = "BSC",
+  BSCTST = "BSCTST",
   RIN = "RIN",
   ROP = "ROP",
   GOE = "GOE",
@@ -48,6 +49,7 @@ export enum BlockHeightVariance {
   XDAI = 5,
   FUS = 5,
   BSC = 15,
+  BSCTST = 15,
   POK = 3,
 }
 
@@ -61,6 +63,7 @@ export enum BlockHeightThreshold {
   XDAI = 5,
   FUS = 15,
   BSC = 10,
+  BSCTST = 10
 }
 
 export enum Messages {
