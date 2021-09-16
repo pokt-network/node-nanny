@@ -35,7 +35,7 @@ export enum LoadBalancerStatus {
 
 
 export enum InstanceIds {
-  shared_2a = 'i-0fb709e897295a622',
+  shared_2a = 'i-0b50f518cb7f65acb',
   shared_2b = 'i-0f61eec9ec7ecb2bc',
   bsc_2a = 'i-0b3105a7e23465369',
   bsc_2b = 'i-0355f5481fa31742c',
