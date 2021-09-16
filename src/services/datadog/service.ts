@@ -59,12 +59,12 @@ export class Service {
     let params: v2.LogsApiListLogsRequest = {
       body: {
         filter: {
-          from: "now-5m",
+          from: "now-3m",
           query: `host:${instance} container_name:${container}`,
           to: "now",
         },
         options: {
-          timeOffset: -8,
+        //  timeOffset: -8,
         },
         sort: "-timestamp",
       },
