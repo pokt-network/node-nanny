@@ -33,4 +33,5 @@ export enum Supported {
   ROP = "ROP",
   GOE = "GOE",
   KOV = "KOV",
+  HEI = "HEI"
 }
