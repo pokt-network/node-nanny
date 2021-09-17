@@ -98,28 +98,6 @@ class Service {
     return Promise.all(nodes);
   }
 
-
-  /**
-   * 
-   *      {
-            node: {
-              name: 'shared-2a/kov',
-              chain: 'KOV',
-              ip: '10.0.0.79',
-              port: '8548'
-            },
-            peer: {
-              name: 'shared-2b/kov',
-              chain: 'KOV',
-              ip: '10.0.1.208',
-              port: '8548'
-            },
-            external: [
-              '***REMOVED***'
-            ]
-          },
-   * 
-   */
   async getDataNodesfromCsv() {
     const raw = await csv().fromFile(csvNodes);
     const list = ['a', 'b']
