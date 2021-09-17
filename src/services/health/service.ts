@@ -13,6 +13,7 @@ import {
 
 import { DiscoverTypes } from "../../types";
 import { hexToDec } from "../../utils";
+import { SupportedBlockChains } from "../event/types";
 
 export class Service {
   private rpc: AxiosInstance;
@@ -198,16 +199,24 @@ export class Service {
     const url = `http://${ip}:${port}`;
 
     try {
-      const [internalBh, externalBh, ethSyncing, peers] = await Promise.all([
+      const [internalBh, externalBh, ethSyncing] = await Promise.all([
         this.getBlockHeight(url),
         this.getReferenceBlockHeight({ endpoints: referenceUrls, chain }),
         this.getEthSyncing(url),
-        this.getPeers(url),
+
       ]);
+
+      let peers;
+      let numPeers;
+
+      if (chain !== SupportedBlockChains.POL) {
+        peers = await this.getPeers(url)
+        numPeers = hexToDec(peers.result);
+      }
 
       const internalHeight = hexToDec(internalBh.result);
       const externalHeight = externalBh;
-      const numPeers = hexToDec(peers.result);
+
       const ethSyncingResult = ethSyncing.result;
       const delta = externalHeight - internalHeight;
 
