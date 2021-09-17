@@ -100,6 +100,38 @@ export class Service {
     }
   }
 
+
+
+  async getHeimdallHealth({ name, url }) {
+
+    try {
+      const { data } = await this.rpc.get(`${url}/status`);
+
+      const { catching_up } = data.result.sync_info
+
+
+      if (!catching_up) {
+        return {
+          name,
+          conditions: ErrorConditions.HEALTHY,
+          status: ErrorStatus.OK,
+          health: data,
+        };
+      } else {
+        return {
+          name,
+          conditions: ErrorConditions.NOT_SYNCHRONIZED,
+          status: ErrorStatus.ERROR,
+          health: data,
+        };
+      }
+    } catch (error) {
+      throw new Error(`could not contact blockchain node ${error} ${url}`);
+    }
+  }
+
+
+
   private async getPocketHeight(url) {
     try {
       const { data } = await this.rpc.post(`${url}/v1/query/height`, {});
@@ -203,7 +235,6 @@ export class Service {
         this.getBlockHeight(url),
         this.getReferenceBlockHeight({ endpoints: referenceUrls, chain }),
         this.getEthSyncing(url),
-
       ]);
 
       let peers;
@@ -359,6 +390,10 @@ export class Service {
           details: error,
         };
       }
+    }
+
+    if (chain === DiscoverTypes.Supported.HEI) {
+      return await this.getHeimdallHealth({ name, url: `http://${ip}:${port}` })
     }
   }
 
