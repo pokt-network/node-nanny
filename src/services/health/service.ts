@@ -144,7 +144,7 @@ export class Service {
 
   private async isRpcResponding({ url, chain }): Promise<boolean> {
     try {
-      if (chain === DiscoverTypes.Supported.AVA) {
+      if (chain === DiscoverTypes.Supported.AVA || chain === DiscoverTypes.Supported.AVATST) {
         await this.rpc.post(`${url}/ext/health`, {
           jsonrpc: "2.0",
           id: 1,
@@ -240,7 +240,7 @@ export class Service {
       let peers;
       let numPeers;
 
-      if (chain !== SupportedBlockChains.POL) {
+      if (!(chain == SupportedBlockChains.POL || chain == SupportedBlockChains.POLTST)) {
         peers = await this.getPeers(url)
         numPeers = hexToDec(peers.result);
       }
@@ -379,7 +379,7 @@ export class Service {
       }
     }
 
-    if (chain === DiscoverTypes.Supported.AVA) {
+    if (chain === DiscoverTypes.Supported.AVA || chain === DiscoverTypes.Supported.AVATST) {
       try {
         return await this.getAvaHealth({ name, url: `http://${ip}:${port}` });
       } catch (error) {
