@@ -1,5 +1,5 @@
 name,chain,ip,port,peer,external
-bsca1/bsca,BSC,51.81.66.151,8545,a,https://bsc-dataseed.binance.org;https://long-late-night.bsc.quiknode.pro;https://bsc-dataseed1.defibit.io
-bsca2/bsca,BSC,51.81.106.64,8545,b,https://bsc-dataseed.binance.org;https://long-late-night.bsc.quiknode.pro;https://bsc-dataseed1.defibit.io
+bsca1/bsca,BSC,51.81.66.151,8545,a,https://bsc-dataseed.binance.org;https://bsc-dataseed1.defibit.io
+bsca2/bsca,BSC,51.81.106.64,8545,b,https://bsc-dataseed.binance.org;https://bsc-dataseed1.defibit.io
 bsca1/bsc-test,BSCTST,51.81.66.151,8546,a,https://data-seed-prebsc-1-s1.binance.org:8545;https://data-seed-prebsc-2-s1.binance.org:8545;https://data-seed-prebsc-1-s2.binance.org:8545
 bsca2/bsc-test,BSCTST,51.81.106.64,8546,b,https://data-seed-prebsc-1-s1.binance.org:8545;https://data-seed-prebsc-2-s1.binance.org:8545;https://data-seed-prebsc-1-s2.binance.org:8545
