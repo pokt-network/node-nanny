@@ -11,12 +11,14 @@ export enum EthVariants {
   GOE = "GOE",
   KOV = "KOV",
   POL = "POL",
+  POLTST = "POLTST",
   XDAI = "XDAI",
   FUS = "FUS",
 }
 
 export enum NonEthVariants {
   AVA = "AVA",
+  AVATST = "AVATST"
 }
 
 export enum ErrorConditions {
@@ -46,6 +48,7 @@ export enum BlockHeightVariance {
   GOE = 5,
   KOV = 5,
   POL = 5,
+  POLTST= 5,
   XDAI = 5,
   FUS = 5,
   BSC = 15,
@@ -60,6 +63,7 @@ export enum BlockHeightThreshold {
   GOE = 10,
   KOV = 10,
   POL = 10,
+  POLTST = 10,
   XDAI = 5,
   FUS = 15,
   BSC = 10,
