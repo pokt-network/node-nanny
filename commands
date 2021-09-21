@@ -25,4 +25,4 @@ aws iam put-role-policy  --role-name CWLtoKinesisRoleEUS1 --policy-name Permissi
 aws logs put-subscription-filter --log-group-name "/ecs/dashboard-mainnet-backend" --filter-name "DDFilter" --filter-pattern "" --destination-arn "arn:aws:firehose:eu-west-1:059424750518:deliverystream/EcsLogsTodataDog" --role-arn "arn:aws:iam::059424750518:role/CWLtoKinesisRoleEUW1" --region eu-west-1
 
 
-aws logs put-subscription-filter --log-group-name "/Pocket/NodeMonitoring/bsca2/bsca" --filter-name "DDFilter" --filter-pattern "" --destination-arn "arn:aws:firehose:us-east-2:059424750518:deliverystream/DatadogCWLogsforwarder" --role-arn "arn:aws:iam::059424750518:role/CWLtoKinesisRole"
+aws logs put-subscription-filter --log-group-name "/Pocket/NodeMonitoring/shared-2b/hei" --filter-name "DDFilter" --filter-pattern "" --destination-arn "arn:aws:firehose:us-east-2:059424750518:deliverystream/DatadogCWLogsforwarder" --role-arn "arn:aws:iam::059424750518:role/CWLtoKinesisRole"

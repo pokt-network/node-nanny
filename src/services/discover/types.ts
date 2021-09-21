@@ -23,10 +23,12 @@ export enum Prefix {
 
 export enum Supported {
   AVA = "AVA",
+  AVATST = "AVATST",
   ETH = "ETH",
   BSC = "BSC",
   BSCTST = "BSCTST",
   POL = "POL",
+  POLTST = "POLTST",
   FUS = "FUS",
   XDAI = "XDAI",
   RIN = "RIN",
