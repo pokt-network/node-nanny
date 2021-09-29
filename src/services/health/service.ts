@@ -7,13 +7,15 @@ import {
   EthVariants,
   NCResponse,
   BlockHeightVariance,
-  BlockHeightThreshold,
   HealthResponse,
 } from "./types";
 
 import { DiscoverTypes } from "../../types";
 import { hexToDec } from "../../utils";
 import { SupportedBlockChains } from "../event/types";
+
+
+import { INode, NodesModel } from "../../models";
 
 export class Service {
   private rpc: AxiosInstance;
@@ -101,15 +103,10 @@ export class Service {
   }
 
 
-
   async getHeimdallHealth({ name, url }) {
-
     try {
       const { data } = await this.rpc.get(`${url}/status`);
-
       const { catching_up } = data.result.sync_info
-
-
       if (!catching_up) {
         return {
           name,
@@ -129,8 +126,6 @@ export class Service {
       throw new Error(`could not contact blockchain node ${error} ${url}`);
     }
   }
-
-
 
   private async getPocketHeight(url) {
     try {
@@ -174,12 +169,11 @@ export class Service {
     }
   }
 
-  private async getReferenceBlockHeight({ endpoints, chain }): Promise<number> {
+  private async getReferenceBlockHeight({ endpoints, variance }): Promise<number> {
     try {
       const results = endpoints.map((endpoint) => this.getBlockHeight(endpoint));
       const resolved = await Promise.all(results);
       const readings = resolved.map(({ result }) => hexToDec(result));
-      const variance = BlockHeightVariance[chain];
       const height = this.getBestBlockHeight({ readings, variance });
       return height;
     } catch (error) {
@@ -213,27 +207,26 @@ export class Service {
   }
 
   private async getEthNodeHealth({
+    url,
     name,
-    ip,
-    port,
     chain,
     peer,
     external,
     isPeerOnline,
+    variance,
+    threshold
   }): Promise<{}> {
     const referenceUrls = external;
 
     if (isPeerOnline) {
-      const { ip, port } = peer;
-      referenceUrls.push(`http://${ip}:${port}`);
+      const { url } = peer;
+      referenceUrls.push(url);
     }
-
-    const url = `http://${ip}:${port}`;
 
     try {
       const [internalBh, externalBh, ethSyncing] = await Promise.all([
         this.getBlockHeight(url),
-        this.getReferenceBlockHeight({ endpoints: referenceUrls, chain }),
+        this.getReferenceBlockHeight({ endpoints: referenceUrls, variance }),
         this.getEthSyncing(url),
       ]);
 
@@ -253,7 +246,6 @@ export class Service {
 
       let status = ErrorStatus.OK;
       let conditions = ErrorConditions.HEALTHY;
-      const threshold = Number(BlockHeightThreshold[chain]);
 
       if (delta > threshold) {
         status = ErrorStatus.ERROR;
@@ -329,17 +321,21 @@ export class Service {
     return results;
   }
 
-  private async getDataNodeHealth({ node, peer, external }): Promise<any> {
-    const { name, ip, port, chain } = node;
-
+  async getDataNodeHealth(node: INode): Promise<any> {
+    const { chain, port, url, host, externalNodes, variance, threshold } = node
+    const [peer] = node.peer
+    const { internalIpaddress: ip } = host
+    const name = `${host.name}/${chain.toLowerCase()}`
     const isNodeListening = await this.isNodeListening({ host: ip, port });
+    const isRpcResponding = await this.isRpcResponding({ url, chain });
+    let isPeerRpcResponding = false
 
-    const isRpcResponding = await this.isRpcResponding({ url: `http://${ip}:${port}`, chain });
-
-    const isPeerRpcResponding = await this.isRpcResponding({
-      url: `http://${peer.ip}:${peer.port}`,
-      chain,
-    });
+    if (peer) {
+      isPeerRpcResponding = await this.isRpcResponding({
+        url: peer.url,
+        chain,
+      });
+    }
 
     if (!isNodeListening) {
       return {
@@ -361,13 +357,14 @@ export class Service {
     if (isEthVariant) {
       try {
         return await this.getEthNodeHealth({
+          url,
           name,
-          ip,
-          port,
           chain,
           peer,
-          external,
+          external: externalNodes,
           isPeerOnline: isPeerRpcResponding,
+          variance,
+          threshold
         });
       } catch (error) {
         return {
@@ -381,7 +378,7 @@ export class Service {
 
     if (chain === DiscoverTypes.Supported.AVA || chain === DiscoverTypes.Supported.AVATST) {
       try {
-        return await this.getAvaHealth({ name, url: `http://${ip}:${port}` });
+        return await this.getAvaHealth({ name, url });
       } catch (error) {
         return {
           name,
@@ -393,14 +390,14 @@ export class Service {
     }
 
     if (chain === DiscoverTypes.Supported.HEI) {
-      return await this.getHeimdallHealth({ name, url: `http://${ip}:${port}` })
+      return await this.getHeimdallHealth({ name, url })
     }
   }
 
-  async getDataNodesHealth(nodes) {
+  async getDataNodesHealth(nodes: INode[]) {
     return await Promise.all(
       nodes.map(
-        async ({ node, peer, external }) => await this.getDataNodeHealth({ node, peer, external }),
+        async (node) => await this.getDataNodeHealth(node),
       ),
     );
   }
@@ -420,5 +417,38 @@ export class Service {
       }
     }
     return this.computePocketResults({ readings });
+  }
+
+  async getPocketNodeHealth(node: INode) {
+
+    const refernceNodes: INode[] = await NodesModel.find({
+      chain: "POKT"
+    }).exec()
+    const poktnodes = refernceNodes.map(({ hostname, port }) => `https://${hostname}:${port}`)
+    const pocketheight = await Promise.all(await poktnodes.map(async (node) => this.getPocketHeight(node)))
+
+    console.log(pocketheight)
+
+    return {}
+  }
+
+  async getNodeHealth(nodes: INode[]) {
+
+    const results = []
+    for (const node of nodes) {
+      if (node.chain === SupportedBlockChains.POKT) {
+        results.push(await this.getPocketNodeHealth(node))
+      }
+
+      if (node.chain === SupportedBlockChains.AVA || node.chain === SupportedBlockChains.AVATST) {
+        results.push(await this.getPocketNodeHealth)
+      }
+
+      if (node.chain === SupportedBlockChains.HEI) {
+
+      }
+    }
+
+
   }
 }
