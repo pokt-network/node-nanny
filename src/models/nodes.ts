@@ -16,26 +16,39 @@ interface IHosts {
     hostType: HostType
 }
 
-interface peer {
+interface IPeer {
     url: string
     id: string
 }
 
+interface IChain {
+    chain: string
+    name: string
+    type: string
+}
+
 export interface INode {
     backend: string
-    chain: string
+    chain: IChain
     container: string
     externalNodes: string[]
     host: IHosts
     hostname: string
     monitorId: string
     online: boolean
-    peer: peer[]
+    peer: IPeer[]
     port: number
     threshold: number
     url: string
     variance: number
 }
+
+
+const chainSchema = new Schema<IChain>({
+    chain: String,
+    name: String,
+    type: String,
+})
 
 const hostsSchema = new Schema<IHosts>(
     {
@@ -51,7 +64,6 @@ const hostsSchema = new Schema<IHosts>(
     }
 )
 
-
 const peerSchema = new Schema({
     url: String,
     id: String
@@ -60,7 +72,7 @@ const peerSchema = new Schema({
 const nodesSchema = new Schema<INode>(
     {
         backend: String,
-        chain: String,
+        chain: chainSchema,
         container: String,
         externalNodes: [String],
         host: hostsSchema,

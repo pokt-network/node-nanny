@@ -1,10 +1,12 @@
 import express from "express";
 import { config } from "dotenv";
-import { Event } from "../services";
+import { Event, DataDog, Log } from "../services";
 import { connect } from "../db"
 
 config();
 const event = new Event();
+const dd = new DataDog()
+const log = new Log();
 const app = express();
 const port = 3000;
 
@@ -20,6 +22,16 @@ app.post("/webhook/datadog/monitor/events", async ({ body }, res) => {
   }
 });
 
+app.post("/admin/monitor/onboard", async ({ body }, res) => {
+  const { name, id } = body
+  try {
+    const logGroup = await log.onBoardNewNode(name)
+    await dd.createMonitor({name,logGroup, id })
+    return res.status(200).json({ done: true });
+  } catch (error) {
+    res.sendStatus(500)
+  }
+});
 
 const start = async () => {
   await connect()
@@ -28,6 +40,5 @@ const start = async () => {
     console.log(`Webhook api listening at http://localhost:${port}`);
   });
 }
-
 
 start()

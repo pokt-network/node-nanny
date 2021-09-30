@@ -4,10 +4,9 @@ import { exec } from "child_process";
 import {
   ErrorConditions,
   ErrorStatus,
-  EthVariants,
   NCResponse,
-  BlockHeightVariance,
   HealthResponse,
+  SupportedBlockChainTypes,
 } from "./types";
 
 import { DiscoverTypes } from "../../types";
@@ -19,10 +18,8 @@ import { INode, NodesModel } from "../../models";
 
 export class Service {
   private rpc: AxiosInstance;
-  private ethVariants;
   constructor() {
     this.rpc = this.initClient();
-    this.ethVariants = Object.keys(EthVariants);
   }
 
   private initClient() {
@@ -206,17 +203,14 @@ export class Service {
     }
   }
 
-  private async getEthNodeHealth({
-    url,
-    name,
-    chain,
-    peer,
-    external,
-    isPeerOnline,
-    variance,
-    threshold
-  }): Promise<{}> {
-    const referenceUrls = external;
+  private async getEthNodeHealth(node: INode): Promise<{}> {
+    const { chain, url, externalNodes, variance, threshold, host } = node
+    const [peer] = node.peer
+    const name = `${host.name}/${chain.name}`
+    const isPeerOnline = await this.isRpcResponding({ url: peer.url, chain: chain.name })
+
+    //if peer online combine with external nodes
+    const referenceUrls = externalNodes;
 
     if (isPeerOnline) {
       const { url } = peer;
@@ -233,7 +227,7 @@ export class Service {
       let peers;
       let numPeers;
 
-      if (!(chain == SupportedBlockChains.POL || chain == SupportedBlockChains.POLTST)) {
+      if (!(chain.name == SupportedBlockChains.POL || chain.name == SupportedBlockChains.POLTST)) {
         peers = await this.getPeers(url)
         numPeers = hexToDec(peers.result);
       }
@@ -269,186 +263,93 @@ export class Service {
     }
   }
 
-  private getHighestPocketHeight(readings): number {
-    let allHeight = [];
-    for (const { nodes } of readings) {
-      for (const { height } of nodes) {
-        allHeight.push(height);
-      }
-    }
-    const sorted = allHeight.sort();
-
-    const [highest] = sorted.slice(-1);
-
-    return highest;
-  }
-
-  private async computePocketResults({ readings }) {
-    const results = [];
-    const highest = this.getHighestPocketHeight(readings);
-    for (const { host, nodes } of readings) {
-      if (results.findIndex((result) => result.host === host) === -1) {
-        results.push({ status: "", badNodes: [] });
-      }
-
-      const index = readings.findIndex((reading) => reading.host === host);
-
-      for (const node of nodes) {
-        if (highest - node.height > BlockHeightVariance.POK) {
-          results[index].badNodes.push(node);
-        }
-      }
-
-      if (results[index].badNodes.length === 1) {
-        results[index].status = ErrorStatus.WARNING;
-        results[index].conditions = ErrorConditions.NO_RESPONSE_ONE_NODE;
-        results[index].details = results[index].badNodes;
-      }
-      if (results[index].badNodes.length > 1) {
-        results[index].status = ErrorStatus.ERROR;
-        results[index].conditions = ErrorConditions.NO_RESPONSE;
-        results[index].details = results[index].badNodes;
-      }
-
-      if (results[index].badNodes.length === 0) {
-        results[index].status = ErrorStatus.OK;
-        results[index].conditions = ErrorConditions.HEALTHY;
-      }
-
-      results[index].name = host;
-    }
-
-    return results;
-  }
-
-  async getDataNodeHealth(node: INode): Promise<any> {
-    const { chain, port, url, host, externalNodes, variance, threshold } = node
-    const [peer] = node.peer
-    const { internalIpaddress: ip } = host
-    const name = `${host.name}/${chain.toLowerCase()}`
-    const isNodeListening = await this.isNodeListening({ host: ip, port });
-    const isRpcResponding = await this.isRpcResponding({ url, chain });
-    let isPeerRpcResponding = false
-
-    if (peer) {
-      isPeerRpcResponding = await this.isRpcResponding({
-        url: peer.url,
-        chain,
-      });
-    }
-
-    if (!isNodeListening) {
-      return {
-        name,
-        status: ErrorStatus.ERROR,
-        conditions: ErrorConditions.OFFLINE,
-      };
-    }
-
-    if (!isRpcResponding) {
-      return {
-        name,
-        status: ErrorStatus.ERROR,
-        conditions: ErrorConditions.NO_RESPONSE,
-      };
-    }
-
-    const isEthVariant = this.ethVariants.includes(chain);
-    if (isEthVariant) {
-      try {
-        return await this.getEthNodeHealth({
-          url,
-          name,
-          chain,
-          peer,
-          external: externalNodes,
-          isPeerOnline: isPeerRpcResponding,
-          variance,
-          threshold
-        });
-      } catch (error) {
-        return {
-          name,
-          status: ErrorStatus.ERROR,
-          conditions: ErrorConditions.NO_RESPONSE,
-          details: error,
-        };
-      }
-    }
-
-    if (chain === DiscoverTypes.Supported.AVA || chain === DiscoverTypes.Supported.AVATST) {
-      try {
-        return await this.getAvaHealth({ name, url });
-      } catch (error) {
-        return {
-          name,
-          status: ErrorStatus.ERROR,
-          conditions: ErrorConditions.NO_RESPONSE,
-          details: error,
-        };
-      }
-    }
-
-    if (chain === DiscoverTypes.Supported.HEI) {
-      return await this.getHeimdallHealth({ name, url })
-    }
-  }
-
-  async getDataNodesHealth(nodes: INode[]) {
-    return await Promise.all(
-      nodes.map(
-        async (node) => await this.getDataNodeHealth(node),
-      ),
-    );
-  }
-
-  async getPocketNodesHealth(hosts) {
-    const readings = [];
-    for (const { host, nodes } of hosts) {
-      if (readings.findIndex((reading) => reading.host === host) === -1) {
-        readings.push({ host, nodes: [] });
-      }
-
-      const index = readings.findIndex((reading) => reading.host === host);
-
-      for (const { name, url } of nodes) {
-        const { height } = await this.getPocketHeight(url);
-        readings[index].nodes.push({ name, height });
-      }
-    }
-    return this.computePocketResults({ readings });
-  }
-
-  async getPocketNodeHealth(node: INode) {
-
+  async getPocketNodeHealth({ hostname, port, host, variance }: INode) {
+    // get list of reference nodes
+    //todo move to discover, get random sample of reference nodes instead of all
     const refernceNodes: INode[] = await NodesModel.find({
-      chain: "POKT"
+      "chain.type": "POKT"
     }).exec()
+    //get highest block height from reference nodes
     const poktnodes = refernceNodes.map(({ hostname, port }) => `https://${hostname}:${port}`)
     const pocketheight = await Promise.all(await poktnodes.map(async (node) => this.getPocketHeight(node)))
+    const [highest] = pocketheight.map(({ height }) => height).sort().slice(-1)
+    const { height } = await this.getPocketHeight(`https://${hostname}:${port}`)
 
-    console.log(pocketheight)
+    const isSyncronized = (Number(highest) - Number(height) < variance)
 
-    return {}
+    if (!isSyncronized) {
+      return {
+        name: hostname,
+        status: ErrorStatus.ERROR,
+        conditions: ErrorConditions.NOT_SYNCHRONIZED,
+        height: {
+          internalHeight: height,
+          externalHeight: highest,
+          delta: (Number(highest) - Number(height)),
+        },
+      };
+    }
+
+    return {
+      name: hostname,
+      status: ErrorStatus.OK,
+      conditions: ErrorConditions.HEALTHY,
+      height: {
+        internalHeight: height,
+        externalHeight: highest,
+        delta: (Number(highest) - Number(height)),
+      },
+    };
+
   }
 
   async getNodeHealth(nodes: INode[]) {
-
     const results = []
     for (const node of nodes) {
-      if (node.chain === SupportedBlockChains.POKT) {
-        results.push(await this.getPocketNodeHealth(node))
+      const { chain, host, hostname, port, url } = node;
+      //Check if node is online and RPC up
+      const isNodeListening = await this.isNodeListening({ host: host.internalIpaddress, port });
+      let isRpcResponding
+
+      if (node.chain.type == SupportedBlockChainTypes.POKT) {
+        const { height } = await this.getPocketHeight(`https://${hostname}:${port}`)
+        isRpcResponding = (height !== 0)
+      } else {
+        isRpcResponding = await this.isRpcResponding({ url, chain: chain.name })
       }
 
-      if (node.chain === SupportedBlockChains.AVA || node.chain === SupportedBlockChains.AVATST) {
-        results.push(await this.getPocketNodeHealth)
+      if (!isNodeListening) {
+        results.push({
+          name: hostname,
+          status: ErrorStatus.ERROR,
+          conditions: ErrorConditions.OFFLINE,
+        })
       }
 
-      if (node.chain === SupportedBlockChains.HEI) {
+      if (isNodeListening && !isRpcResponding) {
+        results.push({
+          name: hostname,
+          status: ErrorStatus.ERROR,
+          conditions: ErrorConditions.NO_RESPONSE,
+        })
+      }
 
+      //Check Health
+      if (isNodeListening && isRpcResponding) {
+        if (chain.type == SupportedBlockChainTypes.POKT) {
+          results.push(await this.getPocketNodeHealth(node))
+        }
+        if (chain.type == SupportedBlockChainTypes.ETH) {
+          results.push(await this.getEthNodeHealth(node))
+        }
+        if (chain.type == SupportedBlockChainTypes.AVA) {
+          results.push(await this.getAvaHealth({ name: `${host.name}/${chain.name}`, url: url }))
+        }
+        if (chain.type == SupportedBlockChainTypes.HEI) {
+          results.push(await this.getHeimdallHealth({ name: `${host.name}/${chain.name}`, url: url }))
+        }
       }
     }
-
-
+    return results
   }
 }

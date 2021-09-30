@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import { v1, v2 } from "@datadog/datadog-api-client";
-
-import { ApiDetails, EventTransitions } from "./types";
+import { NodesModel } from '../../models';
+import { ApiDetails } from "./types";
 import { Config } from "..";
 
 import { wait } from "../../utils";
@@ -64,7 +64,7 @@ export class Service {
           to: "now",
         },
         options: {
-        //  timeOffset: -8,
+          //  timeOffset: -8,
         },
         sort: "-timestamp",
       },
@@ -143,4 +143,39 @@ export class Service {
       await this.config.setParameter({ key, value: id });
     }
   }
+
+  async createMonitor({ name, logGroup, id }) {
+    const { data } = await this.restClient.post('/monitor', {
+      "name": name.toUpperCase(),
+      "type": "log alert",
+      "query": `logs(\"status:error source:\\\"${logGroup.toLowerCase()}\\\"\").index(\"*\").rollup(\"count\").by(\"@conditions\").last(\"5m\") > 4`,
+      "message": `@webhook-events-production \nnodeId_${id}\nevent_{{@conditions.name}}"`,
+      "tags": [
+        "Smart_Monitorv2"
+      ],
+      "options": {
+        "notify_audit": false,
+        "locked": false,
+        "renotify_interval": 10,
+        "include_tags": true,
+        "thresholds": {
+          "critical": 4
+        },
+        "silenced": {},
+        "notify_no_data": false,
+        "enable_logs_sample": true,
+        "groupby_simple_monitor": false,
+        "escalation_message": `@webhook-events-production \nchain_pokt\nnodeId_${id}\nevent_{{@conditions.name}}_NOT_RESOLVED`,
+        "new_group_delay": 60
+      },
+      "classification": "log"
+
+
+    })
+    const { id: monitorId } = data;
+    await NodesModel.findOneAndUpdate({ _id: id }, { $set: { monitorId } })
+    return monitorId;
+  }
+
+
 }
