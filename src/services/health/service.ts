@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import { exec } from "child_process";
-
+import { ObjectId } from 'mongoose';
 import {
   ErrorConditions,
   ErrorStatus,
@@ -174,6 +174,7 @@ export class Service {
       const height = this.getBestBlockHeight({ readings, variance });
       return height;
     } catch (error) {
+      console.log(endpoints)
       throw new Error(`could not get reference block height`);
     }
   }
@@ -204,17 +205,19 @@ export class Service {
   }
 
   private async getEthNodeHealth(node: INode): Promise<{}> {
-    const { chain, url, externalNodes, variance, threshold, host } = node
-    const [peer] = node.peer
+    const { chain, url, externalNodes, variance, threshold, host, id } = node
     const name = `${host.name}/${chain.name}`
-    const isPeerOnline = await this.isRpcResponding({ url: peer.url, chain: chain.name })
 
-    //if peer online combine with external nodes
+    let peers: INode[] = await NodesModel.find({ "chain.name": chain.name, _id: { $ne: id } }).exec()
+
     const referenceUrls = externalNodes;
 
-    if (isPeerOnline) {
-      const { url } = peer;
-      referenceUrls.push(url);
+    peers = peers.filter(async (peer) => await this.isRpcResponding({ url: peer.url, chain: chain.name }))
+
+    if (peers.length > 1) {
+      for (const { url } of peers) {
+        referenceUrls.push(url)
+      }
     }
 
     try {
@@ -263,12 +266,11 @@ export class Service {
     }
   }
 
-  async getPocketNodeHealth({ hostname, port, host, variance }: INode) {
+  async getPocketNodeHealth({ hostname, port, variance, id }: INode) {
     // get list of reference nodes
-    //todo move to discover, get random sample of reference nodes instead of all
     const refernceNodes: INode[] = await NodesModel.find({
-      "chain.type": "POKT"
-    }).exec()
+      "chain.type": "POKT", _id: { $ne: id }
+    }, null, { limit: 10 }).exec()
     //get highest block height from reference nodes
     const poktnodes = refernceNodes.map(({ hostname, port }) => `https://${hostname}:${port}`)
     const pocketheight = await Promise.all(await poktnodes.map(async (node) => this.getPocketHeight(node)))

@@ -50,12 +50,12 @@ test("should get health logs from datadog", async () => {
 
 
 test("should create monitor", async () => { 
-   const response = await dd.createMonitor({
-     logGroup: "/Pocket/NodeMonitoring/mainnet-1.nodes.pokt.network",
-     name: 'mainnet-1.nodes.pokt.network',
-     id: "6153a7eb16a5610010b1a173"
-   })
-   console.log(response)
+  //  const response = await dd.createMonitor({
+  //    logGroup: "/Pocket/NodeMonitoring/mainnet-1.nodes.pokt.network",
+  //    name: 'mainnet-1.nodes.pokt.network',
+  //    id: "6153a7eb16a5610010b1a173"
+  //  })
+  //  console.log(response)
 })
 const event = {
   msg:

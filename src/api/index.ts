@@ -23,6 +23,7 @@ app.post("/webhook/datadog/monitor/events", async ({ body }, res) => {
 });
 
 app.post("/admin/monitor/onboard", async ({ body }, res) => {
+  console.log(body)
   const { name, id } = body
   try {
     const logGroup = await log.onBoardNewNode(name)

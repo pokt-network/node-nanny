@@ -1,4 +1,4 @@
-import { Schema, model, Model, Document } from 'mongoose'
+import { Schema, model, Model, ObjectId } from 'mongoose'
 
 enum HostType {
     AWS = "AWS",
@@ -28,6 +28,7 @@ interface IChain {
 }
 
 export interface INode {
+    id: string
     backend: string
     chain: IChain
     container: string
@@ -71,6 +72,7 @@ const peerSchema = new Schema({
 
 const nodesSchema = new Schema<INode>(
     {
+        id: String,
         backend: String,
         chain: chainSchema,
         container: String,
