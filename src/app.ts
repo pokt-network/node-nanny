@@ -1,6 +1,7 @@
 import { Discover, Health, Log } from "./services";
 import { DiscoverTypes } from "./types";
 import { wait } from "./utils";
+import { connect } from "./db";
 
 export class App {
   private discover: Discover;
@@ -13,13 +14,9 @@ export class App {
   }
 
   async main() {
-    let { dataNodes, pocketNodes } = await this.discover.getNodes();
-
-    const pocketHealth = await this.health.getPocketNodesHealth(pocketNodes);
-
-    const dataHealth = await this.health.getDataNodesHealth(dataNodes);
-
-    const allHealth = pocketHealth.concat(dataHealth);
+    await connect()
+    const nodes = await this.discover.getNodesfromDB()
+    const allHealth = await this.health.getNodeHealth(nodes)
 
     for (const health of allHealth) {
       if (health) {

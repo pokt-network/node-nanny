@@ -125,4 +125,34 @@ export class Service {
       logEvents: [{ message, timestamp: Date.now() }],
     });
   }
+
+  async subscribeToLogGroup(logGroupName) {
+    return await this.client.putSubscriptionFilter({
+      destinationArn: "arn:aws:firehose:us-east-2:059424750518:deliverystream/DatadogCWLogsforwarder",
+      filterName: "DDFilter",
+      filterPattern: "",
+      logGroupName,
+      roleArn: "arn:aws:iam::059424750518:role/CWLtoKinesisRole"
+    }).promise();
+  }
+
+  async onBoardNewNode(name) {
+    const logGroupName = `/Pocket/NodeMonitoring/${name}`
+
+    const doesLogGroupExist = await this.doesLogGroupExist(logGroupName)
+
+    if (!doesLogGroupExist) {
+      await this.createLogGroup(logGroupName)
+    }
+
+    const filterStatus = await this.client.describeSubscriptionFilters({ logGroupName }).promise()
+
+    if (filterStatus.subscriptionFilters.length !== 0) {
+      //subcription already exists
+      return logGroupName
+    }
+    await this.subscribeToLogGroup(logGroupName)
+    return logGroupName;
+  }
+
 }
