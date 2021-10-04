@@ -1,13 +1,23 @@
 import { Health, Discover } from "..";
+import { connect, disconnect } from "../../db";
 import { DiscoverTypes } from "../../types";
 import { Service } from "./service";
-import { BlockHeightVariance } from "./types";
 const health = new Service();
-//const discover = new Discover({ source: DiscoverTypes.Source.TAG });
+const discover = new Discover({ source: DiscoverTypes.Source.TAG });
 
-test("", async () => {
 
- await health.getHeimdallHealth({name: "a", url: 'http://10.0.1.208:26659'})
+beforeAll(async () => {
+  await connect()
+})
 
+afterAll(async () => {
+  await disconnect()
+})
+
+test("get nodes from db and process", async () => {
+  const nodes = await discover.getNodesfromDB()
+  const readings = await health.getNodeHealth(nodes)
   expect(1).toEqual(1)
 });
+
+
