@@ -16,6 +16,13 @@ export enum EthVariants {
   FUS = "FUS",
 }
 
+export enum SupportedBlockChainTypes {
+  ETH = "ETH",
+  AVA = "AVA",
+  HEI = "HEI",
+  POKT = "POKT"
+}
+
 export enum NonEthVariants {
   AVA = "AVA",
   AVATST = "AVATST"
@@ -48,7 +55,7 @@ export enum BlockHeightVariance {
   GOE = 5,
   KOV = 5,
   POL = 5,
-  POLTST= 5,
+  POLTST = 5,
   XDAI = 5,
   FUS = 5,
   BSC = 15,

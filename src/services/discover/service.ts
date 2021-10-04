@@ -4,9 +4,7 @@ import path from "path";
 import { Source, Prefix, Supported } from "./types";
 import { Config } from "../../services";
 import { ConfigTypes } from "../../types";
-
-
-
+import { NodesModel, INode } from '../../models'
 
 const csvNodes = path.resolve(__dirname, "../../../nodes.csv");
 
@@ -148,6 +146,12 @@ class Service {
       };
     });
   }
+
+
+  async getNodesfromDB(): Promise<INode[]> {
+    return await NodesModel.find({}).exec()
+  }
+
 
   async getNodes(): Promise<any> {
     let dataNodes = await this.getDataNodesFromTags();

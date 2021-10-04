@@ -44,6 +44,7 @@
     "dd-trace": "^1.1.0",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
-    "hot-shots": "^8.5.0"
+    "hot-shots": "^8.5.0",
+    "mongoose": "^6.0.7"
   }
 }
