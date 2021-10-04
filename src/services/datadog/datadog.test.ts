@@ -1,9 +1,18 @@
 import { config } from "dotenv";
 import { Service } from "./service";
+import { connect, disconnect } from "../../db";
 import { Status } from "./types";
 const dd = new Service();
 
 config();
+
+beforeAll(async () => {
+  await connect()
+})
+
+afterAll(async () => {
+  await disconnect()
+})
 
 test("should construct event object from dd string", async () => {
   const response = await dd.parseWebhookMessage(retrigger);
@@ -20,8 +29,8 @@ test("should construct event object from dd string", async () => {
 });
 
 test("should get status of dd monitor", async () => {
-  const response = await dd.getMonitorStatus("1867792");
-  expect(Object.values(Status)).toContain(response);
+  // const response = await dd.getMonitorStatus("1867792");
+  // expect(Object.values(Status)).toContain(response);
 });
 
 test("should store dd tags in ssm", async () => {
@@ -35,11 +44,19 @@ test("should get container logs from datadog", async () => {
 
 test("should get health logs from datadog", async () => {
   const logs = await dd.getHealthLogs({ host: "2a", chain: "bsc" })
-
-  //console.log(logs)
+   //console.log(logs)
 
 })
 
+
+test("should create monitor", async () => { 
+  //  const response = await dd.createMonitor({
+  //    logGroup: "/Pocket/NodeMonitoring/mainnet-1.nodes.pokt.network",
+  //    name: 'mainnet-1.nodes.pokt.network',
+  //    id: "6153a7eb16a5610010b1a173"
+  //  })
+  //  console.log(response)
+})
 const event = {
   msg:
     "%%%\n" +
