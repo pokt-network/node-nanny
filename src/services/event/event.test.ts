@@ -1,15 +1,21 @@
 import { Service } from "./service";
-import { Config } from "..";
+import { connect, disconnect } from "../../db";
 
 const event = new Service();
+beforeAll(async () => {
+  await connect()
+})
 
+afterAll(async () => {
+  await disconnect()
+})
 // test("should get backend status", async () => {
 //   const status = await event.getBackendStatus('bscmainnet')
 //   expect(1).toEqual(1)
 
 // })
 test("should set backend to online", async () => {
-  await event.processEvent(mock)
+  //await event.processEvent(mock)
 
   // await event.enableServer({ backend: 'bscmainnet', host: "2a", chain: "bsc" })
   //await event.enableServer({ backend: 'bscmainnet', host: "2b", chain: "bsc" })
@@ -17,26 +23,38 @@ test("should set backend to online", async () => {
 
 })
 
+test("should get blockheight differnce all nodes are bad", async () => {
+  //await event.processEvent(mock)
+
+  // await event.enableServer({ backend: 'bscmainnet', host: "2a", chain: "bsc" })
+  //await event.enableServer({ backend: 'bscmainnet', host: "2b", chain: "bsc" })
+  expect(1).toEqual(1)
+
+})
+
+
 const mock = {
   msg: '%%%\n' +
-    '@webhook-events-production\n' +
-    'chain_kov\n' +
-    'host_2b\n' +
-    'container_kov1\n' +
-    'backend_ethkovan\n' +
-    'event_NO_RESPONSE\n' +
+    '@webhook-events-production \n' +
+    'nodeId_615632b18b86f00010db487b\n' +
+    'event_NOT_SYNCHRONIZED"\n' +
     '\n' +
-    'More than **1** log events matched in the last **1m** against the monitored query: **[source:"/pocket/nodemonitoring/shared-2b/kov" -@conditions:HEALTHY](https://app.datadoghq.eu/logs/analytics?query=source%3A%22%2Fpocket%2Fnodemonitoring%2Fshared-2b%2Fkov%22+-%40conditions%3AHEALTHY&agg_m=count&agg_t=count&agg_q=%40conditions&index=)** by **@conditions**\n' +
+    '@webhook-events-production \n' +
+    'chain_pokt\n' +
+    'nodeId_615632b18b86f00010db487b\n' +
+    'event_NOT_SYNCHRONIZED_NOT_RESOLVED\n' +
     '\n' +
-    'The monitor was last triggered at Wed Sep 15 2021 22:05:12 UTC.\n' +
+    'More than **4** log events matched in the last **5m** against the monitored query: **[status:error source:"/pocket/nodemonitoring/shared-2a/poltst"](https://app.datadoghq.eu/logs/analytics?query=status%3Aerror+source%3A%22%2Fpocket%2Fnodemonitoring%2Fshared-2a%2Fpoltst%22&agg_m=count&agg_t=count&agg_q=%40conditions&index=)** by **@conditions**\n' +
+    '\n' +
+    'The monitor was last triggered at Mon Oct 04 2021 22:40:23 UTC.\n' +
     '\n' +
     '- - -\n' +
     '\n' +
-    '[[Monitor Status](https://app.datadoghq.eu/monitors/2098152?to_ts=1631743512000&group=%40conditions%3ANO_RESPONSE&from_ts=1631742612000)] · [[Edit Monitor](https://app.datadoghq.eu/monitors#2098152/edit)] · [[Related Logs](https://app.datadoghq.eu/logs/analytics?index=%2A&to_ts=1631743512000&agg_t=count&agg_m=count&agg_q=%40conditions&from_ts=1631742612000&live=false&query=source%3A%22%2Fpocket%2Fnodemonitoring%2Fshared-2b%2Fkov%22+-%40conditions%3AHEALTHY)]',
-  id: '2098152',
+    '[[Monitor Status](https://app.datadoghq.eu/monitors/2528963?to_ts=1633387223000&group=%40conditions%3ANOT_SYNCHRONIZED&from_ts=1633386323000)] · [[Edit Monitor](https://app.datadoghq.eu/monitors#2528963/edit)] · [[Related Logs](https://app.datadoghq.eu/logs/analytics?index=%2A&to_ts=1633387223000&agg_t=count&agg_m=count&agg_q=%40conditions&from_ts=1633386323000&live=false&query=status%3Aerror+source%3A%22%2Fpocket%2Fnodemonitoring%2Fshared-2a%2Fpoltst%22)]',
+  id: '2528963',
   transition: 'Triggered',
   type: 'error',
-  title: '[Triggered on {@conditions:NO_RESPONSE}] Ethereum Kovan US-East-2 Host B',
+  title: '[Re-Triggered on {@conditions:NOT_SYNCHRONIZED}] SHARED-2A/POLTST',
   status: '',
-  link: 'https://app.datadoghq.eu/event/event?id=6165303706861805119'
+  link: 'https://app.datadoghq.eu/event/event?id=6192890666631275067'
 }

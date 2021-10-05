@@ -1,4 +1,7 @@
 import AWS from "aws-sdk";
+import { response } from "express";
+import { NodesModel } from "../../models";
+import mongoose from "mongoose";
 
 import { ConfigPrefix } from "./types";
 
@@ -58,9 +61,8 @@ export class Service {
       throw new Error(`could not set parameter ${error}`);
     }
   }
-  
+
   async setParameter({ key, value }) {
-    console.log(key, value)
     try {
       return await this.client
         .putParameter({
@@ -74,20 +76,14 @@ export class Service {
       throw new Error(`could not set parameter ${error}`);
     }
   }
-  async setNodeStatus({ chain, host, status }) {
-    const response = await this.setParam({
-      chain: `${host}_${chain}`,
-      param: "status",
-      value: status,
-    });
-    return response;
+  async setNodeStatus({ status, nodeId }) {
+    return await NodesModel.findByIdAndUpdate(nodeId, {
+      online: status === 'online'
+    })
   }
 
-  async getNodeStatus({ chain, host }) {
-    const response = await this.getParam({
-      chain: `${host}_${chain}`,
-      param: "status",
-    });
-    return response;
+  async getNodeStatus(nodeId) {
+    const { online } = await (await NodesModel.findOne({ "_id": nodeId }, { online: 1 }))
+    return online
   }
 }
