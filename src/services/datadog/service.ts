@@ -76,18 +76,18 @@ export class Service {
     })
   }
 
-  async getHealthLogs({ chain, host }) {
+  async getHealthLogs({ host, logGroup }) {
     let params: v2.LogsApiListLogsRequest = {
       body: {
         filter: {
           from: "now-2m",
-          query: `service:"/pocket/nodemonitoring/binance-${host}/${chain}"`,
+          query: `service:"${logGroup}"`,
           to: "now",
         },
         options: {
-          timeOffset: -8,
+         // timeOffset: -8,
         },
-        sort: "timestamp",
+        sort: "-timestamp",
       },
     };
     return await (await this.ddlogs.listLogs(params)).data.map(({ attributes }) => {
@@ -117,17 +117,14 @@ export class Service {
   }
 
   parseWebhookMessage({ msg, id, transition, type, title, link }) {
-    let [, , chain, host, container, backend, event] = msg.split("\n");
-    chain = chain.split("chain_")[1];
-    host = host.split("host_")[1];
-    container = container.split("container_")[1];
+    let [, , nodeId, event] = msg.split("\n");
     event = event.split("event_")[1];
-    backend = backend.split("backend_")[1];
-    return { event, host, chain, container, id, transition, type, title, backend, link };
+    nodeId = nodeId.split("nodeId_")[1];
+    return { event, id, nodeId, transition, type, title, link };
   }
 
   async storeMonitorIds() {
-    const monitors = await this.getMonitorsByTag("Smart_Monitor");
+    const monitors = await this.getMonitorsByTag("Smart_MonitorV2");
 
     const ids = monitors.map((monitor) => {
       return {
