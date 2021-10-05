@@ -1,6 +1,5 @@
 import axios, { AxiosInstance } from "axios";
 import { exec } from "child_process";
-import { ObjectId } from 'mongoose';
 import {
   ErrorConditions,
   ErrorStatus,
@@ -167,16 +166,17 @@ export class Service {
   }
 
   private async getReferenceBlockHeight({ endpoints, variance }): Promise<number> {
-    try {
-      const results = endpoints.map((endpoint) => this.getBlockHeight(endpoint));
-      const resolved = await Promise.all(results);
-      const readings = resolved.map(({ result }) => hexToDec(result));
-      const height = this.getBestBlockHeight({ readings, variance });
-      return height;
-    } catch (error) {
-      console.log(endpoints)
-      throw new Error(`could not get reference block height`);
+    const resolved = []
+    for (const endpoint of endpoints) {
+      try {
+        resolved.push(await this.getBlockHeight(endpoint))
+      } catch (error) {
+        console.error(`could not get reading ${error}`)
+      }
     }
+    const readings = resolved.map(({ result }) => hexToDec(result));
+    const height = this.getBestBlockHeight({ readings, variance });
+    return height;
   }
 
   private async nc({ host, port }): Promise<string> {
@@ -204,17 +204,31 @@ export class Service {
     }
   }
 
+
+  private async checkExternalUrls(urls) {
+    return Promise.all(
+      await urls.filter(async (url) => {
+        try {
+          await this.getBlockHeight(url);
+          return true
+        } catch (error) {
+          return false
+        }
+      }))
+  }
+
   private async getEthNodeHealth(node: INode): Promise<{}> {
     const { chain, url, externalNodes, variance, threshold, host, id } = node
+
     const name = `${host.name}/${chain.name}`
 
     let peers: INode[] = await NodesModel.find({ "chain.name": chain.name, _id: { $ne: id } }).exec()
 
-    const referenceUrls = externalNodes;
+    const referenceUrls = await this.checkExternalUrls(externalNodes)
 
     peers = peers.filter(async (peer) => await this.isRpcResponding({ url: peer.url, chain: chain.name }))
 
-    if (peers.length > 1) {
+    if (peers.length >= 1) {
       for (const { url } of peers) {
         referenceUrls.push(url)
       }
@@ -262,7 +276,13 @@ export class Service {
         },
       };
     } catch (error) {
-      throw new Error(`could not get eth health ${error}`);
+      if (String(error).includes(`could not contact blockchain node Error: timeout of 1000ms exceeded`)) {
+        return {
+          name,
+          status: ErrorStatus.ERROR,
+          conditions: ErrorConditions.NO_RESPONSE,
+        }
+      }
     }
   }
 
