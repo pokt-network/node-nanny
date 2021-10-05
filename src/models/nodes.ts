@@ -1,4 +1,4 @@
-import { Schema, model, Model, ObjectId } from 'mongoose'
+import { Schema, model, Model } from 'mongoose'
 
 enum HostType {
     AWS = "AWS",
@@ -14,11 +14,6 @@ interface IHosts {
     loadbalancer: boolean
     dockerHost: boolean
     hostType: HostType
-}
-
-interface IPeer {
-    url: string
-    id: string
 }
 
 interface IChain {
@@ -37,11 +32,11 @@ export interface INode {
     hostname: string
     monitorId: string
     online: boolean
-    peer: IPeer[]
     port: number
     threshold: number
     url: string
     variance: number
+    logGroup: string
 }
 
 
@@ -65,10 +60,7 @@ const hostsSchema = new Schema<IHosts>(
     }
 )
 
-const peerSchema = new Schema({
-    url: String,
-    id: String
-})
+
 
 const nodesSchema = new Schema<INode>(
     {
@@ -81,11 +73,11 @@ const nodesSchema = new Schema<INode>(
         hostname: String,
         monitorId: String,
         online: Boolean,
-        peer: [peerSchema],
         port: Number,
         threshold: Number,
         url: String,
         variance: Number,
+        logGroup: String
     },
     { collection: 'nodes' }
 )
