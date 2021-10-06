@@ -14,6 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.post("/webhook/datadog/monitor/events", async ({ body }, res) => {
+  console.log(body)
   try {
     await event.processEvent(body);
     return res.status(200).json({ done: true });
