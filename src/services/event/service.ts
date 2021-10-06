@@ -174,7 +174,7 @@ export class Service {
       }
 
       //Send logs to discord on every error
-      let instance = node.host.hostType === "AWS" ? node.host.awsInstanceId : node.host.externalHostName
+      let instance = node.host.hostType === "AWS" ? node.host.awsInstanceId : node.host.name
 
       const logs = await this.dd.getContainerLogs({ instance, container })
 
