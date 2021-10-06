@@ -288,18 +288,18 @@ export class Service {
 
   async getPocketNodeHealth({ hostname, port, variance, id }: INode) {
     // get list of reference nodes
-    const refernceNodes: INode[] = await NodesModel.find({
+    const referenceNodes: INode[] = await NodesModel.find({
       "chain.type": "POKT", _id: { $ne: id }
     }, null, { limit: 10 }).exec()
     //get highest block height from reference nodes
-    const poktnodes = refernceNodes.map(({ hostname, port }) => `https://${hostname}:${port}`)
+    const poktnodes = referenceNodes.map(({ hostname, port }) => `https://${hostname}:${port}`)
     const pocketheight = await Promise.all(await poktnodes.map(async (node) => this.getPocketHeight(node)))
     const [highest] = pocketheight.map(({ height }) => height).sort().slice(-1)
     const { height } = await this.getPocketHeight(`https://${hostname}:${port}`)
 
-    const isSyncronized = (Number(highest) - Number(height) < variance)
+    const notSynched  = (Number(highest) - Number(height)) > variance
 
-    if (!isSyncronized) {
+    if (notSynched) {
       return {
         name: hostname,
         status: ErrorStatus.ERROR,
@@ -307,7 +307,7 @@ export class Service {
         height: {
           internalHeight: height,
           externalHeight: highest,
-          delta: (Number(highest) - Number(height)),
+          delta: (Number(highest) - Number(height))
         },
       };
     }
