@@ -7,7 +7,7 @@ test.skip("send discord alert", async () => {
   const response = await alert.sendDiscordMessage({
     title: "test message",
     color: DataDogTypes.AlertColor.SUCCESS,
-    channel: Webhooks.WEBHOOK_TEST,
+    channel: Webhooks.WEBHOOK_ERRORS_TEST,
     fields: [
       {
         name: "fieldName1",

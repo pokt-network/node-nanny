@@ -3,7 +3,10 @@ export enum Webhooks {
   WEBHOOK_NON_CRITICAL = "***REMOVED***",
   WEBHOOK_LOGS = "***REMOVED***",
   WEBHOOK_ERRORS = "https://discord.com/api/webhooks/883392489166344192/fj-2aKNTSMbXghSLKbiuovnsvl50yyIEsT95DXVOI-e9qsC2v8xMK1AXaGlrpew_EGcM",
-  WEBHOOK_TEST = "***REMOVED***b",
+  WEBHOOK_CRITICAL_TEST = "***REMOVED***",
+  WEBHOOK_NON_CRITICAL_TEST = "***REMOVED***",
+  WEBHOOK_LOGS_TEST = "***REMOVED***",
+  WEBHOOK_ERRORS_TEST = "***REMOVED***",
 }
 
 interface SendMessageFields {
