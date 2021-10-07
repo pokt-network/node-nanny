@@ -20,7 +20,9 @@ export enum SupportedBlockChainTypes {
   ETH = "ETH",
   AVA = "AVA",
   HEI = "HEI",
-  POKT = "POKT"
+  POKT = "POKT",
+  SOL = "SOL",
+  ALG = "ALG"
 }
 
 export enum NonEthVariants {
