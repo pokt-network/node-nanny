@@ -25,6 +25,8 @@ app.post("/webhook/docker/reboot", async ({ body }, res) => {
 
 app.post("/webhook/lb/disable", async ({ body }, res) => {
   const { backend, host } = body;
+
+  console.log({ backend, host })
   try {
     const status = await lb.disableServer({ backend, host });
     return res.json({ status });
@@ -46,6 +48,8 @@ app.post("/webhook/lb/enable", async ({ body }, res) => {
 
 app.post("/webhook/lb/status", async ({ body }, res) => {
   const { backend } = body;
+
+  console.log(body)
   try {
     const status = await lb.getStatus(backend)
     return res.json({ status });
