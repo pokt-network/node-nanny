@@ -37,7 +37,7 @@ export class Service {
       });
       return data;
     } catch (error) {
-      throw new Error(`could not contact blockchain node ${error} ${url}`);
+      throw new Error(`getBlockHeight could not contact blockchain node ${error} ${url}`);
     }
   }
 
@@ -51,7 +51,7 @@ export class Service {
       });
       return data;
     } catch (error) {
-      throw new Error(`could not contact blockchain node ${error} ${url}`);
+      throw new Error(`getEthSyncing could not contact blockchain node ${error} ${url}`);
     }
   }
 
@@ -65,7 +65,7 @@ export class Service {
       });
       return data;
     } catch (error) {
-      throw new Error(`could not contact blockchain node ${error} ${url}`);
+      throw new Error(`getPeers could not contact blockchain node ${error} ${url}`);
     }
   }
 
@@ -94,7 +94,12 @@ export class Service {
         };
       }
     } catch (error) {
-      throw new Error(`could not contact blockchain node ${error} ${url}`);
+      return {
+        name,
+        conditions: ErrorConditions.NO_RESPONSE,
+        status: ErrorStatus.ERROR,
+        health: error,
+      };
     }
   }
 
@@ -119,7 +124,12 @@ export class Service {
         };
       }
     } catch (error) {
-      throw new Error(`could not contact blockchain node ${error} ${url}`);
+      return {
+        name,
+        conditions: ErrorConditions.NO_RESPONSE,
+        status: ErrorStatus.ERROR,
+        health: error,
+      };
     }
   }
 
@@ -330,7 +340,12 @@ export class Service {
         };
       }
     } catch (error) {
-      throw new Error(`could not contact blockchain node ${error} ${url}`);
+      return {
+        name,
+        conditions: ErrorConditions.NO_RESPONSE,
+        status: ErrorStatus.ERROR,
+        health: error,
+      };
     }
   }
 
@@ -352,7 +367,12 @@ export class Service {
         };
       }
     } catch (error) {
-      throw new Error(`could not contact blockchain node ${error} ${url}`);
+      return {
+        name,
+        conditions: ErrorConditions.NO_RESPONSE,
+        status: ErrorStatus.ERROR,
+        health: error,
+      };
     }
   }
 
