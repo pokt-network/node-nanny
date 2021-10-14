@@ -1,19 +1,16 @@
 import axios, { AxiosInstance } from "axios";
-import { DataDog, Alert, Config } from "..";
+import { DataDog, Alert } from "..";
 import {
   DataDogMonitorStatus,
   BlockChainMonitorEvents,
   EventTransitions,
-  LoadBalancerHostsInternal,
-  LoadBalancerHostsExternal,
   LoadBalancerStatus,
-  Hosts,
-  InstanceIds
+  Limits,
+  LoadBalancer
 } from "./types";
-import { INode, NodesModel } from "../../models";
+import { INode, NodesModel, HostsModel } from "../../models";
 import { exclude } from "./exclude";
-
-
+import { HOST } from "@datadog/datadog-api-client/dist/packages/datadog-api-client-v1/models/WidgetNodeType";
 /**
  * This class functions as an event consumer for DataDog alerts.
  * Events are dependant on parsing format in parseWebhookMessage in the DataDog Service
@@ -22,12 +19,10 @@ import { exclude } from "./exclude";
 export class Service {
   private agent: AxiosInstance;
   private alert: Alert;
-  private config: Config;
   private dd: DataDog;
   constructor() {
     this.agent = this.initAgentClient();
     this.alert = new Alert();
-    this.config = new Config();
     this.dd = new DataDog();
   }
 
@@ -36,6 +31,25 @@ export class Service {
       headers: { "Content-Type": "application/json" },
     });
   }
+
+  async getLoadBalancers(): Promise<LoadBalancer[]> {
+    if (process.env.MONITOR_TEST === "1") {
+      return [
+        {
+          internalHostName: 'ip-10-0-0-102.us-east-2.compute.internal',
+          externalHostName: "ec2-18-118-59-87.us-east-2.compute.amazonaws.com"
+        },
+        {
+
+          internalHostName: 'ip-10-0-0-85.us-east-2.compute.internal',
+          externalHostName: "ec2-18-189-159-188.us-east-2.compute.amazonaws.com"
+        }
+      ]
+    }
+
+    return await HostsModel.find({ loadBalancer: true }, { internalHostName: 1, externalHostName: 1 }).exec()
+  }
+
   private async isPeerOk({ chain, nodeId }) {
     const peers: INode[] = await NodesModel.find({ 'chain.name': chain.toUpperCase(), _id: { $ne: nodeId } })
     const peerStatus = await Promise.all(peers.map(async ({ monitorId }) => {
@@ -46,99 +60,84 @@ export class Service {
     return !(peerStatus.every((value) => value === DataDogMonitorStatus.ALERT))
   }
 
-  async disableServer({ backend, host, nodeId }) {
+  async disableServer({ backend, server }) {
     try {
       const status = await this.getBackendStatus(backend)
-
       if (status === LoadBalancerStatus.ONLINE) {
+        const loadBalancers = await this.getLoadBalancers()
+        return await Promise.all(loadBalancers.map(async ({ internalHostName }) => this.agent.post(`http://${internalHostName}:3001/webhook/lb/disable`, { backend, host: server })))
 
-        await this.config.setNodeStatus({ nodeId, status: LoadBalancerStatus.OFFLINE });
-
-        return await Promise.all([
-          this.agent.post(`http://${LoadBalancerHostsInternal["2A"]}:3001/webhook/lb/disable`, { backend, host }),
-          this.agent.post(`http://${LoadBalancerHostsInternal["2B"]}:3001/webhook/lb/disable`, { backend, host })
-        ])
       } else {
-        this.alert.sendErrorChannel({ title: backend, message: `could not remove from load balancer, some servers already offline, ${status}` })
+        this.alert.sendErrorChannel({ title: backend, message: `could not remove from load balancer, some servers already offline, ${JSON.stringify(status)}` })
       }
     } catch (error) {
       this.alert.sendErrorChannel({ title: backend, message: `could not remove from load balancer, ${error}` })
     }
   }
 
-  async enableServer({ backend, host, nodeId, }) {
+  async enableServer({ backend, server }) {
     try {
-      await this.config.setNodeStatus({ nodeId, status: LoadBalancerStatus.ONLINE });
-      return await Promise.all([
-        this.agent.post(`http://${LoadBalancerHostsInternal["2A"]}:3001/webhook/lb/enable`, { backend, host }),
-        this.agent.post(`http://${LoadBalancerHostsInternal["2B"]}:3001/webhook/lb/enable`, { backend, host })
-      ])
+      const loadBalancers = await this.getLoadBalancers()
+      return await Promise.all(loadBalancers.map(({ internalHostName }) => this.agent.post(`http://${internalHostName}:3001/webhook/lb/enable`, { backend, host: server })))
+
     } catch (error) {
       this.alert.sendErrorChannel({ title: backend, message: `could not contact agent to enable , ${error}` })
     }
   }
 
-
-  async rebootServer({ chain, host, container, id }) {
-
-    const url = this.getDockerEndpoint({ chain, host })
-
-    const { data } = await this.agent.post(`http://${url}:3001/webhook/docker/reboot`, {
-      name: container,
-    });
-
-    const { reboot } = data
-
-    await this.dd.muteMonitor({ id, minutes: 5 });
-
-    return reboot
+  async rebootServer({ host, container, id }) {
+    console.log(host)
+    const Host = await HostsModel.findOne({ name: host})
+    console.log(Host)
+    if (!!Host) {
+      let { internalIpaddress: ip } = Host
+      if (process.env.MONITOR_TEST === "1") {
+        ip = 'localhost'
+      }
+      const { data } = await this.agent.post(`http://${ip}:3001/webhook/docker/reboot`, {
+        name: container,
+      });
+      const { reboot } = data
+      await this.dd.muteMonitor({ id, minutes: 5 });
+      return reboot
+    }
+    return;
   }
 
   async getBackendStatus(backend) {
-    const { data: a } = await this.agent.post(`http://${LoadBalancerHostsInternal["2A"]}:3001/webhook/lb/status`, { backend })
-    const { data: b } = await this.agent.post(`http://${LoadBalancerHostsInternal["2B"]}:3001/webhook/lb/status`, { backend })
-    if (b.status.allOnline && b.status.allOnline) {
-      return LoadBalancerStatus.ONLINE
-    } else {
-      return { a, b }
-    }
-  }
-
-  getDockerEndpoint({ chain, host }): string {
-  //todo use db values instead of enum
-    for (const prop in Hosts) {
-      const [node] = prop.split("_");
-      if (chain.toUpperCase() === node) {
-        return Hosts[`${node}_${host.toUpperCase()}`];
+    const loadBalancers = await this.getLoadBalancers()
+    const results = []
+    for (const { internalHostName } of loadBalancers) {
+      try {
+        const { data } = await this.agent.post(`http://${internalHostName}:3001/webhook/lb/status`, { backend })
+        results.push(data)
+      } catch (error) {
+        throw new Error(`could not getbackendstatus, ${internalHostName} ${backend} ${error}`)
       }
     }
-    return Hosts[`SHARED_${host.toUpperCase()}`];
+    if (results.every((result) => result.status.allOnline === true)) {
+      return LoadBalancerStatus.ONLINE
+    }
+    return results
   }
 
 
   async getBlockHeightDifference({ chain, host, nodeId, logGroup }) {
-    //todo update to handle more than one peer
-    const [peer]: INode[] = await NodesModel.find({ 'chain.name': chain, _id: { $ne: nodeId } })
-    let logs = await this.dd.getHealthLogs({logGroup, host })
-    const peerLogs = await this.dd.getHealthLogs({logGroup: peer.logGroup, host: peer.host.name.toLowerCase()})
+    const [peer]: INode[] = await NodesModel.find({ 'chain.name': chain.toUpperCase(), _id: { $ne: nodeId } })
+    let logs = await this.dd.getHealthLogs({ logGroup, host })
+    let peerLogs = await this.dd.getHealthLogs({ logGroup: peer.logGroup, host: peer.host.name.toLowerCase() })
     logs = logs.concat(peerLogs)
     logs = logs.sort((a, b) => a.delta - b.delta)
     return { worst: logs[0], best: logs[logs.length - 1] }
   }
 
-  getPeerLoadBalancer(host) {
-    //todo use db values instead of enum
-    const hosts = Object.keys(LoadBalancerHostsInternal);
-    return hosts.filter((h) => !(h == host.toUpperCase(host))).join("").toLowerCase();
+  async getHAProxyMessage(backend) {
+    const hosts = await this.getLoadBalancers()
+    const urls = hosts.map((host) => {
+      return `http://${host.externalHostName}:8050/;up?scope=${backend} \n`
+    }).join('')
+    return `HAProxy status\n${urls}`
   }
-
-  getHAProxyMessage(backend) {
-   //todo use db values instead of enum
-    return `HAProxy status\n
-    2A: http://${LoadBalancerHostsExternal.SHARED_2A}:8050/;up?scope=${backend} \n
-    2B: http://${LoadBalancerHostsExternal.SHARED_2B}:8050/;up?scope=${backend}`
-  }
-
 
   async processEvent(raw) {
     const {
@@ -151,37 +150,31 @@ export class Service {
     } = await this.dd.parseWebhookMessage(raw);
 
     const node: INode = await NodesModel.findOne({ _id: nodeId })
-
+    const { backend, container, logGroup, server, haProxy } = node
     const chain = node.chain.name.toLowerCase();
     const host = node.host.name.toLowerCase();
-    const { backend, container, monitorId, logGroup } = node
-
-    const status = await this.config.getNodeStatus(nodeId);
-    if (!status) {
-      await this.config.setNodeStatus({ nodeId, status: LoadBalancerStatus.ONLINE });
-    }
+    const name = node.hostname ? node.hostname : `${chain}/${host}`
+    const docker = node.host.dockerHost
+    let instance = node.host.hostType === "AWS" ? node.host.awsInstanceId : node.host.name
 
     if (transition === EventTransitions.TRIGGERED) {
-
       //alert if both unhealthy
       if (!await this.isPeerOk({ chain, nodeId })) {
         await this.alert.sendErrorCritical({
           title, message:
             `Both ${chain} nodes are unhealthy! \n 
            See event ${link} \n
-            ${this.getHAProxyMessage(backend)}`
+            ${await this.getHAProxyMessage(backend)}`
         })
       }
 
       //Send logs to discord on every error
-      let instance = node.host.hostType === "AWS" ? node.host.awsInstanceId : node.host.name
-
       const logs = await this.dd.getContainerLogs({ instance, container })
 
       const fields = logs.map(({ service, timestamp, message }) => {
         return {
           name: `${timestamp}-${service}`,
-          value: `${`${message}`}`
+          value: `${`${message.length > Limits.MAX_LOG ? Limits.MAX_LOG_MSG : message}`}`
         }
       })
 
@@ -189,63 +182,60 @@ export class Service {
 
       //Not Syncronized and the node is in operation
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
-
-        if (status === true) {
-
-          await this.alert.sendErrorCritical({ title, message: `${chain}/${host} is ${event} \n See event ${link}` })
-
-          if (!await this.isPeerOk({ chain, nodeId })) {
-            //Both nodes are out of sync
-            let { worst, best } = await this.getBlockHeightDifference({ chain, host, nodeId, logGroup })
-
+        await this.alert.sendErrorCritical({ title, message: `${name} is ${event} \n See event ${link}` })
+        if (!await this.isPeerOk({ chain, nodeId })) {
+          //Both nodes are out of sync
+          let { worst, best } = await this.getBlockHeightDifference({ chain, host, nodeId, logGroup })
+          if (haProxy) {
+            const badPeer = await NodesModel.findOne({ "chain.name": chain.toUpperCase(), "host.name": worst.host })
             const status = await this.getBackendStatus(backend)
-
             if (status === LoadBalancerStatus.ONLINE) {
-
-              await this.disableServer({ nodeId, backend, host });
-
+              await this.disableServer({ backend, server: badPeer.server });
               return await this.alert.sendInfo({
                 title, message:
-                  `Removed ${chain}/${worst.host} from load balancer,\n
+                  `Removed ${chain}/${badPeer.hostname ? badPeer.hostname : `${badPeer.chain.name}/${badPeer.host.name}`} from load balancer,\n
                    It will be restored once healthy again \n
                    The best node is ${best.delta} blocks out of sync \n
                    Best: ${JSON.stringify(best)} \n
                    Worst: ${JSON.stringify(worst)}\n
-                  ${this.getHAProxyMessage(backend)}`
+                  ${await this.getHAProxyMessage(backend)}`
               })
             }
-            return this.alert.sendInfo({
-              title, message: `
-                One node already removed!
-                Status: ${JSON.stringify(status)} \n
+          }
+          return this.alert.sendInfo({
+            title, message: `
+                One node already removed!\n
                 Best:${JSON.stringify(best)} \n
                 Worst: ${JSON.stringify(worst)}\n
-                ${this.getHAProxyMessage(backend)}`
-            })
-          }
-          await this.disableServer({ nodeId, backend, host });
+                ${await this.getHAProxyMessage(backend)}`
+          })
+        }
+
+        if (haProxy) {
+          await this.disableServer({ backend, server });
           await this.alert.sendInfo({
             title,
-            message: `Removed ${chain}/${host} from load balancer, it will be restored once healthy again \n
-            ${this.getHAProxyMessage(backend)}`
+            message: `Removed ${name} from load balancer, it will be restored once healthy again \n
+              ${await this.getHAProxyMessage(backend)}`
           })
-
         }
       }
+
       if (event === BlockChainMonitorEvents.NO_RESPONSE) {
         await this.alert.sendWarn({
           title, message:
-            `${chain}/${host} status is ${event} \n
+            `${name} status is ${event} \n
             See event ${link} \n
-            ${this.getHAProxyMessage(backend)}`
+            ${await this.getHAProxyMessage(backend)}`
         })
+
       }
       if (event === BlockChainMonitorEvents.OFFLINE) {
         return await this.alert.sendErrorCritical({
           title, message:
-            `${chain}/${host} status is ${event} \n 
+            `${name} status is ${event} \n 
             See event ${link} \n
-            ${this.getHAProxyMessage(backend)}`
+            ${await this.getHAProxyMessage(backend)}`
         })
       }
     }
@@ -253,69 +243,65 @@ export class Service {
     if (transition === EventTransitions.RECOVERED) {
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
         if (!await this.isPeerOk({ chain, nodeId })) {
-          //one has recoved but bad node may be primary, swap them in this case
-          const peer = this.getPeerLoadBalancer(host);
-          const status = await this.getBackendStatus(backend)
 
-          if (status !== LoadBalancerStatus.ONLINE) {
-            await this.enableServer({ backend, host, nodeId })
-            await this.disableServer({ backend, host: peer, nodeId })
+          //one has recoved but bad node may be primary, swap them in this case
+          const status = await this.getBackendStatus(backend)
+          const peer = await NodesModel.findOne({ "chain.name": chain.toUpperCase(), _id: { $ne: nodeId } })
+
+          if (haProxy && status !== LoadBalancerStatus.ONLINE) {
+            await this.enableServer({ backend, server })
+            await this.disableServer({ backend, server: peer.server })
           }
+
           return this.alert.sendWarn({
-            title, message: `${chain}/${host} has recovered \n
-            ${peer} / ${chain} is still out of sync and was removed
+            title, message: `${name} has recovered \n
+            ${chain} /${peer.hostname ? peer.hostname : peer.host.name} is still out of sync and was removed
           `})
         }
 
-        if (status === true) {
-          await this.alert.sendSuccess({ title, message: `${chain}/${host} has recovered!` })
-        }
+        await this.alert.sendSuccess({ title, message: `${name} has recovered!` })
 
-        if (status === false) {
-          //this case is to put the node back into rotation
-          await this.alert.sendInfo({
-            title, message: `Node is in Synch \n
-            ${chain}/${host} will be added back to the load balancer \n
-            ${this.getHAProxyMessage(backend)}
-            `
-          })
+        //this case is to put the node back into rotation
+        await this.alert.sendInfo({
+          title, message: `Node is in Synch \n
+            ${name} will be added back to the load balancer \n
+            ${await this.getHAProxyMessage(backend)}`
+        })
 
-          await this.enableServer({ backend, host, nodeId });
+        if (haProxy) {
+          await this.enableServer({ backend, server });
           await this.alert.sendSuccess({
             title, message: `
-            Restored \n
-            Added ${chain}/${host} back to load balancer \n`
-          })
-
-          return await this.alert.sendSuccessToCritical({
-            title, message: "Node restored to operation"
+              Restored \n
+              Added ${name} back to load balancer \n`
           })
         }
+        return await this.alert.sendSuccessToCritical({
+          title, message: "Node restored to operation"
+        })
       }
-
       if (event === BlockChainMonitorEvents.NO_RESPONSE) {
-        return await this.alert.sendSuccess({ title, message: `${chain}/${host} is now responding to requests` })
+        return await this.alert.sendSuccess({ title, message: `${name} is now responding to requests` })
       }
     }
 
     if (transition === EventTransitions.RE_TRIGGERED) {
       if (event == BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
-        return this.alert.sendWarn({ title, message: `${chain}/${host} is still out of sync` })
+        return this.alert.sendWarn({ title, message: `${name} is still out of sync` })
       }
       if (
         event === BlockChainMonitorEvents.NO_RESPONSE ||
         event === BlockChainMonitorEvents.OFFLINE
       ) {
         if (exclude.includes(chain)) {
-          return this.alert.sendInfo({ title, message: `${chain}/${host} is still down and must be recovered` })
+          return this.alert.sendInfo({ title, message: `${name} is still down and must be recovered` })
         }
-
-        const reboot = await this.rebootServer({ chain, host, container, id })
-
-        return this.alert.sendInfo({
-          title, message: `rebooting ${chain}/${host} \n
-        ${reboot}
-        `})
+        if (docker) {
+          const reboot = await this.rebootServer({ host, container, id })
+          return this.alert.sendInfo({
+            title, message: `rebooting ${name} \n${reboot ? reboot : ''}`
+          })
+        }
       }
     }
   }
