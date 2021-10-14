@@ -5,13 +5,13 @@ enum HostType {
     OVH = "OVH"
 }
 
-interface IHosts {
+export interface IHost {
     name: string
     internalIpaddress: string
     internalHostName: string
     externalHostName: string
     awsInstanceId: string
-    loadbalancer: boolean
+    loadBalancer: boolean
     dockerHost: boolean
     hostType: HostType
 }
@@ -22,17 +22,25 @@ interface IChain {
     type: string
 }
 
+export interface IOracle {
+    chain: string
+    urls: string[]
+}
+
+
 export interface INode {
     id: string
     backend: string
     chain: IChain
     container: string
     externalNodes: string[]
-    host: IHosts
+    haProxy: boolean
+    host: IHost
     hostname: string
     monitorId: string
     online: boolean
     port: number
+    server: string
     threshold: number
     url: string
     variance: number
@@ -46,21 +54,24 @@ const chainSchema = new Schema<IChain>({
     type: String,
 })
 
-const hostsSchema = new Schema<IHosts>(
+const oracleSchema = new Schema<IOracle>({
+    chain: String,
+    urls: [String]
+})
+
+const hostsSchema = new Schema<IHost>(
     {
         name: String,
         internalIpaddress: String,
         internalHostName: String,
         externalHostName: String,
         awsInstanceId: String,
-        loadbalancer: Boolean,
+        loadBalancer: Boolean,
         dockerHost: Boolean,
         hostType: String
 
     }
 )
-
-
 
 const nodesSchema = new Schema<INode>(
     {
@@ -69,11 +80,13 @@ const nodesSchema = new Schema<INode>(
         chain: chainSchema,
         container: String,
         externalNodes: [String],
+        haProxy: Boolean,
         host: hostsSchema,
         hostname: String,
         monitorId: String,
         online: Boolean,
         port: Number,
+        server: String,
         threshold: Number,
         url: String,
         variance: Number,
@@ -82,9 +95,19 @@ const nodesSchema = new Schema<INode>(
     { collection: 'nodes' }
 )
 
+const OraclesModel: Model<IOracle> = model(
+    'oracles',
+    oracleSchema
+)
+
+const HostsModel: Model<IHost> = model(
+    'hosts',
+    hostsSchema
+)
+
 const NodesModel: Model<INode> = model(
     'nodes',
     nodesSchema
 )
 
-export { NodesModel }
+export { HostsModel, NodesModel, OraclesModel }

@@ -70,27 +70,31 @@ export class Service {
       },
     };
 
-    return await (await this.ddlogs.listLogs(params)).data.map(({ attributes }) => {
-      const { timestamp, service, message } = attributes
-      return { timestamp, service, message }
-    })
+    try {
+      return await (await this.ddlogs.listLogs(params)).data.map(({ attributes }) => {
+        const { timestamp, service, message } = attributes
+        return { timestamp, service, message }
+      })
+    } catch (error) { throw new Error(error) }
+
   }
 
   async getHealthLogs({ host, logGroup }) {
     let params: v2.LogsApiListLogsRequest = {
       body: {
         filter: {
-          from: "now-2m",
+          from: "now-3m",
           query: `service:"${logGroup}"`,
           to: "now",
         },
         options: {
-         // timeOffset: -8,
+          timeOffset: -8,
         },
         sort: "-timestamp",
       },
     };
     return await (await this.ddlogs.listLogs(params)).data.map(({ attributes }) => {
+
       return { host, condition: attributes.attributes.conditions, status: attributes.attributes.status, delta: attributes.attributes.height.delta }
     })
 
@@ -162,7 +166,7 @@ export class Service {
         "notify_no_data": false,
         "enable_logs_sample": true,
         "groupby_simple_monitor": false,
-        "escalation_message": `@webhook-events-production \nchain_pokt\nnodeId_${id}\nevent_{{@conditions.name}}_NOT_RESOLVED`,
+        "escalation_message": `@webhook-events-production \nnodeId_${id}\nevent_{{@conditions.name}}_NOT_RESOLVED`,
         "new_group_delay": 60
       },
       "classification": "log"
@@ -174,5 +178,33 @@ export class Service {
     return monitorId;
   }
 
+  async getAllMonitorsByTag(tag) {
+    return await this.restClient.get(`/monitor?monitor_tags=${tag}`)
+  }
+
+
+  async updateMonitor({ id, update }) {
+    return await this.restClient.put(`/monitor/${id}`, update)
+  }
+
+  async changeWebhookForMonitors() {
+
+    const { data: monitors } = await this.getAllMonitorsByTag('Smart_Monitorv2')
+
+    for (const monitor of monitors) {
+
+      const id = monitor.id
+      const message = String(monitor.options.escalation_message).replace('@webhook-events-production', '@webhook-events-dev')
+
+      const response = await this.updateMonitor({ id, update: { options: { escalation_message: message } } })
+
+      console.log(response)
+    }
+
+
+
+
+    return {}
+  }
 
 }

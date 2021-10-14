@@ -2,6 +2,7 @@ import { api } from "@pagerduty/pdjs";
 import axios, { AxiosInstance } from "axios";
 import { AlertColor, SendMessageInput, PagerDutyDetails, IncidentLevel } from "./types";
 import { DataDogTypes, AlertTypes } from "../../types"
+
 export class Service {
   private dsClient: AxiosInstance;
   private pdClient: any;
@@ -22,16 +23,15 @@ export class Service {
       const { status } = await this.dsClient.post(channel, { embeds });
       return status === 204;
     } catch (error) {
-      throw new Error(`could not send alert to Discord ${error}`);
+      throw new Error(`could not send alert to Discord ${{ error, title, color, fields, channel }}`);
     }
   }
 
-
-  async sendErrorChannel({title ,message}){
+  async sendErrorChannel({ title, message }) {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.ERROR,
-      channel: AlertTypes.Webhooks.WEBHOOK_ERRORS,
+      channel: (process.env.MONITOR_TEST === "1") ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST : AlertTypes.Webhooks.WEBHOOK_ERRORS,
       fields: [
         {
           name: "error",
@@ -45,7 +45,7 @@ export class Service {
     return await this.sendDiscordMessage({
       title,
       color: DataDogTypes.AlertColor.ERROR,
-      channel: AlertTypes.Webhooks.WEBHOOK_CRITICAL,
+      channel: (process.env.MONITOR_TEST === "1") ? AlertTypes.Webhooks.WEBHOOK_CRITICAL_TEST : AlertTypes.Webhooks.WEBHOOK_CRITICAL,
       fields: [
         {
           name: "Error",
@@ -59,19 +59,16 @@ export class Service {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.INFO,
-      channel: AlertTypes.Webhooks.WEBHOOK_LOGS,
+      channel: (process.env.MONITOR_TEST === "1") ? AlertTypes.Webhooks.WEBHOOK_LOGS_TEST : AlertTypes.Webhooks.WEBHOOK_LOGS,
       fields
     });
   }
 
-
-
   async sendInfo({ title, message }) {
-
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.INFO,
-      channel: AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
+      channel: (process.env.MONITOR_TEST === "1") ? AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL_TEST : AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
       fields: [
         {
           name: "Info",
@@ -79,14 +76,13 @@ export class Service {
         },
       ],
     });
-
   }
 
   async sendWarn({ title, message }) {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.WARNING,
-      channel: AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
+      channel: (process.env.MONITOR_TEST === "1") ? AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL_TEST : AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
       fields: [
         {
           name: "Warning",
@@ -100,7 +96,7 @@ export class Service {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.SUCCESS,
-      channel: AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
+      channel: (process.env.MONITOR_TEST === "1") ? AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL_TEST : AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
       fields: [
         {
           name: "Success",
@@ -109,12 +105,12 @@ export class Service {
       ],
     });
   }
-  
+
   async sendSuccessToCritical({ title, message }) {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.SUCCESS,
-      channel: AlertTypes.Webhooks.WEBHOOK_CRITICAL,
+      channel: (process.env.MONITOR_TEST === "1") ? AlertTypes.Webhooks.WEBHOOK_CRITICAL_TEST : AlertTypes.Webhooks.WEBHOOK_CRITICAL,
       fields: [
         {
           name: "Success",
