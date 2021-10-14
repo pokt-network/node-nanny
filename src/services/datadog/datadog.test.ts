@@ -53,6 +53,15 @@ test("should create monitor", async () => {
   //  })
   //  console.log(response)
 })
+
+
+test.skip("should update monitor", async () => {
+ const response = await dd.changeWebhookForMonitors()
+
+ console.log(response)
+
+ expect(2).toBe(2)
+})
 const event = {
   msg:
     "%%%\n" +
