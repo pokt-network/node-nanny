@@ -8,5 +8,4 @@ const disconnect = async (): Promise<void> => {
     await mongoose.disconnect()
 }
 
-
 export { connect, disconnect }
