@@ -9,8 +9,8 @@ import {
   LoadBalancer
 } from "./types";
 import { INode, NodesModel, HostsModel } from "../../models";
-import { exclude } from "./exclude";
-import { HOST } from "@datadog/datadog-api-client/dist/packages/datadog-api-client-v1/models/WidgetNodeType";
+
+
 /**
  * This class functions as an event consumer for DataDog alerts.
  * Events are dependant on parsing format in parseWebhookMessage in the DataDog Service
@@ -86,9 +86,7 @@ export class Service {
   }
 
   async rebootServer({ host, container, id }) {
-    console.log(host)
     const Host = await HostsModel.findOne({ name: host})
-    console.log(Host)
     if (!!Host) {
       let { internalIpaddress: ip } = Host
       if (process.env.MONITOR_TEST === "1") {
@@ -150,7 +148,7 @@ export class Service {
     } = await this.dd.parseWebhookMessage(raw);
 
     const node: INode = await NodesModel.findOne({ _id: nodeId })
-    const { backend, container, logGroup, server, haProxy } = node
+    const { backend, container, logGroup, server, haProxy, reboot } = node
     const chain = node.chain.name.toLowerCase();
     const host = node.host.name.toLowerCase();
     const name = node.hostname ? node.hostname : `${chain}/${host}`
@@ -220,7 +218,6 @@ export class Service {
           })
         }
       }
-
       if (event === BlockChainMonitorEvents.NO_RESPONSE) {
         await this.alert.sendWarn({
           title, message:
@@ -293,10 +290,10 @@ export class Service {
         event === BlockChainMonitorEvents.NO_RESPONSE ||
         event === BlockChainMonitorEvents.OFFLINE
       ) {
-        if (exclude.includes(chain)) {
+        if (!reboot) {
           return this.alert.sendInfo({ title, message: `${name} is still down and must be recovered` })
         }
-        if (docker) {
+        if (reboot && docker) {
           const reboot = await this.rebootServer({ host, container, id })
           return this.alert.sendInfo({
             title, message: `rebooting ${name} \n${reboot ? reboot : ''}`

@@ -2,18 +2,22 @@ export enum NCResponse {
   SUCCESS = "succeeded!",
 }
 
-export enum EthVariants {
+export enum SupportedBlockChains {
+  AVA = "AVA",
+  AVATST = "AVATST",
   ETH = "ETH",
   BSC = "BSC",
   BSCTST = "BSCTST",
+  POL = "POL",
+  POLTST = "POLTST",
+  FUS = "FUS",
+  XDAI = "XDAI",
   RIN = "RIN",
   ROP = "ROP",
   GOE = "GOE",
   KOV = "KOV",
-  POL = "POL",
-  POLTST = "POLTST",
-  XDAI = "XDAI",
-  FUS = "FUS",
+  HEI = "HEI",
+  POKT = "POKT"
 }
 
 export enum SupportedBlockChainTypes {
@@ -22,7 +26,8 @@ export enum SupportedBlockChainTypes {
   HEI = "HEI",
   POKT = "POKT",
   SOL = "SOL",
-  ALG = "ALG"
+  ALG = "ALG",
+  HRM = "HRM"
 }
 
 export enum NonEthVariants {
@@ -48,35 +53,6 @@ export enum ErrorStatus {
 
 export interface ExternalResponse {
   height: number;
-}
-
-export enum BlockHeightVariance {
-  ETH = 5,
-  RIN = 5,
-  ROP = 5,
-  GOE = 5,
-  KOV = 5,
-  POL = 5,
-  POLTST = 5,
-  XDAI = 5,
-  FUS = 5,
-  BSC = 15,
-  BSCTST = 15,
-  POK = 3,
-}
-
-export enum BlockHeightThreshold {
-  ETH = 2,
-  RIN = 10,
-  ROP = 10,
-  GOE = 10,
-  KOV = 10,
-  POL = 10,
-  POLTST = 10,
-  XDAI = 5,
-  FUS = 15,
-  BSC = 10,
-  BSCTST = 10
 }
 
 export enum Messages {
