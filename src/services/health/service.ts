@@ -6,14 +6,11 @@ import {
   NCResponse,
   HealthResponse,
   SupportedBlockChainTypes,
+  SupportedBlockChains
 } from "./types";
 
-import { DiscoverTypes } from "../../types";
 import { hexToDec } from "../../utils";
-import { SupportedBlockChains } from "../event/types";
-
-
-import { INode, NodesModel } from "../../models";
+import { INode, NodesModel, IOracle, OraclesModel } from "../../models";
 
 export class Service {
   private rpc: AxiosInstance;
@@ -23,7 +20,7 @@ export class Service {
 
   private initClient() {
     return axios.create({
-      timeout: 1000,
+      timeout: 10000,
       headers: { "Content-Type": "application/json" },
     });
   }
@@ -74,7 +71,7 @@ export class Service {
       const { data } = await this.rpc.post(`${url}/ext/health`, {
         jsonrpc: "2.0",
         id: 1,
-        method: "health.getLiveness",
+        method: "health.health",
       });
 
       const { result } = data;
@@ -143,20 +140,13 @@ export class Service {
     }
   }
 
-  private async isRpcResponding({ url, chain }): Promise<boolean> {
+
+  private async isRpcResponding({ url }): Promise<boolean> {
     try {
-      if (chain === DiscoverTypes.Supported.AVA || chain === DiscoverTypes.Supported.AVATST) {
-        await this.rpc.post(`${url}/ext/health`, {
-          jsonrpc: "2.0",
-          id: 1,
-          method: "health.getLiveness",
-        });
-      } else {
-        await this.getBlockHeight(url);
-      }
-      return true;
+      await this.getBlockHeight(url);
+      return true
     } catch (error) {
-      return false;
+      return false
     }
   }
 
@@ -226,9 +216,8 @@ export class Service {
   }
 
   private async getEVMNodeHealth(node: INode): Promise<{}> {
-    const { chain, url, externalNodes, variance, threshold, host, id, port } = node
+    const { chain, url, variance, threshold, host, id, port } = node
     const name = `${host.name}/${chain.name}`
-
     //Check if node is online and RPC up
     const isNodeListening = await this.isNodeListening({ host: host.internalIpaddress, port });
 
@@ -239,8 +228,7 @@ export class Service {
         conditions: ErrorConditions.OFFLINE,
       }
     }
-
-    const isRpcResponding = await this.isRpcResponding({ url, chain: chain.name })
+    const isRpcResponding = await this.isRpcResponding({ url })
 
     if (!isRpcResponding) {
       return {
@@ -251,10 +239,11 @@ export class Service {
     }
 
     let peers: INode[] = await NodesModel.find({ "chain.name": chain.name, _id: { $ne: id } }).exec()
+    let { urls: externalNodes } = await OraclesModel.findOne({ chain: chain.name }).exec()
 
     const referenceUrls = await this.checkExternalUrls(externalNodes)
 
-    peers = peers.filter(async (peer) => await this.isRpcResponding({ url: peer.url, chain: chain.name }))
+    peers = peers.filter(async (peer) => await this.isRpcResponding({ url: peer.url }))
 
     if (peers.length >= 1) {
       for (const { url } of peers) {
@@ -336,7 +325,7 @@ export class Service {
           name,
           conditions: ErrorConditions.NOT_SYNCHRONIZED,
           status: ErrorStatus.ERROR,
-          health: result,
+          health: data,
         };
       }
     } catch (error) {
@@ -376,16 +365,40 @@ export class Service {
     }
   }
 
-  async getPocketNodeHealth({ hostname, port, variance, id, host }: INode) {
-    //check if responding
-    const isNodeListening = await this.isNodeListening({ host: host.internalIpaddress, port });
-    if (!isNodeListening) {
-      return {
-        name: hostname,
-        status: ErrorStatus.ERROR,
-        conditions: ErrorConditions.OFFLINE,
+  async getHarmonyHealth({ url, name }) {
+    try {
+      const { data } = await this.rpc.get(`${url}/node-sync`)
+      if (data === true) {
+        return {
+          name,
+          conditions: ErrorConditions.HEALTHY,
+          status: ErrorStatus.OK
+        };
+      } else {
+        return {
+          name,
+          conditions: ErrorConditions.NOT_SYNCHRONIZED,
+          status: ErrorStatus.ERROR
+        };
       }
+    } catch (error) {
+      if (error.response.data === false) {
+        return {
+          name,
+          conditions: ErrorConditions.NOT_SYNCHRONIZED,
+          status: ErrorStatus.ERROR
+        };
+      }
+      return {
+        name,
+        conditions: ErrorConditions.NO_RESPONSE,
+        status: ErrorStatus.ERROR,
+        health: error,
+      };
     }
+  }
+
+  async getPocketNodeHealth({ hostname, port, variance, id }: INode) {
 
     const { height: isRpcResponding } = await this.getPocketHeight(`https://${hostname}:${port}`)
 
@@ -396,7 +409,6 @@ export class Service {
         conditions: ErrorConditions.NO_RESPONSE,
       }
     }
-
 
     // get list of reference nodes
     const referenceNodes: INode[] = await NodesModel.find({
@@ -458,6 +470,9 @@ export class Service {
       }
       if (chain.type == SupportedBlockChainTypes.ALG) {
         results.push(await this.getAlgorandHealth({ name: `${host.name}/${chain.name}`, url: url }))
+      }
+      if (chain.type === SupportedBlockChainTypes.HRM) {
+        results.push(await this.getHarmonyHealth({ name: `${host.name}/${chain.name}`, url: url }))
       }
     }
     return results
