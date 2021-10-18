@@ -1,21 +1,19 @@
-import { Discover, Health, Log } from "./services";
-import { DiscoverTypes } from "./types";
+import { Health, Log } from "./services";
+import { NodesModel } from "./models";
 import { wait } from "./utils";
 import { connect } from "./db";
 
 export class App {
-  private discover: Discover;
   private health: Health;
   private log: Log;
   constructor() {
-    this.discover = new Discover({ source: DiscoverTypes.Source.TAG });
     this.log = new Log();
     this.health = new Health();
   }
 
   async main() {
     await connect()
-    const nodes = await this.discover.getNodesfromDB()
+    const nodes = await NodesModel.find({}).exec()
     const allHealth = await this.health.getNodeHealth(nodes)
 
     for (const health of allHealth) {
