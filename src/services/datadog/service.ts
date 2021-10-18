@@ -4,14 +4,11 @@ import { NodesModel } from '../../models';
 import { ApiDetails } from "./types";
 import { Config } from "..";
 
-import { wait } from "../../utils";
 export class Service {
-  private config: Config;
   private sdkClient: v1.MonitorsApi;
   private restClient: AxiosInstance;
   private ddlogs: v2.LogsApi;
   constructor() {
-    this.config = new Config();
     this.ddlogs = this.logsInitSdk();
     this.sdkClient = this.initSdk();
     this.restClient = this.initRest();
@@ -127,23 +124,7 @@ export class Service {
     return { event, id, nodeId, transition, type, title, link };
   }
 
-  async storeMonitorIds() {
-    const monitors = await this.getMonitorsByTag("Smart_MonitorV2");
 
-    const ids = monitors.map((monitor) => {
-      return {
-        id: monitor.id,
-        chain: monitor.message.split("\n")[1].split("_")[1],
-        host: monitor.message.split("\n")[2].split("_")[1],
-      };
-    });
-
-    for (const { id, chain, host } of ids) {
-      const key = `/pocket/monitoring/config/monitor/${chain}/${host.toUpperCase()}`;
-      await wait(1000)
-      await this.config.setParameter({ key, value: id });
-    }
-  }
 
   async createMonitor({ name, logGroup, id }) {
     const { data } = await this.restClient.post('/monitor', {
@@ -194,15 +175,12 @@ export class Service {
     for (const monitor of monitors) {
 
       const id = monitor.id
-      const message = String(monitor.options.escalation_message).replace('@webhook-events-production', '@webhook-events-dev')
+      const message = String(monitor.message).replace('event_{{@conditions.name}}"', 'event_{{@conditions.name}}')
 
-      const response = await this.updateMonitor({ id, update: { options: { escalation_message: message } } })
+      const response = await this.updateMonitor({ id, update: { message } })
 
       console.log(response)
     }
-
-
-
 
     return {}
   }

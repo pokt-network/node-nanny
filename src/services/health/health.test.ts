@@ -1,11 +1,7 @@
-import { Health, Discover } from "..";
+import { Health } from "..";
 import { connect, disconnect } from "../../db";
-import { DiscoverTypes } from "../../types";
 import { Service } from "./service";
 const health = new Service();
-const discover = new Discover({ source: DiscoverTypes.Source.TAG });
-
-
 beforeAll(async () => {
   await connect()
 })

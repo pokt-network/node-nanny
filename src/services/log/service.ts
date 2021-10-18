@@ -30,6 +30,7 @@ export class Service {
     try {
       return await this.client.createLogGroup({ logGroupName }).promise();
     } catch (error) {
+      console.log(error)
       throw new Error(`could not create log group ${error}`);
     }
   }
@@ -139,7 +140,11 @@ export class Service {
   async onBoardNewNode(name) {
     const logGroupName = `/Pocket/NodeMonitoring/${name}`
 
+    console.log(logGroupName)
+
     const doesLogGroupExist = await this.doesLogGroupExist(logGroupName)
+
+    console.log(doesLogGroupExist)
 
     if (!doesLogGroupExist) {
       await this.createLogGroup(logGroupName)
