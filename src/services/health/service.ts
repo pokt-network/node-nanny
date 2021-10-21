@@ -67,6 +67,7 @@ export class Service {
   }
 
   private async getAvaHealth({ name, url }): Promise<HealthResponse> {
+    const threshold = []
     try {
       const { data } = await this.rpc.post(`${url}/ext/health`, {
         jsonrpc: "2.0",
@@ -216,7 +217,7 @@ export class Service {
   }
 
   private async getEVMNodeHealth(node: INode): Promise<{}> {
-    const { chain, url, variance, threshold, host, id, port } = node
+    const { chain, url, variance, host, id, port } = node
     const name = `${host.name}/${chain.name}`
     //Check if node is online and RPC up
     const isNodeListening = await this.isNodeListening({ host: host.internalIpaddress, port });
@@ -275,7 +276,7 @@ export class Service {
       let status = ErrorStatus.OK;
       let conditions = ErrorConditions.HEALTHY;
 
-      if (delta > threshold) {
+      if (delta > variance) {
         status = ErrorStatus.ERROR;
         conditions = ErrorConditions.NOT_SYNCHRONIZED;
       }
@@ -414,6 +415,7 @@ export class Service {
     const referenceNodes: INode[] = await NodesModel.find({
       "chain.type": "POKT", _id: { $ne: id }
     }, null, { limit: 10 }).exec()
+    
     //get highest block height from reference nodes
     const poktnodes = referenceNodes.map(({ hostname, port }) => `https://${hostname}:${port}`)
     const pocketheight = await Promise.all(await poktnodes.map(async (node) => this.getPocketHeight(node)))

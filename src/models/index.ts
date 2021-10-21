@@ -23,18 +23,17 @@ interface IChain {
 }
 
 export interface IOracle {
-    chain: string
+    chain: string,
     urls: string[]
 }
-
 
 export interface INode {
     id: string
     backend: string
     chain: IChain
     container: string
-    externalNodes: string[]
     haProxy: boolean
+    hasPeers: boolean
     reboot: boolean
     host: IHost
     hostname: string
@@ -46,8 +45,10 @@ export interface INode {
     url: string
     variance: number
     logGroup: string
+    nginx: string
+    poktType: string
+    peer: string
 }
-
 
 const chainSchema = new Schema<IChain>({
     chain: String,
@@ -56,7 +57,7 @@ const chainSchema = new Schema<IChain>({
 })
 
 const oracleSchema = new Schema<IOracle>({
-    chain: String,
+    chain: { type: String, required: true, unique: true },
     urls: [String]
 })
 
@@ -80,11 +81,11 @@ const nodesSchema = new Schema<INode>(
         backend: String,
         chain: chainSchema,
         container: String,
-        externalNodes: [String],
         haProxy: Boolean,
         reboot: Boolean,
+        hasPeers: Boolean,
         host: hostsSchema,
-        hostname: String,
+        hostname: { type: String, unique: true },
         monitorId: String,
         online: Boolean,
         port: Number,
@@ -92,9 +93,17 @@ const nodesSchema = new Schema<INode>(
         threshold: Number,
         url: String,
         variance: Number,
-        logGroup: String
+        logGroup: String,
+        nginx: String,
+        poktType: String,
+        peer: [String]
     },
     { collection: 'nodes' }
+)
+
+const ChainsModel: Model<IChain> = model(
+    'chains',
+    chainSchema
 )
 
 const OraclesModel: Model<IOracle> = model(
@@ -112,4 +121,4 @@ const NodesModel: Model<INode> = model(
     nodesSchema
 )
 
-export { HostsModel, NodesModel, OraclesModel }
+export { HostsModel, NodesModel, OraclesModel, ChainsModel }
