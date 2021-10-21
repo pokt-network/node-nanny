@@ -13,10 +13,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.post("/webhook/docker/reboot", async ({ body }, res) => {
-
-  const { name } = body;
+  const { name, type, nginx, poktType } = body;
   try {
-    const status = await reboot.rebootDockerContainerFromAgent(name);
+    const status = await reboot.rebootDockerContainerFromAgent({ name, type, nginx, poktType });
     return res.json({ reboot: status });
   } catch (error) {
     throw new Error(error);
