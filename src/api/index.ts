@@ -27,7 +27,6 @@ app.post("/admin/monitor/onboard", async ({ body }, res) => {
   const { name, id } = body
   try {
     const logGroup = await log.onBoardNewNode(name)
-    console.log(logGroup)
     await dd.createMonitor({name,logGroup, id })
     return res.status(200).json({ done: true });
   } catch (error) {

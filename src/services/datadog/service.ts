@@ -155,7 +155,7 @@ export class Service {
 
     })
     const { id: monitorId } = data;
-    await NodesModel.findOneAndUpdate({ _id: id }, { $set: { monitorId } })
+    await NodesModel.findOneAndUpdate({ _id: id }, { logGroup, $set: { monitorId } })
     return monitorId;
   }
 
@@ -171,13 +171,14 @@ export class Service {
   async changeWebhookForMonitors() {
 
     const { data: monitors } = await this.getAllMonitorsByTag('Smart_Monitorv2')
+    
 
     for (const monitor of monitors) {
 
       const id = monitor.id
-      const message = String(monitor.message).replace('event_{{@conditions.name}}"', 'event_{{@conditions.name}}')
+      const query = String(monitor.query).replace('> 4', '> 1')
 
-      const response = await this.updateMonitor({ id, update: { message } })
+      const response = await this.updateMonitor({ id, update: { query } })
 
       console.log(response)
     }
