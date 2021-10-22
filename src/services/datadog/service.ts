@@ -2,7 +2,6 @@ import axios, { AxiosInstance } from "axios";
 import { v1, v2 } from "@datadog/datadog-api-client";
 import { NodesModel } from '../../models';
 import { ApiDetails } from "./types";
-import { Config } from "..";
 
 export class Service {
   private sdkClient: v1.MonitorsApi;
@@ -172,7 +171,6 @@ export class Service {
 
     const { data: monitors } = await this.getAllMonitorsByTag('Smart_Monitorv2')
     
-
     for (const monitor of monitors) {
 
       const id = monitor.id
