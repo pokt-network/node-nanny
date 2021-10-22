@@ -28,17 +28,16 @@ export interface IOracle {
 }
 
 export interface INode {
-    id: string
     backend: string
     chain: IChain
     container: string
     haProxy: boolean
-    hasPeers: boolean
-    reboot: boolean
+    hasPeer: boolean
+    id: string
     host: IHost
     hostname: string
+    reboot: boolean
     monitorId: string
-    online: boolean
     port: number
     server: string
     threshold: number
@@ -48,6 +47,7 @@ export interface INode {
     nginx: string
     poktType: string
     peer: string
+    compose: string
 }
 
 const chainSchema = new Schema<IChain>({
@@ -83,11 +83,10 @@ const nodesSchema = new Schema<INode>(
         container: String,
         haProxy: Boolean,
         reboot: Boolean,
-        hasPeers: Boolean,
+        hasPeer: Boolean,
         host: hostsSchema,
         hostname: { type: String, unique: true },
         monitorId: String,
-        online: Boolean,
         port: Number,
         server: String,
         threshold: Number,
@@ -96,7 +95,8 @@ const nodesSchema = new Schema<INode>(
         logGroup: String,
         nginx: String,
         poktType: String,
-        peer: [String]
+        peer: [String],
+        compose: String
     },
     { collection: 'nodes' }
 )
