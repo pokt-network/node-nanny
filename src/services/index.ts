@@ -1,5 +1,4 @@
 export { Service as Alert } from "./alert";
-export { Service as Config } from "./config";
 export { Service as DataDog } from "./datadog";
 export { Service as Event } from "./event";
 export { Service as HAProxy } from "./haproxy";

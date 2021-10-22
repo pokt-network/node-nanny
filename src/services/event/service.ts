@@ -6,7 +6,8 @@ import {
   EventTransitions,
   LoadBalancerStatus,
   Limits,
-  LoadBalancer
+  LoadBalancer,
+  SupportedBlockChains
 } from "./types";
 import { INode, NodesModel, HostsModel } from "../../models";
 
@@ -84,19 +85,28 @@ export class Service {
     }
   }
 
-  async rebootServer({ host, container, id }) {
-    const Host = await HostsModel.findOne({ name: host})
+  async rebootServer({ host, container, id, chain, compose, nginx, poktType }) {
+    const Host = await HostsModel.findOne({ name: host })
     if (!!Host) {
       let { internalIpaddress: ip } = Host
+
       if (process.env.MONITOR_TEST === "1") {
         ip = 'localhost'
       }
-      const { data } = await this.agent.post(`http://${ip}:3001/webhook/docker/reboot`, {
-        name: container,
-      });
-      const { reboot } = data
+
+      let reboot
+
+      if (chain.type === SupportedBlockChains.POKT) {
+        const { data } = await this.agent.post(`http://${ip}:3001/webhook/docker/reboot`, { name: container, type: "pokt", nginx, poktType });
+        reboot = data.reboot
+
+      } else {
+        const { data } = await this.agent.post(`http://${ip}:3001/webhook/docker/reboot`, { name: container, type: 'data', compose });
+        reboot = data.reboot
+      }
       await this.dd.muteMonitor({ id, minutes: 5 });
       return reboot
+
     }
     return;
   }
@@ -109,7 +119,7 @@ export class Service {
         const { data } = await this.agent.post(`http://${internalHostName}:3001/webhook/lb/status`, { backend })
         results.push(data)
       } catch (error) {
-        throw new Error(`could not getbackendstatus, ${internalHostName} ${backend} ${error}`)
+        throw new Error(`could not get backend status, ${internalHostName} ${backend} ${error}`)
       }
     }
     if (results.every((result) => result.status.allOnline === true)) {
@@ -139,7 +149,6 @@ export class Service {
   async processEvent(raw) {
     const {
       event,
-      id,
       nodeId,
       transition,
       title,
@@ -147,7 +156,7 @@ export class Service {
     } = await this.dd.parseWebhookMessage(raw);
 
     const node: INode = await NodesModel.findOne({ _id: nodeId })
-    const { backend, container, logGroup, server, haProxy, reboot } = node
+    const { backend, container, logGroup, server, haProxy, reboot, hasPeer } = node
     const chain = node.chain.name.toLowerCase();
     const host = node.host.name.toLowerCase();
     const name = node.hostname ? node.hostname : `${chain}/${host}`
@@ -180,7 +189,7 @@ export class Service {
       //Not Syncronized and the node is in operation
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
         await this.alert.sendErrorCritical({ title, message: `${name} is ${event} \n See event ${link}` })
-        if (!await this.isPeerOk({ chain, nodeId })) {
+        if (!await this.isPeerOk({ chain, nodeId }) && hasPeer) {
           //Both nodes are out of sync
           let { worst, best } = await this.getBlockHeightDifference({ chain, host, nodeId, logGroup })
           if (haProxy) {
@@ -293,7 +302,7 @@ export class Service {
           return this.alert.sendInfo({ title, message: `${name} is still down and must be recovered` })
         }
         if (reboot && docker) {
-          const reboot = await this.rebootServer({ host, container, id })
+          const reboot = await this.rebootServer(node)
           return this.alert.sendInfo({
             title, message: `rebooting ${name} \n${reboot ? reboot : ''}`
           })
