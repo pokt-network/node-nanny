@@ -2,21 +2,21 @@ import { exec } from "child_process";
 import path from "path";
 
 enum NodeTypes {
-  DATA = "DATA",
-  POKT = "POKT"
+  DATA = "data",
+  POKT = "pokt"
 }
 
 export class Service {
-  rebootDockerContainerFromAgent({ name, type, nginx, poktType }) {
+  rebootDockerContainerFromAgent({ name, type, compose, nginx, poktType }) {
+    console.log(name)
     let cmd, script
     if (type == NodeTypes.DATA) {
       script = path.resolve(__dirname, "../../../scripts/agent_reboot.sh");
-      cmd = `sh ${script} ${name} ${nginx} ${poktType}`
+      cmd = `sh ${script} ${name} ${compose}`
     }
-
     if (type === NodeTypes.POKT) {
       script = path.resolve(__dirname, "../../../scripts/agent_reboot_pokt.sh");
-      cmd = `sh ${script} ${name}`
+      cmd = `sh ${script} ${name} ${nginx} ${poktType}`
     }
 
     return new Promise((resolve, reject) => {

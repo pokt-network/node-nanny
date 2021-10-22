@@ -1,7 +1,8 @@
 #!/bin/bash
-cd /home/ubuntu/node-deploy/shared
+cd /home/$USER/pokt/$3
 docker stop $1
 sleep 2
 echo "waiting for shutdown"
 docker-compose up -d
-docker exec $2 nginx -s
+echo $1
+docker exec $2 nginx -s reload
