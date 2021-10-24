@@ -85,8 +85,8 @@ export class Service {
     }
   }
 
-  async rebootServer({ host, container, id, chain, compose, nginx, poktType }) {
-    const Host = await HostsModel.findOne({ name: host })
+  async rebootServer({ host, container, monitorId, chain, compose, nginx, poktType }) {
+    const Host = await HostsModel.findOne({ name: host.name })
     if (!!Host) {
       let { internalIpaddress: ip } = Host
 
@@ -101,10 +101,10 @@ export class Service {
         reboot = data.reboot
 
       } else {
-        const { data } = await this.agent.post(`http://${ip}:3001/webhook/docker/reboot`, { name: container, type: 'data', compose });
+        const { data } = await this.agent.post(`http://${ip}:3001/webhook/docker/reboot`, { name: container, type: 'data', compose: process.env.MONITOR_TEST === "1" ? "mock" : compose });
         reboot = data.reboot
       }
-      await this.dd.muteMonitor({ id, minutes: 5 });
+      await this.dd.muteMonitor({ id: monitorId, minutes: 5 });
       return reboot
 
     }
