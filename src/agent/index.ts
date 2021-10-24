@@ -12,6 +12,10 @@ const port = 3001;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+app.get('/ping', (req, res) => {
+  return res.json({ status: "ok" });
+})
+
 app.post("/webhook/docker/reboot", async ({ body }, res) => {
   const { name, type, compose, nginx, poktType } = body;
   try {
