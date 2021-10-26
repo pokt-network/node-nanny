@@ -201,11 +201,11 @@ export class Service {
     const host = node.host.name.toLowerCase();
     const name = node.hostname ? node.hostname : `${chain}/${host}`;
     const docker = node.host.dockerHost;
-    let instance = node.host.hostType === "AWS" ? node.host.awsInstanceId : node.host.name;
+    const instance = node.host.hostType === "AWS" ? node.host.awsInstanceId : node.host.name;
 
     if (transition === EventTransitions.TRIGGERED) {
       //alert if both unhealthy
-      if (!(await this.isPeerOk({ chain, nodeId }))) {
+      if (!((await this.isPeerOk({ chain, nodeId })) && hasPeer)) {
         await this.alert.sendErrorCritical({
           title,
           message: `Both ${chain} nodes are unhealthy! \n 

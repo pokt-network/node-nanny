@@ -113,6 +113,15 @@ export class Service {
     }
   }
 
+  async unmuteMonitor({ id }) {
+    try {
+      const { data } = await this.restClient.post(`/monitor/${id}/unmute`);
+      return data;
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
   parseWebhookMessage({ msg, id, transition, type, title, link }) {
     let [, , nodeId, event] = msg.split("\n");
     event = event.split("event_")[1];
