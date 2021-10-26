@@ -1,7 +1,7 @@
 import { api } from "@pagerduty/pdjs";
 import axios, { AxiosInstance } from "axios";
 import { AlertColor, SendMessageInput, PagerDutyDetails, IncidentLevel } from "./types";
-import { DataDogTypes, AlertTypes } from "../../types"
+import { DataDogTypes, AlertTypes } from "../../types";
 
 export class Service {
   private dsClient: AxiosInstance;
@@ -23,7 +23,9 @@ export class Service {
       const { status } = await this.dsClient.post(channel, { embeds });
       return status === 204;
     } catch (error) {
-      throw new Error(`could not send alert to Discord ${{ error, title, color, fields, channel }}`);
+      throw new Error(
+        `could not send alert to Discord ${{ error, title, color, fields, channel }}`,
+      );
     }
   }
 
@@ -31,7 +33,10 @@ export class Service {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.ERROR,
-      channel: (process.env.MONITOR_TEST === "1") ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST : AlertTypes.Webhooks.WEBHOOK_ERRORS,
+      channel:
+        process.env.MONITOR_TEST === "1"
+          ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST
+          : AlertTypes.Webhooks.WEBHOOK_ERRORS,
       fields: [
         {
           name: "error",
@@ -45,13 +50,16 @@ export class Service {
     return await this.sendDiscordMessage({
       title,
       color: DataDogTypes.AlertColor.ERROR,
-      channel: (process.env.MONITOR_TEST === "1") ? AlertTypes.Webhooks.WEBHOOK_CRITICAL_TEST : AlertTypes.Webhooks.WEBHOOK_CRITICAL,
+      channel:
+        process.env.MONITOR_TEST === "1"
+          ? AlertTypes.Webhooks.WEBHOOK_CRITICAL_TEST
+          : AlertTypes.Webhooks.WEBHOOK_CRITICAL,
       fields: [
         {
           name: "Error",
           value: message,
-        }
-      ]
+        },
+      ],
     });
   }
 
@@ -59,8 +67,11 @@ export class Service {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.INFO,
-      channel: (process.env.MONITOR_TEST === "1") ? AlertTypes.Webhooks.WEBHOOK_LOGS_TEST : AlertTypes.Webhooks.WEBHOOK_LOGS,
-      fields
+      channel:
+        process.env.MONITOR_TEST === "1"
+          ? AlertTypes.Webhooks.WEBHOOK_LOGS_TEST
+          : AlertTypes.Webhooks.WEBHOOK_LOGS,
+      fields,
     });
   }
 
@@ -68,11 +79,14 @@ export class Service {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.INFO,
-      channel: (process.env.MONITOR_TEST === "1") ? AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL_TEST : AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
+      channel:
+        process.env.MONITOR_TEST === "1"
+          ? AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL_TEST
+          : AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
       fields: [
         {
           name: "Info",
-          value: message
+          value: message,
         },
       ],
     });
@@ -82,11 +96,14 @@ export class Service {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.WARNING,
-      channel: (process.env.MONITOR_TEST === "1") ? AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL_TEST : AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
+      channel:
+        process.env.MONITOR_TEST === "1"
+          ? AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL_TEST
+          : AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
       fields: [
         {
           name: "Warning",
-          value: message
+          value: message,
         },
       ],
     });
@@ -96,11 +113,14 @@ export class Service {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.SUCCESS,
-      channel: (process.env.MONITOR_TEST === "1") ? AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL_TEST : AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
+      channel:
+        process.env.MONITOR_TEST === "1"
+          ? AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL_TEST
+          : AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
       fields: [
         {
           name: "Success",
-          value: message
+          value: message,
         },
       ],
     });
@@ -110,11 +130,14 @@ export class Service {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.SUCCESS,
-      channel: (process.env.MONITOR_TEST === "1") ? AlertTypes.Webhooks.WEBHOOK_CRITICAL_TEST : AlertTypes.Webhooks.WEBHOOK_CRITICAL,
+      channel:
+        process.env.MONITOR_TEST === "1"
+          ? AlertTypes.Webhooks.WEBHOOK_CRITICAL_TEST
+          : AlertTypes.Webhooks.WEBHOOK_CRITICAL,
       fields: [
         {
           name: "Success",
-          value: message
+          value: message,
         },
       ],
     });
