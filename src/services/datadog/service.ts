@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import { v1, v2 } from "@datadog/datadog-api-client";
-import { NodesModel } from '../../models';
+import { NodesModel } from "../../models";
 import { ApiDetails } from "./types";
 
 export class Service {
@@ -21,7 +21,6 @@ export class Service {
     const configuration = v2.createConfiguration();
     return new v2.LogsApi(configuration);
   }
-
 
   private initRest() {
     return axios.create({
@@ -59,20 +58,18 @@ export class Service {
           query: `host:${instance} container_name:${container}`,
           to: "now",
         },
-        options: {
-          //  timeOffset: -8,
-        },
         sort: "-timestamp",
       },
     };
 
     try {
       return await (await this.ddlogs.listLogs(params)).data.map(({ attributes }) => {
-        const { timestamp, service, message } = attributes
-        return { timestamp, service, message }
-      })
-    } catch (error) { throw new Error(error) }
-
+        const { timestamp, service, message } = attributes;
+        return { timestamp, service, message };
+      });
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
   async getHealthLogs({ host, logGroup }) {
@@ -83,17 +80,17 @@ export class Service {
           query: `service:"${logGroup}"`,
           to: "now",
         },
-        options: {
-          timeOffset: -8,
-        },
         sort: "-timestamp",
       },
     };
     return await (await this.ddlogs.listLogs(params)).data.map(({ attributes }) => {
-
-      return { host, condition: attributes.attributes.conditions, status: attributes.attributes.status, delta: attributes.attributes.height.delta }
-    })
-
+      return {
+        host,
+        condition: attributes.attributes.conditions,
+        status: attributes.attributes.status,
+        delta: attributes.attributes.height.delta,
+      };
+    });
   }
 
   async deleteMonitor({ monitorId }) {
@@ -123,65 +120,55 @@ export class Service {
     return { event, id, nodeId, transition, type, title, link };
   }
 
-
-
   async createMonitor({ name, logGroup, id }) {
-    const { data } = await this.restClient.post('/monitor', {
-      "name": name.toUpperCase(),
-      "type": "log alert",
-      "query": `logs(\"status:error source:\\\"${logGroup.toLowerCase()}\\\"\").index(\"*\").rollup(\"count\").by(\"@conditions\").last(\"5m\") > 4`,
-      "message": `@webhook-events-production \nnodeId_${id}\nevent_{{@conditions.name}}"`,
-      "tags": [
-        "Smart_Monitorv2"
-      ],
-      "options": {
-        "notify_audit": false,
-        "locked": false,
-        "renotify_interval": 10,
-        "include_tags": true,
-        "thresholds": {
-          "critical": 4
+    const { data } = await this.restClient.post("/monitor", {
+      name: name.toUpperCase(),
+      type: "log alert",
+      query: `logs(\"status:error source:\\\"${logGroup.toLowerCase()}\\\"\").index(\"*\").rollup(\"count\").by(\"@conditions\").last(\"5m\") > 4`,
+      message: `@webhook-events-production \nnodeId_${id}\nevent_{{@conditions.name}}"`,
+      tags: ["Smart_Monitorv2"],
+      options: {
+        notify_audit: false,
+        locked: false,
+        renotify_interval: 10,
+        include_tags: true,
+        thresholds: {
+          critical: 4,
         },
-        "silenced": {},
-        "notify_no_data": false,
-        "enable_logs_sample": true,
-        "groupby_simple_monitor": false,
-        "escalation_message": `@webhook-events-production \nnodeId_${id}\nevent_{{@conditions.name}}_NOT_RESOLVED`,
-        "new_group_delay": 60
+        silenced: {},
+        notify_no_data: false,
+        enable_logs_sample: true,
+        groupby_simple_monitor: false,
+        escalation_message: `@webhook-events-production \nnodeId_${id}\nevent_{{@conditions.name}}_NOT_RESOLVED`,
+        new_group_delay: 60,
       },
-      "classification": "log"
-
-
-    })
+      classification: "log",
+    });
     const { id: monitorId } = data;
-    await NodesModel.findOneAndUpdate({ _id: id }, { logGroup, $set: { monitorId } })
+    await NodesModel.findOneAndUpdate({ _id: id }, { logGroup, $set: { monitorId } });
     return monitorId;
   }
 
   async getAllMonitorsByTag(tag) {
-    return await this.restClient.get(`/monitor?monitor_tags=${tag}`)
+    return await this.restClient.get(`/monitor?monitor_tags=${tag}`);
   }
 
-
   async updateMonitor({ id, update }) {
-    return await this.restClient.put(`/monitor/${id}`, update)
+    return await this.restClient.put(`/monitor/${id}`, update);
   }
 
   async changeWebhookForMonitors() {
+    const { data: monitors } = await this.getAllMonitorsByTag("Smart_Monitorv2");
 
-    const { data: monitors } = await this.getAllMonitorsByTag('Smart_Monitorv2')
-    
     for (const monitor of monitors) {
+      const id = monitor.id;
+      const query = String(monitor.query).replace("> 4", "> 1");
 
-      const id = monitor.id
-      const query = String(monitor.query).replace('> 4', '> 1')
+      const response = await this.updateMonitor({ id, update: { query } });
 
-      const response = await this.updateMonitor({ id, update: { query } })
-
-      console.log(response)
+      console.log(response);
     }
 
-    return {}
+    return {};
   }
-
 }
