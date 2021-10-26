@@ -12,9 +12,9 @@ export class App {
   }
 
   async main() {
-    await connect()
-    const nodes = await NodesModel.find({}).exec()
-    const allHealth = await this.health.getNodeHealth(nodes)
+    await connect();
+    const nodes = await NodesModel.find({}).exec();
+    const allHealth = await this.health.getNodeHealth(nodes);
 
     for (const health of allHealth) {
       if (health) {
