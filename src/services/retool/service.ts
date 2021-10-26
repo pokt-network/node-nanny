@@ -1,19 +1,15 @@
 import axios, { AxiosInstance } from "axios";
-import { Reboot, HAProxy, Alert, DataDog } from "../../services";
+import { Alert, DataDog } from "../../services";
 import { NodesModel, INode, HostsModel } from "../../models";
-import { HealthTypes } from "../../types";
+import { HealthTypes, DataDogTypes } from "../../types";
 
 export class Service {
   private agent: AxiosInstance;
-  private reboot: Reboot;
-  private haproxy: HAProxy;
   private alert: Alert;
   private dd: DataDog;
 
   constructor() {
     this.agent = this.initAgentClient();
-    this.reboot = new Reboot();
-    this.haproxy = new HAProxy();
     this.alert = new Alert();
     this.dd = new DataDog();
   }
@@ -24,11 +20,11 @@ export class Service {
     });
   }
 
-  async getNode(id): Promise<INode> {
+  private async getNode(id): Promise<INode> {
     return await NodesModel.findById(id).exec();
   }
 
-  async getLoadBalancers() {
+  private async getLoadBalancers() {
     if (process.env.MONITOR_TEST === "1") {
       return [
         {
@@ -47,7 +43,7 @@ export class Service {
     ).exec();
   }
 
-  async getHaProxyStats(id: string) {
+  async getHaProxyStatus(id: string) {
     const { backend } = await this.getNode(id);
     const loadBalancers = await this.getLoadBalancers();
     const results = [];
@@ -68,13 +64,14 @@ export class Service {
     return false;
   }
 
-  async getMonitorStatus(id: string) {
+  async getMuteStatus(id: string) {
     const { monitorId } = await this.getNode(id);
-    return await this.dd.getMonitorStatus(monitorId);
+    const { options } = await this.dd.getMonitor(monitorId);
+    return !options.silenced.hasOwnProperty("*");
   }
 
   async rebootServer(id: string) {
-    const { host, chain, container, compose, nginx, poktType } = await this.getNode(id);
+    const { host, chain, hostname, container, compose, nginx, poktType } = await this.getNode(id);
 
     const Host = await HostsModel.findOne({ name: host.name }).exec();
     if (!!Host) {
@@ -103,16 +100,68 @@ export class Service {
         reboot = data.reboot;
       }
       await this.dd.muteMonitor({ id, minutes: 5 });
+
+      await this.alert.sendInfo({
+        title: "Manual Reboot",
+        message: `${hostname ? hostname : `${host}/${chain}`} rebooted`,
+      });
       return reboot;
     }
     return;
   }
 
-  async removeFromRotation(id: string) {}
+  async removeFromRotation(id: string) {
+    const { backend, server, hostname, host, chain } = await this.getNode(id);
+    const loadBalancers = await this.getLoadBalancers();
+    try {
+      await Promise.all(
+        loadBalancers.map(({ internalHostName }) =>
+          this.agent.post(`http://${internalHostName}:3001/webhook/lb/disable`, {
+            backend,
+            host: server,
+          }),
+        ),
+      );
 
-  async addToRotation(id: string) {}
+      return await this.alert.sendInfo({
+        title: "Removed from rotation",
+        message: `${hostname ? hostname : `${host}/${chain}`} removed from ${backend}`,
+      });
+    } catch (error) {
+      throw new Error(`could not remove ${backend} ${server}from rotation, ${error}`);
+    }
+  }
 
-  async muteMonitor(id: string) {}
+  async addToRotation(id: string) {
+    const { backend, server, hostname, host, chain } = await this.getNode(id);
+    const loadBalancers = await this.getLoadBalancers();
+    try {
+      await Promise.all(
+        loadBalancers.map(({ internalHostName }) =>
+          this.agent.post(`http://${internalHostName}:3001/webhook/lb/enable`, {
+            backend,
+            host: server,
+          }),
+        ),
+      );
+      return await this.alert.sendInfo({
+        title: "Added to rotation",
+        message: `${hostname ? hostname : `${host}/${chain}`} added to ${backend}`,
+      });
+    } catch (error) {
+      throw new Error(`could not add ${backend} ${server} rotation, ${error}`);
+    }
+  }
 
-  async unmuteMonitor(id: string) {}
+  async muteMonitor(id: string) {
+    const { monitorId } = await this.getNode(id);
+    console.log(monitorId);
+    return await this.dd.muteMonitor({ id: monitorId, minutes: 525600 });
+  }
+
+  async unmuteMonitor(id: string) {
+    const { monitorId } = await this.getNode(id);
+    console.log('ID',monitorId);
+    return await this.dd.unmuteMonitor({ id: monitorId });
+  }
 }
