@@ -37,6 +37,16 @@ app.post("/admin/monitor/onboard", async ({ body }, res) => {
 app.get("/retool/monitor/status/:id", async (req, res) => {
   const { id } = req.params;
   try {
+    const status = await retool.getMonitorStatus(id)
+    return res.status(200).json({ status });
+  } catch (error) {
+    res.sendStatus(500);
+  }
+});
+
+app.get("/retool/monitor/mute/status/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
     const status = await retool.getMuteStatus(id);
     return res.status(200).json({ status });
   } catch (error) {
@@ -88,6 +98,16 @@ app.post("/retool/lb/disable/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const status = await retool.removeFromRotation(id);
+    return res.status(200).json({ status });
+  } catch (error) {
+    res.sendStatus(500);
+  }
+});
+
+app.post("/retool/reboot/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const status = await retool.rebootServer(id);
     return res.status(200).json({ status });
   } catch (error) {
     res.sendStatus(500);
