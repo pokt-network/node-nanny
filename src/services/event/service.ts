@@ -245,8 +245,11 @@ export class Service {
               "chain.name": chain.toUpperCase(),
               "host.name": worst.host,
             });
+           
             const status = await this.getBackendStatus(backend);
-            if (status === LoadBalancerStatus.ONLINE) {
+
+            if (status === LoadBalancerStatus.ONLINE && hasPeer) {
+
               await this.disableServer({ backend, server: badPeer.server });
               return await this.alert.sendInfo({
                 title,
@@ -271,7 +274,7 @@ export class Service {
           });
         }
 
-        if (haProxy) {
+        if (haProxy && hasPeer) {
           await this.disableServer({ backend, server });
           await this.alert.sendInfo({
             title,
@@ -308,7 +311,7 @@ export class Service {
             _id: { $ne: nodeId },
           });
 
-          if (haProxy && status !== LoadBalancerStatus.ONLINE) {
+          if (haProxy && status !== LoadBalancerStatus.ONLINE && hasPeer) {
             await this.enableServer({ backend, server });
             await this.disableServer({ backend, server: peer.server });
           }
@@ -333,7 +336,7 @@ export class Service {
             ${await this.getHAProxyMessage(backend)}`,
         });
 
-        if (haProxy) {
+        if (haProxy && hasPeer) {
           await this.enableServer({ backend, server });
           await this.alert.sendSuccess({
             title,
