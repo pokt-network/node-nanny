@@ -2,6 +2,7 @@ import axios, { AxiosInstance } from "axios";
 import { Alert, DataDog } from "../../services";
 import { NodesModel, INode, HostsModel } from "../../models";
 import { HealthTypes, DataDogTypes } from "../../types";
+import { stat } from "fs";
 
 export class Service {
   private agent: AxiosInstance;
@@ -44,7 +45,10 @@ export class Service {
   }
 
   async getHaProxyStatus(id: string) {
-    const { backend } = await this.getNode(id);
+    const { backend, haProxy } = await this.getNode(id);
+    if (haProxy === false) {
+      return -1;
+    }
     const loadBalancers = await this.getLoadBalancers();
     const results = [];
     for (const { internalHostName } of loadBalancers) {
@@ -59,9 +63,9 @@ export class Service {
       }
     }
     if (results.every((result) => result.status.allOnline === true)) {
-      return true;
+      return 0;
     }
-    return false;
+    return 1;
   }
 
   async getMuteStatus(id: string) {
@@ -70,10 +74,26 @@ export class Service {
     return !options.silenced.hasOwnProperty("*");
   }
 
+  async getMonitorStatus(id: string) {
+    const { monitorId } = await this.getNode(id);
+    const status = await this.dd.getMonitorStatus(monitorId);
+    return !(status === DataDogTypes.Status.ALERT);
+  }
+
   async rebootServer(id: string) {
-    const { host, chain, hostname, container, compose, nginx, poktType } = await this.getNode(id);
+    const {
+      host,
+      chain,
+      hostname,
+      container,
+      compose,
+      nginx,
+      poktType,
+      monitorId,
+    } = await this.getNode(id);
 
     const Host = await HostsModel.findOne({ name: host.name }).exec();
+
     if (!!Host) {
       let { internalIpaddress: ip } = Host;
 
@@ -99,12 +119,14 @@ export class Service {
         });
         reboot = data.reboot;
       }
-      await this.dd.muteMonitor({ id, minutes: 5 });
-
+      await this.dd.muteMonitor({ id: monitorId, minutes: 5 });
       await this.alert.sendInfo({
         title: "Manual Reboot",
-        message: `${hostname ? hostname : `${host}/${chain}`} rebooted`,
+        message: `${
+          hostname ? hostname : `${host.name}/${chain.name.toLowerCase()}`
+        } rebooted \n ${reboot}`,
       });
+
       return reboot;
     }
     return;
@@ -125,7 +147,7 @@ export class Service {
 
       return await this.alert.sendInfo({
         title: "Removed from rotation",
-        message: `${hostname ? hostname : `${host}/${chain}`} removed from ${backend}`,
+        message: `${hostname ? hostname : `${host.name}/${chain.name}`} removed from ${backend}`,
       });
     } catch (error) {
       throw new Error(`could not remove ${backend} ${server}from rotation, ${error}`);
@@ -146,7 +168,7 @@ export class Service {
       );
       return await this.alert.sendInfo({
         title: "Added to rotation",
-        message: `${hostname ? hostname : `${host}/${chain}`} added to ${backend}`,
+        message: `${hostname ? hostname : `${host.name}/${chain.name}`} added to ${backend}`,
       });
     } catch (error) {
       throw new Error(`could not add ${backend} ${server} rotation, ${error}`);
@@ -155,13 +177,11 @@ export class Service {
 
   async muteMonitor(id: string) {
     const { monitorId } = await this.getNode(id);
-    console.log(monitorId);
     return await this.dd.muteMonitor({ id: monitorId, minutes: 525600 });
   }
 
   async unmuteMonitor(id: string) {
     const { monitorId } = await this.getNode(id);
-    console.log('ID',monitorId);
     return await this.dd.unmuteMonitor({ id: monitorId });
   }
 }
