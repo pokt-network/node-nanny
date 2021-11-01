@@ -46,7 +46,6 @@ export interface INode {
   logGroup: string;
   nginx: string;
   poktType: string;
-  peer: string;
   compose: string;
 }
 
@@ -92,7 +91,6 @@ const nodesSchema = new Schema<INode>(
     logGroup: String,
     nginx: String,
     poktType: String,
-    peer: [String],
     compose: String,
   },
   { collection: "nodes" },
