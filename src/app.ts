@@ -18,7 +18,6 @@ export class App {
 
     for (const health of allHealth) {
       if (health) {
-        await wait(500);
         let message = JSON.stringify(health);
         const { name } = health;
         console.info({ name, health });
