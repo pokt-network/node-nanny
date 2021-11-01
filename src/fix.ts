@@ -1,28 +1,29 @@
 import { connect } from "./db";
 import { INode, NodesModel, IOracle, OraclesModel } from "./models";
-import { Service } from "../src/services/datadog"
+import { Service } from "../src/services/datadog";
 
-const dd = new Service()
+const dd = new Service();
 
 const fix = async () => {
+  await connect();
 
-    await connect()
+  // const res = await NodesModel.updateMany({},{hasPeer: true, $unset: {hasPeers: ""}}).exec()
+  // console.log(res)
 
-    // const res = await NodesModel.updateMany({},{hasPeer: true, $unset: {hasPeers: ""}}).exec()
-    // console.log(res)
+  const all = await NodesModel.find({ server: null, "chain.type": { $ne: "POKT" } }).exec();
 
-    const all = await NodesModel.find({ "chain.name": { $ne: "POKT" } }).exec()
+  console.log(all)
 
-    for (const node of all) {
-        if (node.host.name.includes("harmony")) {
-            const res = await NodesModel.updateOne({ _id: node._id }, { compose: "hmy-mainnet" }).exec()
-            console.log(res)
-        }
+  // for (const { _id, hostname, port, container, host } of all) {
+  //   if (host.name.includes("-")) {
+  //     const res = await NodesModel.updateOne(
+  //       { _id },
+  //       { $set: { server: host.name.split("-").splice(-1).join("") } },
+  //     ).exec();
+  //   }
+  // }
 
-    }
+  return;
+};
 
-
-    return
-}
-
-fix()
+fix();

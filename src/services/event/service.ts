@@ -205,7 +205,7 @@ export class Service {
 
     if (transition === EventTransitions.TRIGGERED) {
       //alert if both unhealthy
-      if (!((await this.isPeerOk({ chain, nodeId })) && hasPeer)) {
+      if (!(await this.isPeerOk({ chain, nodeId })) && hasPeer) {
         await this.alert.sendErrorCritical({
           title,
           message: `Both ${chain} nodes are unhealthy! \n 
@@ -245,11 +245,10 @@ export class Service {
               "chain.name": chain.toUpperCase(),
               "host.name": worst.host,
             });
-           
+
             const status = await this.getBackendStatus(backend);
 
             if (status === LoadBalancerStatus.ONLINE && hasPeer) {
-
               await this.disableServer({ backend, server: badPeer.server });
               return await this.alert.sendInfo({
                 title,
