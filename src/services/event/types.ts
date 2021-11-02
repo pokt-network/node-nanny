@@ -10,7 +10,8 @@ export { SupportedBlockChains } from "../health/types"
 
 export enum LoadBalancerStatus {
   ONLINE = 'online',
-  OFFLINE = 'offline'
+  OFFLINE = 'offline',
+  ERROR = 'error'
 }
 
 
