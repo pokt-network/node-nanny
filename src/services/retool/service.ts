@@ -45,7 +45,7 @@ export class Service {
   }
 
   async getHaProxyStatus(id: string) {
-    const { backend, haProxy } = await this.getNode(id);
+    const { backend, haProxy, server } = await this.getNode(id);
     if (haProxy === false) {
       return -1;
     }
@@ -55,11 +55,11 @@ export class Service {
       try {
         const { data } = await this.agent.post(
           `http://${internalHostName}:3001/webhook/lb/status`,
-          { backend },
+          { backend, server },
         );
         results.push(data);
       } catch (error) {
-        throw new Error(`could not get backend status, ${internalHostName} ${backend} ${error}`);
+        throw new Error(`could not get backend status, ${internalHostName} ${server} ${backend} ${error}`);
       }
     }
     if (results.every((result) => result === true)) {
@@ -140,7 +140,7 @@ export class Service {
         loadBalancers.map(({ internalHostName }) =>
           this.agent.post(`http://${internalHostName}:3001/webhook/lb/disable`, {
             backend,
-            host: server,
+            server,
           }),
         ),
       );
@@ -162,7 +162,7 @@ export class Service {
         loadBalancers.map(({ internalHostName }) =>
           this.agent.post(`http://${internalHostName}:3001/webhook/lb/enable`, {
             backend,
-            host: server,
+            server,
           }),
         ),
       );
