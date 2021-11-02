@@ -32,6 +32,9 @@ export class Service {
         method: "eth_blockNumber",
         params: [],
       });
+      if (data.error) {
+        throw new Error(`getBlockHeight could not contact blockchain node ${data.error} ${url}`);
+      }
       return data;
     } catch (error) {
       throw new Error(`getBlockHeight could not contact blockchain node ${error} ${url}`);
@@ -260,6 +263,9 @@ export class Service {
         this.getEthSyncing(url),
       ]);
 
+      if (chain.name === "IOT") {
+        console.log("externalBh", externalBh, "internalBh", internalBh);
+      }
       let peers;
       let numPeers;
 
