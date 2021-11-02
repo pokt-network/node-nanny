@@ -62,7 +62,7 @@ export class Service {
         throw new Error(`could not get backend status, ${internalHostName} ${backend} ${error}`);
       }
     }
-    if (results.every((result) => result.status.allOnline === true)) {
+    if (results.every((result) => result === true)) {
       return 0;
     }
     return 1;
