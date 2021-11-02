@@ -134,7 +134,7 @@ export class Service {
       name: name.toUpperCase(),
       type: "log alert",
       query: `logs(\"status:error source:\\\"${logGroup.toLowerCase()}\\\"\").index(\"*\").rollup(\"count\").by(\"@conditions\").last(\"5m\") > 1`,
-      message: `@webhook-events-production \nnodeId_${id}\nevent_{{@conditions.name}}`,
+      message: `@webhook-events-production\nnodeId_${id}\nevent_{{@conditions.name}}`,
       tags: ["Smart_Monitorv2"],
       options: {
         notify_audit: false,
