@@ -12,8 +12,8 @@ export class Service {
     });
   }
 
-  private async disableServerCommand({ backend, host }) {
-    const cmd = `echo "disable server ${backend}/${host}" | nc -v localhost 9999`;
+   async disableServer({ backend, server }) {
+    const cmd = `echo "disable server ${backend}/${server}" | nc -v localhost 9999`;
     return new Promise((resolve, reject) => {
       exec(cmd, (error, stdout) => {
         if (error) {
@@ -23,8 +23,8 @@ export class Service {
       });
     });
   }
-  private async enableServerCommand({ backend, host }) {
-    const cmd = `echo "enable server ${backend}/${host}" | nc -v localhost 9999`;
+  async enableServer({ backend, server }) {
+    const cmd = `echo "enable server ${backend}/${server}" | nc -v localhost 9999`;
     return new Promise((resolve, reject) => {
       exec(cmd, (error, stdout) => {
         if (error) {
@@ -35,34 +35,16 @@ export class Service {
     });
   }
 
-  async getStatus(backend) {
+  async getStatus({backend, server}) {
     const raw = await this.getCurrentStateByChainCommand(backend);
     const lines = raw.split("\n");
-    const [, , a, b] = lines;
-    const aStatusNum = Number(a.split(" ")[5]);
-    const bStatusNum = Number(b.split(" ")[5]);
-    const aStatus = aStatusNum === 2;
-    const bStatus = bStatusNum === 2;
-    const allOnline = aStatus === true && bStatus === true;
-    return { aStatus, bStatus, allOnline };
+    for(const line of lines){
+      if(line.includes(backend) && line.includes(server)){
+        return Number(line.split(" ")[5]) === 2
+      }
+    }
+
+     return -1;
   }
 
-  async disableServer({ backend, host }) {
-    const currentStatus = await this.getStatus(backend);
-    if (currentStatus.allOnline) {
-      return await this.disableServerCommand({ backend, host });
-    } else {
-      throw new Error(`one or more severs already offline ${currentStatus}`);
-    }
-  }
-
-  async enableServer({ backend, host }) {
-    await this.enableServerCommand({ backend, host });
-    const currentStatus = await this.getStatus(backend);
-    if (currentStatus.allOnline) {
-      return true;
-    } else {
-      throw new Error(`one or more severs are offline ${currentStatus}`);
-    }
-  }
 }

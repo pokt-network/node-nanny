@@ -34,9 +34,9 @@ app.post("/webhook/docker/reboot", async ({ body }, res) => {
 });
 
 app.post("/webhook/lb/disable", async ({ body }, res) => {
-  const { backend, host } = body;
+  const { backend, server } = body;
   try {
-    const status = await lb.disableServer({ backend, host });
+    const status = await lb.disableServer({ backend, server });
     return res.json({ status });
   } catch (error) {
     return res.status(500).send(error);
@@ -44,9 +44,9 @@ app.post("/webhook/lb/disable", async ({ body }, res) => {
 });
 
 app.post("/webhook/lb/enable", async ({ body }, res) => {
-  const { backend, host } = body;
+  const { backend, server } = body;
   try {
-    const status = await lb.enableServer({ backend, host });
+    const status = await lb.enableServer({ backend, server });
     return res.json({ status });
   } catch (error) {
     return res.status(500).send(error);
@@ -54,9 +54,9 @@ app.post("/webhook/lb/enable", async ({ body }, res) => {
 });
 
 app.post("/webhook/lb/status", async ({ body }, res) => {
-  const { backend } = body;
+  const { backend, server } = body;
   try {
-    const status = await lb.getStatus(backend);
+    const status = await lb.getStatus({backend, server});
     return res.json({ status });
   } catch (error) {
     return res.status(500).send(error);
