@@ -11,8 +11,11 @@ afterAll(async () => {
 })
 
 
-test("should process datadog event", async () => {
- await event.processEvent(mock)
+test("should check peer health for more than one", async () => {
+ const status = await event.isPeersOk({chain:"hrm", nodeId: "6176bc3272237b0011a6a740"})
+
+ console.log(status);
+ 
   expect(1).toEqual(1)
 
 })
