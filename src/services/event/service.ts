@@ -185,15 +185,16 @@ export class Service {
       }
     }
 
-    if (results.every((result) => result === true)) {
-      return LoadBalancerStatus.ONLINE;
-    }
+    // if (results.every((result) => result === true)) {
+    //   return LoadBalancerStatus.ONLINE;
+    // }
 
-    if (results.every(({ status }) => status === false)) {
-      return LoadBalancerStatus.OFFLINE;
-    }
+    // if (results.every(({ status }) => status === false)) {
+    //   return LoadBalancerStatus.OFFLINE;
+    // }
 
-    return LoadBalancerStatus.ERROR;
+    // return LoadBalancerStatus.ERROR;
+    return results;
   }
 
   async getHAProxyMessage(backend) {
@@ -249,7 +250,7 @@ export class Service {
         if (!(await this.isPeersOk({ chain, nodeId })) && hasPeer) {
           await this.alert.sendErrorCritical({
             title: `${name} is ${event}`,
-            message: `Both ${chain} nodes are not synched \n 
+            message: `All ${chain} nodes are not synched \n 
             Manual intervention is required! \n
              See event ${link} \n
               ${await this.getHAProxyMessage(backend)}`,
