@@ -263,9 +263,6 @@ export class Service {
         this.getEthSyncing(url),
       ]);
 
-      if (chain.name === "IOT") {
-        console.log("externalBh", externalBh, "internalBh", internalBh);
-      }
       let peers;
       let numPeers;
 
