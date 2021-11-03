@@ -4,9 +4,8 @@ const service = new Service();
 
 test("", async () => {
 
-  const status = await service.getStatus({backend: "ethmainnet", server: "2a"});
+  const status = await service.getServerCount({backend: "bscmainnet"});
   console.log(status);
-
 
 
   expect(3).toBe(3);

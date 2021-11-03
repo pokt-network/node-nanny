@@ -52,7 +52,7 @@ export class Service {
     ).exec();
   }
 
-   async isPeersOk({ chain, nodeId }) {
+  async isPeersOk({ chain, nodeId }) {
     const peers: INode[] = await NodesModel.find({
       "chain.name": chain.toUpperCase(),
       _id: { $ne: nodeId },
@@ -67,24 +67,24 @@ export class Service {
 
   async disableServer({ backend, server }) {
     try {
-      const status = await this.getBackendStatus(backend, server);
+      const status = await this.getBackendServerStatus({ backend, server });
 
-      if(status === LoadBalancerStatus.OFFLINE) {
-       return await this.alert.sendErrorChannel({
-           title: backend,
-           message: `could not remove from load balancer, server already offline`,
-         });
-       }
-       
-        const loadBalancers = await this.getLoadBalancers();
-        return await Promise.all(
-          loadBalancers.map(async ({ internalHostName }) =>
-            this.agent.post(`http://${internalHostName}:3001/webhook/lb/disable`, {
-              backend,
-              server,
-            }),
-          ),
-        );    
+      if (status === LoadBalancerStatus.OFFLINE) {
+        return await this.alert.sendErrorChannel({
+          title: backend,
+          message: `could not remove from load balancer, server already offline`,
+        });
+      }
+
+      const loadBalancers = await this.getLoadBalancers();
+      return await Promise.all(
+        loadBalancers.map(async ({ internalHostName }) =>
+          this.agent.post(`http://${internalHostName}:3001/webhook/lb/disable`, {
+            backend,
+            server,
+          }),
+        ),
+      );
     } catch (error) {
       this.alert.sendErrorChannel({
         title: backend,
@@ -105,7 +105,7 @@ export class Service {
         ),
       );
     } catch (error) {
-     return this.alert.sendErrorChannel({
+      return this.alert.sendErrorChannel({
         title: backend,
         message: `could not contact agent to enable , ${error}`,
       });
@@ -145,7 +145,7 @@ export class Service {
     return;
   }
 
-  async getBackendStatus(backend, server) {
+  async getBackendServerStatus({ backend, server }) {
     const loadBalancers = await this.getLoadBalancers();
     const results = [];
     for (const { internalHostName } of loadBalancers) {
@@ -160,6 +160,31 @@ export class Service {
       }
     }
 
+    if (results.every(({ status }) => status === true)) {
+      return LoadBalancerStatus.ONLINE;
+    }
+
+    if (results.every(({ status }) => status === false)) {
+      return LoadBalancerStatus.OFFLINE;
+    }
+
+    return LoadBalancerStatus.ERROR;
+  }
+
+  async getBackendServerCount(backend) {
+    const loadBalancers = await this.getLoadBalancers();
+    const results = [];
+    for (const { internalHostName } of loadBalancers) {
+      try {
+        const { data } = await this.agent.post(`http://${internalHostName}:3001/webhook/lb/count`, {
+          backend,
+        });
+        results.push(data);
+      } catch (error) {
+        throw new Error(`could not get backend status, ${internalHostName} ${backend} ${error}`);
+      }
+    }
+
     if (results.every((result) => result === true)) {
       return LoadBalancerStatus.ONLINE;
     }
@@ -168,7 +193,7 @@ export class Service {
       return LoadBalancerStatus.OFFLINE;
     }
 
-    return LoadBalancerStatus.ERROR
+    return LoadBalancerStatus.ERROR;
   }
 
   async getHAProxyMessage(backend) {
@@ -191,8 +216,7 @@ export class Service {
     const name = node.hostname ? node.hostname : `${chain}/${host}`;
     const docker = node.host.dockerHost;
     const instance = node.host.hostType === "AWS" ? node.host.awsInstanceId : node.host.name;
-    
-   
+
     if (transition === EventTransitions.TRIGGERED) {
       //alert if both unhealthy
       if (!(await this.isPeersOk({ chain, nodeId })) && hasPeer) {
@@ -223,7 +247,6 @@ export class Service {
           message: `${name} is ${event} \n See event ${link}`,
         });
         if (!(await this.isPeersOk({ chain, nodeId })) && hasPeer) {
-            
           await this.alert.sendErrorCritical({
             title: `${name} is ${event}`,
             message: `Both ${chain} nodes are not synched \n 
@@ -262,7 +285,6 @@ export class Service {
 
     if (transition === EventTransitions.RECOVERED) {
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
- 
         await this.alert.sendSuccess({ title, message: `${name} has recovered!` });
 
         //this case is to put the node back into rotation
