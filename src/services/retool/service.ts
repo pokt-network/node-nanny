@@ -2,7 +2,6 @@ import axios, { AxiosInstance } from "axios";
 import { Alert, DataDog } from "../../services";
 import { NodesModel, INode, HostsModel } from "../../models";
 import { HealthTypes, DataDogTypes } from "../../types";
-import { stat } from "fs";
 
 export class Service {
   private agent: AxiosInstance;
