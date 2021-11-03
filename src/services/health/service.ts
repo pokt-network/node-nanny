@@ -391,7 +391,7 @@ export class Service {
         };
       }
     } catch (error) {
-      if (error.response.data === false) {
+      if (error.response.data && error.response.data === false) {
         return {
           name,
           conditions: ErrorConditions.NOT_SYNCHRONIZED,
