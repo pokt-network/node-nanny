@@ -12,7 +12,7 @@ export class Service {
     });
   }
 
-   async disableServer({ backend, server }) {
+  async disableServer({ backend, server }) {
     const cmd = `echo "disable server ${backend}/${server}" | nc -v localhost 9999`;
     return new Promise((resolve, reject) => {
       exec(cmd, (error, stdout) => {
@@ -35,16 +35,23 @@ export class Service {
     });
   }
 
-  async getStatus({backend, server}) {
+  async getServerStatus({ backend, server }) {
     const raw = await this.getCurrentStateByChainCommand(backend);
     const lines = raw.split("\n");
-    for(const line of lines){
-      if(line.includes(backend) && line.includes(server)){
-        return Number(line.split(" ")[5]) === 2
+    for (const line of lines) {
+      if (line.includes(backend) && line.includes(server)) {
+        return Number(line.split(" ")[5]) === 2;
       }
     }
 
-     return -1;
+    return -1;
   }
 
+  async getServerCount(backend) {
+    const raw = await this.getCurrentStateByChainCommand(backend);
+    const lines = raw.split("\n");
+    return lines.filter((line) => {
+      return line.includes(backend) && Number(line.split(" ")[5]) === 2;
+    }).length;
+  }
 }

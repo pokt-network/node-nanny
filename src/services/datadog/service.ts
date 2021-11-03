@@ -166,18 +166,4 @@ export class Service {
     return await this.restClient.put(`/monitor/${id}`, update);
   }
 
-  async changeWebhookForMonitors() {
-    const { data: monitors } = await this.getAllMonitorsByTag("Smart_Monitorv2");
-
-    for (const monitor of monitors) {
-      const id = monitor.id;
-      const query = String(monitor.query).replace("> 4", "> 1");
-
-      const response = await this.updateMonitor({ id, update: { query } });
-
-      console.log(response);
-    }
-
-    return {};
-  }
 }
