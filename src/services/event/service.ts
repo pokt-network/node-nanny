@@ -189,7 +189,7 @@ export class Service {
       return LoadBalancerStatus.ONLINE;
     }
 
-    if (results.every((result) => result === false)) {
+    if (results.every(({ status }) => status === false)) {
       return LoadBalancerStatus.OFFLINE;
     }
 
