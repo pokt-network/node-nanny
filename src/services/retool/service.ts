@@ -61,7 +61,7 @@ export class Service {
         throw new Error(`could not get backend status, ${internalHostName} ${server} ${backend} ${error}`);
       }
     }
-    if (results.every((result) => result === true)) {
+    if (results.every(({status}) => status === true)) {
       return 0;
     }
     return 1;
