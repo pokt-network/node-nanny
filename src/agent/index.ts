@@ -13,9 +13,9 @@ const port = 3001;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.get('/ping', (req, res) => {
+app.get("/ping", (req, res) => {
   return res.json({ status: "ok" });
-})
+});
 
 app.post("/webhook/docker/reboot", async ({ body }, res) => {
   const { name, type, compose, nginx, poktType } = body;
@@ -56,7 +56,17 @@ app.post("/webhook/lb/enable", async ({ body }, res) => {
 app.post("/webhook/lb/status", async ({ body }, res) => {
   const { backend, server } = body;
   try {
-    const status = await lb.getStatus({backend, server});
+    const status = await lb.getServerStatus({ backend, server });
+    return res.json({ status });
+  } catch (error) {
+    return res.status(500).send(error);
+  }
+});
+
+app.post("/webhook/lb/count", async ({ body }, res) => {
+  const { backend } = body;
+  try {
+    const status = await lb.getServerCount(backend);
     return res.json({ status });
   } catch (error) {
     return res.status(500).send(error);
