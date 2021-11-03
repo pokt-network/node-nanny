@@ -68,6 +68,14 @@ export class Service {
   async disableServer({ backend, server }) {
     try {
       const status = await this.getBackendServerStatus({ backend, server });
+      const count = await this.getBackendServerCount(backend);
+      if (count <= 1) {
+        return await this.alert.sendErrorChannel({
+          title: backend,
+          message: `could not remove ${server} from load balancer, ${count} server online \n
+          manual intervention required`,
+        });
+      }
 
       if (status === LoadBalancerStatus.OFFLINE) {
         return await this.alert.sendErrorChannel({
@@ -173,7 +181,7 @@ export class Service {
 
   async getBackendServerCount(backend) {
     const loadBalancers = await this.getLoadBalancers();
-    const results = [];
+    let results = [];
     for (const { internalHostName } of loadBalancers) {
       try {
         const { data } = await this.agent.post(`http://${internalHostName}:3001/webhook/lb/count`, {
@@ -185,16 +193,12 @@ export class Service {
       }
     }
 
-    // if (results.every((result) => result === true)) {
-    //   return LoadBalancerStatus.ONLINE;
-    // }
+    results = results.map(({ status }) => status);
 
-    // if (results.every(({ status }) => status === false)) {
-    //   return LoadBalancerStatus.OFFLINE;
-    // }
-
-    // return LoadBalancerStatus.ERROR;
-    return results;
+    if (results.every((count) => count === results[0])) {
+      return results[0];
+    }
+    return -1;
   }
 
   async getHAProxyMessage(backend) {
