@@ -1,29 +1,23 @@
-import { Health, Log } from "./services";
+import { SNS } from "./services";
 import { NodesModel } from "./models";
-import { wait } from "./utils";
 import { connect } from "./db";
 
 export class App {
-  private health: Health;
-  private log: Log;
+  private sns: SNS;
   constructor() {
-    this.log = new Log();
-    this.health = new Health();
+    this.sns = new SNS();
   }
 
   async main() {
     await connect();
     const nodes = await NodesModel.find({}).exec();
-    const allHealth = await this.health.getNodeHealth(nodes);
-
-    for (const health of allHealth) {
-      if (health) {
-        let message = JSON.stringify(health);
-        const { name } = health;
-        console.info({ name, health });
-        await this.log.write({ message, name });
-      }
+    for (const node of nodes) {
+      setInterval(async () => {
+        await this.sns.sendMessage(node);
+      }, 10000);
     }
-    return;
   }
 }
+
+const app = new App();
+app.main();

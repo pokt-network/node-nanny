@@ -38,7 +38,7 @@ app.post("/admin/monitor/onboard", async ({ body }, res) => {
 app.get("/retool/monitor/status/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const status = await retool.getMonitorStatus(id)
+    const status = await retool.getMonitorStatus(id);
     return res.status(200).json({ status });
   } catch (error) {
     res.sendStatus(500);
@@ -113,6 +113,11 @@ app.post("/retool/reboot/:id", async (req, res) => {
   } catch (error) {
     res.sendStatus(500);
   }
+});
+
+app.post("/queue/test", async (req, res) => {
+  console.log(req.body);
+  return res.status(200).json({ response: req.body });
 });
 
 const start = async () => {

@@ -6,10 +6,8 @@ const retool = new Retool();
 
 const fix = async () => {
   await connect();
-
- //const status =  await retool.getHaProxyStatus('61563127857d870012a409bd')
- //console.log(status);
-
+  const res = await NodesModel.updateMany({ "chain.type": "POKT" }, { $set: { variance: 3 } });
+  console.log(res);
   return;
 };
 

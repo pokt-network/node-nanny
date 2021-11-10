@@ -94,8 +94,7 @@ export class Service {
       throw new Error(`could not find log stream ${error}`);
     }
   }
-  private async setupLogs(name) {
-    const logGroupName = `${LogGroupPrefix.BASE}${name}`;
+  private async setupLogs(logGroupName ) {
     const groupExists = await this.doesLogGroupExist(logGroupName);
     if (!groupExists) {
       await this.createLogGroup(logGroupName);
@@ -117,8 +116,9 @@ export class Service {
     };
   }
 
-  async write({ message, name }) {
-    const { logGroupName, logStreamName, sequenceToken } = await this.setupLogs(name);
+  async write({ message, logGroupName }) {
+    console.log(logGroupName)
+    const {logStreamName, sequenceToken } = await this.setupLogs(logGroupName);
     return await this.writeToLogStream({
       logGroupName,
       logStreamName,
