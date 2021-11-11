@@ -1,20 +1,29 @@
-import { SNS } from "./services";
+import { Health, Log } from "./services";
 import { NodesModel } from "./models";
 import { connect } from "./db";
 
 export class App {
-  private sns: SNS;
+  private log: Log;
+  private health: Health;
   constructor() {
-    this.sns = new SNS();
+    this.health = new Health();
+    this.log = new Log();
   }
 
   async main() {
     await connect();
-    const nodes = await NodesModel.find({}).exec();
+    const nodes = await NodesModel.find({
+      logGroup: { $ne: null },
+    }).exec();
     for (const node of nodes) {
       setInterval(async () => {
-        await this.sns.sendMessage(node);
-      }, 10000);
+        node.id = node._id;
+        const { logGroup } = node;
+        const healthResponse = await this.health.getNodeHealth(node);
+        let message = JSON.stringify(healthResponse);
+        console.info({ message, logGroup });
+        return await this.log.write({ message, logGroupName: logGroup });
+      }, 20000);
     }
   }
 }
