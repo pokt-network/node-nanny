@@ -53,6 +53,10 @@ export class Service {
   }
 
   async isPeersOk({ chain, nodeId }) {
+    //todo this is just a temp fix for the pocket nodes, needs more sophistiacted handling to check peers
+    if (chain.toUpperCase() === SupportedBlockChains.POKT) {
+      return true;
+    }
     const peers: INode[] = await NodesModel.find({
       "chain.name": chain.toUpperCase(),
       _id: { $ne: nodeId },
@@ -232,7 +236,6 @@ export class Service {
             ${await this.getHAProxyMessage(backend)}`,
         });
       }
-
       //Send logs to discord on every error
       const logs = await this.dd.getContainerLogs({ instance, container });
 
@@ -242,9 +245,7 @@ export class Service {
           value: `${`${message.length > Limits.MAX_LOG ? Limits.MAX_LOG_MSG : message}`}`,
         };
       });
-
       await this.alert.sendLogs({ title, fields });
-
       //Not Syncronized and the node is in operation
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
         await this.alert.sendErrorCritical({
@@ -271,12 +272,22 @@ export class Service {
         }
       }
       if (event === BlockChainMonitorEvents.NO_RESPONSE) {
-        await this.alert.sendWarn({
-          title,
-          message: `${name} status is ${event} \n
+        if (haProxy) {
+          await this.alert.sendWarn({
+            title,
+            message: `${name} status is ${event} \n
             See event ${link} \n
             ${await this.getHAProxyMessage(backend)}`,
-        });
+          });
+        }
+
+        if (!haProxy) {
+          await this.alert.sendErrorCritical({
+            title,
+            message: `${name} status is ${event} \n
+            See event ${link}`,
+          });
+        }
       }
       if (event === BlockChainMonitorEvents.OFFLINE) {
         return await this.alert.sendErrorCritical({
@@ -315,8 +326,11 @@ export class Service {
           message: "Node restored to operation",
         });
       }
-      if (event === BlockChainMonitorEvents.NO_RESPONSE) {
-        return await this.alert.sendSuccess({
+      if (
+        event === BlockChainMonitorEvents.NO_RESPONSE ||
+        event === BlockChainMonitorEvents.OFFLINE
+      ) {
+        return await this.alert.sendSuccessToCritical({
           title,
           message: `${name} is now responding to requests`,
         });
