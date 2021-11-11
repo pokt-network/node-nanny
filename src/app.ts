@@ -1,29 +1,32 @@
 import { Health, Log } from "./services";
 import { NodesModel } from "./models";
-import { wait } from "./utils";
 import { connect } from "./db";
 
 export class App {
-  private health: Health;
   private log: Log;
+  private health: Health;
   constructor() {
-    this.log = new Log();
     this.health = new Health();
+    this.log = new Log();
   }
 
   async main() {
     await connect();
-    const nodes = await NodesModel.find({}).exec();
-    const allHealth = await this.health.getNodeHealth(nodes);
-
-    for (const health of allHealth) {
-      if (health) {
-        let message = JSON.stringify(health);
-        const { name } = health;
-        console.info({ name, health });
-        await this.log.write({ message, name });
-      }
+    const nodes = await NodesModel.find({
+      logGroup: { $ne: null },
+    }).exec();
+    for (const node of nodes) {
+      setInterval(async () => {
+        node.id = node._id;
+        const { logGroup } = node;
+        const healthResponse = await this.health.getNodeHealth(node);
+        let message = JSON.stringify(healthResponse);
+        console.info({ message, logGroup });
+        return await this.log.write({ message, logGroupName: logGroup });
+      }, 20000);
     }
-    return;
   }
 }
+
+const app = new App();
+app.main();
