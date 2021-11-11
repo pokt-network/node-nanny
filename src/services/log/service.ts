@@ -30,8 +30,9 @@ export class Service {
     try {
       return await this.client.createLogGroup({ logGroupName }).promise();
     } catch (error) {
-      console.log(error)
-      throw new Error(`could not create log group ${error}`);
+      console.log(error);
+      return {};
+      // throw new Error(`could not create log group ${error}`);
     }
   }
 
@@ -56,7 +57,10 @@ export class Service {
     try {
       return await this.client.createLogStream({ logGroupName, logStreamName }).promise();
     } catch (error) {
-      throw new Error(`could not create log stream ${error}`);
+      if(error.code === "ResourceAlreadyExistsException") {
+        return {};
+      }
+      // throw new Error(`could not create log stream ${error}`);
     }
   }
 
@@ -71,7 +75,14 @@ export class Service {
         .putLogEvents({ logGroupName, logStreamName, logEvents, sequenceToken })
         .promise();
     } catch (error) {
-      throw new Error(`could not write to log stream ${error}`);
+      if (error.code === "InvalidSequenceTokenException") {
+        const nextSequenceToken = error.message
+          .split("The next expected sequenceToken is: ")[1]
+          .trim();
+          return await this.client
+          .putLogEvents({ logGroupName, logStreamName, logEvents, sequenceToken: nextSequenceToken })
+          .promise();
+      }
     }
   }
 
@@ -91,15 +102,11 @@ export class Service {
       }
       return uploadSequenceToken;
     } catch (error) {
-      throw new Error(`could not find log stream ${error}`);
+      console.log(error);
+     // throw new Error(`could not find log stream ${error}`);
     }
   }
-  private async setupLogs(name) {
-    const logGroupName = `${LogGroupPrefix.BASE}${name}`;
-    const groupExists = await this.doesLogGroupExist(logGroupName);
-    if (!groupExists) {
-      await this.createLogGroup(logGroupName);
-    }
+  private async setupLogs(logGroupName) {
     const streamExist = await this.doesLogStreamExist({
       logGroupName,
       logStreamName: this.today,
@@ -117,8 +124,8 @@ export class Service {
     };
   }
 
-  async write({ message, name }) {
-    const { logGroupName, logStreamName, sequenceToken } = await this.setupLogs(name);
+  async write({ message, logGroupName }) {
+    const { logStreamName, sequenceToken } = await this.setupLogs(logGroupName);
     return await this.writeToLogStream({
       logGroupName,
       logStreamName,
@@ -128,36 +135,40 @@ export class Service {
   }
 
   async subscribeToLogGroup(logGroupName) {
-    return await this.client.putSubscriptionFilter({
-      destinationArn: "arn:aws:firehose:us-east-2:059424750518:deliverystream/DatadogCWLogsforwarder",
-      filterName: "DDFilter",
-      filterPattern: "",
-      logGroupName,
-      roleArn: "arn:aws:iam::059424750518:role/CWLtoKinesisRole"
-    }).promise();
+  
+    try {
+      return await this.client
+      .putSubscriptionFilter({
+        destinationArn:
+          "arn:aws:firehose:us-east-2:059424750518:deliverystream/DatadogCWLogsforwarder",
+        filterName: "DDFilter",
+        filterPattern: "",
+        logGroupName,
+        roleArn: "arn:aws:iam::059424750518:role/CWLtoKinesisRole",
+      })
+      .promise();
+    } catch (error) {
+      throw new Error(`could not subscribe log group ${error} ${logGroupName}`);
+      
+    }
+    
   }
 
   async onBoardNewNode(name) {
-    const logGroupName = `/Pocket/NodeMonitoring/${name}`
-
-    console.log(logGroupName)
-
-    const doesLogGroupExist = await this.doesLogGroupExist(logGroupName)
-
-    console.log(doesLogGroupExist)
+    const logGroupName = `/pocket/nodemonitoring/${name}`;
+    const doesLogGroupExist = await this.doesLogGroupExist(logGroupName);
 
     if (!doesLogGroupExist) {
-      await this.createLogGroup(logGroupName)
+      await this.createLogGroup(logGroupName);
     }
 
-    const filterStatus = await this.client.describeSubscriptionFilters({ logGroupName }).promise()
+    const filterStatus = await this.client.describeSubscriptionFilters({ logGroupName }).promise();
 
     if (filterStatus.subscriptionFilters.length !== 0) {
       //subcription already exists
-      return logGroupName
+      return logGroupName;
     }
-    await this.subscribeToLogGroup(logGroupName)
+    await this.subscribeToLogGroup(logGroupName);
     return logGroupName;
   }
-
 }

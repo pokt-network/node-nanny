@@ -466,37 +466,30 @@ export class Service {
     };
   }
 
-  async getNodeHealth(nodes: INode[]) {
-    const results = [];
-    for (const node of nodes) {
-      const { chain, host, url } = node;
-      //Check Health
-      if (chain.type == SupportedBlockChainTypes.POKT) {
-        results.push(await this.getPocketNodeHealth(node));
-      }
-      if (chain.type == SupportedBlockChainTypes.ETH) {
-        results.push(await this.getEVMNodeHealth(node));
-      }
-      if (chain.type == SupportedBlockChainTypes.AVA) {
-        results.push(await this.getAvaHealth({ name: `${host.name}/${chain.name}`, url: url }));
-      }
-      if (chain.type == SupportedBlockChainTypes.HEI) {
-        results.push(
-          await this.getHeimdallHealth({ name: `${host.name}/${chain.name}`, url: url }),
-        );
-      }
-      if (chain.type == SupportedBlockChainTypes.SOL) {
-        results.push(await this.getSolHealth({ name: `${host.name}/${chain.name}`, url: url }));
-      }
-      if (chain.type == SupportedBlockChainTypes.ALG) {
-        results.push(
-          await this.getAlgorandHealth({ name: `${host.name}/${chain.name}`, url: url }),
-        );
-      }
-      if (chain.type === SupportedBlockChainTypes.HRM) {
-        results.push(await this.getHarmonyHealth({ name: `${host.name}/${chain.name}`, url: url }));
-      }
+  async getNodeHealth(node: INode) {
+    const { chain, host, url } = node;
+    if (chain.type == SupportedBlockChainTypes.POKT) {
+      const pocket = await this.getPocketNodeHealth(node);
+      return pocket;
     }
-    return results;
+    if (chain.type == SupportedBlockChainTypes.ETH) {
+      return await this.getEVMNodeHealth(node);
+    }
+    if (chain.type == SupportedBlockChainTypes.AVA) {
+      return await this.getAvaHealth({ name: `${host.name}/${chain.name}`, url: url });
+    }
+    if (chain.type == SupportedBlockChainTypes.HEI) {
+      return await this.getHeimdallHealth({ name: `${host.name}/${chain.name}`, url: url });
+    }
+    if (chain.type == SupportedBlockChainTypes.SOL) {
+      return await this.getSolHealth({ name: `${host.name}/${chain.name}`, url: url });
+    }
+    if (chain.type == SupportedBlockChainTypes.ALG) {
+      return await this.getAlgorandHealth({ name: `${host.name}/${chain.name}`, url: url });
+    }
+    if (chain.type === SupportedBlockChainTypes.HRM) {
+      return await this.getHarmonyHealth({ name: `${host.name}/${chain.name}`, url: url });
+    }
+    return -1;
   }
 }
