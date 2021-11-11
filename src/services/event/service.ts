@@ -302,25 +302,16 @@ export class Service {
     if (transition === EventTransitions.RECOVERED) {
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
         await this.alert.sendSuccess({ title, message: `${name} has recovered!` });
-
-        //this case is to put the node back into rotation
-        await this.alert.sendInfo({
-          title,
-          message: `Node is in Synch \n
-            ${name} will be added back to the load balancer \n
-            ${await this.getHAProxyMessage(backend)}`,
-        });
-
         if (haProxy && hasPeer) {
           await this.enableServer({ backend, server });
           await this.alert.sendSuccess({
             title,
             message: `
               Restored \n
-              Added ${name} back to load balancer \n`,
+              Added ${name} back to load balancer \n
+              ${await this.getHAProxyMessage(backend)}`,
           });
         }
-
         return await this.alert.sendSuccessToCritical({
           title,
           message: "Node restored to operation",
