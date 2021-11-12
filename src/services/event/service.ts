@@ -26,7 +26,7 @@ export class Service {
     this.agent = this.initAgentClient();
     this.alert = new Alert();
     this.dd = new DataDog();
-    this.threshold = 3;
+    this.threshold = 2;
   }
 
   private initAgentClient() {
