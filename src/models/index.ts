@@ -1,10 +1,5 @@
 import { Schema, model, Model } from "mongoose";
 
-enum HostType {
-  AWS = "AWS",
-  OVH = "OVH",
-}
-
 export interface IHost {
   name: string;
   internalIpaddress: string;
@@ -13,7 +8,7 @@ export interface IHost {
   awsInstanceId: string;
   loadBalancer: boolean;
   dockerHost: boolean;
-  hostType: HostType;
+  hostType: string;
 }
 
 interface IChain {
@@ -45,8 +40,8 @@ export interface INode {
   variance: number;
   logGroup: string;
   nginx: string;
-  poktType: string;
   compose: string;
+  poktType: string;
 }
 
 const chainSchema = new Schema<IChain>({
