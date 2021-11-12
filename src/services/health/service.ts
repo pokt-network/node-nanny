@@ -438,8 +438,17 @@ export class Service {
       .sort()
       .slice(-1);
     const { height } = await this.getPocketHeight(`https://${hostname}:${port}`);
-
     const notSynched = Number(highest) - Number(height) > variance;
+
+
+    if (height === 0) {
+      return {
+        name: hostname,
+        status: ErrorStatus.ERROR,
+        conditions: ErrorConditions.NO_RESPONSE,
+      };
+    }
+
 
     if (notSynched) {
       return {
