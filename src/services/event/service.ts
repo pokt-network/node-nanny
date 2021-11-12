@@ -313,14 +313,11 @@ export class Service {
         const badCount = await this.checkPocketPeers({ nodeId, poktType });
 
         if (poktType === PocketTypes.DISPATCH && badCount >= this.threshold) {
-          console.log(`badCount ${badCount}`);
-          const incident = await this.alert.createPagerDutyIncident({
+          await this.alert.createPagerDutyIncident({
             title: "Dispatchers are down!",
             details: `${badCount} dispatchers are down!`,
           });
-          console.log(incident)
         }
-      
       }
 
       /*============================NO_RESPONSE===================================  */
@@ -377,6 +374,16 @@ export class Service {
             title,
             message: `rebooting ${name} \n${reboot ? reboot : ""}`,
           });
+        }
+
+        if (node.chain.type === SupportedBlockChains.POKT) {
+          const badCount = await this.checkPocketPeers({ nodeId, poktType });
+          if (poktType === PocketTypes.DISPATCH && badCount >= this.threshold) {
+            await this.alert.createPagerDutyIncident({
+              title: "Dispatchers are down!",
+              details: `${badCount} dispatchers are down!`,
+            });
+          }
         }
       }
     }
