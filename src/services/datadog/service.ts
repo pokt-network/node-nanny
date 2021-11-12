@@ -102,7 +102,7 @@ export class Service {
     });
   }
 
-  async deleteMonitor({ monitorId }) {
+  async deleteMonitor(monitorId) {
     return await this.sdkClient.deleteMonitor({ monitorId });
   }
 
