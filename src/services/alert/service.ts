@@ -1,6 +1,6 @@
 import { api } from "@pagerduty/pdjs";
 import axios, { AxiosInstance } from "axios";
-import { AlertColor, SendMessageInput, PagerDutyDetails, IncidentLevel } from "./types";
+import { AlertColor, SendMessageInput, PagerDutyDetails, IncidentLevel, PagerDutyServices } from "./types";
 import { DataDogTypes, AlertTypes } from "../../types";
 
 export class Service {
@@ -143,7 +143,7 @@ export class Service {
     });
   }
 
-  async createPagerDutyIncident({ title, details, urgency = IncidentLevel.HIGH }) {
+  async createPagerDutyIncident({ title, details, service = PagerDutyServices.CRITICAL, urgency = IncidentLevel.HIGH }) {
     try {
       const { data } = await this.pdClient.post("/incidents", {
         data: {
@@ -151,7 +151,7 @@ export class Service {
             type: PagerDutyDetails.TYPE,
             title,
             service: {
-              id: PagerDutyDetails.SERVICE_ID,
+              id: service,
               type: PagerDutyDetails.SERVICE_TYPE,
             },
             urgency,
