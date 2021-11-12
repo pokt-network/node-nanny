@@ -8,6 +8,7 @@ import {
   Limits,
   LoadBalancer,
   SupportedBlockChains,
+  PocketTypes,
 } from "./types";
 import { INode, NodesModel, HostsModel } from "../../models";
 
@@ -20,10 +21,12 @@ export class Service {
   private agent: AxiosInstance;
   private alert: Alert;
   private dd: DataDog;
+  threshold: number;
   constructor() {
     this.agent = this.initAgentClient();
     this.alert = new Alert();
     this.dd = new DataDog();
+    this.threshold = 3;
   }
 
   private initAgentClient() {
@@ -57,16 +60,34 @@ export class Service {
     if (chain.toUpperCase() === SupportedBlockChains.POKT) {
       return true;
     }
+
     const peers: INode[] = await NodesModel.find({
       "chain.name": chain.toUpperCase(),
       _id: { $ne: nodeId },
     });
+
     const peerStatus = await Promise.all(
       peers.map(async ({ monitorId }) => {
         return await this.dd.getMonitorStatus(monitorId);
       }),
     );
     return !peerStatus.every((value) => value === DataDogMonitorStatus.ALERT);
+  }
+
+  async checkPocketPeers({ nodeId, poktType }) {
+    const peers: INode[] = await NodesModel.find({
+      "chain.name": "POKT",
+      poktType,
+      _id: { $ne: nodeId },
+    });
+
+    console.log(peers.length);
+    const peerStatus = await Promise.all(
+      peers.map(async ({ monitorId }) => {
+        return await this.dd.getMonitorStatus(monitorId);
+      }),
+    );
+    return peerStatus.filter((value) => value === DataDogMonitorStatus.ALERT).length;
   }
 
   async disableServer({ backend, server }) {
@@ -217,15 +238,15 @@ export class Service {
 
   async processEvent(raw) {
     const { event, nodeId, transition, title, link } = await this.dd.parseWebhookMessage(raw);
-
     const node: INode = await NodesModel.findOne({ _id: nodeId });
-    const { backend, container, server, haProxy, reboot, hasPeer } = node;
+    const { backend, container, server, haProxy, reboot, hasPeer, poktType } = node;
     const chain = node.chain.name.toLowerCase();
     const host = node.host.name.toLowerCase();
     const name = node.hostname ? node.hostname : `${chain}/${host}`;
     const docker = node.host.dockerHost;
     const instance = node.host.hostType === "AWS" ? node.host.awsInstanceId : node.host.name;
 
+    /*++++++++++++++++++++++++TRIGGERED++++++++++++++++++++++++++++++++ */
     if (transition === EventTransitions.TRIGGERED) {
       //alert if both unhealthy
       if (!(await this.isPeersOk({ chain, nodeId })) && hasPeer) {
@@ -237,8 +258,8 @@ export class Service {
         });
       }
       //Send dockerlogs to discord on every error
-      if(docker) {
-        const logs = await this.dd.getContainerLogs({ instance, container });  
+      if (docker) {
+        const logs = await this.dd.getContainerLogs({ instance, container });
         const fields = logs.map(({ service, timestamp, message }) => {
           return {
             name: `${timestamp}-${service}`,
@@ -247,14 +268,13 @@ export class Service {
         });
         await this.alert.sendLogs({ title, fields });
       }
-
+      /*============================NOT_SYNCHRONIZED===================================  */
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
-
         await this.alert.sendErrorCritical({
           title,
           message: `${name} is ${event} \n See event ${link}`,
         });
-     
+
         if (!hasPeer) {
           await this.alert.sendErrorCritical({
             title: `${name} is ${event}`,
@@ -284,9 +304,26 @@ export class Service {
           });
         }
       }
+
+      /*============================NO_RESPONSE and OFFLINE POKT ==========================*/
+      if (
+        node.chain.type === SupportedBlockChains.POKT &&
+        (event === BlockChainMonitorEvents.NO_RESPONSE || event === BlockChainMonitorEvents.OFFLINE)
+      ) {
+        const badCount = await this.checkPocketPeers({ nodeId, poktType });
+
+        if (poktType === PocketTypes.DISPATCH && badCount >= this.threshold) {
+          await this.alert.createPagerDutyIncident({
+            title: "Dispatchers are down!",
+            details: `${badCount} dispatchers are down!`,
+          });
+        }
+      }
+
+      /*============================NO_RESPONSE===================================  */
       if (event === BlockChainMonitorEvents.NO_RESPONSE) {
         if (haProxy) {
-          await this.alert.sendWarn({
+          return await this.alert.sendWarn({
             title,
             message: `${name} status is ${event} \n
             See event ${link} \n
@@ -295,13 +332,15 @@ export class Service {
         }
 
         if (!haProxy) {
-          await this.alert.sendErrorCritical({
+          return await this.alert.sendErrorCritical({
             title,
             message: `${name} status is ${event} \n
             See event ${link}`,
           });
         }
       }
+
+      /*============================OFFLINE==================================*/
       if (event === BlockChainMonitorEvents.OFFLINE) {
         return await this.alert.sendErrorCritical({
           title,
@@ -312,39 +351,13 @@ export class Service {
       }
     }
 
-    if (transition === EventTransitions.RECOVERED) {
-      if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
-        await this.alert.sendSuccess({ title, message: `${name} has recovered!` });
-        if (haProxy && hasPeer) {
-          await this.enableServer({ backend, server });
-          await this.alert.sendSuccess({
-            title,
-            message: `
-              Restored \n
-              Added ${name} back to load balancer \n
-              ${await this.getHAProxyMessage(backend)}`,
-          });
-        }
-        return await this.alert.sendSuccessToCritical({
-          title,
-          message: "Node restored to operation",
-        });
-      }
-      if (
-        event === BlockChainMonitorEvents.NO_RESPONSE ||
-        event === BlockChainMonitorEvents.OFFLINE
-      ) {
-        return await this.alert.sendSuccessToCritical({
-          title,
-          message: `${name} is now responding to requests`,
-        });
-      }
-    }
-
+    /*++++++++++++++++++++++++RE_TRIGGERED++++++++++++++++++++++++++++++++ */
     if (transition === EventTransitions.RE_TRIGGERED) {
       if (event == BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
+        /*============================NOT_SYNCHRONIZED==========================*/
         return this.alert.sendWarn({ title, message: `${name} is still out of sync` });
       }
+      /*============================NO_RESPONSE and OFFLINE ==========================*/
       if (
         event === BlockChainMonitorEvents.NO_RESPONSE ||
         event === BlockChainMonitorEvents.OFFLINE
@@ -362,6 +375,49 @@ export class Service {
             message: `rebooting ${name} \n${reboot ? reboot : ""}`,
           });
         }
+
+        if (node.chain.type === SupportedBlockChains.POKT) {
+          const badCount = await this.checkPocketPeers({ nodeId, poktType });
+          if (poktType === PocketTypes.DISPATCH && badCount >= this.threshold) {
+            await this.alert.createPagerDutyIncident({
+              title: "Dispatchers are down!",
+              details: `${badCount} dispatchers are down!`,
+            });
+          }
+        }
+      }
+    }
+
+    /*++++++++++++++++++++++++RECOVERED+++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+    if (transition === EventTransitions.RECOVERED) {
+      /*============================NOT_SYNCHRONIZED==========================*/
+      if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
+        await this.alert.sendSuccess({ title, message: `${name} has recovered!` });
+        if (haProxy && hasPeer) {
+          await this.enableServer({ backend, server });
+          await this.alert.sendSuccess({
+            title,
+            message: `
+              Restored \n
+              Added ${name} back to load balancer \n
+              ${await this.getHAProxyMessage(backend)}`,
+          });
+        }
+        return await this.alert.sendSuccessToCritical({
+          title,
+          message: "Node restored to operation",
+        });
+      }
+
+      /*============================NO_RESPONSE and OFFLINE ==========================*/
+      if (
+        event === BlockChainMonitorEvents.NO_RESPONSE ||
+        event === BlockChainMonitorEvents.OFFLINE
+      ) {
+        return await this.alert.sendSuccessToCritical({
+          title,
+          message: `${name} is now responding to requests`,
+        });
       }
     }
   }

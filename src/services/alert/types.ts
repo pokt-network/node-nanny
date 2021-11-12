@@ -23,7 +23,7 @@ export interface SendMessageInput {
 export enum PagerDutyDetails {
   BODY_TYPE = "incident_body",
   FROM = "john@pokt.network",
-  SERVICE_ID = "PASFNRN",
+  SERVICE_ID = "P01UMQB",
   SERVICE_TYPE = "service_reference",
   TYPE = "incident",
 }
