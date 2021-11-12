@@ -311,12 +311,16 @@ export class Service {
         (event === BlockChainMonitorEvents.NO_RESPONSE || event === BlockChainMonitorEvents.OFFLINE)
       ) {
         const badCount = await this.checkPocketPeers({ nodeId, poktType });
-        if (poktType === PocketTypes.DISPATCH && badCount > this.threshold) {
-          await this.alert.createPagerDutyIncident({
+
+        if (poktType === PocketTypes.DISPATCH && badCount >= this.threshold) {
+          console.log(`badCount ${badCount}`);
+          const incident = await this.alert.createPagerDutyIncident({
             title: "Dispatchers are down!",
             details: `${badCount} dispatchers are down!`,
           });
+          console.log(incident)
         }
+      
       }
 
       /*============================NO_RESPONSE===================================  */

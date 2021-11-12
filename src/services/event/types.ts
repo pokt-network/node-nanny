@@ -11,7 +11,7 @@ export { SupportedBlockChains } from "../health/types";
 export enum PocketTypes {
   PEER = "peer",
   MAIN = "main",
-  DISPATCH = "dispatch",
+  DISPATCH = "dis",
   BT = "bt",
 }
 
