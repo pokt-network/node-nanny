@@ -28,6 +28,11 @@ export enum PagerDutyDetails {
   TYPE = "incident",
 }
 
+export enum PagerDutyServices {
+  CRITICAL = "***REMOVED***",
+  NODE_INFRA = "***REMOVED***",
+}
+
 export enum IncidentLevel {
   HIGH = "high",
   MEDIUM = "medium",
