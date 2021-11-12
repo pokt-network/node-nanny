@@ -33,8 +33,17 @@ export class Service {
     });
   }
 
-  async getMonitor(id) {
-    return await this.sdkClient.getMonitor({ monitorId: id });
+  async getMonitor(monitorId) {
+    return await this.sdkClient.getMonitor({ monitorId });
+  }
+
+  async doesMonitorExist(monitorId) {
+    try {
+      await this.sdkClient.getMonitor({ monitorId });
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   async getMonitorStatus(id) {
@@ -165,5 +174,4 @@ export class Service {
   async updateMonitor({ id, update }) {
     return await this.restClient.put(`/monitor/${id}`, update);
   }
-
 }
