@@ -469,8 +469,7 @@ export class Service {
   async getNodeHealth(node: INode) {
     const { chain, host, url } = node;
     if (chain.type == SupportedBlockChainTypes.POKT) {
-      const pocket = await this.getPocketNodeHealth(node);
-      return pocket;
+      return await this.getPocketNodeHealth(node);
     }
     if (chain.type == SupportedBlockChainTypes.ETH) {
       return await this.getEVMNodeHealth(node);
