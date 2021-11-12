@@ -236,22 +236,35 @@ export class Service {
             ${await this.getHAProxyMessage(backend)}`,
         });
       }
-      //Send logs to discord on every error
-      const logs = await this.dd.getContainerLogs({ instance, container });
+      //Send dockerlogs to discord on every error
+      if(docker) {
+        const logs = await this.dd.getContainerLogs({ instance, container });  
+        const fields = logs.map(({ service, timestamp, message }) => {
+          return {
+            name: `${timestamp}-${service}`,
+            value: `${`${message.length > Limits.MAX_LOG ? Limits.MAX_LOG_MSG : message}`}`,
+          };
+        });
+        await this.alert.sendLogs({ title, fields });
+      }
 
-      const fields = logs.map(({ service, timestamp, message }) => {
-        return {
-          name: `${timestamp}-${service}`,
-          value: `${`${message.length > Limits.MAX_LOG ? Limits.MAX_LOG_MSG : message}`}`,
-        };
-      });
-      await this.alert.sendLogs({ title, fields });
-      //Not Syncronized and the node is in operation
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
+
         await this.alert.sendErrorCritical({
           title,
           message: `${name} is ${event} \n See event ${link}`,
         });
+     
+        if (!hasPeer) {
+          await this.alert.sendErrorCritical({
+            title: `${name} is ${event}`,
+            message: `${chain} node is not synched \n 
+            This node does not have a peer \n
+            Manual intervention is required! \n
+             See event ${link} \n`,
+          });
+        }
+
         if (!(await this.isPeersOk({ chain, nodeId })) && hasPeer) {
           await this.alert.sendErrorCritical({
             title: `${name} is ${event}`,
