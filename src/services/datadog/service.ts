@@ -151,7 +151,7 @@ export class Service {
         renotify_interval: 10,
         include_tags: true,
         thresholds: {
-          critical: 4,
+          critical: 1,
         },
         silenced: {},
         notify_no_data: false,
