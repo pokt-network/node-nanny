@@ -51,12 +51,11 @@ export enum ErrorStatus {
   WARNING = "WARNING",
 }
 
-export interface ExternalResponse {
-  height: number;
-}
-
 export enum Messages {
   OFFLINE = "This node is offfline!",
+}
+export interface ExternalResponse {
+  height: number;
 }
 
 interface BlockHeight {
