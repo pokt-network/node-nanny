@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import { DataDog, Alert } from "..";
+import { AlertTypes } from "../../types";
 import {
   DataDogMonitorStatus,
   BlockChainMonitorEvents,
@@ -80,8 +81,6 @@ export class Service {
       poktType,
       _id: { $ne: nodeId },
     });
-
-    console.log(peers.length);
     const peerStatus = await Promise.all(
       peers.map(async ({ monitorId }) => {
         return await this.dd.getMonitorStatus(monitorId);
@@ -248,6 +247,14 @@ export class Service {
 
     /*++++++++++++++++++++++++TRIGGERED++++++++++++++++++++++++++++++++ */
     if (transition === EventTransitions.TRIGGERED) {
+      if (node.chain.name === SupportedBlockChains.ETH) {
+        await this.alert.createPagerDutyIncident({
+          title: "Problem with Ethereum Node!",
+          details: `${title}\n${event}\n${link}`,
+          service: AlertTypes.PagerDutyServices.NODE_INFRA,
+        });
+      }
+
       //alert if both unhealthy
       if (!(await this.isPeersOk({ chain, nodeId })) && hasPeer) {
         await this.alert.sendErrorCritical({
