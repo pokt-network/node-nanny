@@ -1,7 +1,7 @@
 import { Health, Log } from "./services";
 import { NodesModel } from "./models";
 import { connect } from "./db";
-
+import { HealthTypes } from "./types";
 export class App {
   private log: Log;
   private health: Health;
@@ -20,9 +20,14 @@ export class App {
         node.id = node._id;
         const { logGroup } = node;
         const healthResponse = await this.health.getNodeHealth(node);
+        const status = healthResponse.status;
         let message = JSON.stringify(healthResponse);
         console.info({ message, logGroup });
-        return await this.log.write({ message, logGroupName: logGroup });
+        return await this.log.write({
+          name: logGroup,
+          message,
+          level: status === HealthTypes.ErrorStatus.ERROR ? "error" : "info",
+        }); 
       }, 20000);
     }
   }
