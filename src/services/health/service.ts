@@ -216,7 +216,7 @@ export class Service {
     );
   }
 
-  private async getEVMNodeHealth(node: INode): Promise<{}> {
+  private async getEVMNodeHealth(node: INode): Promise<HealthResponse> {
     const { chain, url, variance, host, id, port } = node;
     const name = `${host.name}/${chain.name}`;
     //Check if node is online and RPC up
@@ -497,7 +497,7 @@ export class Service {
     };
   }
 
-  async getNodeHealth(node: INode) {
+  async getNodeHealth(node: INode): Promise<HealthResponse> {
     const { chain, host, url } = node;
     if (chain.type == SupportedBlockChainTypes.POKT) {
       return await this.getPocketNodeHealth(node);
@@ -520,6 +520,10 @@ export class Service {
     if (chain.type === SupportedBlockChainTypes.HRM) {
       return await this.getHarmonyHealth({ name: `${host.name}/${chain.name}`, url: url });
     }
-    return -1;
+    return {
+      name: null,
+      conditions: null,
+      status: null,
+    };
   }
 }
