@@ -1,12 +1,11 @@
 import express from "express";
 import { config } from "dotenv";
-import { Event, DataDog, Log, Retool } from "../services";
+import { Event, DataDog, Retool } from "../services";
 import { connect } from "../db";
 
 config();
 const event = new Event();
 const dd = new DataDog();
-const log = new Log();
 const retool = new Retool();
 const app = express();
 const port = 3000;
@@ -25,9 +24,8 @@ app.post("/webhook/datadog/monitor/events", async ({ body }, res) => {
 });
 
 app.post("/admin/monitor/onboard", async ({ body }, res) => {
-  const { name, id } = body;
+  const { name, id, logGroup } = body;
   try {
-    const logGroup = await log.onBoardNewNode(name);
     await dd.createMonitor({ name, logGroup, id });
     return res.status(200).json({ done: true });
   } catch (error) {
