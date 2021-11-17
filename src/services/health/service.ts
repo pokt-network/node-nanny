@@ -285,6 +285,11 @@ export class Service {
         conditions = ErrorConditions.NOT_SYNCHRONIZED;
       }
 
+      if (Math.sign(delta) === -1) {
+        status = ErrorStatus.ERROR;
+        conditions = ErrorConditions.PEER_NOT_SYNCHRONIZED;
+      }
+
       return {
         name,
         status,
@@ -428,6 +433,14 @@ export class Service {
       { limit: 10 },
     ).exec();
 
+    if (!referenceNodes || referenceNodes.length === 0) {
+      return {
+        name: hostname,
+        status: ErrorStatus.ERROR,
+        conditions: ErrorConditions.NO_PEERS,
+      };
+    }
+
     //get highest block height from reference nodes
     const poktnodes = referenceNodes.map(({ hostname, port }) => `https://${hostname}:${port}`);
     const pocketheight = await Promise.all(
@@ -440,6 +453,13 @@ export class Service {
     const { height } = await this.getPocketHeight(`https://${hostname}:${port}`);
     const notSynched = Number(highest) - Number(height) > variance;
 
+    if (Math.sign(Number(highest) - Number(height)) === -1) {
+      return {
+        name: hostname,
+        status: ErrorStatus.ERROR,
+        conditions: ErrorConditions.PEER_NOT_SYNCHRONIZED,
+      };
+    }
 
     if (height === 0) {
       return {
@@ -448,7 +468,6 @@ export class Service {
         conditions: ErrorConditions.NO_RESPONSE,
       };
     }
-
 
     if (notSynched) {
       return {
