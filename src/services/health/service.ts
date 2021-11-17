@@ -412,7 +412,7 @@ export class Service {
     }
   }
 
-  async getPocketNodeHealth({ hostname, port, variance, id, poktType }: INode) {
+  async getPocketNodeHealth({ hostname, port, variance, id }: INode) {
     const { height: isRpcResponding } = await this.getPocketHeight(`https://${hostname}:${port}`);
 
     if (isRpcResponding === 0) {
@@ -428,7 +428,6 @@ export class Service {
       {
         "chain.type": "POKT",
         _id: { $ne: id },
-        poktType,
       },
       null,
       { limit: 10 },
