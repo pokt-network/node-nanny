@@ -458,6 +458,10 @@ export class Service {
         name: hostname,
         status: ErrorStatus.ERROR,
         conditions: ErrorConditions.PEER_NOT_SYNCHRONIZED,
+        delta: Number(highest) - Number(height),
+        referenceNodes: referenceNodes.map(({ hostname }) => `${hostname} \n`),
+        highest,
+        height,
       };
     }
 
