@@ -368,7 +368,7 @@ export class Service {
       /*============================PEER NOT SYNCRONIZED==================================*/
 
       if (event === BlockChainMonitorEvents.PEER_NOT_SYNCHRONIZED) {
-        return await this.alert.sendErrorCritical({
+        return await this.alert.sendInfo({
           title,
           message: `${name} status is ${event} \n`,
         });
@@ -422,7 +422,7 @@ export class Service {
       /*============================PEER NOT SYNCRONIZED==================================*/
 
       if (event === BlockChainMonitorEvents.PEER_NOT_SYNCHRONIZED) {
-        return await this.alert.sendErrorCritical({
+        return await this.alert.sendInfo({
           title,
           message: `${name} status is ${event} \n`,
         });
@@ -472,7 +472,7 @@ export class Service {
       /*============================PEER NOT SYNCRONIZED==================================*/
 
       if (event === BlockChainMonitorEvents.PEER_NOT_SYNCHRONIZED) {
-        return await this.alert.sendErrorCritical({
+        return await this.alert.sendInfo({
           title,
           message: `${name} status is ${event} \n`,
         });
