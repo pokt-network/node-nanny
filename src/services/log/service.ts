@@ -1,13 +1,10 @@
 import AWS from "aws-sdk";
-import { Alert } from "../../services";
 import { GroupStreamParams, PutLogParams, LogGroupPrefix } from "./types";
 
 export class Service {
-  private alert: Alert;
   private client: AWS.CloudWatchLogs;
   private today: string;
   constructor() {
-    this.alert = new Alert();
     this.today = new Date().toDateString();
     this.client = new AWS.CloudWatchLogs({
       region: "us-east-2",
@@ -32,7 +29,6 @@ export class Service {
     } catch (error) {
       console.log(error);
       return {};
-      // throw new Error(`could not create log group ${error}`);
     }
   }
 
@@ -57,10 +53,8 @@ export class Service {
     try {
       return await this.client.createLogStream({ logGroupName, logStreamName }).promise();
     } catch (error) {
-      if(error.code === "ResourceAlreadyExistsException") {
-        return {};
-      }
-      // throw new Error(`could not create log stream ${error}`);
+      console.log(error);
+      return {};
     }
   }
 
@@ -79,8 +73,13 @@ export class Service {
         const nextSequenceToken = error.message
           .split("The next expected sequenceToken is: ")[1]
           .trim();
-          return await this.client
-          .putLogEvents({ logGroupName, logStreamName, logEvents, sequenceToken: nextSequenceToken })
+        return await this.client
+          .putLogEvents({
+            logGroupName,
+            logStreamName,
+            logEvents,
+            sequenceToken: nextSequenceToken,
+          })
           .promise();
       }
     }
@@ -103,7 +102,6 @@ export class Service {
       return uploadSequenceToken;
     } catch (error) {
       console.log(error);
-     // throw new Error(`could not find log stream ${error}`);
     }
   }
   private async setupLogs(logGroupName) {
@@ -135,23 +133,29 @@ export class Service {
   }
 
   async subscribeToLogGroup(logGroupName) {
-  
     try {
       return await this.client
-      .putSubscriptionFilter({
-        destinationArn:
-          "arn:aws:firehose:us-east-2:059424750518:deliverystream/DatadogCWLogsforwarder",
-        filterName: "DDFilter",
-        filterPattern: "",
-        logGroupName,
-        roleArn: "arn:aws:iam::059424750518:role/CWLtoKinesisRole",
-      })
-      .promise();
+        .putSubscriptionFilter({
+          destinationArn:
+            "arn:aws:firehose:us-east-2:059424750518:deliverystream/DatadogCWLogsforwarder",
+          filterName: "DDFilter",
+          filterPattern: "",
+          logGroupName,
+          roleArn: "arn:aws:iam::059424750518:role/CWLtoKinesisRole",
+        })
+        .promise();
     } catch (error) {
       throw new Error(`could not subscribe log group ${error} ${logGroupName}`);
-      
     }
-    
+  }
+
+  async setRetentionPeriod(logGroupName) {
+    return await this.client
+      .putRetentionPolicy({
+        logGroupName,
+        retentionInDays: 1,
+      })
+      .promise();
   }
 
   async onBoardNewNode(name) {
@@ -169,6 +173,7 @@ export class Service {
       return logGroupName;
     }
     await this.subscribeToLogGroup(logGroupName);
+    await this.setRetentionPeriod(logGroupName);
     return logGroupName;
   }
 }
