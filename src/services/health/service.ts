@@ -70,7 +70,6 @@ export class Service {
   }
 
   private async getAvaHealth({ name, url }): Promise<HealthResponse> {
-    const threshold = [];
     try {
       const { data } = await this.rpc.post(`${url}/ext/health`, {
         jsonrpc: "2.0",
@@ -285,7 +284,7 @@ export class Service {
         conditions = ErrorConditions.NOT_SYNCHRONIZED;
       }
 
-      if (Math.sign(delta) === -1) {
+      if (Math.sign(delta + variance) === -1) {
         status = ErrorStatus.ERROR;
         conditions = ErrorConditions.PEER_NOT_SYNCHRONIZED;
       }
@@ -453,7 +452,7 @@ export class Service {
     const { height } = await this.getPocketHeight(`https://${hostname}:${port}`);
     const notSynched = Number(highest) - Number(height) > variance;
 
-    if (Math.sign(Number(highest) - Number(height)) === -1) {
+    if (Math.sign(Number(highest) - Number(height) + variance) === -1) {
       return {
         name: hostname,
         status: ErrorStatus.ERROR,
