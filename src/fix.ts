@@ -7,6 +7,12 @@ const log = new Log();
 const event = new Event();
 const fix = async () => {
   await connect();
+
+  // const res = await log.winstonWrite({
+  //   name: "testlogging",
+  //   message: JSON.stringify({ status: "OK", test: "test" }),
+  // });
+  //console.log(res);
   //await event.processEvent(dis)
   // const allNodes = await NodesModel.find({});
 
