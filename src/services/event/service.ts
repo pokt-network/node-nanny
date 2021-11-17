@@ -356,6 +356,23 @@ export class Service {
             ${await this.getHAProxyMessage(backend)}`,
         });
       }
+
+      /*============================NO PEERS==================================*/
+      if (event === BlockChainMonitorEvents.NO_PEERS) {
+        return await this.alert.sendErrorCritical({
+          title,
+          message: `${name} status is ${event} \n 
+            See event ${link} \n`,
+        });
+      }
+      /*============================PEER NOT SYNCRONIZED==================================*/
+
+      if (event === BlockChainMonitorEvents.PEER_NOT_SYNCHRONIZED) {
+        return await this.alert.sendErrorCritical({
+          title,
+          message: `${name} status is ${event} \n`,
+        });
+      }
     }
 
     /*++++++++++++++++++++++++RE_TRIGGERED++++++++++++++++++++++++++++++++ */
@@ -393,6 +410,23 @@ export class Service {
           }
         }
       }
+
+      /*============================NO PEERS==================================*/
+      if (event === BlockChainMonitorEvents.NO_PEERS) {
+        return await this.alert.sendErrorCritical({
+          title,
+          message: `${name} status is ${event} \n 
+            See event ${link} \n`,
+        });
+      }
+      /*============================PEER NOT SYNCRONIZED==================================*/
+
+      if (event === BlockChainMonitorEvents.PEER_NOT_SYNCHRONIZED) {
+        return await this.alert.sendErrorCritical({
+          title,
+          message: `${name} status is ${event} \n`,
+        });
+      }
     }
 
     /*++++++++++++++++++++++++RECOVERED+++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -424,6 +458,23 @@ export class Service {
         return await this.alert.sendSuccessToCritical({
           title,
           message: `${name} is now responding to requests`,
+        });
+      }
+
+      /*============================NO PEERS==================================*/
+      if (event === BlockChainMonitorEvents.NO_PEERS) {
+        return await this.alert.sendErrorCritical({
+          title,
+          message: `${name} status is ${event} \n 
+                  See event ${link} \n`,
+        });
+      }
+      /*============================PEER NOT SYNCRONIZED==================================*/
+
+      if (event === BlockChainMonitorEvents.PEER_NOT_SYNCHRONIZED) {
+        return await this.alert.sendErrorCritical({
+          title,
+          message: `${name} status is ${event} \n`,
         });
       }
     }
