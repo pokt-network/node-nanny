@@ -163,7 +163,6 @@ export class Service {
       classification: "log",
     });
     const { id: monitorId } = data;
-    await NodesModel.findOneAndUpdate({ _id: id }, { logGroup, $set: { monitorId } });
     return monitorId;
   }
 
