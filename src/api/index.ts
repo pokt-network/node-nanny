@@ -113,11 +113,6 @@ app.post("/retool/reboot/:id", async (req, res) => {
   }
 });
 
-app.post("/queue/test", async (req, res) => {
-  console.log(req.body);
-  return res.status(200).json({ response: req.body });
-});
-
 const start = async () => {
   await connect();
   console.log("db connected");
