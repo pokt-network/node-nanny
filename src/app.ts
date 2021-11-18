@@ -20,14 +20,17 @@ export class App {
         node.id = node._id;
         const { logGroup } = node;
         const healthResponse = await this.health.getNodeHealth(node);
-        const status = healthResponse.status;
+        let status;
+        if (healthResponse) {
+          status = healthResponse.status;
+        }
         let message = JSON.stringify(healthResponse);
         console.info({ message, logGroup });
         return await this.log.write({
           name: logGroup,
           message,
           level: status === HealthTypes.ErrorStatus.ERROR ? "error" : "info",
-        }); 
+        });
       }, 20000);
     }
   }
