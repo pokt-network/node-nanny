@@ -1,25 +1,16 @@
 import { connect } from "./db";
 import { INode, NodesModel, IOracle, OraclesModel } from "./models";
-import { Retool, DataDog, Log, Event } from "./services";
+import { Retool, DataDog, Log, Event, Health } from "./services";
 const dd = new DataDog();
 const retool = new Retool();
 const log = new Log();
 const event = new Event();
+const health = new Health();
 const fix = async () => {
   await connect();
-
-  // const res = await log.winstonWrite({
-  //   name: "testlogging",
-  //   message: JSON.stringify({ status: "OK", test: "test" }),
-  // });
-  //console.log(res);
-  //await event.processEvent(dis)
-  // const allNodes = await NodesModel.find({});
-
-  // for (const { logGroup } of allNodes) {
-  //   const res = await log.setRetentionPeriod(logGroup);
-  //   console.log(res);
-  // }
+  const node = await NodesModel.findOne({ "chain.name": "SOL", hostname: { $ne: "" } });
+  const res = await health.getNodeHealth(node);
+  console.log(res);
 
   return "done";
 };
@@ -47,3 +38,38 @@ const dis = {
   status: "",
   link: "https://app.datadoghq.eu/event/event?id=6249066407093886828",
 };
+
+// const sol = {
+//  _id: "6196c79cce07a00011af2b4d",
+//   chain: {
+//     _id: "6196c86550f727e5e7eedb4a",
+//     chain: "0006",
+//     name: "SOL",
+//     type: "SOL",
+//     enabled: true,
+//   },
+//   _host: {
+//     id: "6196c86550f727e5e7eedb4b",
+//     name: "BisonTrails",
+//     internalIpaddress: "",
+//     internalHostName: "",
+//     externalHostName: "",
+//     awsInstanceId: "",
+//     hostType: "OVH",
+//     loadBalancer: false,
+//   },
+//   hostname: "01db1eda-74a8-4f2c-9ee8-e2bcfa993119.solana.bison.run/rpc",
+//   port: null,
+//   variance: 0,
+//   backend: "solanamainnet",
+//   container: "",
+//   online: true,
+//   haProxy: true,
+//   reboot: false,
+//   compose: "",
+//   hasPeer: true,
+//   server: "",
+//   poktType: "",
+//   logGroup: "/pocket/nodemonitoring/01db1eda-74a8-4f2c-9ee8-e2bcfa993119.solana.bison.run/rpc",
+//   url: "http://:",
+// };
