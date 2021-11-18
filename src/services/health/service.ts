@@ -316,7 +316,11 @@ export class Service {
     }
   }
 
-  async getSolHealth({ url, name }) {
+  async getSolHealth({ url, name, hostname }) {
+    if (hostname) {
+      url = `https://${hostname}`;
+    }
+
     try {
       const { data } = await this.rpc.post(url, {
         jsonrpc: "2.0",
@@ -512,7 +516,11 @@ export class Service {
       return await this.getHeimdallHealth({ name: `${host.name}/${chain.name}`, url: url });
     }
     if (chain.type == SupportedBlockChainTypes.SOL) {
-      return await this.getSolHealth({ name: `${host.name}/${chain.name}`, url: url });
+      return await this.getSolHealth({
+        name: `${host.name}/${chain.name}`,
+        url: url,
+        hostname: node.hostname,
+      });
     }
     if (chain.type == SupportedBlockChainTypes.ALG) {
       return await this.getAlgorandHealth({ name: `${host.name}/${chain.name}`, url: url });
