@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import util from "util";
+import axiosRetry from 'axios-retry';
 import { exec } from "child_process";
 import {
   ErrorConditions,
@@ -10,7 +11,7 @@ import {
   SupportedBlockChains,
 } from "./types";
 
-import { hexToDec } from "../../utils";
+import { hexToDec, wait } from "../../utils";
 import { INode, NodesModel, OraclesModel } from "../../models";
 
 export class Service {
@@ -20,10 +21,12 @@ export class Service {
   }
 
   private initClient() {
-    return axios.create({
+  const client = axios.create({
       timeout: 10000,
       headers: { "Content-Type": "application/json" },
     });
+    axiosRetry(client, { retries: 5 });
+    return client;
   }
   private async getBlockHeight(url) {
     try {
@@ -453,9 +456,12 @@ export class Service {
 
     //get highest block height from reference nodes
     const poktnodes = referenceNodes.map(({ hostname, port }) => `https://${hostname}:${port}`);
+   
     const pocketheight = await Promise.all(
       await poktnodes.map(async (node) => this.getPocketHeight(node)),
     );
+
+    console.log(pocketheight);
 
     const [highest] = pocketheight
       .map(({ height }) => height)
