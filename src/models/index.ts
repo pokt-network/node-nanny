@@ -42,6 +42,8 @@ export interface INode {
   nginx: string;
   compose: string;
   poktType: string;
+  bareMetal: boolean;
+  service: string;
 }
 
 const chainSchema = new Schema<IChain>({
@@ -87,6 +89,8 @@ const nodesSchema = new Schema<INode>(
     nginx: String,
     poktType: String,
     compose: String,
+    bareMetal: Boolean,
+    service: String,
   },
   { collection: "nodes" },
 );
