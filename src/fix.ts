@@ -8,11 +8,8 @@ const event = new Event();
 const health = new Health();
 const fix = async () => {
   await connect();
-  //const nodes = await NodesModel.updateMany({ "chain.name": "POKT", poktType: { $ne: "bt" } }, { $set: { reboot: true } });
-  //console.log(nodes)
-
-  const node = await NodesModel.findOne({ "chain.name": "SOL", restart: true });
-  const response = await event.restartService(node)
+  const node = await NodesModel.findOne({ "chain.name": "SOL", reboot: false });
+  const response = await health.getNodeHealth(node);
   console.log(response)
   return "done";
 };
