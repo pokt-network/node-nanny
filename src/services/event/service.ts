@@ -174,7 +174,19 @@ export class Service {
       await this.dd.muteMonitor({ id: monitorId, minutes: 5 });
       return reboot;
     }
-    return;
+    throw new Error("Host not found");
+  }
+
+  async restartService({ host, service }) {
+    const Host = await HostsModel.findOne({ name: host.name });
+    if (!!Host) {
+      let { internalIpaddress: ip } = Host;
+      const { data } = await this.agent.post(`http://${ip}:3001/webhook/service/restart`, {
+        service,
+      });
+      return data;
+    }
+    throw new Error("Host not found");
   }
 
   async getBackendServerStatus({ backend, server }) {
@@ -238,7 +250,17 @@ export class Service {
   async processEvent(raw) {
     const { event, nodeId, transition, title, link } = await this.dd.parseWebhookMessage(raw);
     const node: INode = await NodesModel.findOne({ _id: nodeId });
-    const { backend, container, server, haProxy, reboot, hasPeer, poktType } = node;
+    const {
+      backend,
+      container,
+      server,
+      haProxy,
+      reboot,
+      hasPeer,
+      poktType,
+      bareMetal,
+      service,
+    } = node;
     const chain = node.chain.name.toLowerCase();
     const host = node.host.name.toLowerCase();
     const name = node.hostname ? node.hostname : `${chain}/${host}`;
@@ -397,6 +419,14 @@ export class Service {
           return this.alert.sendInfo({
             title,
             message: `rebooting ${name} \n${reboot ? reboot : ""}`,
+          });
+        }
+
+        if (reboot && bareMetal) {
+          const restart = await this.restartService(node);
+          return this.alert.sendInfo({
+            title,
+            message: `restarting ${name} \n${restart ? restart : ""}`,
           });
         }
 
