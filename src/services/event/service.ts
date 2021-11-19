@@ -178,13 +178,19 @@ export class Service {
   }
 
   async restartService({ host, service }) {
+    console.log({ host, service });
     const Host = await HostsModel.findOne({ name: host.name });
     if (!!Host) {
       let { internalIpaddress: ip } = Host;
-      const { data } = await this.agent.post(`http://${ip}:3001/webhook/service/restart`, {
-        service,
-      });
-      return data;
+      console.log(ip);
+      try {
+        const { data } = await this.agent.post(`http://${ip}:3001/webhook/service/restart`, {
+          service,
+        });
+        return data;
+      } catch (error) {
+        throw new Error(`could not contact agent ${error}`);
+      }
     }
     throw new Error("Host not found");
   }
@@ -426,7 +432,7 @@ export class Service {
           const restart = await this.restartService(node);
           return this.alert.sendInfo({
             title,
-            message: `restarting ${name} \n${restart ? restart : ""}`,
+            message: `restarting ${name} \n`,
           });
         }
 
