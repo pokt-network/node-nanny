@@ -36,8 +36,8 @@ app.post("/webhook/docker/reboot", async ({ body }, res) => {
 app.post("/webhook/service/restart", async ({ body }, res) => {
   const { service } = body;
   try {
-    const status = await reboot.restartService(service);
-    return res.json({ reboot: status });
+    const restart = await reboot.restartService(service);
+    return res.json({ restart });
   } catch (error) {
     throw new Error(error);
   }
