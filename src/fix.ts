@@ -8,7 +8,7 @@ const event = new Event();
 const health = new Health();
 const fix = async () => {
   await connect();
-  const node = await NodesModel.findOne({ "chain.name": "SOL", reboot: false });
+  const node = await NodesModel.findOne({ "chain.name": "POKT", reboot: false });
   const response = await health.getNodeHealth(node);
   console.log(response)
   return "done";
