@@ -461,14 +461,8 @@ export class Service {
       .map(({ height }) => height)
       .sort()
       .slice(-1);
-
-    console.log(highest, pocketheight);
-
     const { height } = await this.getPocketHeight(`https://${hostname}:${port}`);
     const notSynched = Number(highest) - Number(height) > variance;
-
-    console.log(Number(highest) - Number(height) + variance);
-    console.log(Math.sign(Number(highest) - Number(height) + variance) === -1);
     if (Math.sign(Number(highest) - Number(height) + variance) === -1) {
       return {
         name: hostname,
