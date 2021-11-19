@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from "axios";
+import util from "util";
 import { exec } from "child_process";
 import {
   ErrorConditions,
@@ -317,32 +318,38 @@ export class Service {
   }
 
   async getSolHealth({ url, name, hostname }) {
+    const execute = util.promisify(exec);
     if (hostname) {
       url = `https://${hostname}`;
     }
-
+    const command = `curl -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`;
     try {
-      const { data } = await this.rpc.post(url, {
-        jsonrpc: "2.0",
-        id: 1,
-        method: "getHealth",
-      });
+      const { stdout, stderr } = await execute(command);
+      if (stderr) {
+        return {
+          name,
+          conditions: ErrorConditions.NO_RESPONSE,
+          status: ErrorStatus.ERROR,
+          health: JSON.parse(stderr),
+        };
+      }
 
-      const { result } = data;
+      const health = JSON.parse(stdout);
+      const { result } = health;
 
       if (result == "ok") {
         return {
           name,
           conditions: ErrorConditions.HEALTHY,
           status: ErrorStatus.OK,
-          health: result,
+          health,
         };
       } else {
         return {
           name,
           conditions: ErrorConditions.NOT_SYNCHRONIZED,
           status: ErrorStatus.ERROR,
-          health: data,
+          health,
         };
       }
     } catch (error) {
@@ -433,7 +440,7 @@ export class Service {
         _id: { $ne: id },
       },
       null,
-      { limit: 10 },
+      { limit: 20 },
     ).exec();
 
     if (!referenceNodes || referenceNodes.length === 0) {
@@ -449,13 +456,19 @@ export class Service {
     const pocketheight = await Promise.all(
       await poktnodes.map(async (node) => this.getPocketHeight(node)),
     );
+
     const [highest] = pocketheight
       .map(({ height }) => height)
       .sort()
       .slice(-1);
+
+    console.log(highest, pocketheight);
+
     const { height } = await this.getPocketHeight(`https://${hostname}:${port}`);
     const notSynched = Number(highest) - Number(height) > variance;
 
+    console.log(Number(highest) - Number(height) + variance);
+    console.log(Math.sign(Number(highest) - Number(height) + variance) === -1);
     if (Math.sign(Number(highest) - Number(height) + variance) === -1) {
       return {
         name: hostname,
