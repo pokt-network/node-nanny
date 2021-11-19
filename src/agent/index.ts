@@ -33,6 +33,16 @@ app.post("/webhook/docker/reboot", async ({ body }, res) => {
   }
 });
 
+app.post("/webhook/service/restart", async ({ body }, res) => {
+  const { service } = body;
+  try {
+    const status = await reboot.restartService(service);
+    return res.json({ reboot: status });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 app.post("/webhook/lb/disable", async ({ body }, res) => {
   const { backend, server } = body;
   try {
