@@ -1,6 +1,5 @@
 import axios, { AxiosInstance } from "axios";
 import { v1, v2 } from "@datadog/datadog-api-client";
-import { NodesModel } from "../../models";
 import { ApiDetails } from "./types";
 
 export class Service {
@@ -142,7 +141,7 @@ export class Service {
     const { data } = await this.restClient.post("/monitor", {
       name: name.toUpperCase(),
       type: "log alert",
-      query: `logs(\"status:error source:\\\"${logGroup.toLowerCase()}\\\"\").index(\"*\").rollup(\"count\").by(\"@conditions\").last(\"5m\") > 1`,
+      query: `logs(\"status:error service:\\\"${logGroup.toLowerCase()}\\\"\").index(\"*\").rollup(\"count\").by(\"@conditions\").last(\"5m\") > 1`,
       message: `@webhook-events-production\nnodeId_${id}\nevent_{{@conditions.name}}`,
       tags: ["Smart_Monitorv2"],
       options: {
