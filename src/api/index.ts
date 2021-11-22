@@ -43,6 +43,16 @@ app.get("/retool/monitor/status/:id", async (req, res) => {
   }
 });
 
+app.post("/retool/host/add", async (req, res) => {
+  const {  awsInstanceId, loadBalancer } = req.body;
+  try {
+    const status = await retool.findAndStoreAWSHost({ awsInstanceId, loadBalancer });
+    return res.status(201).json({ status });
+  } catch (error) {
+    res.sendStatus(500);
+  }
+});
+
 app.get("/retool/monitor/mute/status/:id", async (req, res) => {
   const { id } = req.params;
   try {
