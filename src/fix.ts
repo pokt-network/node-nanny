@@ -8,13 +8,12 @@ const event = new Event();
 const health = new Health();
 const fix = async () => {
   await connect();
-  const instance = await retool.findAndStoreAWSHost({awsInstanceId: "i-0b50f518cb7f65acb", loadBalancer: true});
-
-  console.log(instance);
+  const res = await NodesModel.updateMany({"chain.name": "SOL"}, {$set: {docker: false}});
+   console.log(res);
 
 
   return "done";
-};
+}; 
 
 fix().then(console.log);
 

@@ -262,13 +262,12 @@ export class Service {
       reboot,
       hasPeer,
       poktType,
-      bareMetal,
       removeNoResponse,
+      docker
     } = node;
     const chain = node.chain.name.toLowerCase();
     const host = node.host.name.toLowerCase();
     const name = node.hostname ? node.hostname : `${chain}/${host}`;
-    const docker = node.host.dockerHost;
     const instance = node.host.hostType === "AWS" ? node.host.awsInstanceId : node.host.name;
 
     /*++++++++++++++++++++++++TRIGGERED++++++++++++++++++++++++++++++++ */
@@ -441,7 +440,7 @@ export class Service {
           });
         }
 
-        if (reboot && bareMetal) {
+        if (reboot && !docker) {
           await this.restartService(node);
           return this.alert.sendInfo({
             title,
