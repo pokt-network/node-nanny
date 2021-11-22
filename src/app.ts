@@ -31,10 +31,7 @@ export class App {
           message,
           level: status === HealthTypes.ErrorStatus.ERROR ? "error" : "info",
         });
-      }, 20000);
+      }, 10000);
     }
   }
 }
-
-const app = new App();
-app.main();
