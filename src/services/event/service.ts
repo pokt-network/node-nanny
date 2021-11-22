@@ -22,7 +22,7 @@ export class Service {
   private agent: AxiosInstance;
   private alert: Alert;
   private dd: DataDog;
-  threshold: number;
+  private threshold: number;
   constructor() {
     this.agent = this.initAgentClient();
     this.alert = new Alert();
@@ -178,11 +178,9 @@ export class Service {
   }
 
   async restartService({ host, service }) {
-    console.log({ host, service });
     const Host = await HostsModel.findOne({ name: host.name });
     if (!!Host) {
       let { internalIpaddress: ip } = Host;
-      console.log(ip);
       try {
         const { data } = await this.agent.post(`http://${ip}:3001/webhook/service/restart`, {
           service,
@@ -265,7 +263,7 @@ export class Service {
       hasPeer,
       poktType,
       bareMetal,
-      service,
+      removeNoResponse,
     } = node;
     const chain = node.chain.name.toLowerCase();
     const host = node.host.name.toLowerCase();
@@ -355,6 +353,21 @@ export class Service {
         }
       }
 
+      /*============================NO_RESPONSE and OFFLINE Remove from LB (BT Solana) ==========================*/
+
+      if (
+        (event === BlockChainMonitorEvents.OFFLINE ||
+          event === BlockChainMonitorEvents.NO_RESPONSE) &&
+        removeNoResponse
+      ) {
+        await this.disableServer({ backend, server });
+        await this.alert.sendInfo({
+          title,
+          message: `Removed ${name}from load balancer, it will be restored once healthy again \n
+            ${await this.getHAProxyMessage(backend)}`,
+        });
+      }
+
       /*============================NO_RESPONSE===================================  */
       if (event === BlockChainMonitorEvents.NO_RESPONSE) {
         if (haProxy) {
@@ -429,7 +442,7 @@ export class Service {
         }
 
         if (reboot && bareMetal) {
-          const restart = await this.restartService(node);
+          await this.restartService(node);
           return this.alert.sendInfo({
             title,
             message: `restarting ${name} \n`,
@@ -491,6 +504,15 @@ export class Service {
         event === BlockChainMonitorEvents.NO_RESPONSE ||
         event === BlockChainMonitorEvents.OFFLINE
       ) {
+        if (removeNoResponse) {
+          await this.enableServer({ backend, server });
+          await this.alert.sendInfo({
+            title,
+            message: `Restored \n Added ${name} back to rotation \n
+              ${await this.getHAProxyMessage(backend)}`,
+          });
+        }
+
         return await this.alert.sendSuccessToCritical({
           title,
           message: `${name} is now responding to requests`,
