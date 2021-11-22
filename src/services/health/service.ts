@@ -11,7 +11,7 @@ import {
   SupportedBlockChains,
 } from "./types";
 
-import { hexToDec, wait } from "../../utils";
+import { hexToDec } from "../../utils";
 import { INode, NodesModel, OraclesModel } from "../../models";
 
 export class Service {
@@ -460,8 +460,6 @@ export class Service {
     const pocketheight = await Promise.all(
       await poktnodes.map(async (node) => this.getPocketHeight(node)),
     );
-
-    console.log(pocketheight);
 
     const [highest] = pocketheight
       .map(({ height }) => height)

@@ -44,6 +44,8 @@ export interface INode {
   poktType: string;
   bareMetal: boolean;
   service: string;
+  removeNoResponse: boolean;
+  docker: boolean;
 }
 
 const chainSchema = new Schema<IChain>({
@@ -90,7 +92,9 @@ const nodesSchema = new Schema<INode>(
     poktType: String,
     compose: String,
     bareMetal: Boolean,
+    docker: Boolean,
     service: String,
+    removeNoResponse: Boolean
   },
   { collection: "nodes" },
 );
