@@ -30,11 +30,6 @@ export enum SupportedBlockChainTypes {
   HRM = "HRM"
 }
 
-export enum NonEthVariants {
-  AVA = "AVA",
-  AVATST = "AVATST"
-}
-
 export enum ErrorConditions {
   HEALTHY = "HEALTHY",
   OFFLINE = "OFFLINE",
@@ -49,13 +44,6 @@ export enum ErrorStatus {
   OK = "OK",
   INFO = "INFO",
   WARNING = "WARNING",
-}
-
-export enum Messages {
-  OFFLINE = "This node is offfline!",
-}
-export interface ExternalResponse {
-  height: number;
 }
 
 interface BlockHeight {
