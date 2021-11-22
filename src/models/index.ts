@@ -7,7 +7,6 @@ export interface IHost {
   externalHostName: string;
   awsInstanceId: string;
   loadBalancer: boolean;
-  dockerHost: boolean;
   hostType: string;
 }
 
@@ -42,7 +41,6 @@ export interface INode {
   nginx: string;
   compose: string;
   poktType: string;
-  bareMetal: boolean;
   service: string;
   removeNoResponse: boolean;
   docker: boolean;
@@ -66,7 +64,6 @@ const hostsSchema = new Schema<IHost>({
   externalHostName: String,
   awsInstanceId: String,
   loadBalancer: Boolean,
-  dockerHost: Boolean,
   hostType: String,
 });
 
@@ -91,7 +88,6 @@ const nodesSchema = new Schema<INode>(
     nginx: String,
     poktType: String,
     compose: String,
-    bareMetal: Boolean,
     docker: Boolean,
     service: String,
     removeNoResponse: Boolean
