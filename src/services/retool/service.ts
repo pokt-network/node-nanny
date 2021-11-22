@@ -1,3 +1,4 @@
+import { EC2 } from "aws-sdk";
 import axios, { AxiosInstance } from "axios";
 import { Alert, DataDog } from "../../services";
 import { NodesModel, INode, HostsModel } from "../../models";
@@ -7,9 +8,11 @@ export class Service {
   private agent: AxiosInstance;
   private alert: Alert;
   private dd: DataDog;
+  private ec2: EC2;
 
   constructor() {
     this.agent = this.initAgentClient();
+    this.ec2 = new EC2({ region: "us-east-2" });
     this.alert = new Alert();
     this.dd = new DataDog();
   }
@@ -58,10 +61,12 @@ export class Service {
         );
         results.push(data);
       } catch (error) {
-        throw new Error(`could not get backend status, ${internalHostName} ${server} ${backend} ${error}`);
+        throw new Error(
+          `could not get backend status, ${internalHostName} ${server} ${backend} ${error}`,
+        );
       }
     }
-    if (results.every(({status}) => status === true)) {
+    if (results.every(({ status }) => status === true)) {
       return 0;
     }
     return 1;
@@ -182,5 +187,51 @@ export class Service {
   async unmuteMonitor(id: string) {
     const { monitorId } = await this.getNode(id);
     return await this.dd.unmuteMonitor({ id: monitorId });
+  }
+
+  async getInstanceDetails(awsInstanceId: string) {
+    try {
+      const details = await this.ec2
+        .describeInstances({
+          InstanceIds: [awsInstanceId],
+        })
+        .promise();
+
+      const instance = details.Reservations[0].Instances[0];
+      const {
+        PrivateDnsName: internalHostName,
+        PrivateIpAddress: internalIpaddress,
+        PublicDnsName: externalHostName,
+      } = instance;
+
+      const { Value: name } = instance.Tags.find(({ Key }) => Key === "Name");
+
+      return {
+        name,
+        internalIpaddress,
+        internalHostName,
+        externalHostName,
+        awsInstanceId,
+        hostType: "AWS",
+      };
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async findAndStoreAWSHost({
+    awsInstanceId,
+    loadBalancer,
+  }: {
+    awsInstanceId: string;
+    loadBalancer: boolean;
+  }) {
+    const instance = await this.getInstanceDetails(awsInstanceId);
+    if (instance) {
+      const data = Object.assign(instance, { loadBalancer });
+      return await HostsModel.create(data);
+    }
+
+    throw new Error(`could not create host ${awsInstanceId}`);
   }
 }
