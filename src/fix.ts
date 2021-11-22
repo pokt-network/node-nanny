@@ -8,9 +8,11 @@ const event = new Event();
 const health = new Health();
 const fix = async () => {
   await connect();
-  const node = await NodesModel.findOne({ "chain.name": "POKT", reboot: false });
-  const response = await health.getNodeHealth(node);
-  console.log(response)
+  const instance = await retool.findAndStoreAWSHost({awsInstanceId: "i-0b50f518cb7f65acb", loadBalancer: true});
+
+  console.log(instance);
+
+
   return "done";
 };
 
