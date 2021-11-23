@@ -1,17 +1,27 @@
 import express from "express";
 import { config } from "dotenv";
-import { Event, DataDog, Retool } from "../services";
+import { Event, DataDog, Retool, Infra } from "../services";
 import { connect } from "../db";
 
 config();
 const event = new Event();
 const dd = new DataDog();
 const retool = new Retool();
+const infra = new Infra();
 const app = express();
 const port = 3000;
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+app.post("/webhook/datadog/infra", async ({ body }, res) => {
+  try {
+    await infra.processEvent(body);
+    return res.status(200).json({ done: true });
+  } catch (error) {
+    res.sendStatus(500);
+  }
+});
 
 app.post("/webhook/datadog/monitor/events", async ({ body }, res) => {
   console.log(body);
@@ -44,7 +54,7 @@ app.get("/retool/monitor/status/:id", async (req, res) => {
 });
 
 app.post("/retool/host/add", async (req, res) => {
-  const {  awsInstanceId, loadBalancer } = req.body;
+  const { awsInstanceId, loadBalancer } = req.body;
   try {
     const status = await retool.findAndStoreAWSHost({ awsInstanceId, loadBalancer });
     return res.status(201).json({ status });
