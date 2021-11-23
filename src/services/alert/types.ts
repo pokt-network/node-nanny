@@ -7,6 +7,7 @@ export enum Webhooks {
   WEBHOOK_NON_CRITICAL_TEST = "***REMOVED***",
   WEBHOOK_LOGS_TEST = "***REMOVED***",
   WEBHOOK_ERRORS_TEST = "***REMOVED***",
+  DATADOG_ALERTS = "***REMOVED***"
 }
 
 interface SendMessageFields {
