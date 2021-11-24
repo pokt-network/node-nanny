@@ -246,7 +246,7 @@ export class Service {
     const hosts = await this.getLoadBalancers();
     const urls = hosts
       .map((host) => {
-        return `http://${host.externalHostName}:8050/;up?scope=${backend} \n`;
+        return `http://${host.externalHostName}:8050/stats/;up?scope=${backend} \n`;
       })
       .join("");
     return `HAProxy status\n${urls}`;
