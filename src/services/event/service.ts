@@ -177,7 +177,7 @@ export class Service {
     throw new Error("Host not found");
   }
 
-  async restartService({ host, service }) {
+  async restartService({ host, service, monitorId }) {
     const Host = await HostsModel.findOne({ name: host.name });
     if (!!Host) {
       let { internalIpaddress: ip } = Host;
@@ -185,6 +185,7 @@ export class Service {
         const { data } = await this.agent.post(`http://${ip}:3001/webhook/service/restart`, {
           service,
         });
+        await this.dd.muteMonitor({ id: monitorId, minutes: 20 });
         return data;
       } catch (error) {
         throw new Error(`could not contact agent ${error}`);
