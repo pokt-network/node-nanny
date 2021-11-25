@@ -264,7 +264,7 @@ export class Service {
       hasPeer,
       poktType,
       removeNoResponse,
-      docker
+      docker,
     } = node;
     const chain = node.chain.name.toLowerCase();
     const host = node.host.name.toLowerCase();
