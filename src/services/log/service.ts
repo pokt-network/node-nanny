@@ -1,4 +1,5 @@
 import { createLogger, format, transports, Logger } from "winston";
+import { LogsModel } from "../../models";
 
 export class Service {
   init(name: string): Logger {
@@ -19,5 +20,11 @@ export class Service {
   async write({ name, message, level }: { name: string; message: string; level: string }) {
     const logger = this.init(name);
     return await logger.log(level, message);
+  }
+
+  async writeLogtoDB({ nodeId, message }) {
+    const data = { ...message, nodeId, createdAt: new Date() };
+    const log = new LogsModel(data);
+    return await log.save();
   }
 }
