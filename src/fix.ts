@@ -9,8 +9,13 @@ const health = new Health();
 const infra = new Infra();
 const fix = async () => {
   await connect();
-  const res = await infra.processEvent(proccess);
-  return res;
+  const node = await NodesModel.find({"chain.name": {$ne: "POKT"}})
+  //const reading = await health.getNodeHealth(node)
+ // console.log(reading)
+ // const data = await log.writeLogtoDB({message: reading, nodeId: node._id})
+  //console.log(data)
+  
+ // return res;
 };
 
 fix().then(console.log);
