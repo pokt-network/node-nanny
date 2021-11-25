@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import { v1, v2 } from "@datadog/datadog-api-client";
 import { ApiDetails } from "./types";
+import { resourceUsage } from "process";
 
 export class Service {
   private sdkClient: v1.MonitorsApi;
@@ -78,6 +79,27 @@ export class Service {
     } catch (error) {
       throw new Error(error);
     }
+  }
+
+  async getLogs({ query, from }) {
+    let params: v2.LogsApiListLogsRequest = {
+      body: {
+        filter: {
+          from,
+          query,
+          to: "now",
+        },
+        sort: "-timestamp",
+      },
+    };
+
+    const logs = await this.ddlogs.listLogs(params);
+    return logs.data.map(({ attributes }) => {
+      return {
+        timestamp: attributes.timestamp,
+        message: attributes.attributes,
+      };
+    });
   }
 
   async getHealthLogs({ host, logGroup }) {
