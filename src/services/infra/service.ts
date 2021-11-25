@@ -68,7 +68,7 @@ export class Service {
           value: JSON.stringify(message, null, 2),
         };
       });
-
+      formated.length = 5
       fields = fields.concat(formated);
     }
 
@@ -85,6 +85,7 @@ export class Service {
         };
       });
 
+      formated.length = 5
       fields = fields.concat(formated);
     }
 
