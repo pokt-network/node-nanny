@@ -15,24 +15,19 @@ export class App {
   async main() {
     await connect();
     const nodes = await NodesModel.find({
-      logGroup: { $ne: null },
+
     }).exec();
     for (const node of nodes) {
       setInterval(async () => {
         node.id = node._id;
-        const { logGroup } = node;
-        const healthResponse = await this.health.getNodeHealth(node);
-        let status;
-        if (healthResponse) {
-          status = healthResponse.status;
+        const message = await this.health.getNodeHealth(node);
+        if (message && message.status) {
+          console.log({ message });
+          return await this.log.writeLogtoDB({
+            message,
+            nodeId: node._id,
+          });
         }
-        let message = JSON.stringify(healthResponse);
-        console.info({ message, logGroup });
-        return await this.log.write({
-          name: logGroup,
-          message,
-          level: status === HealthTypes.ErrorStatus.ERROR ? "error" : "info",
-        });
       }, 10000);
     }
   }
