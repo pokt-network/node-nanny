@@ -56,23 +56,30 @@ export class Service {
       });
     }
 
-    if (tags.hasOwnProperty("latency")) {
+    if (type === "ERROR" && tags.hasOwnProperty("latency")) {
       const { blockchainid, servicedomain, region } = tags;
       const logs = await this.dd.getLogs({
         query: `@blockchainID:${blockchainid} @serviceDomain:${servicedomain} @elapsedTime:>6 region:${region}`,
-        from: "now-10m",
+        from: "now-30m",
       });
       const formated = logs.map(({ message, timestamp }) => {
+        console.log(message);
         return {
           name: timestamp.toString(),
-          value: JSON.stringify(message, null, 2),
+          value: JSON.stringify({
+            error: message.error,
+            elapsedTime: message.elapsedTime,
+            serviceNode: message.serviceNode,
+            origin: message.origin,
+          }, null, 2),
         };
       });
+
       formated.length = 5
       fields = fields.concat(formated);
     }
 
-    if (tags.hasOwnProperty("error")) {
+    if (type === "ERROR" && tags.hasOwnProperty("error")) {
       const { blockchainid, servicedomain, region } = tags;
       const logs = await this.dd.getLogs({
         query: `@blockchainID:${blockchainid} @serviceDomain:${servicedomain} @status:error region:${region}`,
