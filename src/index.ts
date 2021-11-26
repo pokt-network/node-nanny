@@ -9,10 +9,14 @@ export class App {
   private log: Log;
   private health: Health;
   private redis: Redis;
+  private threshold: number;
+  private map: Map<any, any>;
   constructor() {
     this.health = new Health();
     this.log = new Log();
     this.redis = new Redis();
+    this.threshold = 2;
+    this.map = new Map();
   }
 
   async main() {
@@ -24,12 +28,29 @@ export class App {
         const message = await this.health.getNodeHealth(node);
         if (message && message.status) {
           if (message.status === HealthTypes.ErrorStatus.ERROR) {
-            await this.redis.publish(
-              "send-error-event",
-              JSON.stringify({ ...message, id: node.id }),
-            );
+            const exists = this.map.has(node.id);
+            if (!exists) {
+              this.map.set(node.id, 1);
+            } else {
+              this.map.set(node.id, Number(this.map.get(node.id) + 1));
+            }
+            const count = this.map.get(node.id);
+            if (count >= this.threshold) {
+              await this.redis.publish(
+                "send-error-event",
+                JSON.stringify({ ...message, id: node.id, count }),
+              );
+            }
           }
-          console.log({ message });
+          if (message.status === HealthTypes.ErrorStatus.OK) {
+            if (this.map.has(node.id)) {
+              this.map.delete(node.id);
+              await this.redis.publish(
+                "send-resolved-event",
+                JSON.stringify({ ...message, id: node.id }),
+              );
+            }
+          }
           return await this.log.writeLogtoDB({
             message,
             nodeId: node._id,
