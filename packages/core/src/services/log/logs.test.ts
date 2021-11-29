@@ -1,4 +1,4 @@
-import { Service } from './'
+import { Service } from '.'
 
 const logs = new Service()
 
