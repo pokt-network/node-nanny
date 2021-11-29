@@ -10,8 +10,12 @@
     "composite": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
-    "outDir": "dist",
-    "rootDir": "src",
+    "jsx": "react-jsx",
+    "outDir": "./dist",
+    "rootDir": ".",
+    "paths": {
+      "@pokt-foundation/node-monitoring/*": ["./packages/*/src"]
+    },
     "strict": false,
     "moduleResolution": "node",
     "resolveJsonModule": true
