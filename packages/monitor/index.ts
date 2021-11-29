@@ -1,8 +1,8 @@
 import Redis from "ioredis";
-import { Health, Log } from "./services";
-import { NodesModel } from "./models";
-import { connect } from "./db";
-import { HealthTypes } from "./types";
+import { Health, Log } from "@pokt-foundation/node-monitoring-core/services";
+import { NodesModel } from "@pokt-foundation/node-monitoring-core/models";
+import { connect } from "@pokt-foundation/node-monitoring-core/db";
+import { HealthTypes } from "@pokt-foundation/node-monitoring-core/types";
 import "./tracer";
 
 export class App {
