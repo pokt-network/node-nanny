@@ -9,15 +9,15 @@ importers:
     specifiers:
       '@pokt-foundation/node-monitoring-core': workspace:^0.1.0
     dependencies:
-      '@pokt-foundation/node-monitoring-core': link:../core/src
+      '@pokt-foundation/node-monitoring-core': link:../core
 
   packages/api:
     specifiers:
       '@pokt-foundation/node-monitoring-core': workspace:^0.1.0
     dependencies:
-      '@pokt-foundation/node-monitoring-core': link:../core/src
+      '@pokt-foundation/node-monitoring-core': link:../core
 
-  packages/core/src:
+  packages/core:
     specifiers:
       '@datadog/datadog-api-client': ^1.0.0-beta.4
       '@pagerduty/pdjs': ^2.2.2
@@ -38,6 +38,7 @@ importers:
       ts-node: ^10.1.0
       typescript: ^4.3.5
       winston: ^3.3.3
+      winston-mongodb: ^5.0.7
     dependencies:
       '@datadog/datadog-api-client': 1.0.0-beta.6
       '@pagerduty/pdjs': 2.2.4
@@ -47,6 +48,7 @@ importers:
       dotenv: 10.0.0
       mongoose: 6.0.13
       winston: 3.3.3
+      winston-mongodb: 5.0.7_winston@3.3.3
     devDependencies:
       '@types/express': 4.17.13
       '@types/jest': 26.0.24
@@ -65,7 +67,7 @@ importers:
       '@pokt-foundation/node-monitoring-core': workspace:^0.1.0
       ioredis: ^4.28.1
     dependencies:
-      '@pokt-foundation/node-monitoring-core': link:../core/src
+      '@pokt-foundation/node-monitoring-core': link:../core
       ioredis: 4.28.1
 
   packages/monitor:
@@ -74,7 +76,7 @@ importers:
       dd-trace: ^1.1.0
       ioredis: ^4.28.1
     dependencies:
-      '@pokt-foundation/node-monitoring-core': link:../core/src
+      '@pokt-foundation/node-monitoring-core': link:../core
       dd-trace: 1.5.1
       ioredis: 4.28.1
 
@@ -4534,6 +4536,13 @@ packages:
     dev: false
     optional: true
 
+  /bl/2.2.1:
+    resolution: {integrity: sha512-6Pesp1w0DEX1N550i/uGV/TqucVL4AM/pgThFSN/Qq9si1/DF9aIHs1BxD8V/QU0HoeHO6cQRTAuYnLPKq1e4g==}
+    dependencies:
+      readable-stream: 2.3.7
+      safe-buffer: 5.2.1
+    dev: false
+
   /bluebird/3.7.2:
     resolution: {integrity: sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==}
     dev: false
@@ -4704,6 +4713,11 @@ packages:
     resolution: {integrity: sha512-gQxTNE/GAfIIrmHLUE3oJyp5FO6HRBfhjnw4/wMmA63ZGDJnWBmgY/lyQBpnDUkGmAhbSe39tx2d/iTOAfglwQ==}
     dependencies:
       node-int64: 0.4.0
+
+  /bson/1.1.6:
+    resolution: {integrity: sha512-EvVNVeGo4tHxwi8L6bPj3y3itEvStdwvvlojVxxbyYfoaxJ6keLgrTuKdyfEAszFK+H3olzBuafE0yoh0D1gdg==}
+    engines: {node: '>=0.6.19'}
+    dev: false
 
   /bson/4.6.0:
     resolution: {integrity: sha512-8jw1NU1hglS+Da1jDOUYuNcBJ4cNHCFIqzlwoFNnsTOg2R/ox0aTYcTiBN4dzRa9q7Cvy6XErh3L8ReTEb9AQQ==}
@@ -9739,6 +9753,39 @@ packages:
       whatwg-url: 11.0.0
     dev: false
 
+  /mongodb/3.7.3:
+    resolution: {integrity: sha512-Psm+g3/wHXhjBEktkxXsFMZvd3nemI0r3IPsE0bU+4//PnvNWKkzhZcEsbPcYiWqe8XqXJJEg4Tgtr7Raw67Yw==}
+    engines: {node: '>=4'}
+    peerDependencies:
+      aws4: '*'
+      bson-ext: '*'
+      kerberos: '*'
+      mongodb-client-encryption: '*'
+      mongodb-extjson: '*'
+      snappy: '*'
+    peerDependenciesMeta:
+      aws4:
+        optional: true
+      bson-ext:
+        optional: true
+      kerberos:
+        optional: true
+      mongodb-client-encryption:
+        optional: true
+      mongodb-extjson:
+        optional: true
+      snappy:
+        optional: true
+    dependencies:
+      bl: 2.2.1
+      bson: 1.1.6
+      denque: 1.5.1
+      optional-require: 1.1.8
+      safe-buffer: 5.2.1
+    optionalDependencies:
+      saslprep: 1.0.3
+    dev: false
+
   /mongodb/4.1.4:
     resolution: {integrity: sha512-Cv/sk8on/tpvvqbEvR1h03mdyNdyvvO+WhtFlL4jrZ+DSsN/oSQHVqmJQI/sBCqqbOArFcYCAYDfyzqFwV4GSQ==}
     engines: {node: '>=12.9.0'}
@@ -10203,6 +10250,13 @@ packages:
       cssnano: 4.1.11
       last-call-webpack-plugin: 3.0.0
       webpack: 4.44.2
+    dev: false
+
+  /optional-require/1.1.8:
+    resolution: {integrity: sha512-jq83qaUb0wNg9Krv1c5OQ+58EK+vHde6aBPzLvPPqJm89UQWsvSuFy9X/OSNJnFeSOKo7btE0n8Nl2+nE+z5nA==}
+    engines: {node: '>=4'}
+    dependencies:
+      require-at: 1.0.6
     dev: false
 
   /optionator/0.8.3:
@@ -11810,6 +11864,11 @@ packages:
   /repeat-string/1.6.1:
     resolution: {integrity: sha1-jcrkcOHIirwtYA//Sndihtp15jc=}
     engines: {node: '>=0.10'}
+    dev: false
+
+  /require-at/1.0.6:
+    resolution: {integrity: sha512-7i1auJbMUrXEAZCOQ0VNJgmcT2VOKPRl2YGJwgpHpC9CE91Mv4/4UYIUm4chGJaI381ZDq1JUicFii64Hapd8g==}
+    engines: {node: '>=4'}
     dev: false
 
   /require-directory/2.1.1:
@@ -13750,6 +13809,24 @@ packages:
     dependencies:
       isexe: 2.0.0
 
+  /winston-mongodb/5.0.7_winston@3.3.3:
+    resolution: {integrity: sha512-6uUdd7IPfzKMth1vbO6zPyLQzn57CTNXbyjZmdD9UgBlY19BliFnYcK7+Aopo0GHIsWDo7xlerpj3x/ZULDIpg==}
+    engines: {node: '>=6.8.1'}
+    peerDependencies:
+      winston: ^3.0.0
+    dependencies:
+      mongodb: 3.7.3
+      winston: 3.3.3
+      winston-transport: 4.4.0
+    transitivePeerDependencies:
+      - aws4
+      - bson-ext
+      - kerberos
+      - mongodb-client-encryption
+      - mongodb-extjson
+      - snappy
+    dev: false
+
   /winston-transport/4.4.0:
     resolution: {integrity: sha512-Lc7/p3GtqtqPBYYtS6KCN3c77/2QCev51DvcJKbkFPQNoj1sinkGwLGFDxkXY9J6p9+EPnYs+D90uwbnaiURTw==}
     engines: {node: '>= 6.4.0'}
@@ -13997,7 +14074,7 @@ packages:
   /xml2js/0.4.19:
     resolution: {integrity: sha512-esZnJZJOiJR9wWKMyuvSE1y6Dq5LCuJanqhxslH2bxM6duahNZ+HMpCLhBQGZkbX6xRf8x1Y2eJlgt2q3qo49Q==}
     dependencies:
-      sax: 1.2.1
+      sax: 1.2.4
       xmlbuilder: 9.0.7
     dev: false
 
