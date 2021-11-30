@@ -1,7 +1,5 @@
 import { Service } from '.'
 
-const logs = new Service()
-
 test("should skip onboarding for node already subscribed", async () => {
   // const response = await logs.onBoardNewNode('ethereum-2a/eth')
   // expect(response).toBe(false);
