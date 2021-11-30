@@ -30,6 +30,7 @@
     "axios-retry": "^3.2.4",
     "dotenv": "^10.0.0",
     "mongoose": "^6.0.7",
-    "winston": "^3.3.3"
+    "winston": "^3.3.3",
+    "winston-mongodb": "^5.0.7"
   }
 }
