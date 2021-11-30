@@ -1,0 +1,9 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@pokt-foundation/node-monitoring-core": "workspace:^0.1.0"
+  }
+}
