@@ -1,7 +1,8 @@
 {
-  "name": "@pokt-foundation/node-monitoring-monitor",
+  "name": "agent",
   "version": "1.0.0",
   "description": "",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -9,8 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dd-trace": "^1.1.0",
-    "@pokt-foundation/node-monitoring-core": "workspace:^0.1.0",
-    "ioredis": "^4.28.1"
+    "@pokt-foundation/node-monitoring-core": "workspace:^0.1.0"
   }
 }
