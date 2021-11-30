@@ -1,9 +1,12 @@
+import { config } from "dotenv";
 import { Health, Log } from "@pokt-foundation/node-monitoring-core/dist/services";
 import { NodesModel } from "@pokt-foundation/node-monitoring-core/dist/models";
 import { HealthTypes } from "@pokt-foundation/node-monitoring-core/dist/types";
 import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
 import { Publish } from "./publish";
 import "./tracer";
+
+config();
 
 type Config = {
   logger: LoggerOptions;

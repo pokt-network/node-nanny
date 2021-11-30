@@ -11,8 +11,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dd-trace": "^1.1.0",
     "@pokt-foundation/node-monitoring-core": "workspace:^0.1.0",
+    "dd-trace": "^1.1.0",
+    "dotenv": "^10.0.0",
     "ioredis": "^4.28.1"
   }
 }
