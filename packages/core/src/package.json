@@ -5,19 +5,9 @@
   "author": "JonathonJulian <john@pokt.network>",
   "license": "MIT",
   "scripts": {
-    "start:dev": "nodemon ./dist/index.ts",
-    "start:api": "node dist/api",
-    "start:api:dev": "nodemon dist/api",
-    "start:agent": "node dist/agent",
-    "start:agent:dev": "nodemon dist/agent",
-    "start:haproxy:dev": "cd ../node-deploy/haproxy && docker-compose up",
     "build": "tsc -b .",
     "build:watch": "tsc -b -w .",
-    "test": "jest",
-    "test:dev": "jest --watch --testTimeout=1000000",
-    "test:events": "ts-node ./src/services/event/test.event.ts",
-    "fix": "ts-node ./src/fix.ts",
-    "subscribe": "ts-node ./src/subscribe.ts"
+    "test": "jest"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",
@@ -38,11 +28,7 @@
     "aws-sdk": "^2.950.0",
     "axios": "^0.21.2",
     "axios-retry": "^3.2.4",
-    "csvtojson": "^2.0.10",
     "dotenv": "^10.0.0",
-    "express": "^4.17.1",
-    "hot-shots": "^8.5.0",
-    "ioredis": "^4.28.1",
     "mongoose": "^6.0.7",
     "winston": "^3.3.3"
   }
