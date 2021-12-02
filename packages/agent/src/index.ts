@@ -1,7 +1,7 @@
 import express from "express";
 import { config } from "dotenv";
 
-import { Reboot, HAProxy } from "@pokt-foundation/node-monitoring-core/services";
+import { Reboot, HAProxy } from "@pokt-foundation/node-monitoring-core/dist/services";
 
 config();
 

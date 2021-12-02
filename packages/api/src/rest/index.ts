@@ -1,7 +1,7 @@
 import express from "express";
 import { config } from "dotenv";
-import { Event, DataDog, Retool, Infra } from "@pokt-foundation/node-monitoring-core/services";
-import { connect } from "@pokt-foundation/node-monitoring-core/db";
+import { Event, DataDog, Retool, Infra } from "@pokt-foundation/node-monitoring-core/dist/services";
+import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
 
 config();
 const event = new Event();
