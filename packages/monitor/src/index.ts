@@ -17,6 +17,7 @@ enum LoggerOptions {
   MONGODB = "mongodb",
   DATADOG = "datadog",
 }
+
 enum EventOptions {
   REDIS = "redis",
   DATADOG = "datadog",
@@ -52,7 +53,7 @@ export class App {
         }
         let message = JSON.stringify(healthResponse);
         console.info({ message, logGroup });
-        if (this.config.event === "redis") {
+        if (this.config.event === EventOptions.REDIS) {
           await this.publish.evaluate({ message, id: node.id });
         }
         return await this.log.write({
