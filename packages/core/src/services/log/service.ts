@@ -25,7 +25,7 @@ export class Service {
   init({ name, id }: { name: string; id: string }): Logger {
     const transport = {
       mongodb: new transports.MongoDB({
-        db: process.env.MONGO_URI,
+        db: process.env.MONGO_URI_DEV,
         expireAfterSeconds: 60 * 60 * 24,
         label: id,
       }),
