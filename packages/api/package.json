@@ -3,7 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -b .",
+    "build:watch": "tsc -b -w ."
+  },
   "dependencies": {
-    "@pokt-foundation/node-monitoring-core": "workspace:^0.1.0"
+    "@pokt-foundation/node-monitoring-core": "workspace:^0.1.0",
+    "apollo-server": "^3.5.0",
+    "graphql": "^16.0.1"
   }
 }
