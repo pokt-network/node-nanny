@@ -1,14 +1,19 @@
-import * as React from 'react';
-import Typography from '@mui/material/Typography';
-
+import * as React from "react";
+import { Form } from "../components";
 interface ViewProps {
   children?: React.ReactNode;
 }
 
 export function View(props: ViewProps) {
   return (
-    <Typography component="h2" variant="h6" color="primary" gutterBottom>
-      {props.children}
-    </Typography>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+     <Form/>
+    </div>
   );
 }
