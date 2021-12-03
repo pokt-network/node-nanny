@@ -8,5 +8,5 @@ export function View(props: ViewProps) {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-  }}>HOSTS</div>;
+  }}>HOME</div>;
 }
