@@ -16,6 +16,20 @@ const resolvers = {
     oracles: async () => await OraclesModel.find({}).exec(),
     logs: async ({ id }) => await LogsModel.find({ label: id }).exec(),
   },
+  Mutation: {
+    createChain: async (_, chain) => {
+      return await ChainsModel.create(chain);
+    },
+    createHost: async (_, host) => {
+      return await HostsModel.create(host);
+    },
+    createOracle: async (_, oracle) => {
+      return await OraclesModel.create(oracle);
+    },
+    createNode: async (_, node) => {
+      return await NodesModel.create(node);
+    },
+  },
 };
 
 const typeDefs = gql`
@@ -88,10 +102,10 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    createNode(input: NodeInput): Node
-    createhost(name: String, ip: String): Host
-    createOracle(chain: String, url: String): Oracle
     createChain(name: String, type: String): Chain
+    createHost(name: String, ip: String): Host
+    createOracle(chain: String, url: String): Oracle
+    createNode(input: NodeInput): Node
     updateNode(input: NodeInput): Node
     updatehost(name: String, ip: String): Host
     updateOracle(id: ID, action: String, url: String): Oracle
