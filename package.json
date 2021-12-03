@@ -5,7 +5,11 @@
     "author": "JonathonJulian <john@pokt.network>",
     "license": "MIT",
     "scripts":{
-      "build": "tsc -b ."
+      "build": "tsc -b .",
+      "build:watch": "tsc -b -w .",
+      "start:api:graphql": "cd packages/api && pnpm install && pnpm run build && node dist/graphql",
+      "start:api:rest": "cd api && pnpm run build && node dist/rest",
+      "start:ui": "export SKIP_PREFLIGHT_CHECK=true && cd packages/ui && pnpm run start"
     }
   }
   
