@@ -5,36 +5,14 @@ import MuiDrawer from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
-import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
-import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Container from "@mui/material/Container";
-import Grid from "@mui/material/Grid";
-import Paper from "@mui/material/Paper";
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import { mainListItems, secondaryListItems } from "./components/listItems";
-import { Card, Table } from "./components";
-
-function createData(
-  id: number,
-  date: string,
-  name: string,
-  shipTo: string,
-  paymentMethod: string,
-  amount: number,
-) {
-  return { id, date, name, shipTo, paymentMethod, amount };
-}
-
-const rows = [
-  createData(0, "16 Mar, 2019", "Elvis Presley", "Tupelo, MS", "VISA ⠀•••• 3719", 312.44),
-  createData(1, "16 Mar, 2019", "Paul McCartney", "London, UK", "VISA ⠀•••• 2574", 866.99),
-  createData(2, "16 Mar, 2019", "Tom Scholz", "Boston, MA", "MC ⠀•••• 1253", 100.81),
-  createData(3, "16 Mar, 2019", "Michael Jackson", "Gary, IN", "AMEX ⠀•••• 2000", 654.39),
-  createData(4, "15 Mar, 2019", "Bruce Springsteen", "Long Branch, NJ", "VISA ⠀•••• 5919", 212.79),
-];
+import { Route } from "react-router-dom";
+import { Home, Chains, Hosts, Logs, Nodes, Oracles, Settings } from "./views";
+import { Nav } from "./components";
 
 const drawerWidth: number = 240;
 
@@ -142,10 +120,7 @@ function DashboardContent() {
               <ChevronLeftIcon />
             </IconButton>
           </Toolbar>
-          <Divider />
-          <List>{mainListItems}</List>
-          <Divider />
-          <List>{secondaryListItems}</List>
+          <Nav />
         </Drawer>
         <Box
           component="main"
@@ -157,29 +132,16 @@ function DashboardContent() {
             overflow: "auto",
           }}
         >
-          <Toolbar />
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={4} lg={3}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    display: "flex",
-                    flexDirection: "column",
-                    height: 240,
-                  }}
-                >
-                  <Card />
-                </Paper>
-              </Grid>
-              {/* Recent Table */}
-              <Grid item xs={12}>
-                <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
-                  <Table rows={rows} />
-                </Paper>
-              </Grid>
-            </Grid>
+            <div>___</div>
           </Container>
+          <Route exact path="/" component={Home} />
+          <Route exact path="/chains" component={Chains} />
+          <Route exact path="/hosts" component={Hosts} />
+          <Route exact path="/oracles" component={Oracles} />
+          <Route exact path="/nodes" component={Nodes} />
+          <Route exact path="/logs" component={Logs} />
+          <Route exact path="/settings" component={Settings} />
         </Box>
       </Box>
     </ThemeProvider>
