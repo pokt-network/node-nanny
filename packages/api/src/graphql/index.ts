@@ -21,26 +21,45 @@ const resolvers = {
       return await ChainsModel.create(chain);
     },
     createHost: async (_, host) => {
+      console.log(host);
       return await HostsModel.create(host);
     },
-    createOracle: async (_, oracle) => {
-      return await OraclesModel.create(oracle);
+    createOracle: async (_, { chain, url }) => {
+      const doesExist = await OraclesModel.findOne({ chain }).exec();
+      if (!doesExist) {
+        return await OraclesModel.create({ chain, urls: [url] });
+      }
+      return await OraclesModel.findOneAndUpdate({ chain }, { $push: { urls: url } }).exec();
     },
     createNode: async (_, node) => {
       return await NodesModel.create(node);
+    },
+  },
+
+  Chain: {
+    id(chain: any) {
+      return chain._id;
+    },
+  },
+  Host: {
+    id(host: any) {
+      return host._id;
     },
   },
 };
 
 const typeDefs = gql`
   type Chain {
-    name: String
-    type: String
+    id: ID!
+    name: String!
+    type: String!
   }
 
   type Host {
-    name: String
-    ip: String
+    id: ID!
+    name: String!
+    ip: String!
+    loadBalancer: Boolean!
   }
 
   type Node {
@@ -77,12 +96,6 @@ const typeDefs = gql`
     urls: [String]
   }
 
-  type Haproxy {
-    id: ID
-    name: String
-    ip: String
-  }
-
   type Log {
     id: ID
     timestamp: String
@@ -103,7 +116,7 @@ const typeDefs = gql`
 
   type Mutation {
     createChain(name: String, type: String): Chain
-    createHost(name: String, ip: String): Host
+    createHost(name: String, ip: String, loadBalancer: Boolean): Host
     createOracle(chain: String, url: String): Oracle
     createNode(input: NodeInput): Node
     updateNode(input: NodeInput): Node
