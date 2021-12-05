@@ -8,6 +8,7 @@ export interface IHost {
     awsInstanceId: string;
     loadBalancer: boolean;
     hostType: string;
+    ip: string;
   }
 
 
@@ -19,6 +20,7 @@ export interface IHost {
     awsInstanceId: String,
     loadBalancer: Boolean,
     hostType: String,
+    ip: String
   })
 
   export const HostsModel: Model<IHost> = model("hosts", hostsSchema);
