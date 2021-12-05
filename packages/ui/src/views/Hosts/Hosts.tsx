@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Form } from "../components";
+import { Form } from ".";
+
 interface ViewProps {
   children?: React.ReactNode;
 }
@@ -13,7 +14,7 @@ export function View(props: ViewProps) {
         alignItems: "center",
       }}
     >
-     <Form/>
+      <Form />
     </div>
   );
 }
