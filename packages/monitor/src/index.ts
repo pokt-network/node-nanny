@@ -41,24 +41,22 @@ export class App {
 
   async main() {
     await connect();
-    const nodes = await NodesModel.find({}).exec();
+    const nodes = await NodesModel.find({}).populate("host").populate("chain").exec();
     for (const node of nodes) {
       setInterval(async () => {
-        node.id = node._id;
-        const { logGroup } = node;
         const healthResponse = await this.health.getNodeHealth(node);
         let status;
         if (healthResponse) {
           status = healthResponse.status;
         }
         let message = JSON.stringify(healthResponse);
-        console.info({ message, logGroup });
+        console.info({ message });
         if (this.config.event === EventOptions.REDIS) {
           await this.publish.evaluate({ message, id: node.id });
         }
         return await this.log.write({
           id: node.id,
-          name: logGroup,
+          name: healthResponse.name,
           message,
           level: status === HealthTypes.ErrorStatus.ERROR ? "error" : "info",
         });
