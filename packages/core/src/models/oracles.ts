@@ -1,12 +1,16 @@
 import { Schema, model, Model } from "mongoose";
-
+import { IChain } from "./chains";
 export interface IOracle {
-  chain: string;
+  id: string;
+  chain: IChain;
   urls: string[];
 }
 
 const oracleSchema = new Schema<IOracle>({
-  chain: { type: String, required: true, unique: true },
+  chain: {
+    type: Schema.Types.ObjectId,
+    ref: "chains",
+  },
   urls: [String],
 });
 

@@ -45,7 +45,7 @@ const nodesSchema = new Schema<INode>(
       type: Schema.Types.ObjectId,
       ref: "hosts",
     },
-    hostname: { type: String, unique: true },
+    hostname: String,
     monitorId: String,
     port: Number,
     server: String,
@@ -64,5 +64,6 @@ const nodesSchema = new Schema<INode>(
   },
   { collection: "nodes" },
 );
+
 
 export const NodesModel: Model<INode> = model("nodes", nodesSchema);
