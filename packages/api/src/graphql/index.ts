@@ -31,8 +31,9 @@ const resolvers = {
       }
       return await OraclesModel.findOneAndUpdate({ chain }, { $push: { urls: url } }).exec();
     },
-    createNode: async (_, node) => {
-      return await NodesModel.create(node);
+    createNode: async (_, {input}) => {
+      console.log(input);
+      return await NodesModel.create(input);
     },
   },
 
@@ -67,28 +68,26 @@ const typeDefs = gql`
     backend: String
     chain: Chain
     haProxy: Boolean
-    hasPeer: Boolean
     host: Host
     port: Int
     server: String
-    threshold: Int
     url: String
-    variance: Int
-    logGroup: String
-  }
+    variance: Int 
+    ssl: Boolean
+    basicAuth: String
+   }
 
   input NodeInput {
     backend: String
     chain: ID
     haProxy: Boolean
-    hasPeer: Boolean
     host: ID
     port: Int
     server: String
-    threshold: Int
     url: String
     variance: Int
-    logGroup: String
+    ssl: Boolean
+    basicAuth: String
   }
 
   type Oracle {
