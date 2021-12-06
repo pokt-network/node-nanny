@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import util from "util";
-import axiosRetry from 'axios-retry';
+import axiosRetry from "axios-retry";
 import { exec } from "child_process";
 import {
   ErrorConditions,
@@ -20,66 +20,116 @@ export class Service {
     this.rpc = this.initClient();
   }
 
-  private initClient() {
-  const client = axios.create({
+  private initClient(): AxiosInstance {
+    const client = axios.create({
       timeout: 10000,
       headers: { "Content-Type": "application/json" },
     });
     axiosRetry(client, { retries: 5 });
     return client;
   }
-  private async getBlockHeight(url) {
+  async getBlockHeight(url, auth?: string): Promise<any> {
+    let options;
+    if (auth) {
+      options = {};
+      options.auth = {
+        username: auth.split(":")[0],
+        password: auth.split(":")[1],
+      };
+    }
     try {
-      const { data } = await this.rpc.post(url, {
-        jsonrpc: "2.0",
-        id: 1,
-        method: "eth_blockNumber",
-        params: [],
-      });
+      const { data } = await this.rpc.post(
+        url,
+        {
+          jsonrpc: "2.0",
+          id: 1,
+          method: "eth_blockNumber",
+          params: [],
+        },
+        options,
+      );
       if (data.error) {
-        throw new Error(`getBlockHeight could not contact blockchain node ${data.error} ${url}`);
+        return data.error;
       }
       return data;
     } catch (error) {
-      throw new Error(`getBlockHeight could not contact blockchain node ${error} ${url}`);
+      throw new Error(
+        `getBlockHeight could not contact blockchain node ${JSON.stringify(error)} ${url}`,
+      );
     }
   }
 
-  private async getEthSyncing(url) {
+  private async getEthSyncing(url, auth?: string): Promise<any> {
+    let options;
+    if (auth) {
+      options = {};
+      options.auth = {
+        username: auth.split(":")[0],
+        password: auth.split(":")[1],
+      };
+    }
     try {
-      const { data } = await this.rpc.post(url, {
-        jsonrpc: "2.0",
-        id: 1,
-        method: "eth_syncing",
-        params: [],
-      });
+      const { data } = await this.rpc.post(
+        url,
+        {
+          jsonrpc: "2.0",
+          id: 1,
+          method: "eth_syncing",
+          params: [],
+        },
+        options,
+      );
       return data;
     } catch (error) {
       throw new Error(`getEthSyncing could not contact blockchain node ${error} ${url}`);
     }
   }
 
-  private async getPeers(url) {
+  private async getPeers(url, auth?: string): Promise<any> {
+    let options;
+    if (auth) {
+      options = {};
+      options.auth = {
+        username: auth.split(":")[0],
+        password: auth.split(":")[1],
+      };
+    }
     try {
-      const { data } = await this.rpc.post(url, {
-        jsonrpc: "2.0",
-        id: 1,
-        method: "net_peerCount",
-        params: [],
-      });
+      const { data } = await this.rpc.post(
+        url,
+        {
+          jsonrpc: "2.0",
+          id: 1,
+          method: "net_peerCount",
+          params: [],
+        },
+        options,
+      );
       return data;
     } catch (error) {
       throw new Error(`getPeers could not contact blockchain node ${error} ${url}`);
     }
   }
 
-  private async getAvaHealth({ name, url }): Promise<HealthResponse> {
+  private async getAvaHealth({ name, url }, auth?: string): Promise<HealthResponse> {
+    let options;
+    if (auth) {
+      options = {};
+      options.auth = {
+        username: auth.split(":")[0],
+        password: auth.split(":")[1],
+      };
+    }
     try {
-      const { data } = await this.rpc.post(`${url}/ext/health`, {
-        jsonrpc: "2.0",
-        id: 1,
-        method: "health.health",
-      });
+      const { data } = await this.rpc.post(
+        `${url}/ext/health`,
+        {
+          jsonrpc: "2.0",
+          id: 1,
+          method: "health.health",
+        },
+        options,
+      );
 
       const { result } = data;
       if (result.healthy) {
@@ -107,9 +157,17 @@ export class Service {
     }
   }
 
-  async getHeimdallHealth({ name, url }) {
+  async getHeimdallHealth({ name, url }, auth?: string): Promise<any> {
+    let options;
+    if (auth) {
+      options = {};
+      options.auth = {
+        username: auth.split(":")[0],
+        password: auth.split(":")[1],
+      };
+    }
     try {
-      const { data } = await this.rpc.get(`${url}/status`);
+      const { data } = await this.rpc.get(`${url}/status`, options);
       const { catching_up } = data.result.sync_info;
       if (!catching_up) {
         return {
@@ -136,7 +194,15 @@ export class Service {
     }
   }
 
-  private async getPocketHeight(url) {
+  private async getPocketHeight(url, auth?: string): Promise<any> {
+    let options;
+    if (auth) {
+      options = {};
+      options.auth = {
+        username: auth.split(":")[0],
+        password: auth.split(":")[1],
+      };
+    }
     try {
       const { data } = await this.rpc.post(`${url}/v1/query/height`, {});
       return data;
@@ -146,9 +212,9 @@ export class Service {
     }
   }
 
-  private async isRpcResponding({ url }): Promise<boolean> {
+  private async isRpcResponding({ url }, auth?: string): Promise<boolean> {
     try {
-      await this.getBlockHeight(url);
+      await this.getBlockHeight(url, auth);
       return true;
     } catch (error) {
       return false;
@@ -171,14 +237,17 @@ export class Service {
 
   private async getReferenceBlockHeight({ endpoints, variance }): Promise<number> {
     const resolved = [];
-    for (const endpoint of endpoints) {
+    for (const { url, auth } of endpoints) {
       try {
-        resolved.push(await this.getBlockHeight(endpoint));
+        resolved.push(await this.getBlockHeight(url, auth));
       } catch (error) {
         console.error(`could not get reading ${error}`);
       }
     }
-    const readings = resolved.map(({ result }) => hexToDec(result));
+
+    const readings = resolved
+      .filter((reading) => reading.result)
+      .map(({ result }) => hexToDec(result));
     const height = this.getBestBlockHeight({ readings, variance });
     return height;
   }
@@ -209,23 +278,26 @@ export class Service {
 
   private async checkExternalUrls(urls) {
     return Promise.all(
-      await urls.filter(async (url) => {
-        try {
-          await this.getBlockHeight(url);
-          return true;
-        } catch (error) {
-          return false;
-        }
-      }),
+      await urls
+        .filter(async (url) => {
+          try {
+            await this.getBlockHeight(url);
+            return true;
+          } catch (error) {
+            return false;
+          }
+        })
+        .map((url) => {
+          return { url };
+        }),
     );
   }
 
   private async getEVMNodeHealth(node: INode): Promise<HealthResponse> {
-    const { chain, url, variance, host, id, port } = node;
+    const { chain, url, variance, host, id, port, basicAuth } = node;
     const name = `${host.name}/${chain.name}`;
     //Check if node is online and RPC up
-    const isNodeListening = await this.isNodeListening({ host: host.internalIpaddress, port });
-
+    const isNodeListening = await this.isNodeListening({ host: host.ip, port });
     if (!isNodeListening) {
       return {
         name,
@@ -233,8 +305,7 @@ export class Service {
         conditions: ErrorConditions.OFFLINE,
       };
     }
-    const isRpcResponding = await this.isRpcResponding({ url });
-
+    const isRpcResponding = await this.isRpcResponding({ url }, basicAuth);
     if (!isRpcResponding) {
       return {
         name,
@@ -244,33 +315,36 @@ export class Service {
     }
 
     let peers: INode[] = await NodesModel.find({
-      "chain.name": chain.name,
+      chain,
       _id: { $ne: id },
     }).exec();
-    let { urls: externalNodes } = await OraclesModel.findOne({ chain: chain.name }).exec();
 
-    const referenceUrls = await this.checkExternalUrls(externalNodes);
+    let { urls: externalNodes } = await OraclesModel.findOne({ chain }).exec();
 
-    peers = peers.filter(async (peer) => await this.isRpcResponding({ url: peer.url }));
+    let referenceUrls = await this.checkExternalUrls(externalNodes);
+
+    peers = peers.filter(
+      async (peer) => await this.isRpcResponding({ url: peer.url }, peer.basicAuth),
+    );
 
     if (peers.length >= 1) {
-      for (const { url } of peers) {
-        referenceUrls.push(url);
+      for (const { url, basicAuth } of peers) {
+        referenceUrls.push({ url, auth: basicAuth });
       }
     }
 
     try {
       const [internalBh, externalBh, ethSyncing] = await Promise.all([
-        this.getBlockHeight(url),
+        this.getBlockHeight(url, basicAuth),
         this.getReferenceBlockHeight({ endpoints: referenceUrls, variance }),
-        this.getEthSyncing(url),
+        this.getEthSyncing(url, basicAuth),
       ]);
 
       let peers;
       let numPeers;
 
       if (!(chain.name == SupportedBlockChains.POL || chain.name == SupportedBlockChains.POLTST)) {
-        peers = await this.getPeers(url);
+        peers = await this.getPeers(url, basicAuth);
         numPeers = hexToDec(peers.result);
       }
 
@@ -282,6 +356,15 @@ export class Service {
 
       let status = ErrorStatus.OK;
       let conditions = ErrorConditions.HEALTHY;
+
+      if (internalBh.code) {
+        return {
+          name,
+          conditions: ErrorConditions.NOT_SYNCHRONIZED,
+          status: ErrorStatus.ERROR,
+          health: internalBh,
+        };
+      }
 
       if (delta > variance) {
         status = ErrorStatus.ERROR;
@@ -306,6 +389,7 @@ export class Service {
         },
       };
     } catch (error) {
+      console.error(`could not get readings ${error}`);
       if (
         String(error).includes(
           `could not contact blockchain node Error: timeout of 1000ms exceeded`,
@@ -318,6 +402,12 @@ export class Service {
         };
       }
     }
+
+    return {
+      name,
+      status: ErrorStatus.ERROR,
+      conditions: ErrorConditions.NO_RESPONSE,
+    };
   }
 
   async getSolHealth({ url, name, hostname }) {
@@ -456,7 +546,7 @@ export class Service {
 
     //get highest block height from reference nodes
     const poktnodes = referenceNodes.map(({ hostname, port }) => `https://${hostname}:${port}`);
-   
+
     const pocketheight = await Promise.all(
       await poktnodes.map(async (node) => this.getPocketHeight(node)),
     );
@@ -517,7 +607,7 @@ export class Service {
     if (chain.type == SupportedBlockChainTypes.POKT) {
       return await this.getPocketNodeHealth(node);
     }
-    if (chain.type == SupportedBlockChainTypes.ETH) {
+    if (chain.type == SupportedBlockChainTypes.EVM) {
       return await this.getEVMNodeHealth(node);
     }
     if (chain.type == SupportedBlockChainTypes.AVA) {
