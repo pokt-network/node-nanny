@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
-import { DataDog, Alert } from "..";
-import { AlertTypes } from "../../types";
+import { DataDog, Alert } from "../..";
+import { AlertTypes } from "../../../types";
 import {
   DataDogMonitorStatus,
   BlockChainMonitorEvents,
@@ -10,8 +10,8 @@ import {
   LoadBalancer,
   SupportedBlockChains,
   PocketTypes,
-} from "./types";
-import { INode, NodesModel, HostsModel } from "../../models";
+} from "../types";
+import { INode, NodesModel, HostsModel } from "../../../models";
 
 /**
  * This class functions as an event consumer for DataDog alerts.

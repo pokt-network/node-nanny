@@ -4,7 +4,7 @@ import { Event, DataDog, Retool, Infra } from "@pokt-foundation/node-monitoring-
 import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
 
 config();
-const event = new Event();
+const event = new Event.DataDog();
 const dd = new DataDog();
 const retool = new Retool();
 const infra = new Infra();
