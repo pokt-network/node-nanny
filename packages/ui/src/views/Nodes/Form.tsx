@@ -1,72 +1,219 @@
 import * as React from "react";
 import { useState } from "react";
-import { gql, useMutation } from "@apollo/client";
-import { Paper, Switch, Button, FormControl, TextField } from "@mui/material";
+import { gql, useMutation, useQuery } from "@apollo/client";
+import { Paper, Switch, Button, FormControl, TextField, MenuItem } from "@mui/material";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
 
-const GET_HOSTS = gql`
+interface Host {
+  id: string;
+  name: string;
+  ip: string;
+}
+interface Chain {
+  id: string;
+  name: string;
+  type: string;
+}
+interface HostsAndChainsData {
+  chains: Chain[];
+  hosts: Host[];
+}
+
+const GET_HOSTS_AND_CHAINS = gql`
   {
     hosts {
       id
-      ip
       name
-      loadBalancer
+      ip
     }
-  }
-`;
-const GET_CHAINS = gql`
-  {
     chains {
       id
       name
-      type
     }
   }
 `;
 
-const CREATE_HOST = gql`
-  mutation createHost($name: String, $ip: String, $loadBalancer: Boolean) {
-    createHost(name: $name, ip: $ip, loadBalancer: $loadBalancer) {
-      name
-      ip
-      loadBalancer
+const CREATE_NODE = gql`
+  mutation(
+    $backend: String
+    $chain: ID
+    $haProxy: Boolean
+    $host: ID
+    $port: Int
+    $server: String
+    $variance: Int
+    $ssl: Boolean
+    $basicAuth: String
+    $url: String
+  ) {
+    createNode(
+      input: {
+        backend: $backend
+        chain: $chain
+        haProxy: $haProxy
+        host: $host
+        port: $port
+        server: $server
+        variance: $variance
+        ssl: $ssl
+        basicAuth: $basicAuth
+        url: $url
+      }
+    ) {
+      id
+      url
     }
   }
 `;
 
 export function Form() {
-  const [name, setName] = useState("");
+  const [chain, setChain] = useState("");
+  const [host, setHost] = useState("");
   const [ip, setIP] = useState("");
-  const [loadBalancer, setLoadBalancer] = useState(true);
-  const [submit, { data, loading, error }] = useMutation(CREATE_HOST);
-  const label = { inputProps: { "aria-label": "lb swtich" } };
+  const [url, setUrl] = useState("");
+  const [variance, setVariance] = useState(0);
+  const [port, setPort] = useState(0);
+  const [backend, setBackend] = useState("");
+  const [server, setServer] = useState("");
+  const [basicAuth, setAuth] = useState("");
+  const [ssl, setSSL] = useState("");
+  const [haProxy, setHaproxy] = useState(true);
+  const [submit] = useMutation(CREATE_NODE);
+  const { loading, error, data } = useQuery<HostsAndChainsData>(GET_HOSTS_AND_CHAINS);
 
-  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setName(event.target.value);
+  const handleChainChange = (event: SelectChangeEvent<typeof chain>) => {
+    setChain(event.target.value);
   };
 
-  const handleIPChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIP(event.target.value);
+  const handleHostChange = (event: SelectChangeEvent<typeof host>) => {
+    if (data?.hosts) {
+      const index = data.hosts.findIndex((item) => item.id === event.target.value);
+      const ip = data.hosts[index].ip;
+      setIP(ip);
+    }
+
+    setHost(event.target.value);
+  };
+  const handleURLChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUrl(event.target.value);
   };
 
-  const handleLBChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setLoadBalancer(event.target.checked);
+  const handleVarianceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setVariance(Number(event.target.value));
   };
+
+  const handlePortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setPort(Number(event.target.value));
+  };
+
+  const handleBackendChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setBackend(event.target.value);
+  };
+
+  const handleServerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setServer(event.target.value);
+  };
+  const handleAuthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setAuth(event.target.value);
+  };
+
+  // const handleSSLChange = (event:  SelectChangeEvent<typeof ssl>) => {
+  //   setSSL(event.target.value);
+  // };
+
+  const handleHaproxyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setHaproxy(event.target.checked);
+  };
+
+  if (loading) return <React.Fragment>Loading...</React.Fragment>;
+  if (error) return <React.Fragment> Error! ${error.message}</React.Fragment>;
+
+  console.log(data?.hosts);
 
   return (
     <React.Fragment>
-      <div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          padding: "10px",
+          columnGap: "10px",
+          rowGap: "10px",
+        }}
+      >
         <Paper style={{ width: "200%" }} variant="outlined">
           <FormControl fullWidth>
+            <Select value={chain} onChange={handleChainChange}>
+              {data?.chains.map(({ name, id }) => (
+                <MenuItem value={id}>{name}</MenuItem>
+              ))}
+            </Select>
+            <div style={{ marginTop: "10px" }} />
+            <Select value={host} onChange={handleHostChange}>
+              {data?.hosts.map(({ name, id }) => (
+                <MenuItem value={id}>{name}</MenuItem>
+              ))}
+            </Select>
+            <div style={{ marginTop: "10px" }} />
+
+            {/* <div
+            style={{
+              display: "flex",
+            }}
+            > 
+            <Select value={ssl} onChange={handleSSLChange}>
+         
+            <MenuItem value={"http"}>http</MenuItem>
+            <MenuItem value={"https"}>https</MenuItem>
+            </Select>
+
             <TextField
-              value={name}
-              onChange={handleNameChange}
-              label="Host Name"
+              fullWidth
+              value={url}
+              onChange={handleURLChange}
+              label="Url"
               variant="outlined"
             />
-            <TextField value={ip} onChange={handleIPChange} label="Host IP" variant="outlined" />
-            <div>
-              Load Balancer
-              <Switch checked={loadBalancer} onChange={handleLBChange} />
+            </div> */}
+
+            <div style={{ marginTop: "10px" }} />
+
+            <TextField
+              value={variance}
+              onChange={handleVarianceChange}
+              label="Variance"
+              variant="outlined"
+            />
+            <div style={{ marginTop: "10px" }} />
+            <TextField value={port} onChange={handlePortChange} label="Port" variant="outlined" />
+            <div style={{ marginTop: "10px" }} />
+            <TextField
+              value={backend}
+              onChange={handleBackendChange}
+              label="Backend"
+              variant="outlined"
+            />
+            <div style={{ marginTop: "10px" }} />
+            <TextField
+              value={server}
+              onChange={handleServerChange}
+              label="Server"
+              variant="outlined"
+            />
+            <div style={{ marginTop: "10px" }} />
+            <TextField
+              value={basicAuth}
+              onChange={handleAuthChange}
+              label="Auth String"
+              variant="outlined"
+            />
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+              <div>
+                HAproxy
+                <Switch checked={haProxy} onChange={handleHaproxyChange} />
+              </div>
             </div>
 
             <Button
@@ -77,10 +224,19 @@ export function Form() {
               }}
               variant="outlined"
               onClick={() => {
-                submit({ variables: { name, ip, loadBalancer } });
-                setName("");
-                setIP("");
-                setLoadBalancer(true);
+                submit({
+                  variables: {
+                    backend,
+                    chain,
+                    haProxy,
+                    host,
+                    port,
+                    server,
+                    variance,
+                    basicAuth,
+                    url: `http://${ip}:${port}`,
+                  },
+                });
               }}
             >
               Submit
