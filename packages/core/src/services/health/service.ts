@@ -28,7 +28,12 @@ export class Service {
     axiosRetry(client, { retries: 5 });
     return client;
   }
-  async getBlockHeight(url, auth?: string): Promise<any> {
+  private async getBlockHeight(url, auth?: string, hmy?: boolean): Promise<any> {
+    let method = "eth_blockNumber";
+    if (hmy) {
+      method = "hmy_blockNumber";
+    }
+
     let options;
     if (auth) {
       options = {};
@@ -43,7 +48,7 @@ export class Service {
         {
           jsonrpc: "2.0",
           id: 1,
-          method: "eth_blockNumber",
+          method,
           params: [],
         },
         options,
@@ -59,8 +64,13 @@ export class Service {
     }
   }
 
-  private async getEthSyncing(url, auth?: string): Promise<any> {
+  private async getEthSyncing(url, auth?: string, hmy?: boolean): Promise<any> {
+    let method = "eth_syncing";
+    if (hmy) {
+      method = "hmy_syncing";
+    }
     let options;
+
     if (auth) {
       options = {};
       options.auth = {
@@ -68,13 +78,14 @@ export class Service {
         password: auth.split(":")[1],
       };
     }
+
     try {
       const { data } = await this.rpc.post(
         url,
         {
           jsonrpc: "2.0",
           id: 1,
-          method: "eth_syncing",
+          method,
           params: [],
         },
         options,
@@ -111,15 +122,59 @@ export class Service {
     }
   }
 
-  private async getAvaHealth({ name, url }, auth?: string): Promise<HealthResponse> {
+  private getAlgorandNodeHealth = async ({
+    url,
+    host,
+    chain,
+    basicAuth,
+  }): Promise<HealthResponse> => {
+    const name = `${host.name}/${chain.name}`;
     let options;
-    if (auth) {
+    if (basicAuth) {
       options = {};
       options.auth = {
-        username: auth.split(":")[0],
-        password: auth.split(":")[1],
+        username: basicAuth.split(":")[0],
+        password: basicAuth.split(":")[1],
       };
     }
+
+    try {
+      const { data, status } = await this.rpc.get(`${url}/health`, options);
+      if (status == 200) {
+        return {
+          name,
+          conditions: ErrorConditions.HEALTHY,
+          status: ErrorStatus.OK,
+        };
+      } else {
+        return {
+          name,
+          conditions: ErrorConditions.NOT_SYNCHRONIZED,
+          status: ErrorStatus.ERROR,
+          health: data ? data.result : [],
+        };
+      }
+    } catch (error) {
+      return {
+        name,
+        conditions: ErrorConditions.NO_RESPONSE,
+        status: ErrorStatus.ERROR,
+        health: error,
+      };
+    }
+  };
+
+  private getAvaNodeHealth = async ({ url, host, chain, basicAuth }): Promise<HealthResponse> => {
+    const name = `${host.name}/${chain.name}`;
+    let options;
+    if (basicAuth) {
+      options = {};
+      options.auth = {
+        username: basicAuth.split(":")[0],
+        password: basicAuth.split(":")[1],
+      };
+    }
+
     try {
       const { data } = await this.rpc.post(
         `${url}/ext/health`,
@@ -155,15 +210,21 @@ export class Service {
         health: error,
       };
     }
-  }
+  };
 
-  async getHeimdallHealth({ name, url }, auth?: string): Promise<any> {
+  private getHeimdallNodeHealth = async ({
+    url,
+    host,
+    chain,
+    basicAuth,
+  }): Promise<HealthResponse> => {
+    const name = `${host.name}/${chain.name}`;
     let options;
-    if (auth) {
+    if (basicAuth) {
       options = {};
       options.auth = {
-        username: auth.split(":")[0],
-        password: auth.split(":")[1],
+        username: basicAuth.split(":")[0],
+        password: basicAuth.split(":")[1],
       };
     }
     try {
@@ -192,9 +253,67 @@ export class Service {
         health: error,
       };
     }
-  }
+  };
+
+  private getSolNodeHealth = async ({
+    url,
+    host,
+    chain,
+    hostname,
+    basicAuth,
+  }): Promise<HealthResponse> => {
+    const name = `${host.name}/${chain.name}`;
+    const execute = util.promisify(exec);
+    if (hostname) {
+      url = `https://${hostname}`;
+    }
+    let command;
+    if (basicAuth) {
+      `curl -u ${basicAuth} -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`;
+    } else {
+      command = `curl -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`;
+    }
+    try {
+      const { stdout, stderr } = await execute(command);
+      if (stderr) {
+        return {
+          name,
+          conditions: ErrorConditions.NO_RESPONSE,
+          status: ErrorStatus.ERROR,
+          health: JSON.parse(stderr),
+        };
+      }
+
+      const health = JSON.parse(stdout);
+      const { result } = health;
+
+      if (result == "ok") {
+        return {
+          name,
+          conditions: ErrorConditions.HEALTHY,
+          status: ErrorStatus.OK,
+          health,
+        };
+      } else {
+        return {
+          name,
+          conditions: ErrorConditions.NOT_SYNCHRONIZED,
+          status: ErrorStatus.ERROR,
+          health,
+        };
+      }
+    } catch (error) {
+      return {
+        name,
+        conditions: ErrorConditions.NO_RESPONSE,
+        status: ErrorStatus.ERROR,
+        health: error,
+      };
+    }
+  };
 
   private async getPocketHeight(url, auth?: string): Promise<any> {
+    //console.log(url);
     let options;
     if (auth) {
       options = {};
@@ -204,17 +323,17 @@ export class Service {
       };
     }
     try {
-      const { data } = await this.rpc.post(`${url}/v1/query/height`, {});
+      const { data } = await this.rpc.post(`${url}/v1/query/height`, {}, options);
       return data;
     } catch (error) {
-      console.error(`could not contact pocket node ${error} ${url}`);
+     // //console.error(`could not contact pocket node ${error} ${url}`);
       return { height: 0 };
     }
   }
 
-  private async isRpcResponding({ url }, auth?: string): Promise<boolean> {
+  private async isRpcResponding({ url }, auth?: string, hmy?: boolean): Promise<boolean> {
     try {
-      await this.getBlockHeight(url, auth);
+      await this.getBlockHeight(url, auth, hmy);
       return true;
     } catch (error) {
       return false;
@@ -235,13 +354,13 @@ export class Service {
     }
   }
 
-  private async getReferenceBlockHeight({ endpoints, variance }): Promise<number> {
+  private async getReferenceBlockHeight({ endpoints, variance }, hmy: boolean): Promise<number> {
     const resolved = [];
     for (const { url, auth } of endpoints) {
       try {
-        resolved.push(await this.getBlockHeight(url, auth));
+        resolved.push(await this.getBlockHeight(url, auth, hmy));
       } catch (error) {
-        console.error(`could not get reading ${error}`);
+        ////console.error(`could not get reading ${error}`);
       }
     }
 
@@ -293,9 +412,13 @@ export class Service {
     );
   }
 
-  private async getEVMNodeHealth(node: INode): Promise<HealthResponse> {
-    const { chain, url, variance, host, id, port, basicAuth } = node;
-    const name = `${host.name}/${chain.name}`;
+  private getHarmonyNodeHealth = async (node) => {
+    return await this.getEVMNodeHealth(node, true);
+  };
+
+  private getEVMNodeHealth = async (node: INode, hmy?: boolean): Promise<HealthResponse> => {
+    const { chain, url, variance, host, id, port, basicAuth, server } = node;
+    const name = `${host.name}/${chain.name}/${server}`;
     //Check if node is online and RPC up
     const isNodeListening = await this.isNodeListening({ host: host.ip, port });
     if (!isNodeListening) {
@@ -305,7 +428,7 @@ export class Service {
         conditions: ErrorConditions.OFFLINE,
       };
     }
-    const isRpcResponding = await this.isRpcResponding({ url }, basicAuth);
+    const isRpcResponding = await this.isRpcResponding({ url }, basicAuth, hmy);
     if (!isRpcResponding) {
       return {
         name,
@@ -335,8 +458,8 @@ export class Service {
 
     try {
       const [internalBh, externalBh, ethSyncing] = await Promise.all([
-        this.getBlockHeight(url, basicAuth),
-        this.getReferenceBlockHeight({ endpoints: referenceUrls, variance }),
+        this.getBlockHeight(url, basicAuth, hmy),
+        this.getReferenceBlockHeight({ endpoints: referenceUrls, variance }, hmy),
         this.getEthSyncing(url, basicAuth),
       ]);
 
@@ -389,7 +512,7 @@ export class Service {
         },
       };
     } catch (error) {
-      console.error(`could not get readings ${error}`);
+      //console.error(`could not get readings ${error}`);
       if (
         String(error).includes(
           `could not contact blockchain node Error: timeout of 1000ms exceeded`,
@@ -408,116 +531,10 @@ export class Service {
       status: ErrorStatus.ERROR,
       conditions: ErrorConditions.NO_RESPONSE,
     };
-  }
+  };
 
-  async getSolHealth({ url, name, hostname }) {
-    const execute = util.promisify(exec);
-    if (hostname) {
-      url = `https://${hostname}`;
-    }
-    const command = `curl -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`;
-    try {
-      const { stdout, stderr } = await execute(command);
-      if (stderr) {
-        return {
-          name,
-          conditions: ErrorConditions.NO_RESPONSE,
-          status: ErrorStatus.ERROR,
-          health: JSON.parse(stderr),
-        };
-      }
-
-      const health = JSON.parse(stdout);
-      const { result } = health;
-
-      if (result == "ok") {
-        return {
-          name,
-          conditions: ErrorConditions.HEALTHY,
-          status: ErrorStatus.OK,
-          health,
-        };
-      } else {
-        return {
-          name,
-          conditions: ErrorConditions.NOT_SYNCHRONIZED,
-          status: ErrorStatus.ERROR,
-          health,
-        };
-      }
-    } catch (error) {
-      return {
-        name,
-        conditions: ErrorConditions.NO_RESPONSE,
-        status: ErrorStatus.ERROR,
-        health: error,
-      };
-    }
-  }
-
-  async getAlgorandHealth({ url, name }) {
-    try {
-      const { data, status } = await this.rpc.get(`${url}/health`);
-      if (status == 200) {
-        return {
-          name,
-          conditions: ErrorConditions.HEALTHY,
-          status: ErrorStatus.OK,
-        };
-      } else {
-        return {
-          name,
-          conditions: ErrorConditions.NOT_SYNCHRONIZED,
-          status: ErrorStatus.ERROR,
-          health: data ? data.result : [],
-        };
-      }
-    } catch (error) {
-      return {
-        name,
-        conditions: ErrorConditions.NO_RESPONSE,
-        status: ErrorStatus.ERROR,
-        health: error,
-      };
-    }
-  }
-
-  async getHarmonyHealth({ url, name }) {
-    try {
-      const { data } = await this.rpc.get(`${url}/node-sync`);
-      if (data === true) {
-        return {
-          name,
-          conditions: ErrorConditions.HEALTHY,
-          status: ErrorStatus.OK,
-        };
-      } else {
-        return {
-          name,
-          conditions: ErrorConditions.NOT_SYNCHRONIZED,
-          status: ErrorStatus.ERROR,
-        };
-      }
-    } catch (error) {
-      if (error?.data === false) {
-        return {
-          name,
-          conditions: ErrorConditions.NOT_SYNCHRONIZED,
-          status: ErrorStatus.ERROR,
-        };
-      }
-      return {
-        name,
-        conditions: ErrorConditions.NO_RESPONSE,
-        status: ErrorStatus.ERROR,
-        health: error,
-      };
-    }
-  }
-
-  async getPocketNodeHealth({ hostname, port, variance, id }: INode) {
+  private getPocketNodeHealth = async ({ hostname, port, variance, id }: INode) => {
     const { height: isRpcResponding } = await this.getPocketHeight(`https://${hostname}:${port}`);
-
     if (isRpcResponding === 0) {
       return {
         name: hostname,
@@ -600,39 +617,25 @@ export class Service {
         delta: Number(highest) - Number(height),
       },
     };
-  }
+  };
 
   async getNodeHealth(node: INode): Promise<HealthResponse> {
-    const { chain, host, url } = node;
-    if (chain.type == SupportedBlockChainTypes.POKT) {
-      return await this.getPocketNodeHealth(node);
+    const { chain } = node;
+    if (chain.type !== "EVM") {
+      //console.log(chain.type);
     }
-    if (chain.type == SupportedBlockChainTypes.EVM) {
-      return await this.getEVMNodeHealth(node);
+
+    if (!Object.keys(SupportedBlockChainTypes).includes(chain.type)) {
+      throw new Error(`${chain.type} is not a supported chain type`);
     }
-    if (chain.type == SupportedBlockChainTypes.AVA) {
-      return await this.getAvaHealth({ name: `${host.name}/${chain.name}`, url: url });
-    }
-    if (chain.type == SupportedBlockChainTypes.HEI) {
-      return await this.getHeimdallHealth({ name: `${host.name}/${chain.name}`, url: url });
-    }
-    if (chain.type == SupportedBlockChainTypes.SOL) {
-      return await this.getSolHealth({
-        name: `${host.name}/${chain.name}`,
-        url: url,
-        hostname: node.hostname,
-      });
-    }
-    if (chain.type == SupportedBlockChainTypes.ALG) {
-      return await this.getAlgorandHealth({ name: `${host.name}/${chain.name}`, url: url });
-    }
-    if (chain.type === SupportedBlockChainTypes.HRM) {
-      return await this.getHarmonyHealth({ name: `${host.name}/${chain.name}`, url: url });
-    }
-    return {
-      name: null,
-      conditions: null,
-      status: null,
-    };
+    return await {
+      ALG: this.getAlgorandNodeHealth,
+      AVA: this.getAvaNodeHealth,
+      EVM: this.getEVMNodeHealth,
+      HEI: this.getHeimdallNodeHealth,
+      HRM: this.getHarmonyNodeHealth,
+      POKT: this.getPocketNodeHealth,
+      SOL: this.getSolNodeHealth,
+    }[chain.type](node);
   }
 }
