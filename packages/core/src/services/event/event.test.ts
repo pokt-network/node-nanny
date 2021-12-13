@@ -1,4 +1,4 @@
-import { Service } from "./service";
+import { Service } from "./service/datadog";
 import { connect, disconnect } from "../../db";
 
 const event = new Service();
