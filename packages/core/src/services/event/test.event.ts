@@ -1,4 +1,4 @@
-import { Service } from "./service";
+import { Service } from "./service/datadog";
 import { config } from "dotenv";
 import { wait } from "../../utils";
 import { connect } from "../../db";
