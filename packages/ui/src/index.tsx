@@ -5,7 +5,7 @@ import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 const client = new ApolloClient({
-  uri: "http://localhost:4000",
+  uri: "http://ec2-18-189-159-188.us-east-2.compute.amazonaws.com:4000",
   cache: new InMemoryCache(),
 });
 
