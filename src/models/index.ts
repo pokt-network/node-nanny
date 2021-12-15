@@ -46,6 +46,17 @@ export interface INode {
   docker: boolean;
 }
 
+interface IWebhook {
+  chain: string;
+  url: string;
+}
+
+const webhookSchema = new Schema<IWebhook>({
+  chain: String,
+  url: String,
+});
+
+
 const chainSchema = new Schema<IChain>({
   chain: String,
   name: String,
@@ -90,7 +101,7 @@ const nodesSchema = new Schema<INode>(
     compose: String,
     docker: Boolean,
     service: String,
-    removeNoResponse: Boolean
+    removeNoResponse: Boolean,
   },
   { collection: "nodes" },
 );
@@ -103,4 +114,6 @@ const HostsModel: Model<IHost> = model("hosts", hostsSchema);
 
 const NodesModel: Model<INode> = model("nodes", nodesSchema);
 
-export { HostsModel, NodesModel, OraclesModel, ChainsModel };
+const WebhookModel: Model<IWebhook> = model("webhooks", webhookSchema);
+
+export { HostsModel, NodesModel, OraclesModel, ChainsModel, WebhookModel };
