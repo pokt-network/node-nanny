@@ -154,20 +154,8 @@ export class Service {
       }
 
       let reboot;
-
-     
-
       try {
         if (chain.type === SupportedBlockChains.POKT) {
-
-          console.log("reboot pokt node", `http://${ip}:3001/webhook/docker/reboot`);
-
-          console.log({
-            name: container,
-            type: "pokt",
-            nginx,
-            poktType,
-          })
           const { data } = await this.agent.post(`http://${ip}:3001/webhook/docker/reboot`, {
             name: container,
             type: "pokt",
@@ -442,10 +430,8 @@ export class Service {
           });
         }
         if (reboot && docker) {
-          console.log("HIT");
           try {
             const reboot = await this.rebootServer(node);
-            console.log("reboot", reboot);
             return this.alert.sendInfo({
               title,
               message: `rebooting ${name} \n${reboot ? reboot : ""}`,
