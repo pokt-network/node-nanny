@@ -155,24 +155,41 @@ export class Service {
 
       let reboot;
 
-      if (chain.type === SupportedBlockChains.POKT) {
-        const { data } = await this.agent.post(`http://${ip}:3001/webhook/docker/reboot`, {
-          name: container,
-          type: "pokt",
-          nginx,
-          poktType,
-        });
-        reboot = data.reboot;
-      } else {
-        const { data } = await this.agent.post(`http://${ip}:3001/webhook/docker/reboot`, {
-          name: container,
-          type: "data",
-          compose: process.env.MONITOR_TEST === "1" ? "mock" : compose,
-        });
-        reboot = data.reboot;
+     
+
+      try {
+        if (chain.type === SupportedBlockChains.POKT) {
+
+          console.log("reboot pokt node", `http://${ip}:3001/webhook/docker/reboot`);
+
+          console.log({
+            name: container,
+            type: "pokt",
+            nginx,
+            poktType,
+          })
+          const { data } = await this.agent.post(`http://${ip}:3001/webhook/docker/reboot`, {
+            name: container,
+            type: "pokt",
+            nginx,
+            poktType,
+          });
+          reboot = data.reboot;
+        } else {
+          const { data } = await this.agent.post(`http://${ip}:3001/webhook/docker/reboot`, {
+            name: container,
+            type: "data",
+            compose: process.env.MONITOR_TEST === "1" ? "mock" : compose,
+          });
+
+          reboot = data.reboot;
+        }
+        await this.dd.muteMonitor({ id: monitorId, minutes: 5 });
+        return reboot;
+      } catch (error) {
+        console.log(error);
+        throw new Error(`could not reboot ${container} ${error}`);
       }
-      await this.dd.muteMonitor({ id: monitorId, minutes: 5 });
-      return reboot;
     }
     throw new Error("Host not found");
   }
@@ -255,16 +272,7 @@ export class Service {
   async processEvent(raw) {
     const { event, nodeId, transition, title, link } = await this.dd.parseWebhookMessage(raw);
     const node: INode = await NodesModel.findOne({ _id: nodeId });
-    const {
-      backend,
-      server,
-      haProxy,
-      reboot,
-      hasPeer,
-      poktType,
-      removeNoResponse,
-      docker,
-    } = node;
+    const { backend, server, haProxy, reboot, hasPeer, poktType, removeNoResponse, docker } = node;
     const chain = node.chain.name.toLowerCase();
     const host = node.host.name.toLowerCase();
     const name = node.hostname ? node.hostname : `${chain}/${host}`;
@@ -434,12 +442,24 @@ export class Service {
           });
         }
         if (reboot && docker) {
-          const reboot = await this.rebootServer(node);
-          return this.alert.sendInfo({
-            title,
-            message: `rebooting ${name} \n${reboot ? reboot : ""}`,
-            chain,
-          });
+          console.log("HIT");
+          try {
+            const reboot = await this.rebootServer(node);
+            console.log("reboot", reboot);
+            return this.alert.sendInfo({
+              title,
+              message: `rebooting ${name} \n${reboot ? reboot : ""}`,
+              chain,
+            });
+          } catch (error) {
+            return this.alert.sendInfo({
+              title,
+              message: `attempted to reboot${name} \n reboot failed \n manual intervention required \n ${
+                reboot ? reboot : ""
+              }`,
+              chain,
+            });
+          }
         }
 
         if (reboot && !docker) {

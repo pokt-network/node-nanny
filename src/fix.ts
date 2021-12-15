@@ -12,13 +12,47 @@ const health = new Health();
 const infra = new Infra();
 const fix = async () => {
   await connect();
+  await event.processEvent(proccess)
+  return {}
+};
+
+fix().then(console.log);
+
+const proccess = {
+  msg: '%%%\n' +
+    '@webhook-events-production\n' +
+    'nodeId_61803b30fdf81300119b6307\n' +
+    'event_NO_RESPONSE\n' +
+    '\n' +
+    '@webhook-events-production \n' +
+    'nodeId_61803b30fdf81300119b6307\n' +
+    'event_NO_RESPONSE_NOT_RESOLVED\n' +
+    '\n' +
+    'More than **1** log events matched in the last **5m** against the monitored query: **[status:error service:"/pocket/nodemonitoring/mainnet-10.nodes.pokt.network"](https://app.datadoghq.eu/logs/analytics?query=status%3Aerror+service%3A%22%2Fpocket%2Fnodemonitoring%2Fmainnet-10.nodes.pokt.network%22&agg_m=count&agg_t=count&agg_q=%40conditions&index=)** by **@conditions**\n' +
+    '\n' +
+    'The monitor was last triggered at Tue Dec 14 2021 12:28:36 UTC.\n' +
+    '\n' +
+    '- - -\n' +
+    '\n' +
+    '[[Monitor Status](https://app.datadoghq.eu/monitors/2969316?to_ts=1639592616000&group=%40conditions%3ANO_RESPONSE&from_ts=1639591416000)] · [[Edit Monitor](https://app.datadoghq.eu/monitors#2969316/edit)] · [[Related Logs](https://app.datadoghq.eu/logs/analytics?index=%2A&to_ts=1639592616000&agg_t=count&agg_m=count&agg_q=%40conditions&from_ts=1639591416000&live=false&query=status%3Aerror+service%3A%22%2Fpocket%2Fnodemonitoring%2Fmainnet-10.nodes.pokt.network%22)]',
+  id: '2969316',
+  transition: 'Re-Triggered',
+  type: 'error',
+  title: '[Re-Triggered on {@conditions:NO_RESPONSE}] MAINNET-10.NODES.POKT.NETWORK',
+  status: '',
+  link: 'https://app.datadoghq.eu/event/event?id=6296984784093566340'
+};
+
+const createChans = async (server) => {
+  await connect();
+  var guild = server;
   const chains = await ChainsModel.find({});
 
   const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
   // // When the client is ready, run this code (only once)
   client.once("ready", async () => {
-    const server = client.guilds.cache.get("824324475256438814");
+    const server = client.guilds.cache.get(guild);
     const category = await server.channels.create("Blockchain Monitoring", {
       type: "GUILD_CATEGORY",
     });
@@ -35,29 +69,4 @@ const fix = async () => {
 
   // // Login to Discord with your client's token
   client.login(process.env.DISCORD_TOKEN);
-};
-
-fix().then(console.log);
-
-const proccess = {
-  msg:
-    "%%%\n" +
-    "@webhook-infra-discord-prod\n" +
-    "\n" +
-    "More than **1000** log events matched in the last **5m** against the monitored query: **[\\@elapsedTime:>6](https://app.datadoghq.eu/logs/analytics?query=%40elapsedTime%3A%3E6&agg_m=count&agg_t=count&agg_q=%40blockchainID%2Cregion%2C%40serviceDomain%2Cservice&index=)** by **@blockchainID,region,\\@serviceDomain,service**\n" +
-    "\n" +
-    "The monitor was last triggered at Thu Nov 25 2021 22:01:29 UTC.\n" +
-    "\n" +
-    "- - -\n" +
-    "\n" +
-    "[[Monitor Status](https://app.datadoghq.eu/monitors/3288509?to_ts=1637877989000&group=%40blockchainID%3A0021%2C%40serviceDomain%3Athunderstake.io%2Cregion%3Aeu-south-1%2Cservice%3Aeu-south-1%2Fecs%2Fgateway&from_ts=1637876789000)] · [[Edit Monitor](https://app.datadoghq.eu/monitors#3288509/edit)] · [[Related Logs](https://app.datadoghq.eu/logs/analytics?index=%2A&to_ts=1637877989000&agg_t=count&agg_m=count&agg_q=%40blockchainID%2Cregion%2C%40serviceDomain%2Cservice&from_ts=1637876789000&live=false&query=%40elapsedTime%3A%3E6)]",
-  id: "3288509",
-  transition: "Triggered",
-  type: "error",
-  title:
-    "[Triggered on {@blockchainID:0021,@serviceDomain:thunderstake.io,region:eu-south-1,service:eu-south-1/ecs/gateway}] High latency!",
-  status: "",
-  link: "https://app.datadoghq.eu/event/event?id=6268218125651091624",
-  tags:
-    "blockchainid:0021,critical,latency,monitor,region:eu-south-1,service:eu-south-1/ecs/gateway,servicedomain:thunderstake.io",
 };
