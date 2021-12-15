@@ -129,6 +129,7 @@ export class Service {
         message: `${
           hostname ? hostname : `${host.name}/${chain.name.toLowerCase()}`
         } rebooted \n ${reboot}`,
+        chain: chain.name,
       });
 
       return reboot;
@@ -152,6 +153,7 @@ export class Service {
       return await this.alert.sendInfo({
         title: "Removed from rotation",
         message: `${hostname ? hostname : `${host.name}/${chain.name}`} removed from ${backend}`,
+        chain: chain.name,
       });
     } catch (error) {
       throw new Error(`could not remove ${backend} ${server}from rotation, ${error}`);
@@ -173,6 +175,7 @@ export class Service {
       return await this.alert.sendInfo({
         title: "Added to rotation",
         message: `${hostname ? hostname : `${host.name}/${chain.name}`} added to ${backend}`,
+        chain: chain.name,
       });
     } catch (error) {
       throw new Error(`could not add ${backend} ${server} rotation, ${error}`);

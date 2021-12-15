@@ -257,7 +257,6 @@ export class Service {
     const node: INode = await NodesModel.findOne({ _id: nodeId });
     const {
       backend,
-      container,
       server,
       haProxy,
       reboot,
@@ -269,7 +268,6 @@ export class Service {
     const chain = node.chain.name.toLowerCase();
     const host = node.host.name.toLowerCase();
     const name = node.hostname ? node.hostname : `${chain}/${host}`;
-    const instance = node.host.hostType === "AWS" ? node.host.awsInstanceId : node.host.name;
 
     /*++++++++++++++++++++++++TRIGGERED++++++++++++++++++++++++++++++++ */
     if (transition === EventTransitions.TRIGGERED) {
@@ -283,48 +281,42 @@ export class Service {
 
       //alert if both unhealthy
       if (!(await this.isPeersOk({ chain, nodeId })) && hasPeer) {
-        await this.alert.sendErrorCritical({
+        await this.alert.sendError({
           title,
           message: `All ${chain} nodes are unhealthy! \n 
            See event ${link} \n
             ${await this.getHAProxyMessage(backend)}`,
+          chain,
         });
       }
-      //Send dockerlogs to discord on every error
-      if (docker) {
-        const logs = await this.dd.getContainerLogs({ instance, container });
-        const fields = logs.map(({ service, timestamp, message }) => {
-          return {
-            name: `${timestamp}-${service}`,
-            value: `${`${message.length > Limits.MAX_LOG ? Limits.MAX_LOG_MSG : message}`}`,
-          };
-        });
-        await this.alert.sendLogs({ title, fields });
-      }
+
       /*============================NOT_SYNCHRONIZED===================================  */
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
-        await this.alert.sendErrorCritical({
+        await this.alert.sendError({
           title,
           message: `${name} is ${event} \n See event ${link}`,
+          chain,
         });
 
         if (!hasPeer) {
-          await this.alert.sendErrorCritical({
+          await this.alert.sendError({
             title: `${name} is ${event}`,
             message: `${chain} node is not synched \n 
             This node does not have a peer \n
             Manual intervention is required! \n
              See event ${link} \n`,
+            chain,
           });
         }
 
         if (!(await this.isPeersOk({ chain, nodeId })) && hasPeer) {
-          await this.alert.sendErrorCritical({
+          await this.alert.sendError({
             title: `${name} is ${event}`,
             message: `All ${chain} nodes are not synched \n 
             Manual intervention is required! \n
              See event ${link} \n
               ${await this.getHAProxyMessage(backend)}`,
+            chain,
           });
         }
 
@@ -334,6 +326,7 @@ export class Service {
             title,
             message: `Removed ${name} from load balancer, it will be restored once healthy again \n
               ${await this.getHAProxyMessage(backend)}`,
+            chain,
           });
         }
       }
@@ -365,6 +358,7 @@ export class Service {
           title,
           message: `Removed ${name}from load balancer, it will be restored once healthy again \n
             ${await this.getHAProxyMessage(backend)}`,
+          chain,
         });
       }
 
@@ -376,34 +370,38 @@ export class Service {
             message: `${name} status is ${event} \n
             See event ${link} \n
             ${await this.getHAProxyMessage(backend)}`,
+            chain,
           });
         }
 
         if (!haProxy) {
-          return await this.alert.sendErrorCritical({
+          return await this.alert.sendError({
             title,
             message: `${name} status is ${event} \n
             See event ${link}`,
+            chain,
           });
         }
       }
 
       /*============================OFFLINE==================================*/
       if (event === BlockChainMonitorEvents.OFFLINE) {
-        return await this.alert.sendErrorCritical({
+        return await this.alert.sendError({
           title,
           message: `${name} status is ${event} \n 
             See event ${link} \n
             ${await this.getHAProxyMessage(backend)}`,
+          chain,
         });
       }
 
       /*============================NO PEERS==================================*/
       if (event === BlockChainMonitorEvents.NO_PEERS) {
-        return await this.alert.sendErrorCritical({
+        return await this.alert.sendError({
           title,
           message: `${name} status is ${event} \n 
             See event ${link} \n`,
+          chain,
         });
       }
       /*============================PEER NOT SYNCRONIZED==================================*/
@@ -412,6 +410,7 @@ export class Service {
         return await this.alert.sendInfo({
           title,
           message: `${name} status is ${event} \n`,
+          chain,
         });
       }
     }
@@ -420,7 +419,7 @@ export class Service {
     if (transition === EventTransitions.RE_TRIGGERED) {
       if (event == BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
         /*============================NOT_SYNCHRONIZED==========================*/
-        return this.alert.sendWarn({ title, message: `${name} is still out of sync` });
+        return this.alert.sendWarn({ title, message: `${name} is still out of sync`, chain });
       }
       /*============================NO_RESPONSE and OFFLINE ==========================*/
       if (
@@ -431,6 +430,7 @@ export class Service {
           return this.alert.sendInfo({
             title,
             message: `${name} is still down and must be recovered`,
+            chain,
           });
         }
         if (reboot && docker) {
@@ -438,6 +438,7 @@ export class Service {
           return this.alert.sendInfo({
             title,
             message: `rebooting ${name} \n${reboot ? reboot : ""}`,
+            chain,
           });
         }
 
@@ -446,6 +447,7 @@ export class Service {
           return this.alert.sendInfo({
             title,
             message: `restarting ${name} \n`,
+            chain,
           });
         }
 
@@ -462,10 +464,11 @@ export class Service {
 
       /*============================NO PEERS==================================*/
       if (event === BlockChainMonitorEvents.NO_PEERS) {
-        return await this.alert.sendErrorCritical({
+        return await this.alert.sendError({
           title,
           message: `${name} status is ${event} \n 
             See event ${link} \n`,
+          chain,
         });
       }
       /*============================PEER NOT SYNCRONIZED==================================*/
@@ -474,6 +477,7 @@ export class Service {
         return await this.alert.sendInfo({
           title,
           message: `${name} status is ${event} \n`,
+          chain,
         });
       }
     }
@@ -482,7 +486,7 @@ export class Service {
     if (transition === EventTransitions.RECOVERED) {
       /*============================NOT_SYNCHRONIZED==========================*/
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
-        await this.alert.sendSuccess({ title, message: `${name} has recovered!` });
+        await this.alert.sendSuccess({ title, message: `${name} has recovered!`, chain });
         if (haProxy && hasPeer) {
           await this.enableServer({ backend, server });
           await this.alert.sendSuccess({
@@ -491,11 +495,13 @@ export class Service {
               Restored \n
               Added ${name} back to load balancer \n
               ${await this.getHAProxyMessage(backend)}`,
+            chain,
           });
         }
-        return await this.alert.sendSuccessToCritical({
+        return await this.alert.sendSuccess({
           title,
           message: "Node restored to operation",
+          chain,
         });
       }
 
@@ -510,21 +516,24 @@ export class Service {
             title,
             message: `Restored \n Added ${name} back to rotation \n
               ${await this.getHAProxyMessage(backend)}`,
+            chain,
           });
         }
 
-        return await this.alert.sendSuccessToCritical({
+        return await this.alert.sendSuccess({
           title,
           message: `${name} is now responding to requests`,
+          chain,
         });
       }
 
       /*============================NO PEERS==================================*/
       if (event === BlockChainMonitorEvents.NO_PEERS) {
-        return await this.alert.sendErrorCritical({
+        return await this.alert.sendError({
           title,
           message: `${name} status is ${event} \n 
                   See event ${link} \n`,
+          chain,
         });
       }
       /*============================PEER NOT SYNCRONIZED==================================*/
@@ -533,6 +542,7 @@ export class Service {
         return await this.alert.sendInfo({
           title,
           message: `${name} status is ${event} \n`,
+          chain,
         });
       }
     }
