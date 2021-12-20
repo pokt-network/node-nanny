@@ -441,9 +441,9 @@ export class Service {
       {
         "chain.type": "POKT",
         _id: { $ne: id },
+        poktType: "dis"
       },
       null,
-      { limit: 20 },
     ).exec();
 
     if (!referenceNodes || referenceNodes.length === 0) {

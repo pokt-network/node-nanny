@@ -58,7 +58,12 @@ export class Service {
 
   async isPeersOk({ chain, nodeId }) {
     //todo this is just a temp fix for the pocket nodes, needs more sophistiacted handling to check peers
-    if (chain.toUpperCase() === SupportedBlockChains.POKT) {
+    if (
+      chain.toUpperCase() === SupportedBlockChains.POKT ||
+      chain.toUpperCase() === "POKT-DIS" ||
+      chain.toUpperCase() === "POKT-MAIN" ||
+      chain.toUpperCase() === "POKT-BT"
+    ) {
       return true;
     }
 
