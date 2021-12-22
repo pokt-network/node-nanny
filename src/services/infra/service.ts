@@ -129,7 +129,7 @@ export class Service {
 
     try {
       return await this.alert.sendDiscordMessage({
-        fields: [],
+        fields,
         title,
         color: colors[type],
         channel: webhooks[channel],
