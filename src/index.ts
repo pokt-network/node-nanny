@@ -33,7 +33,7 @@ export class App {
           message,
           level: status === HealthTypes.ErrorStatus.ERROR ? "error" : "info",
         });
-      }, 10000);
+      }, 20000);
     }
   }
 }
