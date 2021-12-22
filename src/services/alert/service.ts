@@ -37,7 +37,7 @@ export class Service {
       return status === 204;
     } catch (error) {
       throw new Error(
-        `could not send alert to Discord ${{ error, title, color, fields, channel }}`,
+        `could not send alert to Discord ${JSON.stringify({ error })}`,
       );
     }
   }

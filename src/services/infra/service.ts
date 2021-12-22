@@ -6,6 +6,15 @@ const colors = {
   SUCCESS: 3066993,
 };
 
+const webhooks = {
+  TEST:
+    "https://discord.com/api/webhooks/895805822569943060/EBN7fVY1KU2Xunl66hk0awg33Y1ajZpQC6EkMMH1L66tGwOMJ2t1czfygTabbTJmM-QB",
+  GENERAL:
+    "https://discord.com/api/webhooks/912802442201141299/BUtDZp0zYY5ObjtylJ23k0bEEqUfkR0O7rbJIPAXuyLH8Fee7-OmqwD1MT-MSGStWfas",
+  APM:
+    "https://discord.com/api/webhooks/923319480451481691/DpOKGPnpixGuw21FLwnqtBy6jvXsR-neQuJ-OmDY1KGYvksGk3buvSn3nFPBDxA9_YLS",
+};
+
 export class Service {
   private alert: Alert;
   private dd: DataDog;
@@ -37,8 +46,27 @@ export class Service {
     };
   }
 
-  async processEvent(event) {
+  //todo: break this function up into general and apm handling
+  async processEvent({ event, channel }) {
     const { title, monitorStatus, link, type, metric, tags } = this.parseEvent(event);
+    if (channel === "APM") {
+      return await this.alert.sendDiscordMessage({
+        fields: [
+          {
+            name: "Link",
+            value: link,
+          },
+          {
+            name: "Monitor Status",
+            value: monitorStatus,
+          },
+        ],
+        title,
+        color: colors[type],
+        channel: webhooks[channel],
+      });
+    }
+
     let fields = [
       {
         name: "Monitor Status",
@@ -63,19 +91,22 @@ export class Service {
         from: "now-30m",
       });
       const formated = logs.map(({ message, timestamp }) => {
-        console.log(message);
         return {
           name: timestamp.toString(),
-          value: JSON.stringify({
-            error: message.error,
-            elapsedTime: message.elapsedTime,
-            serviceNode: message.serviceNode,
-            origin: message.origin,
-          }, null, 2),
+          value: JSON.stringify(
+            {
+              error: message.error,
+              elapsedTime: message.elapsedTime,
+              serviceNode: message.serviceNode,
+              origin: message.origin,
+            },
+            null,
+            2,
+          ),
         };
       });
 
-      formated.length = 5
+      formated.length = 5;
       fields = fields.concat(formated);
     }
 
@@ -92,18 +123,19 @@ export class Service {
         };
       });
 
-      formated.length = 5
+      formated.length = 5;
       fields = fields.concat(formated);
     }
 
-    return await this.alert.sendDiscordMessage({
-      fields,
-      title,
-      color: colors[type],
-      channel:
-        process.env.MONITOR_TEST === "1"
-          ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST
-          : AlertTypes.Webhooks.DATADOG_ALERTS,
-    });
+    try {
+      return await this.alert.sendDiscordMessage({
+        fields: [],
+        title,
+        color: colors[type],
+        channel: webhooks[channel],
+      });
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
