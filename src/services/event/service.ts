@@ -57,6 +57,8 @@ export class Service {
   }
 
   async isPeersOk({ chain, nodeId }) {
+
+    console.log("isPeersOk", chain, nodeId);
     //todo this is just a temp fix for the pocket nodes, needs more sophistiacted handling to check peers
     if (
       chain.toUpperCase() === SupportedBlockChains.POKT ||
@@ -72,11 +74,15 @@ export class Service {
       _id: { $ne: nodeId },
     });
 
+    console.log(peers)
+
     const peerStatus = await Promise.all(
       peers.map(async ({ monitorId }) => {
         return await this.dd.getMonitorStatus(monitorId);
       }),
     );
+
+    console.log(peerStatus);
     return !peerStatus.every((value) => value === DataDogMonitorStatus.ALERT);
   }
 
@@ -265,10 +271,10 @@ export class Service {
   async processEvent(raw) {
     const { event, nodeId, transition, title, link } = await this.dd.parseWebhookMessage(raw);
     const node: INode = await NodesModel.findOne({ _id: nodeId });
-    const { backend, server, haProxy, reboot, hasPeer, poktType, removeNoResponse, docker } = node;
+    const { backend, server, haProxy, reboot, hasPeer, poktType, removeNoResponse, docker, container } = node;
     const chain = node.chain.name.toLowerCase();
     const host = node.host.name.toLowerCase();
-    const name = node.hostname ? node.hostname : `${chain}/${host}`;
+    const name = node.hostname ? node.hostname : `${chain}/${host}/${container}`;
 
     /*++++++++++++++++++++++++TRIGGERED++++++++++++++++++++++++++++++++ */
     if (transition === EventTransitions.TRIGGERED) {
