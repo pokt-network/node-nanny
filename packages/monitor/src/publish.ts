@@ -5,10 +5,12 @@ export class Publish {
   private map: Map<any, any>;
   private threshold: number;
   private redis: any;
+  reTriggerThreshold: number;
   constructor() {
     this.map = new Map();
     this.redis = new Redis();
     this.threshold = 6;
+    this.reTriggerThreshold = 20;
   }
 
   async evaluate({ message, id }) {
@@ -19,9 +21,17 @@ export class Publish {
       } else {
         this.map.set(id, Number(this.map.get(id) + 1));
       }
-      const count = this.map.get(id);      
+      const count = this.map.get(id);
+
       if (count >= this.threshold) {
         await this.redis.publish("send-error-event", JSON.stringify({ ...message, id: id, count }));
+      }
+
+      if (count >= this.reTriggerThreshold) {
+        await this.redis.publish(
+          "send-error-event-retrigger",
+          JSON.stringify({ ...message, id: id, count }),
+        );
       }
     }
     if (message.status === HealthTypes.ErrorStatus.OK) {
