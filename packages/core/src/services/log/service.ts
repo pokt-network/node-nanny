@@ -26,7 +26,7 @@ export class Service {
     const transport = {
       mongodb: new transports.MongoDB({
         db: process.env.MONGO_URI,
-        expireAfterSeconds: 60 * 60 * 24,
+        expireAfterSeconds: 60,
         label: id,
       }),
       datadog: new transports.Http({
