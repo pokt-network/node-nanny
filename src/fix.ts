@@ -40,7 +40,7 @@ const fix = async () => {
   return {};
 };
 
-fix().then(console.log);
+//fix().then(console.log);
 
 const proccess = {
   msg:
@@ -69,6 +69,12 @@ const createChans = async (server) => {
   var guild = server;
   const chains = await ChainsModel.find({});
 
+  for (const { name } of chains) {
+    await WebhookModel.create({ chain: name, url: "" });
+  }
+
+  return {};
+
   const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
   // // When the client is ready, run this code (only once)
@@ -91,3 +97,5 @@ const createChans = async (server) => {
   // // Login to Discord with your client's token
   client.login(process.env.DISCORD_TOKEN);
 };
+
+createChans("916127579331772467").then(console.log);

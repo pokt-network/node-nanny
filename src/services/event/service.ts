@@ -74,15 +74,12 @@ export class Service {
       _id: { $ne: nodeId },
     });
 
-    console.log(peers)
-
     const peerStatus = await Promise.all(
       peers.map(async ({ monitorId }) => {
         return await this.dd.getMonitorStatus(monitorId);
       }),
     );
 
-    console.log(peerStatus);
     return !peerStatus.every((value) => value === DataDogMonitorStatus.ALERT);
   }
 
@@ -278,14 +275,6 @@ export class Service {
 
     /*++++++++++++++++++++++++TRIGGERED++++++++++++++++++++++++++++++++ */
     if (transition === EventTransitions.TRIGGERED) {
-      if (node.chain.name === SupportedBlockChains.ETH) {
-        await this.alert.createPagerDutyIncident({
-          title: "Problem with Ethereum Node!",
-          details: `${title}\n${event}\n${link}`,
-          service: AlertTypes.PagerDutyServices.NODE_INFRA,
-        });
-      }
-
       //alert if both unhealthy
       if (!(await this.isPeersOk({ chain, nodeId })) && hasPeer) {
         await this.alert.sendError({
@@ -424,6 +413,13 @@ export class Service {
 
     /*++++++++++++++++++++++++RE_TRIGGERED++++++++++++++++++++++++++++++++ */
     if (transition === EventTransitions.RE_TRIGGERED) {
+      if (node.chain.name === SupportedBlockChains.ETH) {
+        await this.alert.createPagerDutyIncident({
+          title: "Problem with Ethereum Node!",
+          details: `${title}\n${event}\n${link}`,
+          service: AlertTypes.PagerDutyServices.NODE_INFRA,
+        });
+      }
       if (event == BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
         /*============================NOT_SYNCHRONIZED==========================*/
         return this.alert.sendWarn({ title, message: `${name} is still out of sync`, chain });
