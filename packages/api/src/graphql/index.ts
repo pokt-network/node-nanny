@@ -11,7 +11,10 @@ import {
 const resolvers = {
   Query: {
     nodes: async () => await NodesModel.find({}).exec(),
-    hosts: async () => await HostsModel.find({}).exec(),
+    hosts: async (_, { loadBalancer }) => {
+      const query = loadBalancer === true ? { loadBalancer } : {};
+      return await HostsModel.find(query).exec();
+    },
     chains: async () => await ChainsModel.find({}).exec(),
     oracles: async () => await OraclesModel.find({}).exec(),
     logs: async ({ id }) => await LogsModel.find({ label: id }).exec(),
@@ -21,7 +24,6 @@ const resolvers = {
       return await ChainsModel.create(chain);
     },
     createHost: async (_, host) => {
-      console.log(host);
       return await HostsModel.create(host);
     },
     createOracle: async (_, { chain, url }) => {
@@ -31,7 +33,7 @@ const resolvers = {
       }
       return await OraclesModel.findOneAndUpdate({ chain }, { $push: { urls: url } }).exec();
     },
-    createNode: async (_, {input}) => {
+    createNode: async (_, { input }) => {
       console.log(input);
       return await NodesModel.create(input);
     },
@@ -72,10 +74,11 @@ const typeDefs = gql`
     port: Int
     server: String
     url: String
-    variance: Int 
+    variance: Int
     ssl: Boolean
     basicAuth: String
-   }
+    loadBalancers: [ID]
+  }
 
   input NodeInput {
     backend: String
@@ -88,6 +91,7 @@ const typeDefs = gql`
     variance: Int
     ssl: Boolean
     basicAuth: String
+    loadBalancers: [ID]
   }
 
   type Oracle {
@@ -105,7 +109,7 @@ const typeDefs = gql`
 
   type Query {
     nodes: [Node]
-    hosts: [Host]
+    hosts(loadBalancer: Boolean): [Host]
     oracles: [Oracle]
     chains: [Chain]
     logs(id: String): [Log]
