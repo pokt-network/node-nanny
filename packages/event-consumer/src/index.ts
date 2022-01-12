@@ -1,33 +1,33 @@
 import Redis from "ioredis";
 import { Event } from "@pokt-foundation/node-monitoring-core/dist/services";
+import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
 const { Redis: Consumer } = Event;
 
+const consumer = new Consumer();
 const redis = new Redis();
-const triggered = new Consumer.Triggered();
-const reTriggered = new Consumer.ReTriggered();
-const resolved = new Consumer.Resolved();
 
-const main = () => {
-  redis.subscribe("send-error-event", (err, count) => {
+const main = async () => {
+  await connect();
+  redis.subscribe("send-event-trigger", (err, count) => {
     if (err) console.error(err.message);
     console.log(`Subscribed to ${count} channels.`);
   });
 
-  redis.subscribe("send-error-event-retrigger", (err, count) => {
+  redis.subscribe("send-event-retrigger", (err, count) => {
     if (err) console.error(err.message);
     console.log(`Subscribed to ${count} channels.`);
   });
 
-  redis.subscribe("send-resolved-event", (err, count) => {
+  redis.subscribe("send-event-resolved", (err, count) => {
     if (err) console.error(err.message);
     console.log(`Subscribed to ${count} channels.`);
   });
 
   redis.on("message", (channel, message) => {
     return {
-      "send-error-event": triggered.processEvent,
-      "send-error-event-retrigger": reTriggered.processEvent,
-      "send-resolved-event": resolved.processEvent,
+      "send-event-trigger": consumer.processTriggered,
+      "send-event-retrigger": consumer.processReTriggered,
+      "send-event-resolved": consumer.processResolved,
     }[channel](message);
   });
 };
