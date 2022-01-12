@@ -62,4 +62,5 @@ export interface HealthResponse {
   status: ErrorStatus;
   health?: any;
   details?: any;
+  id?: string;
 }

@@ -17,10 +17,11 @@ interface Chain {
 interface HostsAndChainsData {
   chains: Chain[];
   hosts: Host[];
+  loadBalancers: Host[];
 }
 
-const GET_HOSTS_AND_CHAINS = gql`
-  {
+const GET_HOSTS_CHAINS_LB = gql`
+  query getHostsChainsAndLoadBalancers {
     hosts {
       id
       name
@@ -30,11 +31,15 @@ const GET_HOSTS_AND_CHAINS = gql`
       id
       name
     }
+    loadBalancers: hosts(loadBalancer: true) {
+      id
+      name
+    }
   }
 `;
 
 const CREATE_NODE = gql`
-  mutation(
+  mutation (
     $backend: String
     $chain: ID
     $haProxy: Boolean
@@ -70,7 +75,7 @@ export function Form() {
   const [chain, setChain] = useState("");
   const [host, setHost] = useState("");
   const [ip, setIP] = useState("");
-  const [url, setUrl] = useState("");
+  const [loadBalancer, setLoadBalancer] = useState("");
   const [variance, setVariance] = useState(0);
   const [port, setPort] = useState(0);
   const [backend, setBackend] = useState("");
@@ -79,7 +84,7 @@ export function Form() {
   const [ssl, setSSL] = useState("");
   const [haProxy, setHaproxy] = useState(true);
   const [submit] = useMutation(CREATE_NODE);
-  const { loading, error, data } = useQuery<HostsAndChainsData>(GET_HOSTS_AND_CHAINS);
+  const { loading, error, data } = useQuery<HostsAndChainsData>(GET_HOSTS_CHAINS_LB);
 
   const handleChainChange = (event: SelectChangeEvent<typeof chain>) => {
     setChain(event.target.value);
@@ -94,9 +99,11 @@ export function Form() {
 
     setHost(event.target.value);
   };
-  const handleURLChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setUrl(event.target.value);
+
+  const handleLoadBalancerChange = (event: SelectChangeEvent<typeof chain>) => {
+    setLoadBalancer(event.target.value);
   };
+
 
   const handleVarianceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setVariance(Number(event.target.value));
@@ -128,8 +135,6 @@ export function Form() {
   if (loading) return <React.Fragment>Loading...</React.Fragment>;
   if (error) return <React.Fragment> Error! ${error.message}</React.Fragment>;
 
-  console.log(data?.hosts);
-
   return (
     <React.Fragment>
       <div
@@ -156,30 +161,14 @@ export function Form() {
                 <MenuItem value={id}>{name}</MenuItem>
               ))}
             </Select>
-            <div style={{ marginTop: "10px" }} />
 
-            {/* <div
-            style={{
-              display: "flex",
-            }}
-            > 
-            <Select value={ssl} onChange={handleSSLChange}>
-         
-            <MenuItem value={"http"}>http</MenuItem>
-            <MenuItem value={"https"}>https</MenuItem>
+            <div style={{ marginTop: "10px" }} />
+            <Select value={loadBalancer} onChange={handleLoadBalancerChange}>
+              {data?.loadBalancers.map(({ name, id }) => (
+                <MenuItem value={id}>{name}</MenuItem>
+              ))}
             </Select>
-
-            <TextField
-              fullWidth
-              value={url}
-              onChange={handleURLChange}
-              label="Url"
-              variant="outlined"
-            />
-            </div> */}
-
             <div style={{ marginTop: "10px" }} />
-
             <TextField
               value={variance}
               onChange={handleVarianceChange}
@@ -234,6 +223,7 @@ export function Form() {
                     server,
                     variance,
                     basicAuth,
+                    loadBalancer,
                     url: `http://${ip}:${port}`,
                   },
                 });

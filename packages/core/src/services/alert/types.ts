@@ -15,7 +15,7 @@ interface SendMessageFields {
   value: string;
 }
 export interface SendMessageInput {
-  channel: Webhooks;
+  channel: string;
   title: string;
   color: number;
   fields: SendMessageFields[];
