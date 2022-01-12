@@ -127,8 +127,9 @@ export class Service {
       await this.alert.sendInfo({
         title: "Manual Reboot",
         message: `${
-          hostname ? hostname : `${host.name}/${chain.name.toLowerCase()}`
+          hostname ? hostname : `${host.name}/${chain.name.toLowerCase()}/${container}`
         } rebooted \n ${reboot}`,
+        chain: chain.name,
       });
 
       return reboot;
@@ -137,7 +138,7 @@ export class Service {
   }
 
   async removeFromRotation(id: string) {
-    const { backend, server, hostname, host, chain } = await this.getNode(id);
+    const { backend, server, hostname, host, chain, container } = await this.getNode(id);
     const loadBalancers = await this.getLoadBalancers();
     try {
       await Promise.all(
@@ -151,7 +152,8 @@ export class Service {
 
       return await this.alert.sendInfo({
         title: "Removed from rotation",
-        message: `${hostname ? hostname : `${host.name}/${chain.name}`} removed from ${backend}`,
+        message: `${hostname ? hostname : `${host.name}/${chain.name}/${container}`} removed from ${backend}`,
+        chain: chain.name,
       });
     } catch (error) {
       throw new Error(`could not remove ${backend} ${server}from rotation, ${error}`);
@@ -159,7 +161,7 @@ export class Service {
   }
 
   async addToRotation(id: string) {
-    const { backend, server, hostname, host, chain } = await this.getNode(id);
+    const { backend, server, hostname, host, chain, container } = await this.getNode(id);
     const loadBalancers = await this.getLoadBalancers();
     try {
       await Promise.all(
@@ -172,7 +174,8 @@ export class Service {
       );
       return await this.alert.sendInfo({
         title: "Added to rotation",
-        message: `${hostname ? hostname : `${host.name}/${chain.name}`} added to ${backend}`,
+        message: `${hostname ? hostname : `${host.name}/${chain.name}/${container}`} added to ${backend}`,
+        chain: chain.name,
       });
     } catch (error) {
       throw new Error(`could not add ${backend} ${server} rotation, ${error}`);

@@ -22,8 +22,9 @@ export enum LoadBalancerStatus {
 }
 
 export interface LoadBalancer {
-  internalHostName: string;
-  externalHostName: string;
+  ip?: string;
+  internalHostName?: string;
+  externalHostName?: string;
 }
 
 export enum Limits {

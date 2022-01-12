@@ -23,13 +23,16 @@ export class Publish {
       }
       const count = this.map.get(id);
 
-      if (count >= this.threshold) {
-        await this.redis.publish("send-error-event", JSON.stringify({ ...message, id: id, count }));
+      if (count >= this.threshold && count < this.reTriggerThreshold) {
+        await this.redis.publish(
+          "send-event-trigger",
+          JSON.stringify({ ...message, id: id, count }),
+        );
       }
 
       if (count >= this.reTriggerThreshold) {
         await this.redis.publish(
-          "send-error-event-retrigger",
+          "send-event-retrigger",
           JSON.stringify({ ...message, id: id, count }),
         );
       }
@@ -37,7 +40,7 @@ export class Publish {
     if (message.status === HealthTypes.ErrorStatus.OK) {
       if (this.map.has(id)) {
         this.map.delete(id);
-        await this.redis.publish("send-resolved-event", JSON.stringify({ ...message, id: id }));
+        await this.redis.publish("send-event-resolved", JSON.stringify({ ...message, id: id }));
       }
     }
   }
