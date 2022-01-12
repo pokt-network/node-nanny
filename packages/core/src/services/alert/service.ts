@@ -1,7 +1,14 @@
 import { api } from "@pagerduty/pdjs";
 import axios, { AxiosInstance } from "axios";
-import { AlertColor, SendMessageInput, PagerDutyDetails, IncidentLevel, PagerDutyServices } from "./types";
+import {
+  AlertColor,
+  SendMessageInput,
+  PagerDutyDetails,
+  IncidentLevel,
+  PagerDutyServices,
+} from "./types";
 import { DataDogTypes, AlertTypes } from "../../types";
+import { WebhookModel } from "../../models";
 
 export class Service {
   private dsClient: AxiosInstance;
@@ -17,15 +24,19 @@ export class Service {
     });
   }
 
+  async getWebhookUrl(chain: string): Promise<string> {
+    const { url } = await WebhookModel.findOne({ chain }).exec();
+    return url;
+  }
+
   async sendDiscordMessage({ title, color, fields, channel }: SendMessageInput): Promise<boolean> {
     const embeds = [{ title, color, fields }];
+
     try {
       const { status } = await this.dsClient.post(channel, { embeds });
       return status === 204;
     } catch (error) {
-      throw new Error(
-        `could not send alert to Discord ${{ error, title, color, fields, channel }}`,
-      );
+      throw new Error(`could not send alert to Discord ${JSON.stringify({ error })}`);
     }
   }
 
@@ -46,104 +57,52 @@ export class Service {
     });
   }
 
-  async sendErrorCritical({ title, message }) {
-    return await this.sendDiscordMessage({
-      title,
-      color: DataDogTypes.AlertColor.ERROR,
-      channel:
-        process.env.MONITOR_TEST === "1"
-          ? AlertTypes.Webhooks.WEBHOOK_CRITICAL_TEST
-          : AlertTypes.Webhooks.WEBHOOK_CRITICAL,
-      fields: [
-        {
-          name: "Error",
-          value: message,
-        },
-      ],
-    });
-  }
+  sendError = async ({ title, message, chain }) => {
+    try {
+      return await this.sendDiscordMessage({
+        title,
+        color: DataDogTypes.AlertColor.ERROR,
+        channel: await this.getWebhookUrl(chain.toUpperCase()),
+        fields: [{ name: "Error", value: message }],
+      });
+    } catch (error) {
+      throw new Error(error);
+    }
+  };
 
-  async sendLogs({ title, fields }) {
+  async sendInfo({ title, message, chain }) {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.INFO,
-      channel:
-        process.env.MONITOR_TEST === "1"
-          ? AlertTypes.Webhooks.WEBHOOK_LOGS_TEST
-          : AlertTypes.Webhooks.WEBHOOK_LOGS,
-      fields,
+      channel: await this.getWebhookUrl(chain.toUpperCase()),
+      fields: [{ name: "Info", value: message }],
     });
   }
 
-  async sendInfo({ title, message }) {
-    return await this.sendDiscordMessage({
-      title,
-      color: AlertColor.INFO,
-      channel:
-        process.env.MONITOR_TEST === "1"
-          ? AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL_TEST
-          : AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
-      fields: [
-        {
-          name: "Info",
-          value: message,
-        },
-      ],
-    });
-  }
-
-  async sendWarn({ title, message }) {
+  async sendWarn({ title, message, chain }) {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.WARNING,
-      channel:
-        process.env.MONITOR_TEST === "1"
-          ? AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL_TEST
-          : AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
-      fields: [
-        {
-          name: "Warning",
-          value: message,
-        },
-      ],
+      channel: await this.getWebhookUrl(chain.toUpperCase()),
+      fields: [{ name: "Warning", value: message }],
     });
   }
 
-  async sendSuccess({ title, message }) {
+  async sendSuccess({ title, message, chain }) {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.SUCCESS,
-      channel:
-        process.env.MONITOR_TEST === "1"
-          ? AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL_TEST
-          : AlertTypes.Webhooks.WEBHOOK_NON_CRITICAL,
-      fields: [
-        {
-          name: "Success",
-          value: message,
-        },
-      ],
+      channel: await this.getWebhookUrl(chain.toUpperCase()),
+      fields: [{ name: "Success", value: message }],
     });
   }
 
-  async sendSuccessToCritical({ title, message }) {
-    return await this.sendDiscordMessage({
-      title,
-      color: AlertColor.SUCCESS,
-      channel:
-        process.env.MONITOR_TEST === "1"
-          ? AlertTypes.Webhooks.WEBHOOK_CRITICAL_TEST
-          : AlertTypes.Webhooks.WEBHOOK_CRITICAL,
-      fields: [
-        {
-          name: "Success",
-          value: message,
-        },
-      ],
-    });
-  }
-
-  async createPagerDutyIncident({ title, details, service = PagerDutyServices.CRITICAL, urgency = IncidentLevel.HIGH }) {
+  async createPagerDutyIncident({
+    title,
+    details,
+    service = PagerDutyServices.CRITICAL,
+    urgency = IncidentLevel.HIGH,
+  }) {
     try {
       const { data } = await this.pdClient.post("/incidents", {
         data: {
