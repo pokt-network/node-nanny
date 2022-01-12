@@ -103,7 +103,7 @@ function DashboardContent() {
               noWrap
               sx={{ flexGrow: 1 }}
             >
-              Blockchain Monitor
+              Pocket Node Nanny
             </Typography>
           </Toolbar>
         </AppBar>

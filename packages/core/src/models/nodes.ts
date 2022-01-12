@@ -27,6 +27,7 @@ export interface INode {
   docker: boolean;
   basicAuth: string;
   ssl: boolean;
+  loadBalancers: string[];
 }
 
 const nodesSchema = new Schema<INode>(
@@ -61,9 +62,9 @@ const nodesSchema = new Schema<INode>(
     removeNoResponse: Boolean,
     basicAuth: String,
     ssl: Boolean,
+    loadBalancers: [Schema.Types.ObjectId],
   },
   { collection: "nodes" },
 );
-
 
 export const NodesModel: Model<INode> = model("nodes", nodesSchema);
