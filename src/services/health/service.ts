@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import util from "util";
-import axiosRetry from 'axios-retry';
+import axiosRetry from "axios-retry";
 import { exec } from "child_process";
 import {
   ErrorConditions,
@@ -21,7 +21,7 @@ export class Service {
   }
 
   private initClient() {
-  const client = axios.create({
+    const client = axios.create({
       timeout: 10000,
       headers: { "Content-Type": "application/json" },
     });
@@ -409,19 +409,21 @@ export class Service {
         };
       }
     } catch (error) {
-      if (error.response.data && error.response.data === false) {
+      if (!error.response) {
+        return {
+          name,
+          conditions: ErrorConditions.NO_RESPONSE,
+          status: ErrorStatus.ERROR,
+          health: error,
+        };
+      }
+      if (error.response.data === false) {
         return {
           name,
           conditions: ErrorConditions.NOT_SYNCHRONIZED,
           status: ErrorStatus.ERROR,
         };
       }
-      return {
-        name,
-        conditions: ErrorConditions.NO_RESPONSE,
-        status: ErrorStatus.ERROR,
-        health: error,
-      };
     }
   }
 
@@ -441,7 +443,7 @@ export class Service {
       {
         "chain.type": "POKT",
         _id: { $ne: id },
-        poktType: "dis"
+        poktType: "dis",
       },
       null,
     ).exec();
@@ -456,7 +458,7 @@ export class Service {
 
     //get highest block height from reference nodes
     const poktnodes = referenceNodes.map(({ hostname, port }) => `https://${hostname}:${port}`);
-   
+
     const pocketheight = await Promise.all(
       await poktnodes.map(async (node) => this.getPocketHeight(node)),
     );
