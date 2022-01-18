@@ -66,36 +66,36 @@ export class Service {
         fields: [{ name: "Error", value: message }],
       });
     } catch (error) {
-      throw new Error(error);
+     // throw new Error(error);
     }
   };
 
-  async sendInfo({ title, message, chain }) {
+  sendInfo = async ({ title, message, chain }) => {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.INFO,
       channel: await this.getWebhookUrl(chain.toUpperCase()),
       fields: [{ name: "Info", value: message }],
     });
-  }
+  };
 
-  async sendWarn({ title, message, chain }) {
+  sendWarn = async ({ title, message, chain }) => {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.WARNING,
       channel: await this.getWebhookUrl(chain.toUpperCase()),
       fields: [{ name: "Warning", value: message }],
     });
-  }
+  };
 
-  async sendSuccess({ title, message, chain }) {
+  sendSuccess = async ({ title, message, chain }) => {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.SUCCESS,
       channel: await this.getWebhookUrl(chain.toUpperCase()),
       fields: [{ name: "Success", value: message }],
     });
-  }
+  };
 
   async createPagerDutyIncident({
     title,

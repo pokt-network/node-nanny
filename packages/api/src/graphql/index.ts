@@ -13,7 +13,7 @@ const resolvers = {
     nodes: async () => await NodesModel.find({}).exec(),
     hosts: async (_, { loadBalancer }) => {
       const query = loadBalancer === true ? { loadBalancer } : {};
-      return await HostsModel.find(query).exec();
+      return await HostsModel.find(query).sort({ name: 1 }).exec();
     },
     chains: async () => await ChainsModel.find({}).exec(),
     oracles: async () => await OraclesModel.find({}).exec(),
