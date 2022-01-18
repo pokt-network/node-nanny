@@ -48,7 +48,11 @@ export class App {
         if (healthResponse) {
           status = healthResponse.status;
         }
-        console.info({ healthResponse });
+
+        if (healthResponse.status == HealthTypes.ErrorStatus.OK) {
+          console.info({ healthResponse });
+        }
+
         if (this.config.event === EventOptions.REDIS) {
           await this.publish.evaluate({ message: healthResponse, id: node.id });
         }
