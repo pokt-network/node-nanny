@@ -294,7 +294,11 @@ export class Service {
         });
       }
 
+<<<<<<< HEAD
       console.log("peers are healthy");
+=======
+      console.log('peers are healthy')
+>>>>>>> ea6531c5a16fb4466d7f156c423811b42b44f274
       /*============================NOT_SYNCHRONIZED===================================  */
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
         await this.alert.sendError({
