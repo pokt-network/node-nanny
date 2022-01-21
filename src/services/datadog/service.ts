@@ -1,8 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import { v1, v2 } from "@datadog/datadog-api-client";
 import { ApiDetails } from "./types";
-import { resourceUsage } from "process";
-
+import { NodesModel } from "../../models";
 export class Service {
   private sdkClient: v1.MonitorsApi;
   private restClient: AxiosInstance;
@@ -184,6 +183,9 @@ export class Service {
       classification: "log",
     });
     const { id: monitorId } = data;
+
+    await NodesModel.updateOne({ _id: id }, { monitorId });
+
     return monitorId;
   }
 

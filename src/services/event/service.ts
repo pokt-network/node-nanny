@@ -57,7 +57,6 @@ export class Service {
   }
 
   async isPeersOk({ chain, nodeId }) {
-
     console.log("isPeersOk", chain, nodeId);
     //todo this is just a temp fix for the pocket nodes, needs more sophistiacted handling to check peers
     if (
@@ -268,11 +267,20 @@ export class Service {
   async processEvent(raw) {
     const { event, nodeId, transition, title, link } = await this.dd.parseWebhookMessage(raw);
     const node: INode = await NodesModel.findOne({ _id: nodeId });
-    const { backend, server, haProxy, reboot, hasPeer, poktType, removeNoResponse, docker, container } = node;
+    const {
+      backend,
+      server,
+      haProxy,
+      reboot,
+      hasPeer,
+      poktType,
+      removeNoResponse,
+      docker,
+      container,
+    } = node;
     const chain = node.chain.name.toLowerCase();
     const host = node.host.name.toLowerCase();
     const name = node.hostname ? node.hostname : `${chain}/${host}/${container}`;
-
     /*++++++++++++++++++++++++TRIGGERED++++++++++++++++++++++++++++++++ */
     if (transition === EventTransitions.TRIGGERED) {
       //alert if both unhealthy
@@ -286,6 +294,7 @@ export class Service {
         });
       }
 
+      console.log("peers are healthy");
       /*============================NOT_SYNCHRONIZED===================================  */
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
         await this.alert.sendError({
@@ -413,13 +422,14 @@ export class Service {
 
     /*++++++++++++++++++++++++RE_TRIGGERED++++++++++++++++++++++++++++++++ */
     if (transition === EventTransitions.RE_TRIGGERED) {
-      if (node.chain.name === SupportedBlockChains.ETH) {
-        await this.alert.createPagerDutyIncident({
-          title: "Problem with Ethereum Node!",
-          details: `${title}\n${event}\n${link}`,
-          service: AlertTypes.PagerDutyServices.NODE_INFRA,
-        });
-      }
+      //jan 21, turning off eth pd out now we have ample nodes to suppport more than one down, will be revamped to alert when theres a real problem
+      // if (node.chain.name === SupportedBlockChains.ETH) {
+      //   await this.alert.createPagerDutyIncident({
+      //     title: "Problem with Ethereum Node!",
+      //     details: `${title}\n${event}\n${link}`,
+      //     service: AlertTypes.PagerDutyServices.NODE_INFRA,
+      //   });
+      // }
       if (event == BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
         /*============================NOT_SYNCHRONIZED==========================*/
         return this.alert.sendWarn({ title, message: `${name} is still out of sync`, chain });

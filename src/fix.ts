@@ -11,36 +11,21 @@ const event = new Event();
 const health = new Health();
 const infra = new Infra();
 
-const names = [
-  {
-    name: "POKT-DIS",
-    url:
-      "https://discord.com/api/webhooks/922563249025745006/QZIWRfQaXkZGMcISUDDTsLi3xFuP8R0nZjVOUabCNUQUdbMbC0_yG1RuKASm7jWifuNy",
-  },
-  {
-    name: "POKT-MAIN",
-    url:
-      "https://discord.com/api/webhooks/922563510356041849/z-mmqlmebRBnr2TyhcMMCA4nUvG-0TnXyH9UllzZnQZ94xv7BwKQESllSa-7eRc3lSiC",
-  },
-];
 const fix = async () => {
   await connect();
 
-  // for (const { name, url } of names) {
-  //   const res = await WebhookModel.create({ chain: name, url: url });
-  //   console.log(res);
-  // }
 
-  // const res = await NodesModel.updateMany(
-  //   { poktType: "dis" },
-  //   { $set: { "chain.name": "POKT-DIS" } },
-  // );
-  // console.log(res);
-  // //await event.processEvent(proccess)
+  const allNodes = await NodesModel.find({"chain.name": "ETH", monitorId: null}).exec()
+
+
+  for(const node of allNodes){
+    console.log(node)
+  }
+
   return {};
 };
 
-//fix().then(console.log);
+fix().then(console.log);
 
 const proccess = {
   msg:
@@ -98,4 +83,4 @@ const createChans = async (server) => {
   client.login(process.env.DISCORD_TOKEN);
 };
 
-createChans("916127579331772467").then(console.log);
+//createChans("916127579331772467").then(console.log);
