@@ -15,8 +15,7 @@ import { INode, NodesModel, HostsModel } from "../../models";
 
 /**
  * This class functions as an event consumer for DataDog alerts.
- * Events are dependant on parsing format in parseWebhookMessage in the DataDog Service
- */
+ * Events are dependant on parsing format in parseWebhookMessage in the DataDog Service */
 
 export class Service {
   private agent: AxiosInstance;
@@ -272,7 +271,6 @@ export class Service {
       server,
       haProxy,
       reboot,
-      hasPeer,
       poktType,
       removeNoResponse,
       docker,
@@ -284,7 +282,7 @@ export class Service {
     /*++++++++++++++++++++++++TRIGGERED++++++++++++++++++++++++++++++++ */
     if (transition === EventTransitions.TRIGGERED) {
       //alert if both unhealthy
-      if (!(await this.isPeersOk({ chain, nodeId })) && hasPeer) {
+      if (!(await this.isPeersOk({ chain, nodeId }))) {
         await this.alert.sendError({
           title,
           message: `All ${chain} nodes are unhealthy! \n 
@@ -302,18 +300,18 @@ export class Service {
           chain,
         });
 
-        if (!hasPeer) {
-          await this.alert.sendError({
-            title: `${name} is ${event}`,
-            message: `${chain} node is not synched \n 
-            This node does not have a peer \n
-            Manual intervention is required! \n
-             See event ${link} \n`,
-            chain,
-          });
-        }
+        // if (!hasPeer) {
+        //   await this.alert.sendError({
+        //     title: `${name} is ${event}`,
+        //     message: `${chain} node is not synched \n 
+        //     This node does not have a peer \n
+        //     Manual intervention is required! \n
+        //      See event ${link} \n`,
+        //     chain,
+        //   });
+        // }
 
-        if (!(await this.isPeersOk({ chain, nodeId })) && hasPeer) {
+        if (!(await this.isPeersOk({ chain, nodeId }))) {
           await this.alert.sendError({
             title: `${name} is ${event}`,
             message: `All ${chain} nodes are not synched \n 
@@ -323,8 +321,8 @@ export class Service {
             chain,
           });
         }
-
-        if (haProxy && hasPeer) {
+         
+        if (haProxy) {
           await this.disableServer({ backend, server });
           await this.alert.sendInfo({
             title,
@@ -509,7 +507,7 @@ export class Service {
       /*============================NOT_SYNCHRONIZED==========================*/
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
         await this.alert.sendSuccess({ title, message: `${name} has recovered!`, chain });
-        if (haProxy && hasPeer) {
+        if (haProxy) {
           await this.enableServer({ backend, server });
           await this.alert.sendSuccess({
             title,
