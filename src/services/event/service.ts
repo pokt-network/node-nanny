@@ -294,7 +294,6 @@ export class Service {
         });
       }
 
-      console.log("peers are healthy");
       /*============================NOT_SYNCHRONIZED===================================  */
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
         await this.alert.sendError({
