@@ -107,7 +107,7 @@ export class Service {
     }
   }
 
-  async getHeimdallHealth({ name, url }) {
+  async getTenderMintHealth({ name, url }) {
     try {
       const { data } = await this.rpc.get(`${url}/status`);
       const { catching_up } = data.result.sync_info;
@@ -525,8 +525,8 @@ export class Service {
     if (chain.type == SupportedBlockChainTypes.AVA) {
       return await this.getAvaHealth({ name: `${host.name}/${chain.name}`, url: url });
     }
-    if (chain.type == SupportedBlockChainTypes.HEI) {
-      return await this.getHeimdallHealth({ name: `${host.name}/${chain.name}`, url: url });
+    if (chain.type == SupportedBlockChainTypes.TMT) {
+      return await this.getTenderMintHealth({ name: `${host.name}/${chain.name}`, url: url });
     }
     if (chain.type == SupportedBlockChainTypes.SOL) {
       return await this.getSolHealth({

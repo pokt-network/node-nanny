@@ -27,7 +27,8 @@ export enum SupportedBlockChainTypes {
   POKT = "POKT",
   SOL = "SOL",
   ALG = "ALG",
-  HRM = "HRM"
+  HRM = "HRM",
+  TMT = "TMT"
 }
 
 export enum ErrorConditions {

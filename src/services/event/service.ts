@@ -14,6 +14,7 @@ import {
 import { INode, NodesModel, HostsModel } from "../../models";
 
 /**
+ * 
  * This class functions as an event consumer for DataDog alerts.
  * Events are dependant on parsing format in parseWebhookMessage in the DataDog Service */
 

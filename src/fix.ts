@@ -14,12 +14,12 @@ const infra = new Infra();
 const fix = async () => {
   await connect();
 
-  // const allNodes = await NodesModel.find({"chain.name": "ETH", monitorId: null}).exec()
+  const allNodes = await NodesModel.find({  monitorId: null }).exec();
 
-  // for(const node of allNodes){
-  //   console.log(node)
-  // }
-  await event.processEvent(proccess);
+  for (const node of allNodes) {
+    console.log(node);
+  }
+  // await event.processEvent(proccess);
   return {};
 };
 
