@@ -31,7 +31,7 @@ export class Service {
   private async getBlockHeight(url, auth?: string, hmy?: boolean): Promise<any> {
     let method = "eth_blockNumber";
     if (hmy) {
-      method = "hmy_blockNumber";
+      method = "hmyv2_blockNumber";
     }
 
     let options;
@@ -67,7 +67,7 @@ export class Service {
   private async getEthSyncing(url, auth?: string, hmy?: boolean): Promise<any> {
     let method = "eth_syncing";
     if (hmy) {
-      method = "hmy_syncing";
+      method = "hmyv2_syncing";
     }
     let options;
 
@@ -340,19 +340,20 @@ export class Service {
     }
   }
 
-  private getBestBlockHeight({ readings, variance }) {
-    if (readings.length === 1) {
-      return readings[0];
-    }
-    const sorted = readings.sort();
-    const [last] = sorted.slice(-1);
-    const [secondLast] = sorted.slice(-2);
-    if (last - secondLast < variance) {
-      return sorted.pop();
-    } else {
-      return sorted.pop();
-    }
-  }
+  // private getBestBlockHeight({ readings, variance }) {
+  //   if (readings.length === 1) {
+  //     return readings[0];
+  //   }
+  //   const sorted = readings.sort();
+  //   const [last] = sorted.slice(-1);
+  //   const [secondLast] = sorted.slice(-2);
+  //   console.log(0x1506068)
+  //   if (last - secondLast < variance) {
+  //     return sorted.pop();
+  //   } else {
+  //     return sorted.pop();
+  //   }
+  // }
 
   private async getReferenceBlockHeight({ endpoints, variance }, hmy: boolean): Promise<number> {
     const resolved = [];
@@ -367,8 +368,11 @@ export class Service {
     const readings = resolved
       .filter((reading) => reading.result)
       .map(({ result }) => hexToDec(result));
-    const height = this.getBestBlockHeight({ readings, variance });
-    return height;
+    //const height = this.getBestBlockHeight({ readings, variance });
+
+    console.log("READINGS", readings.sort()[0])
+
+    return  readings.sort()[0]
   }
 
   private async nc({ host, port }): Promise<string> {
