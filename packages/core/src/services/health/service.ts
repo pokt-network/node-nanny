@@ -625,10 +625,6 @@ export class Service {
 
   async getNodeHealth(node: INode): Promise<HealthResponse> {
     const { chain } = node;
-    if (chain.type !== "EVM") {
-      //console.log(chain.type);
-    }
-
     if (!Object.keys(SupportedBlockChainTypes).includes(chain.type)) {
       throw new Error(`${chain.type} is not a supported chain type`);
     }
