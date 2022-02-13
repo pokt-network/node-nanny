@@ -6,6 +6,7 @@ import {
   ChainsModel,
   OraclesModel,
   LogsModel,
+  WebhookModel,
 } from "@pokt-foundation/node-monitoring-core/dist/models";
 
 const resolvers = {
@@ -34,8 +35,10 @@ const resolvers = {
       return await OraclesModel.findOneAndUpdate({ chain }, { $push: { urls: url } }).exec();
     },
     createNode: async (_, { input }) => {
-      console.log(input);
       return await NodesModel.create(input);
+    },
+    createWebhook: async (_, webhook) => {
+      return await WebhookModel.create(webhook);
     },
   },
 
@@ -63,6 +66,7 @@ const typeDefs = gql`
     name: String!
     ip: String!
     loadBalancer: Boolean!
+    location: String!
   }
 
   type Node {
@@ -78,6 +82,12 @@ const typeDefs = gql`
     ssl: Boolean
     basicAuth: String
     loadBalancers: [ID]
+  }
+
+  type Webhook {
+    location: String
+    chain: String
+    url: String
   }
 
   input NodeInput {
@@ -119,7 +129,7 @@ const typeDefs = gql`
 
   type Mutation {
     createChain(name: String, type: String): Chain
-    createHost(name: String, ip: String, loadBalancer: Boolean): Host
+    createHost(name: String, ip: String, loadBalancer: Boolean, location: String): Host
     createOracle(chain: String, url: String): Oracle
     createNode(input: NodeInput): Node
     updateNode(input: NodeInput): Node
@@ -131,6 +141,7 @@ const typeDefs = gql`
     deletehost(id: ID): Host
     deleteOracle(id: ID): Oracle
     deleteChain(id: ID): Chain
+    createWebhook(location: String, chain: String, url: String): Webhook
   }
 `;
 
