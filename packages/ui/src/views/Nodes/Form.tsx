@@ -50,6 +50,7 @@ const CREATE_NODE = gql`
     $ssl: Boolean
     $basicAuth: String
     $url: String
+    $loadBalancers: [ID]
   ) {
     createNode(
       input: {
@@ -63,6 +64,7 @@ const CREATE_NODE = gql`
         ssl: $ssl
         basicAuth: $basicAuth
         url: $url
+        loadBalancers: $loadBalancers
       }
     ) {
       id
@@ -75,7 +77,7 @@ export function Form() {
   const [chain, setChain] = useState("");
   const [host, setHost] = useState("");
   const [ip, setIP] = useState("");
-  const [loadBalancer, setLoadBalancer] = useState("");
+  const [loadBalancers, setLoadBalancer] = useState("");
   const [variance, setVariance] = useState(0);
   const [port, setPort] = useState(0);
   const [backend, setBackend] = useState("");
@@ -124,10 +126,6 @@ export function Form() {
     setAuth(event.target.value);
   };
 
-  // const handleSSLChange = (event:  SelectChangeEvent<typeof ssl>) => {
-  //   setSSL(event.target.value);
-  // };
-
   const handleHaproxyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setHaproxy(event.target.checked);
   };
@@ -163,7 +161,7 @@ export function Form() {
             </Select>
 
             <div style={{ marginTop: "10px" }} />
-            <Select value={loadBalancer} onChange={handleLoadBalancerChange}>
+            <Select value={loadBalancers} onChange={handleLoadBalancerChange}>
               {data?.loadBalancers.map(({ name, id }) => (
                 <MenuItem value={id}>{name}</MenuItem>
               ))}
@@ -223,7 +221,7 @@ export function Form() {
                     server,
                     variance,
                     basicAuth,
-                    loadBalancer,
+                    loadBalancers: [loadBalancers],
                     url: `http://${ip}:${port}`,
                   },
                 });

@@ -40,6 +40,7 @@ export class App {
   async main() {
     await connect();
     const nodes = await NodesModel.find().populate("host").populate("chain").exec();
+    console.log(nodes)
     for (const node of nodes) {
       node.id = node._id;
       setInterval(async () => {

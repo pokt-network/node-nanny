@@ -11,7 +11,7 @@ import Container from "@mui/material/Container";
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { Route } from "react-router-dom";
-import { Home, Chains, Hosts, Logs, Nodes, Oracles, Settings } from "./views";
+import { Home, Chains, Hosts, Logs, Nodes, Oracles, Settings, Webhooks } from "./views";
 import { Nav } from "./components";
 
 const drawerWidth: number = 240;
@@ -140,7 +140,7 @@ function DashboardContent() {
           <Route exact path="/hosts" component={Hosts} />
           <Route exact path="/oracles" component={Oracles} />
           <Route exact path="/nodes" component={Nodes} />
-          <Route exact path="/logs" component={Logs} />
+          <Route exact path="/webhooks" component={Webhooks} />
           <Route exact path="/settings" component={Settings} />
         </Box>
       </Box>
