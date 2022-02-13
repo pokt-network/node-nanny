@@ -43,11 +43,11 @@ export const Nav = (props: any) => {
             </ListItemIcon>
             <ListItemText primary="Nodes" />
           </ListItem>
-          <ListItem button onClick={() => history.push("/logs")}>
+          <ListItem button onClick={() => history.push("/webhooks")}>
             <ListItemIcon>
               <LogsIcon />
             </ListItemIcon>
-            <ListItemText primary="Logs" />
+            <ListItemText primary="Webhooks" />
           </ListItem>
         </div>
       </List>
