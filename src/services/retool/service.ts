@@ -48,12 +48,18 @@ export class Service {
 
   async getHaProxyStatus(id: string) {
     const { backend, haProxy, server } = await this.getNode(id);
+
+    console.log( backend, haProxy, server)
     if (haProxy === false) {
       return -1;
     }
     const loadBalancers = await this.getLoadBalancers();
+
+    console.log(loadBalancers)
     const results = [];
     for (const { internalHostName } of loadBalancers) {
+
+      console.log(internalHostName)
       try {
         const { data } = await this.agent.post(
           `http://${internalHostName}:3001/webhook/lb/status`,
@@ -61,6 +67,7 @@ export class Service {
         );
         results.push(data);
       } catch (error) {
+        console.log(error);
         throw new Error(
           `could not get backend status, ${internalHostName} ${server} ${backend} ${error}`,
         );
@@ -162,9 +169,10 @@ export class Service {
 
   async addToRotation(id: string) {
     const { backend, server, hostname, host, chain, container } = await this.getNode(id);
+    console.log(backend, server, hostname, host, chain, container)
     const loadBalancers = await this.getLoadBalancers();
     try {
-      await Promise.all(
+    const res =  await Promise.all(
         loadBalancers.map(({ internalHostName }) =>
           this.agent.post(`http://${internalHostName}:3001/webhook/lb/enable`, {
             backend,
@@ -172,6 +180,7 @@ export class Service {
           }),
         ),
       );
+      console.log(res);
       return await this.alert.sendInfo({
         title: "Added to rotation",
         message: `${hostname ? hostname : `${host.name}/${chain.name}/${container}`} added to ${backend}`,
