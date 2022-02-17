@@ -14,7 +14,7 @@ import {
 import { INode, NodesModel, HostsModel } from "../../models";
 
 /**
- * 
+ *
  * This class functions as an event consumer for DataDog alerts.
  * Events are dependant on parsing format in parseWebhookMessage in the DataDog Service */
 
@@ -264,8 +264,22 @@ export class Service {
     return `HAProxy status\n${urls}`;
   }
 
+  isOnTime(timestamp: number, miliseconds: number): boolean {
+    return new Date().getTime() - new Date(timestamp).getTime() > miliseconds;
+  }
+
   async processEvent(raw) {
-    const { event, nodeId, transition, title, link } = await this.dd.parseWebhookMessage(raw);
+    const { event, nodeId, transition, title, link, timestamp } = await this.dd.parseWebhookMessage(
+      raw,
+    );
+
+    if (this.isOnTime(timestamp, 120000)) {
+      return this.alert.sendErrorChannel({
+        title: "webhook is late",
+        message: title,
+      });
+    }
+
     const node: INode = await NodesModel.findOne({ _id: nodeId });
     const {
       backend,
@@ -304,7 +318,7 @@ export class Service {
         // if (!hasPeer) {
         //   await this.alert.sendError({
         //     title: `${name} is ${event}`,
-        //     message: `${chain} node is not synched \n 
+        //     message: `${chain} node is not synched \n
         //     This node does not have a peer \n
         //     Manual intervention is required! \n
         //      See event ${link} \n`,
@@ -322,7 +336,7 @@ export class Service {
             chain,
           });
         }
-         
+
         if (haProxy) {
           await this.disableServer({ backend, server });
           await this.alert.sendInfo({

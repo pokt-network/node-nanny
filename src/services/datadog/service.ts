@@ -151,11 +151,11 @@ export class Service {
     }
   }
 
-  parseWebhookMessage({ msg, id, transition, type, title, link }) {
+  parseWebhookMessage({ msg, id, transition, type, title, link, timestamp }) {
     let [, , nodeId, event] = msg.split("\n");
     event = event.split("event_")[1];
     nodeId = nodeId.split("nodeId_")[1];
-    return { event, id, nodeId, transition, type, title, link };
+    return { event, id, nodeId, transition, type, title, link, timestamp };
   }
 
   async createMonitor({ name, logGroup, id }) {
