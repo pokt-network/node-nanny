@@ -1,15 +1,21 @@
 {
-    "name": "@pokt-foundation/node-monitoring",
-    "description": "Blockchain monitoring and automation.",
-    "repository": "https://github.com/pokt-foundation/portal",
-    "author": "JonathonJulian <john@pokt.network>",
-    "license": "MIT",
-    "scripts":{
-      "build": "tsc -b .",
-      "build:watch": "tsc -b -w .",
-      "start:api:graphql": "cd packages/api && pnpm install && pnpm run build && node dist/graphql",
-      "start:api:rest": "cd api && pnpm run build && node dist/rest",
-      "start:ui": "export SKIP_PREFLIGHT_CHECK=true && cd packages/ui && pnpm run start"
-    }
+  "name": "@pokt-foundation/node-nanny",
+  "description": "Blockchain monitoring and automation.",
+  "repository": "https://github.com/pokt-foundation/portal",
+  "author": "JonathonJulian <john@pokt.network>",
+  "license": "MIT",
+  "scripts": {
+    "build": "pnpm nx run-many --target=build --all",
+    "build:watch": "tsc -b -w .",
+    "start:api:graphql": "cd packages/api && pnpm install && pnpm run build && node dist/graphql",
+    "start:api:rest": "cd api && pnpm run build && node dist/rest",
+    "start:ui": "export SKIP_PREFLIGHT_CHECK=true && cd packages/ui && pnpm run start"
+  },
+  "devDependencies": {
+    "@nrwl/workspace": "latest",
+    "@nrwl/cli": "latest",
+    "@nrwl/tao": "latest",
+    "typescript": "4.2.4",
+    "@nrwl/nx-cloud": "latest"
   }
-  
+}
