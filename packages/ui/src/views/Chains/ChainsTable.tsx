@@ -1,10 +1,18 @@
 import * as React from "react";
 import { Table } from "../../components";
 
-interface ViewProps {
-  children?: React.ReactNode;
+// TEMP - Add to common package
+
+interface IChain {
+  chain: string;
+  name: string;
+  type: string;
 }
 
-export function ChainsTable(props: ViewProps) {
-  return <Table />;
+interface ChainsTableProps {
+  chains: IChain[];
+}
+
+export function ChainsTable({ chains }: ChainsTableProps) {
+  return <Table rows={chains} />;
 }
