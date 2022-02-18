@@ -1,5 +1,5 @@
 {
-  "name": "@pokt-foundation/node-monitoring-monitor",
+  "name": "@pokt-foundation/event-consumer",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
