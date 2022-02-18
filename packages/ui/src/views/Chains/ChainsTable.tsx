@@ -2,7 +2,6 @@ import * as React from "react";
 import { Table } from "../../components";
 
 // TEMP - Add to common package
-
 interface IChain {
   id: string;
   chain: string;
@@ -15,5 +14,5 @@ interface ChainsTableProps {
 }
 
 export function ChainsTable({ chains }: ChainsTableProps) {
-  return <Table rows={chains} />;
+  return <Table paginate rows={chains} />;
 }
