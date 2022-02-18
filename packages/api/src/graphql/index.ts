@@ -58,6 +58,7 @@ const typeDefs = gql`
   type Chain {
     id: ID!
     name: String!
+    chain: String!
     type: String!
   }
 
