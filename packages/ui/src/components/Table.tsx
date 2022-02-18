@@ -18,7 +18,7 @@ const rows = [
   createData("Gingerbread", 356, 16.0, 49, 3.9),
 ];
 
-export default function Table() {
+export function Table() {
   return (
     <TableContainer component={Paper}>
       <MUITable sx={{ minWidth: 650 }} aria-label="simple table">
