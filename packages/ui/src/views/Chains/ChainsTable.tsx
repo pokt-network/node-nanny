@@ -4,6 +4,7 @@ import { Table } from "../../components";
 // TEMP - Add to common package
 
 interface IChain {
+  id: string;
   chain: string;
   name: string;
   type: string;
