@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "start": "pnpm build && node ./dist/graphql/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b .",
     "build:watch": "tsc -b -w ."
