@@ -1,14 +1,18 @@
 import { ChangeEvent, MouseEvent, useState } from "react";
-import Box from "@mui/material/Box";
-import MUITable from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TablePagination from "@mui/material/TablePagination";
-import TableRow from "@mui/material/TableRow";
-import TableSortLabel from "@mui/material/TableSortLabel";
-import Paper from "@mui/material/Paper";
+import {
+  Box,
+  Paper,
+  Table as MUITable,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  TableSortLabel,
+} from "@mui/material";
+
+import { formatHeaderCell } from "utils";
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -48,7 +52,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
     .filter((value) => value !== "id")
     .map((column) => ({
       id: column,
-      label: column[0].toUpperCase() + column.slice(1),
+      label: formatHeaderCell(column),
     }));
 
   return (
@@ -78,13 +82,14 @@ interface TableProps {
   rows: any[];
   height?: number;
   paginate?: boolean;
+  numPerPage?: number;
 }
 
-export function Table({ rows, height, paginate }: TableProps) {
+export function Table({ rows, height, paginate, numPerPage }: TableProps) {
   const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(paginate ? 25 : rows.length);
+  const [rowsPerPage, setRowsPerPage] = useState(paginate ? numPerPage || 25 : rows.length);
 
   const handleRequestSort = (_event: MouseEvent<unknown>, property: any) => {
     const isAsc = orderBy === property && order === "asc";

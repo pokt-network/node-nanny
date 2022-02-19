@@ -1,22 +1,21 @@
-import * as React from "react";
-import { useState } from "react";
-import { gql, useMutation } from "@apollo/client";
-import { Paper, Switch, Button, FormControl, TextField,  MenuItem } from "@mui/material";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
+import { ChangeEvent, useState } from "react";
+import { useMutation } from "@apollo/client";
+import {
+  Paper,
+  Select,
+  SelectChangeEvent,
+  Switch,
+  Button,
+  FormControl,
+  TextField,
+  MenuItem,
+} from "@mui/material";
 
-const CREATE_HOST = gql`
-  mutation createHost($name: String, $ip: String, $loadBalancer: Boolean, $location: String) {
-    createHost(name: $name, ip: $ip, loadBalancer: $loadBalancer, location: $location) {
-      name
-      ip
-      loadBalancer
-    }
-  }
-`;
+import { CREATE_HOST } from "queries";
 
 const locations = ["NL", "DE", "USE1", "USE2", "USW2", "HK", "SG", "LDN"];
 
-export function Form() {
+export function HostsForm() {
   const [name, setName] = useState("");
   const [ip, setIP] = useState("");
   const [loadBalancer, setLoadBalancer] = useState(true);
@@ -28,24 +27,24 @@ export function Form() {
     setLocation(event.target.value);
   };
 
-  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
   };
 
-  const handleIPChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleIPChange = (event: ChangeEvent<HTMLInputElement>) => {
     setIP(event.target.value);
   };
 
-  const handleLBChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLBChange = (event: ChangeEvent<HTMLInputElement>) => {
     setLoadBalancer(event.target.checked);
   };
 
   return (
-    <React.Fragment>
+    <>
       <div>
         <Paper style={{ width: "200%" }} variant="outlined">
           <FormControl fullWidth>
-          <Select value={location} onChange={handleLocationChange}>
+            <Select value={location} onChange={handleLocationChange}>
               {locations.map((location) => (
                 <MenuItem value={location}>{location}</MenuItem>
               ))}
@@ -82,6 +81,6 @@ export function Form() {
           </FormControl>
         </Paper>
       </div>
-    </React.Fragment>
+    </>
   );
 }
