@@ -1,24 +1,20 @@
-import * as React from "react";
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { gql, useMutation } from "@apollo/client";
-import TextField from "@mui/material/TextField";
-import { MenuItem, Paper } from "@mui/material";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
-import FormControl from "@mui/material/FormControl";
-import { Button } from "@mui/material";
+import {
+  Button,
+  FormControl,
+  MenuItem,
+  Paper,
+  Select,
+  SelectChangeEvent,
+  TextField,
+} from "@mui/material";
 
-const CREATE_CHAIN = gql`
-  mutation createChain($name: String!, $type: String!) {
-    createChain(name: $name, type: $type) {
-      name
-      type
-    }
-  }
-`;
+import { CREATE_CHAIN } from "queries";
 
 const typeMenuItems = ["EVM", "AVA", "HEI", "POKT", "SOL", "ALG", "HRM"];
 
-export function Form() {
+export default function ChainsForm() {
   const [name, setName] = useState("");
   const [type, setType] = useState("EVM");
   const [submit, { data, loading, error }] = useMutation(CREATE_CHAIN);
@@ -27,12 +23,12 @@ export function Form() {
     setType(event.target.value);
   };
 
-  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
   };
 
   return (
-    <React.Fragment>
+    <>
       <div>
         <Paper style={{ width: "200%" }} variant="outlined">
           <FormControl fullWidth>
@@ -65,6 +61,6 @@ export function Form() {
           </FormControl>
         </Paper>
       </div>
-    </React.Fragment>
+    </>
   );
 }

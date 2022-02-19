@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "pnpm build && node ./dist/graphql/index.js",
+    "start:graphql": "pnpm build && ts-node -r tsconfig-paths/register ./src/gql-server.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b .",
     "build:watch": "tsc -b -w ."
@@ -14,5 +14,9 @@
     "apollo-server": "^3.5.0",
     "dotenv": "^10.0.0",
     "graphql": "^16.0.1"
+  },
+  "devDependencies": {
+    "ts-node": "^10.1.0",
+    "tsconfig-paths": "^3.12.0"
   }
 }
