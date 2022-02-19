@@ -135,7 +135,7 @@ app.post("/retool/reboot/:id", async (req, res) => {
 
 const start = async () => {
   await connect();
-  console.log("db connected");
+  console.log("MongoDB connected ...");
   return app.listen(port, () => {
     console.log(`Webhook api listening at http://localhost:${port}`);
   });
