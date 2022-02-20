@@ -6,7 +6,7 @@ import { HostsForm } from "./HostsForm";
 
 export function Hosts() {
   const { data, error } = useQuery(GET_ALL_HOSTS);
-  console.log({ error });
+
   return (
     <div
       style={{

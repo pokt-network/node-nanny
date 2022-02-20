@@ -17,7 +17,7 @@ const typeDefs = gql`
   }
 
   type Log {
-    id: ID
+    id: ID!
     timestamp: String
     level: String
     message: String
@@ -25,7 +25,7 @@ const typeDefs = gql`
   }
 
   type Node {
-    id: ID
+    id: ID!
     backend: String
     chain: Chain
     haProxy: Boolean
@@ -40,11 +40,13 @@ const typeDefs = gql`
   }
 
   type Oracle {
-    id: ID
+    id: ID!
+    chain: String!
     urls: [String]
   }
 
   type Webhook {
+    id: ID!
     location: String
     chain: String
     url: String
