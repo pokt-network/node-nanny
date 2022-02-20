@@ -50,10 +50,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   };
   const headCells = Object.keys(rows[0])
     .filter((value) => value !== "id")
-    .map((column) => ({
-      id: column,
-      label: formatHeaderCell(column),
-    }));
+    .map((column) => ({ id: column, label: formatHeaderCell(column) }));
 
   return (
     <TableHead>
