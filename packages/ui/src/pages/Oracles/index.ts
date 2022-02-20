@@ -1,2 +1,1 @@
-export { View } from "./Oracles";
-export { Form } from "./Form";
+export { Oracles } from "./Oracles";
