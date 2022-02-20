@@ -1,6 +1,4 @@
-const TEST = "AwsInstanceId";
-
-const abbreviations = ["aws", "id"];
+const abbreviations = ["aws", "id", "ip", "url"];
 
 export const formatHeaderCell = (field: string): string => {
   const uppercased = field[0].toUpperCase() + field.slice(1);

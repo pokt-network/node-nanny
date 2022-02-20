@@ -1,27 +1,17 @@
-import * as React from "react";
+import { ChangeEvent } from "react";
 import { useState } from "react";
-import { gql, useMutation, useQuery } from "@apollo/client";
-import { Paper, Switch, Button, FormControl, TextField, MenuItem } from "@mui/material";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
+import { useMutation, useQuery } from "@apollo/client";
+import {
+  Paper,
+  Button,
+  FormControl,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  TextField,
+} from "@mui/material";
 
-const GET_CHAINS = gql`
-  {
-    chains {
-      id
-      name
-      type
-    }
-  }
-`;
-
-const CREATE_ORACLE = gql`
-  mutation ($chain: String, $url: String) {
-    createOracle(chain: $chain, url: $url) {
-      id
-      urls
-    }
-  }
-`;
+import { CREATE_ORACLE, GET_ALL_CHAINS } from "queries";
 
 interface Chain {
   id: string;
@@ -32,23 +22,25 @@ interface ChainsData {
   chains: Chain[];
 }
 
-export function Form() {
+export function OraclesForm() {
   const [chain, setChain] = useState("");
   const [url, setUrl] = useState("");
   const [submit] = useMutation(CREATE_ORACLE);
-  const { loading, error, data } = useQuery<ChainsData>(GET_CHAINS);
+  const { loading, error, data } = useQuery<ChainsData>(GET_ALL_CHAINS);
 
-  const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUrlChange = (event: ChangeEvent<HTMLInputElement>) => {
     setUrl(event.target.value);
   };
 
   const handleChainChange = (event: SelectChangeEvent<typeof chain>) => {
     setChain(event.target.value);
   };
-  if (loading) return <React.Fragment>Loading...</React.Fragment>;
-  if (error) return <React.Fragment> Error! ${error.message}</React.Fragment>;
+
+  if (loading) return <>Loading...</>;
+  if (error) return <> Error! ${error.message}</>;
+
   return (
-    <React.Fragment>
+    <>
       <div>
         <Paper style={{ width: "200%" }} variant="outlined">
           <FormControl fullWidth>
@@ -77,6 +69,6 @@ export function Form() {
           </FormControl>
         </Paper>
       </div>
-    </React.Fragment>
+    </>
   );
 }

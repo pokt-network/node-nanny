@@ -29,7 +29,7 @@ type Order = "asc" | "desc";
 function getComparator<Key extends keyof any>(
   order: Order,
   orderBy: Key,
-): (a: { [key in Key]: number | string }, b: { [key in Key]: number | string }) => number {
+): (a: { [key in Key]: Cell }, b: { [key in Key]: Cell }) => number {
   return order === "desc"
     ? (a, b) => descendingComparator(a, b, orderBy)
     : (a, b) => -descendingComparator(a, b, orderBy);
@@ -78,8 +78,10 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   );
 }
 
+type Cell = number | string | string[];
+
 interface TableProps {
-  rows: any[];
+  rows: { [key: string]: Cell }[];
   height?: number;
   paginate?: boolean;
   numPerPage?: number;
@@ -126,12 +128,10 @@ export function Table({ rows, height, paginate, numPerPage }: TableProps) {
                 .slice()
                 .sort(getComparator(order, orderBy))
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row: any, index: any) => {
-                  const labelId = `enhanced-table-checkbox-${index}`;
-
+                .map((row) => {
                   return (
                     <TableRow
-                      key={row.id}
+                      key={String(row.id)}
                       sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
                       {Object.entries(row)
@@ -139,7 +139,9 @@ export function Table({ rows, height, paginate, numPerPage }: TableProps) {
                         .map(([_, value], i) => {
                           console.log({ value });
                           return (
-                            <TableCell align={!i ? "left" : "right"}>{value as string}</TableCell>
+                            <TableCell align={!i ? "left" : "right"}>
+                              {Array.isArray(value) ? value.join(", ") : value}
+                            </TableCell>
                           );
                         })}
                     </TableRow>
