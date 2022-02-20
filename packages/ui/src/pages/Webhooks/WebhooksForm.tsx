@@ -1,27 +1,18 @@
-import * as React from "react";
 import { useState } from "react";
-import { gql, useMutation, useQuery } from "@apollo/client";
-import { Paper, Switch, Button, FormControl, TextField, MenuItem } from "@mui/material";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
+import { useMutation, useQuery } from "@apollo/client";
+import {
+  Button,
+  FormControl,
+  MenuItem,
+  Paper,
+  Select,
+  SelectChangeEvent,
+  TextField,
+} from "@mui/material";
+
+import { CREATE_WEBHOOK, GET_ALL_CHAINS } from "queries";
+
 const locations = ["NL", "DE", "USE1", "USE2", "USW2", "HK", "SG", "LDN"];
-
-const GET_CHAINS = gql`
-  {
-    chains {
-      id
-      name
-      type
-    }
-  }
-`;
-
-const CREATE_WEBHOOK = gql`
-  mutation ($chain: String, $url: String, $location: String) {
-    createWebhook(chain: $chain, url: $url, location: $location) {
-      url
-    }
-  }
-`;
 
 interface Chain {
   id: string;
@@ -32,13 +23,13 @@ interface ChainsData {
   chains: Chain[];
 }
 
-export function Form() {
+export function WebhooksForm() {
   const [chain, setChain] = useState("");
   const [url, setUrl] = useState("");
   const [submit] = useMutation(CREATE_WEBHOOK);
   const [location, setLocation] = useState("NL");
 
-  const { loading, error, data } = useQuery<ChainsData>(GET_CHAINS);
+  const { loading, error, data } = useQuery<ChainsData>(GET_ALL_CHAINS);
 
   const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(event.target.value);
@@ -50,14 +41,16 @@ export function Form() {
   const handleChainChange = (event: SelectChangeEvent<typeof chain>) => {
     setChain(event.target.value);
   };
-  if (loading) return <React.Fragment>Loading...</React.Fragment>;
-  if (error) return <React.Fragment> Error! ${error.message}</React.Fragment>;
+
+  if (loading) return <>Loading...</>;
+  if (error) return <> Error! ${error.message}</>;
+
   return (
-    <React.Fragment>
+    <>
       <div>
         <Paper style={{ width: "200%" }} variant="outlined">
           <FormControl fullWidth>
-          <Select value={location} onChange={handleLocationChange}>
+            <Select value={location} onChange={handleLocationChange}>
               {locations.map((location) => (
                 <MenuItem value={location}>{location}</MenuItem>
               ))}
@@ -78,7 +71,7 @@ export function Form() {
               variant="outlined"
               onClick={() => {
                 submit({ variables: { chain, url } });
-               // setChain("");
+                // setChain("");
                 setUrl("");
               }}
             >
@@ -87,6 +80,6 @@ export function Form() {
           </FormControl>
         </Paper>
       </div>
-    </React.Fragment>
+    </>
   );
 }

@@ -1,8 +1,17 @@
-import * as React from "react";
-import { useState } from "react";
-import { gql, useMutation, useQuery } from "@apollo/client";
-import { Paper, Switch, Button, FormControl, TextField, MenuItem } from "@mui/material";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
+import { ChangeEvent, useState } from "react";
+import { useMutation, useQuery } from "@apollo/client";
+import {
+  Button,
+  FormControl,
+  MenuItem,
+  Paper,
+  Select,
+  SelectChangeEvent,
+  Switch,
+  TextField,
+} from "@mui/material";
+
+import { CREATE_NODE, GET_HOSTS_CHAINS_LB } from "queries";
 
 interface Host {
   id: string;
@@ -20,60 +29,7 @@ interface HostsAndChainsData {
   loadBalancers: Host[];
 }
 
-const GET_HOSTS_CHAINS_LB = gql`
-  query getHostsChainsAndLoadBalancers {
-    hosts {
-      id
-      name
-      ip
-    }
-    chains {
-      id
-      name
-    }
-    loadBalancers: hosts(loadBalancer: true) {
-      id
-      name
-    }
-  }
-`;
-
-const CREATE_NODE = gql`
-  mutation (
-    $backend: String
-    $chain: ID
-    $haProxy: Boolean
-    $host: ID
-    $port: Int
-    $server: String
-    $variance: Int
-    $ssl: Boolean
-    $basicAuth: String
-    $url: String
-    $loadBalancers: [ID]
-  ) {
-    createNode(
-      input: {
-        backend: $backend
-        chain: $chain
-        haProxy: $haProxy
-        host: $host
-        port: $port
-        server: $server
-        variance: $variance
-        ssl: $ssl
-        basicAuth: $basicAuth
-        url: $url
-        loadBalancers: $loadBalancers
-      }
-    ) {
-      id
-      url
-    }
-  }
-`;
-
-export function Form() {
+export function NodesForm() {
   const [chain, setChain] = useState("");
   const [host, setHost] = useState("");
   const [ip, setIP] = useState("");
@@ -106,35 +62,34 @@ export function Form() {
     setLoadBalancer(event.target.value);
   };
 
-
-  const handleVarianceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVarianceChange = (event: ChangeEvent<HTMLInputElement>) => {
     setVariance(Number(event.target.value));
   };
 
-  const handlePortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePortChange = (event: ChangeEvent<HTMLInputElement>) => {
     setPort(Number(event.target.value));
   };
 
-  const handleBackendChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBackendChange = (event: ChangeEvent<HTMLInputElement>) => {
     setBackend(event.target.value);
   };
 
-  const handleServerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleServerChange = (event: ChangeEvent<HTMLInputElement>) => {
     setServer(event.target.value);
   };
-  const handleAuthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAuthChange = (event: ChangeEvent<HTMLInputElement>) => {
     setAuth(event.target.value);
   };
 
-  const handleHaproxyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleHaproxyChange = (event: ChangeEvent<HTMLInputElement>) => {
     setHaproxy(event.target.checked);
   };
 
-  if (loading) return <React.Fragment>Loading...</React.Fragment>;
-  if (error) return <React.Fragment> Error! ${error.message}</React.Fragment>;
+  if (loading) return <>Loading...</>;
+  if (error) return <> Error! ${error.message}</>;
 
   return (
-    <React.Fragment>
+    <>
       <div
         style={{
           display: "flex",
@@ -232,6 +187,6 @@ export function Form() {
           </FormControl>
         </Paper>
       </div>
-    </React.Fragment>
+    </>
   );
 }
