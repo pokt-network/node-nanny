@@ -42,15 +42,30 @@ const resolvers = {
     },
   },
 
+  /* Return MongoDB ObjectId field `_id` for all types as `id` */
   Chain: {
     id(chain: any) {
       return chain._id;
     },
   },
-
   Host: {
     id(host: any) {
       return host._id;
+    },
+  },
+  Node: {
+    id(node: any) {
+      return node._id;
+    },
+  },
+  Oracle: {
+    id(oracle: any) {
+      return oracle._id;
+    },
+  },
+  Webhook: {
+    id(webhook: any) {
+      return webhook._id;
     },
   },
 };

@@ -1,20 +1,26 @@
-import * as React from "react";
-import { Form } from ".";
+import { useQuery } from "@apollo/client";
 
-interface ViewProps {
-  children?: React.ReactNode;
-}
+import { GET_ALL_NODES } from "queries";
+import { Table } from "components";
+import { NodesForm } from "./NodesForm";
 
-export function View(props: ViewProps) {
+export function Nodes() {
+  const { data, error } = useQuery(GET_ALL_NODES);
+
   return (
     <div
       style={{
         display: "flex",
+        flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
+        margin: "16px",
       }}
     >
-      <Form />
+      <div style={{ marginBottom: "16px" }}>
+        <NodesForm />
+      </div>
+      {data && <Table paginate rows={data.nodes} />}
     </div>
   );
 }
