@@ -16,7 +16,7 @@ const resolvers = {
     },
     logs: async ({ id }) => await LogsModel.find({ label: id }).exec(),
     nodes: async () => await NodesModel.find({}).populate("chain").populate("host").exec(),
-    oracles: async () => await OraclesModel.find({}).exec(),
+    oracles: async () => await OraclesModel.find({}).populate("chain").exec(),
     webhooks: async () => await WebhookModel.find({}).exec(),
   },
 
@@ -61,6 +61,9 @@ const resolvers = {
   Oracle: {
     id(oracle: any) {
       return oracle._id;
+    },
+    chain(oracle: any) {
+      return oracle.chain.name;
     },
   },
   Webhook: {
