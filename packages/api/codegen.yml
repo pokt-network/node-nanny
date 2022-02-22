@@ -1,5 +1,8 @@
 overwrite: true
 schema: "./src/graphql/schema.ts"
+config:
+  typesPrefix: I
+  skipTypename: true
 generates:
   ../ui/src/types/types.ts:
     plugins:

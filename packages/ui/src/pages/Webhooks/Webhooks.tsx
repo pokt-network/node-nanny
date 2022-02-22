@@ -2,11 +2,11 @@ import { useQuery } from "@apollo/client";
 
 import { Table } from "components";
 import { GET_ALL_WEBHOOKS } from "queries";
-import { Webhook } from "types";
+import { IWebhook } from "types";
 import { WebhooksForm } from "./WebhooksForm";
 
 export function Webhooks() {
-  const { data, error } = useQuery<{ webhooks: Webhook[] }>(GET_ALL_WEBHOOKS);
+  const { data, error } = useQuery<{ webhooks: IWebhook[] }>(GET_ALL_WEBHOOKS);
 
   return (
     <div
