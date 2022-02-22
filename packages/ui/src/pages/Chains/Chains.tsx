@@ -1,11 +1,12 @@
 import { useQuery } from "@apollo/client";
 
-import { GET_ALL_CHAINS } from "queries";
 import { Table } from "components";
+import { GET_ALL_CHAINS } from "queries";
+import { Chain } from "types";
 import ChainsForm from "./ChainsForm";
 
 export function Chains() {
-  const { data, error } = useQuery(GET_ALL_CHAINS);
+  const { data, error } = useQuery<{ chains: Chain[] }>(GET_ALL_CHAINS);
 
   return (
     <div

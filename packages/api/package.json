@@ -7,7 +7,8 @@
     "start:graphql": "pnpm build && ts-node -r tsconfig-paths/register ./src/gql-server.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b .",
-    "build:watch": "tsc -b -w ."
+    "build:watch": "tsc -b -w .",
+    "generate": "graphql-codegen --config codegen.yml"
   },
   "dependencies": {
     "@pokt-foundation/node-monitoring-core": "workspace:^0.1.0",
@@ -16,7 +17,10 @@
     "graphql": "^16.0.1"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "2.6.2",
     "ts-node": "^10.1.0",
-    "tsconfig-paths": "^3.12.0"
+    "tsconfig-paths": "^3.12.0",
+    "@graphql-codegen/typescript-operations": "2.3.2",
+    "@graphql-codegen/typescript": "2.4.5"
   }
 }
