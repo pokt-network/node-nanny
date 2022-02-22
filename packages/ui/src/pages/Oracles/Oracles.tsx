@@ -2,11 +2,11 @@ import { useQuery } from "@apollo/client";
 
 import { Table } from "components";
 import { GET_ALL_ORACLES } from "queries";
-import { Oracle } from "types";
+import { IOracle } from "types";
 import { OraclesForm } from "./OraclesForm";
 
 export function Oracles() {
-  const { data, error } = useQuery<{ oracles: Oracle[] }>(GET_ALL_ORACLES);
+  const { data, error } = useQuery<{ oracles: IOracle[] }>(GET_ALL_ORACLES);
 
   return (
     <div

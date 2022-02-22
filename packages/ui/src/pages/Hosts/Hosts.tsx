@@ -2,11 +2,11 @@ import { useQuery } from "@apollo/client";
 
 import { Table } from "components";
 import { GET_ALL_HOSTS } from "queries";
-import { Host } from "types";
+import { IHost } from "types";
 import { HostsForm } from "./HostsForm";
 
 export function Hosts() {
-  const { data, error } = useQuery<{ hosts: Host[] }>(GET_ALL_HOSTS);
+  const { data, error } = useQuery<{ hosts: IHost[] }>(GET_ALL_HOSTS);
 
   return (
     <div
