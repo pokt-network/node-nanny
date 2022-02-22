@@ -11,25 +11,17 @@ import {
 } from "@mui/material";
 
 import { CREATE_WEBHOOK, GET_ALL_CHAINS } from "queries";
+import { IChain, IWebhook } from "types";
 
 const locations = ["NL", "DE", "USE1", "USE2", "USW2", "HK", "SG", "LDN"];
-
-interface Chain {
-  id: string;
-  name: string;
-  type: string;
-}
-interface ChainsData {
-  chains: Chain[];
-}
 
 export function WebhooksForm() {
   const [chain, setChain] = useState("");
   const [url, setUrl] = useState("");
-  const [submit] = useMutation(CREATE_WEBHOOK);
   const [location, setLocation] = useState("NL");
 
-  const { loading, error, data } = useQuery<ChainsData>(GET_ALL_CHAINS);
+  const [submit] = useMutation<{ createWebhook: IWebhook }>(CREATE_WEBHOOK);
+  const { loading, error, data } = useQuery<{ chains: IChain[] }>(GET_ALL_CHAINS);
 
   const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(event.target.value);

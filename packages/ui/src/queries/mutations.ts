@@ -1,10 +1,11 @@
 import { gql } from "@apollo/client";
 
 export const CREATE_CHAIN = gql`
-  mutation createChain($name: String!, $type: String!) {
-    createChain(name: $name, type: $type) {
+  mutation createChain($name: String!, $type: String!, $variance: Int) {
+    createChain(name: $name, type: $type, variance: $variance) {
       name
       type
+      variance
     }
   }
 `;
@@ -20,14 +21,13 @@ export const CREATE_HOST = gql`
 `;
 
 export const CREATE_NODE = gql`
-  mutation (
+  mutation(
     $backend: String
     $chain: ID
     $haProxy: Boolean
     $host: ID
     $port: Int
     $server: String
-    $variance: Int
     $ssl: Boolean
     $basicAuth: String
     $url: String
@@ -41,7 +41,6 @@ export const CREATE_NODE = gql`
         host: $host
         port: $port
         server: $server
-        variance: $variance
         ssl: $ssl
         basicAuth: $basicAuth
         url: $url
@@ -64,7 +63,7 @@ export const CREATE_ORACLE = gql`
 `;
 
 export const CREATE_WEBHOOK = gql`
-  mutation ($chain: String, $url: String, $location: String) {
+  mutation($chain: String, $url: String, $location: String) {
     createWebhook(chain: $chain, url: $url, location: $location) {
       url
     }

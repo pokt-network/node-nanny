@@ -6,9 +6,12 @@ export interface IOracle {
   urls: string[];
 }
 
-const oracleSchema = new Schema<IOracle>({
-  chain: { type: Schema.Types.ObjectId, ref: "chains" },
-  urls: [String],
-});
+const oracleSchema = new Schema<IOracle>(
+  {
+    chain: { type: Schema.Types.ObjectId, ref: "chains" },
+    urls: [String],
+  },
+  { timestamps: true },
+);
 
 export const OraclesModel: Model<IOracle> = model("oracles", oracleSchema);
