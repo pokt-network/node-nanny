@@ -29,7 +29,7 @@ type Order = "asc" | "desc";
 function getComparator<Key extends keyof any>(
   order: Order,
   orderBy: Key,
-): (a: { [key in Key]: Cell }, b: { [key in Key]: Cell }) => number {
+): (a: { [key in Key]: any }, b: { [key in Key]: any }) => number {
   return order === "desc"
     ? (a, b) => descendingComparator(a, b, orderBy)
     : (a, b) => -descendingComparator(a, b, orderBy);
@@ -75,10 +75,8 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   );
 }
 
-type Cell = number | string | string[];
-
 interface TableProps {
-  rows: { [key: string]: Cell }[];
+  rows: { [key: string]: any }[];
   height?: number;
   paginate?: boolean;
   numPerPage?: number;
