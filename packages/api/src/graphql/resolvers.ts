@@ -70,6 +70,9 @@ const resolvers = {
     id(webhook: any) {
       return webhook._id;
     },
+    chain(oracle: any) {
+      return oracle.chain.name;
+    },
   },
 };
 

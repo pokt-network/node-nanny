@@ -6,6 +6,7 @@ export const GET_ALL_CHAINS = gql`
       id
       name
       type
+      variance
     }
   }
 `;
