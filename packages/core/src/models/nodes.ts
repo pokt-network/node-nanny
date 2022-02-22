@@ -3,13 +3,13 @@ import { IChain } from "./chains";
 import { IHost } from "./hosts";
 
 export interface INode {
-  backend: string;
+  id: Schema.Types.ObjectId;
   chain: IChain;
+  host: IHost;
+  backend: string;
   container: string;
   haProxy: boolean;
   hasPeer: boolean;
-  id: string;
-  host: IHost;
   hostname: string;
   reboot: boolean;
   monitorId: string;
@@ -32,20 +32,14 @@ export interface INode {
 
 const nodesSchema = new Schema<INode>(
   {
-    id: String,
+    id: Schema.Types.ObjectId,
+    chain: { type: Schema.Types.ObjectId, ref: "chains" },
+    host: { type: Schema.Types.ObjectId, ref: "hosts" },
     backend: String,
-    chain: {
-      type: Schema.Types.ObjectId,
-      ref: "chains",
-    },
     container: String,
     haProxy: Boolean,
     reboot: Boolean,
     hasPeer: Boolean,
-    host: {
-      type: Schema.Types.ObjectId,
-      ref: "hosts",
-    },
     hostname: String,
     monitorId: String,
     port: Number,
