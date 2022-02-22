@@ -1,5 +1,6 @@
 import { api } from "@pagerduty/pdjs";
 import axios, { AxiosInstance } from "axios";
+import { Types } from "mongoose";
 import {
   AlertColor,
   SendMessageInput,
@@ -25,7 +26,7 @@ export class Service {
   }
 
   async getWebhookUrl(chain: string): Promise<string> {
-    const { url } = await WebhookModel.findOne({ chain }).exec();
+    const { url } = await WebhookModel.findOne({ chain: chain as any }).exec();
     return url;
   }
 
@@ -66,7 +67,7 @@ export class Service {
         fields: [{ name: "Error", value: message }],
       });
     } catch (error) {
-     // throw new Error(error);
+      // throw new Error(error);
     }
   };
 

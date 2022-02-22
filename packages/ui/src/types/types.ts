@@ -13,13 +13,14 @@ export type Scalars = {
 };
 
 export type IChain = {
-  id?: Maybe<Scalars['ID']>;
+  id: Scalars['ID'];
   name?: Maybe<Scalars['String']>;
   type?: Maybe<Scalars['String']>;
+  variance?: Maybe<Scalars['Int']>;
 };
 
 export type IHost = {
-  id?: Maybe<Scalars['ID']>;
+  id: Scalars['ID'];
   ip?: Maybe<Scalars['String']>;
   loadBalancer?: Maybe<Scalars['Boolean']>;
   location?: Maybe<Scalars['String']>;
@@ -145,7 +146,6 @@ export type INode = {
   server?: Maybe<Scalars['String']>;
   ssl?: Maybe<Scalars['Boolean']>;
   url?: Maybe<Scalars['String']>;
-  variance?: Maybe<Scalars['Int']>;
 };
 
 export type INodeInput = {
@@ -200,7 +200,7 @@ export type IQueryNodeStatusArgs = {
 };
 
 export type IWebhook = {
-  chain?: Maybe<Scalars['String']>;
+  chain: Scalars['String'];
   id: Scalars['ID'];
   location?: Maybe<Scalars['String']>;
   url?: Maybe<Scalars['String']>;

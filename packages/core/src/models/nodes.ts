@@ -58,7 +58,7 @@ const nodesSchema = new Schema<INode>(
     ssl: Boolean,
     loadBalancers: [Schema.Types.ObjectId],
   },
-  { collection: "nodes" },
+  { collection: "nodes", timestamps: true },
 );
 
 export const NodesModel: Model<INode> = model("nodes", nodesSchema);
