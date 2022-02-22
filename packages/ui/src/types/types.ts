@@ -12,15 +12,13 @@ export type Scalars = {
   Float: number;
 };
 
-export type Chain = {
-  __typename?: 'Chain';
+export type IChain = {
   id?: Maybe<Scalars['ID']>;
   name?: Maybe<Scalars['String']>;
   type?: Maybe<Scalars['String']>;
 };
 
-export type Host = {
-  __typename?: 'Host';
+export type IHost = {
   id?: Maybe<Scalars['ID']>;
   ip?: Maybe<Scalars['String']>;
   loadBalancer?: Maybe<Scalars['Boolean']>;
@@ -28,8 +26,7 @@ export type Host = {
   name?: Maybe<Scalars['String']>;
 };
 
-export type Log = {
-  __typename?: 'Log';
+export type ILog = {
   id: Scalars['ID'];
   label?: Maybe<Scalars['ID']>;
   level?: Maybe<Scalars['String']>;
@@ -37,32 +34,31 @@ export type Log = {
   timestamp?: Maybe<Scalars['String']>;
 };
 
-export type Mutation = {
-  __typename?: 'Mutation';
-  createChain?: Maybe<Chain>;
-  createHost?: Maybe<Host>;
-  createNode?: Maybe<Node>;
-  createOracle?: Maybe<Oracle>;
-  createWebhook?: Maybe<Webhook>;
-  deleteChain?: Maybe<Chain>;
-  deleteNode?: Maybe<Node>;
-  deleteOracle?: Maybe<Oracle>;
-  deletehost?: Maybe<Host>;
-  updateChain?: Maybe<Chain>;
-  updateHost?: Maybe<Host>;
-  updateNode?: Maybe<Node>;
+export type IMutation = {
+  createChain?: Maybe<IChain>;
+  createHost?: Maybe<IHost>;
+  createNode?: Maybe<INode>;
+  createOracle?: Maybe<IOracle>;
+  createWebhook?: Maybe<IWebhook>;
+  deleteChain?: Maybe<IChain>;
+  deleteNode?: Maybe<INode>;
+  deleteOracle?: Maybe<IOracle>;
+  deletehost?: Maybe<IHost>;
+  updateChain?: Maybe<IChain>;
+  updateHost?: Maybe<IHost>;
+  updateNode?: Maybe<INode>;
   updateNodeInRotation?: Maybe<Scalars['String']>;
-  updateOracle?: Maybe<Oracle>;
+  updateOracle?: Maybe<IOracle>;
 };
 
 
-export type MutationCreateChainArgs = {
+export type IMutationCreateChainArgs = {
   name?: InputMaybe<Scalars['String']>;
   type?: InputMaybe<Scalars['String']>;
 };
 
 
-export type MutationCreateHostArgs = {
+export type IMutationCreateHostArgs = {
   ip?: InputMaybe<Scalars['String']>;
   loadBalancer?: InputMaybe<Scalars['Boolean']>;
   location?: InputMaybe<Scalars['String']>;
@@ -70,80 +66,79 @@ export type MutationCreateHostArgs = {
 };
 
 
-export type MutationCreateNodeArgs = {
-  input?: InputMaybe<NodeInput>;
+export type IMutationCreateNodeArgs = {
+  input?: InputMaybe<INodeInput>;
 };
 
 
-export type MutationCreateOracleArgs = {
+export type IMutationCreateOracleArgs = {
   chain?: InputMaybe<Scalars['String']>;
   url?: InputMaybe<Scalars['String']>;
 };
 
 
-export type MutationCreateWebhookArgs = {
+export type IMutationCreateWebhookArgs = {
   chain?: InputMaybe<Scalars['String']>;
   location?: InputMaybe<Scalars['String']>;
   url?: InputMaybe<Scalars['String']>;
 };
 
 
-export type MutationDeleteChainArgs = {
+export type IMutationDeleteChainArgs = {
   id?: InputMaybe<Scalars['ID']>;
 };
 
 
-export type MutationDeleteNodeArgs = {
+export type IMutationDeleteNodeArgs = {
   id?: InputMaybe<Scalars['ID']>;
 };
 
 
-export type MutationDeleteOracleArgs = {
+export type IMutationDeleteOracleArgs = {
   id?: InputMaybe<Scalars['ID']>;
 };
 
 
-export type MutationDeletehostArgs = {
+export type IMutationDeletehostArgs = {
   id?: InputMaybe<Scalars['ID']>;
 };
 
 
-export type MutationUpdateChainArgs = {
+export type IMutationUpdateChainArgs = {
   name?: InputMaybe<Scalars['String']>;
   type?: InputMaybe<Scalars['String']>;
 };
 
 
-export type MutationUpdateHostArgs = {
+export type IMutationUpdateHostArgs = {
   ip?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
 };
 
 
-export type MutationUpdateNodeArgs = {
-  input?: InputMaybe<NodeInput>;
+export type IMutationUpdateNodeArgs = {
+  input?: InputMaybe<INodeInput>;
 };
 
 
-export type MutationUpdateNodeInRotationArgs = {
+export type IMutationUpdateNodeInRotationArgs = {
   action?: InputMaybe<Scalars['String']>;
   id?: InputMaybe<Scalars['ID']>;
 };
 
 
-export type MutationUpdateOracleArgs = {
+export type IMutationUpdateOracleArgs = {
   action?: InputMaybe<Scalars['String']>;
   id?: InputMaybe<Scalars['ID']>;
   url?: InputMaybe<Scalars['String']>;
 };
 
-export type Node = {
-  __typename?: 'Node';
+export type INode = {
   backend?: Maybe<Scalars['String']>;
   basicAuth?: Maybe<Scalars['String']>;
-  chain?: Maybe<Chain>;
+  chain?: Maybe<IChain>;
   haProxy?: Maybe<Scalars['Boolean']>;
-  host?: Maybe<Host>;
+  host?: Maybe<IHost>;
   id: Scalars['ID'];
   loadBalancers?: Maybe<Array<Maybe<Scalars['ID']>>>;
   port?: Maybe<Scalars['Int']>;
@@ -153,7 +148,7 @@ export type Node = {
   variance?: Maybe<Scalars['Int']>;
 };
 
-export type NodeInput = {
+export type INodeInput = {
   backend?: InputMaybe<Scalars['String']>;
   basicAuth?: InputMaybe<Scalars['String']>;
   chain?: InputMaybe<Scalars['ID']>;
@@ -167,47 +162,44 @@ export type NodeInput = {
   variance?: InputMaybe<Scalars['Int']>;
 };
 
-export type Oracle = {
-  __typename?: 'Oracle';
+export type IOracle = {
   chain: Scalars['String'];
   id: Scalars['ID'];
   urls?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
-export type Query = {
-  __typename?: 'Query';
-  chains?: Maybe<Array<Maybe<Chain>>>;
+export type IQuery = {
+  chains?: Maybe<Array<Maybe<IChain>>>;
   haProxyStatus?: Maybe<Scalars['String']>;
-  hosts?: Maybe<Array<Maybe<Host>>>;
-  logs?: Maybe<Array<Maybe<Log>>>;
+  hosts?: Maybe<Array<Maybe<IHost>>>;
+  logs?: Maybe<Array<Maybe<ILog>>>;
   nodeStatus?: Maybe<Scalars['String']>;
-  nodes?: Maybe<Array<Maybe<Node>>>;
-  oracles?: Maybe<Array<Maybe<Oracle>>>;
-  webhooks?: Maybe<Array<Maybe<Webhook>>>;
+  nodes?: Maybe<Array<Maybe<INode>>>;
+  oracles?: Maybe<Array<Maybe<IOracle>>>;
+  webhooks?: Maybe<Array<Maybe<IWebhook>>>;
 };
 
 
-export type QueryHaProxyStatusArgs = {
+export type IQueryHaProxyStatusArgs = {
   id?: InputMaybe<Scalars['String']>;
 };
 
 
-export type QueryHostsArgs = {
+export type IQueryHostsArgs = {
   loadBalancer?: InputMaybe<Scalars['Boolean']>;
 };
 
 
-export type QueryLogsArgs = {
+export type IQueryLogsArgs = {
   id?: InputMaybe<Scalars['String']>;
 };
 
 
-export type QueryNodeStatusArgs = {
+export type IQueryNodeStatusArgs = {
   id?: InputMaybe<Scalars['String']>;
 };
 
-export type Webhook = {
-  __typename?: 'Webhook';
+export type IWebhook = {
   chain?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
   location?: Maybe<Scalars['String']>;

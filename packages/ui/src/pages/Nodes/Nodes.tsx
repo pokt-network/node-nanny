@@ -2,11 +2,11 @@ import { useQuery } from "@apollo/client";
 
 import { Table } from "components";
 import { GET_ALL_NODES } from "queries";
-import { Node } from "types";
+import { INode } from "types";
 import { NodesForm } from "./NodesForm";
 
 export function Nodes() {
-  const { data, error } = useQuery<{ nodes: Node[] }>(GET_ALL_NODES);
+  const { data, error } = useQuery<{ nodes: INode[] }>(GET_ALL_NODES);
 
   return (
     <div
