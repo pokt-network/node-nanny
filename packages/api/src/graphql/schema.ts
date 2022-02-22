@@ -3,14 +3,14 @@ import { gql } from "apollo-server";
 const typeDefs = gql`
   # Types
   type Chain {
-    id: ID!
-    name: String!
-    type: String!
+    id: ID
+    name: String
+    type: String
   }
 
   type Host {
-    id: ID!
-    name: String!
+    id: ID
+    name: String
     ip: String
     loadBalancer: Boolean
     location: String
