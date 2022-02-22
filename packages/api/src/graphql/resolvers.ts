@@ -15,7 +15,7 @@ const resolvers = {
       return await HostsModel.find(query).sort({ name: 1 }).exec();
     },
     logs: async ({ id }) => await LogsModel.find({ label: id }).exec(),
-    nodes: async () => await NodesModel.find({}).exec(),
+    nodes: async () => await NodesModel.find({}).populate("chain").populate("host").exec(),
     oracles: async () => await OraclesModel.find({}).exec(),
     webhooks: async () => await WebhookModel.find({}).exec(),
   },
