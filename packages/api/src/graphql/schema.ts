@@ -3,13 +3,14 @@ import { gql } from "apollo-server";
 const typeDefs = gql`
   # Types
   type Chain {
-    id: ID
+    id: ID!
     name: String
     type: String
+    variance: Int
   }
 
   type Host {
-    id: ID
+    id: ID!
     name: String
     ip: String
     loadBalancer: Boolean
@@ -33,7 +34,6 @@ const typeDefs = gql`
     port: Int
     server: String
     url: String
-    variance: Int
     ssl: Boolean
     basicAuth: String
     loadBalancers: [ID]
@@ -47,8 +47,8 @@ const typeDefs = gql`
 
   type Webhook {
     id: ID!
+    chain: String!
     location: String
-    chain: String
     url: String
   }
 
@@ -81,7 +81,7 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    createChain(name: String, type: String): Chain
+    createChain(name: String, type: String, variance: Int): Chain
     createHost(name: String, ip: String, loadBalancer: Boolean, location: String): Host
     createNode(input: NodeInput): Node
     createOracle(chain: String, url: String): Oracle
