@@ -12,21 +12,12 @@ import {
 } from "@mui/material";
 
 import { CREATE_NODE, GET_HOSTS_CHAINS_LB } from "queries";
+import { IChain, IHost, INode } from "types";
 
-interface Host {
-  id: string;
-  name: string;
-  ip: string;
-}
-interface Chain {
-  id: string;
-  name: string;
-  type: string;
-}
 interface HostsAndChainsData {
-  chains: Chain[];
-  hosts: Host[];
-  loadBalancers: Host[];
+  chains: IChain[];
+  hosts: IHost[];
+  loadBalancers: IHost[];
 }
 
 export function NodesForm() {
@@ -34,14 +25,14 @@ export function NodesForm() {
   const [host, setHost] = useState("");
   const [ip, setIP] = useState("");
   const [loadBalancers, setLoadBalancer] = useState("");
-  const [variance, setVariance] = useState(0);
   const [port, setPort] = useState(0);
   const [backend, setBackend] = useState("");
   const [server, setServer] = useState("");
   const [basicAuth, setAuth] = useState("");
   const [ssl, setSSL] = useState("");
   const [haProxy, setHaproxy] = useState(true);
-  const [submit] = useMutation(CREATE_NODE);
+
+  const [submit] = useMutation<{ createNode: INode }>(CREATE_NODE);
   const { loading, error, data } = useQuery<HostsAndChainsData>(GET_HOSTS_CHAINS_LB);
 
   const handleChainChange = (event: SelectChangeEvent<typeof chain>) => {
@@ -52,7 +43,7 @@ export function NodesForm() {
     if (data?.hosts) {
       const index = data.hosts.findIndex((item) => item.id === event.target.value);
       const ip = data.hosts[index].ip;
-      setIP(ip);
+      setIP(ip!);
     }
 
     setHost(event.target.value);
@@ -60,10 +51,6 @@ export function NodesForm() {
 
   const handleLoadBalancerChange = (event: SelectChangeEvent<typeof chain>) => {
     setLoadBalancer(event.target.value);
-  };
-
-  const handleVarianceChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setVariance(Number(event.target.value));
   };
 
   const handlePortChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -122,13 +109,6 @@ export function NodesForm() {
               ))}
             </Select>
             <div style={{ marginTop: "10px" }} />
-            <TextField
-              value={variance}
-              onChange={handleVarianceChange}
-              label="Variance"
-              variant="outlined"
-            />
-            <div style={{ marginTop: "10px" }} />
             <TextField value={port} onChange={handlePortChange} label="Port" variant="outlined" />
             <div style={{ marginTop: "10px" }} />
             <TextField
@@ -174,7 +154,6 @@ export function NodesForm() {
                     host,
                     port,
                     server,
-                    variance,
                     basicAuth,
                     loadBalancers: [loadBalancers],
                     url: `http://${ip}:${port}`,

@@ -8,12 +8,15 @@ export interface ILog {
   label: string;
 }
 
-const logSchema = new Schema<ILog>({
-  id: Schema.Types.ObjectId,
-  timestamp: String,
-  level: String,
-  message: String,
-  label: Schema.Types.ObjectId
-});
+const logSchema = new Schema<ILog>(
+  {
+    id: Schema.Types.ObjectId,
+    label: Schema.Types.ObjectId,
+    timestamp: String,
+    level: String,
+    message: String,
+  },
+  { timestamps: true },
+);
 
 export const LogsModel: Model<ILog> = model("logs", logSchema);
