@@ -88,7 +88,7 @@ const typeDefs = gql`
     createWebhook(location: String, chain: String, url: String): Webhook
 
     updateNode(input: NodeInput): Node
-    updatehost(name: String, ip: String): Host
+    updateHost(name: String, ip: String): Host
     updateOracle(id: ID, action: String, url: String): Oracle
     updateChain(name: String, type: String): Chain
     updateNodeInRotation(id: ID, action: String): String
