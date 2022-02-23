@@ -132,7 +132,6 @@ export function Table({ rows, height, paginate, numPerPage }: TableProps) {
                       {Object.entries(row)
                         .filter(([key]) => key !== "id")
                         .map(([_, value], i) => {
-                          console.log({ value });
                           return (
                             <TableCell align={!i ? "left" : "right"}>
                               {Array.isArray(value) ? value.join(", ") : value}
