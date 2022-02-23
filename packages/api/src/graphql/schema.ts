@@ -35,10 +35,11 @@ const typeDefs = gql`
     server: String
     url: String
     ssl: Boolean
-    basicAuth: String
     loadBalancers: [ID]
+    # Add array of Host IDs for loadBalancers field
   }
 
+  # EVM chains only
   type Oracle {
     id: ID!
     chain: String!
@@ -56,14 +57,13 @@ const typeDefs = gql`
   input NodeInput {
     backend: String
     chain: ID
-    haProxy: Boolean
     host: ID
+    haProxy: Boolean
     port: Int
     server: String
     url: String
     variance: Int
     ssl: Boolean
-    basicAuth: String
     loadBalancers: [ID]
   }
 

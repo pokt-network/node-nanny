@@ -326,7 +326,7 @@ export class Service {
       const { data } = await this.rpc.post(`${url}/v1/query/height`, {}, options);
       return data;
     } catch (error) {
-     // //console.error(`could not contact pocket node ${error} ${url}`);
+      // //console.error(`could not contact pocket node ${error} ${url}`);
       return { height: 0 };
     }
   }
@@ -370,9 +370,9 @@ export class Service {
       .map(({ result }) => hexToDec(result));
     //const height = this.getBestBlockHeight({ readings, variance });
 
-    console.log("READINGS", readings.sort()[0])
+    console.log("READINGS", readings.sort()[0]);
 
-    return  readings.sort()[0]
+    return readings.sort()[0];
   }
 
   private async nc({ host, port }): Promise<string> {
@@ -632,7 +632,7 @@ export class Service {
       ALG: this.getAlgorandNodeHealth,
       AVA: this.getAvaNodeHealth,
       EVM: this.getEVMNodeHealth,
-      HEI: this.getHeimdallNodeHealth,
+      HEI: this.getHeimdallNodeHealth, // DEV NOTE -> Change to Tendermint
       HRM: this.getHarmonyNodeHealth,
       POKT: this.getPocketNodeHealth,
       SOL: this.getSolNodeHealth,
