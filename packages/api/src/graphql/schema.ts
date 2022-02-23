@@ -36,7 +36,6 @@ const typeDefs = gql`
     url: String
     ssl: Boolean
     loadBalancers: [ID]
-    # Add array of Host IDs for loadBalancers field
   }
 
   # EVM chains only
