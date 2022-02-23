@@ -31,9 +31,7 @@ export const GET_ALL_NODES = gql`
       port
       server
       url
-      variance
       ssl
-      basicAuth
       loadBalancers
     }
   }
