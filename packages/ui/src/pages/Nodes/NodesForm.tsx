@@ -32,7 +32,6 @@ export function NodesForm() {
   const [port, setPort] = useState(0);
   const [backend, setBackend] = useState("");
   const [server, setServer] = useState("");
-  const [ssl, setSSL] = useState("");
   const [haProxy, setHaproxy] = useState(true);
 
   const [submit] = useMutation<{ createNode: INode }>(CREATE_NODE, {

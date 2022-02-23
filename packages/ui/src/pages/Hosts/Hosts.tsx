@@ -8,6 +8,8 @@ import { HostsForm } from "./HostsForm";
 export function Hosts() {
   const { data, error } = useQuery<{ hosts: IHost[] }>(GET_ALL_HOSTS);
 
+  if (error) console.log({ error });
+
   return (
     <div
       style={{
