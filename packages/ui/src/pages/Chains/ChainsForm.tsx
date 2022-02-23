@@ -19,7 +19,14 @@ export default function ChainsForm() {
   const [name, setName] = useState("");
   const [type, setType] = useState("EVM");
   const [variance, setVariance] = useState(0);
-  const [submit, { data, loading, error }] = useMutation<{ createChain: IChain }>(CREATE_CHAIN);
+
+  const [submit] = useMutation<{ createChain: IChain }>(CREATE_CHAIN, {
+    onCompleted: () => {
+      setName("");
+      setType("");
+    },
+    onError: (error) => console.log("DEV - ERROR CREATING CHAIN", error),
+  });
 
   const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
@@ -36,7 +43,7 @@ export default function ChainsForm() {
   return (
     <>
       <div>
-        <Paper style={{ width: "200%" }} variant="outlined">
+        <Paper style={{ width: "200%", padding: 10 }} variant="outlined">
           <FormControl fullWidth>
             <TextField
               value={name}
@@ -67,8 +74,6 @@ export default function ChainsForm() {
               variant="outlined"
               onClick={() => {
                 submit({ variables: { name, type, variance } });
-                setName("");
-                setType("");
               }}
             >
               Submit

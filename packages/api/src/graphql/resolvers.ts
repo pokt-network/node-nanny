@@ -6,6 +6,8 @@ import {
   LogsModel,
   WebhookModel,
 } from "@pokt-foundation/node-monitoring-core/dist/models";
+// DEV NOTE -> Rename Retool Service to something else?
+// import { Retool as RetoolService } from "@pokt-foundation/node-monitoring-core/dist/services";
 
 const resolvers = {
   Query: {
@@ -22,6 +24,7 @@ const resolvers = {
 
   Mutation: {
     createChain: async (_, chain) => {
+      console.log({ chain });
       return await ChainsModel.create(chain);
     },
     createHost: async (_, host) => {

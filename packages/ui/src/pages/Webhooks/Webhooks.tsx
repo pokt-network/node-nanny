@@ -8,6 +8,8 @@ import { WebhooksForm } from "./WebhooksForm";
 export function Webhooks() {
   const { data, error } = useQuery<{ webhooks: IWebhook[] }>(GET_ALL_WEBHOOKS);
 
+  if (error) console.log({ error });
+
   return (
     <div
       style={{
