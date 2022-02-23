@@ -2,8 +2,12 @@ import { ChangeEvent, useState } from "react";
 import { useMutation, useQuery } from "@apollo/client";
 import {
   Button,
+  Checkbox,
   FormControl,
+  InputLabel,
+  ListItemText,
   MenuItem,
+  OutlinedInput,
   Paper,
   Select,
   SelectChangeEvent,
@@ -24,11 +28,10 @@ export function NodesForm() {
   const [chain, setChain] = useState("");
   const [host, setHost] = useState("");
   const [ip, setIP] = useState("");
-  const [loadBalancers, setLoadBalancer] = useState("");
+  const [loadBalancers, setLoadBalancers] = useState<string[]>([]);
   const [port, setPort] = useState(0);
   const [backend, setBackend] = useState("");
   const [server, setServer] = useState("");
-  const [basicAuth, setAuth] = useState("");
   const [ssl, setSSL] = useState("");
   const [haProxy, setHaproxy] = useState(true);
 
@@ -49,8 +52,14 @@ export function NodesForm() {
     setHost(event.target.value);
   };
 
-  const handleLoadBalancerChange = (event: SelectChangeEvent<typeof chain>) => {
-    setLoadBalancer(event.target.value);
+  const handleLoadBalancerChange = (event: SelectChangeEvent<typeof loadBalancers>) => {
+    const {
+      target: { value },
+    } = event;
+    setLoadBalancers(
+      // On autofill we get a stringified value.
+      typeof value === "string" ? value.split(",") : value,
+    );
   };
 
   const handlePortChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -63,9 +72,6 @@ export function NodesForm() {
 
   const handleServerChange = (event: ChangeEvent<HTMLInputElement>) => {
     setServer(event.target.value);
-  };
-  const handleAuthChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setAuth(event.target.value);
   };
 
   const handleHaproxyChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -90,80 +96,100 @@ export function NodesForm() {
       >
         <Paper style={{ width: "200%" }} variant="outlined">
           <FormControl fullWidth>
-            <Select value={chain} onChange={handleChainChange}>
+            <InputLabel id="chain-label">Chain</InputLabel>
+            <Select labelId="chain-label" value={chain} label="Chain" onChange={handleChainChange}>
               {data?.chains.map(({ name, id }) => (
                 <MenuItem value={id}>{name}</MenuItem>
               ))}
             </Select>
-            <div style={{ marginTop: "10px" }} />
-            <Select value={host} onChange={handleHostChange}>
+          </FormControl>
+          <div style={{ marginTop: "10px" }} />
+          <FormControl fullWidth>
+            <InputLabel id="host-label">Host</InputLabel>
+            <Select labelId="host-label" value={host} label="Host" onChange={handleHostChange}>
               {data?.hosts.map(({ name, id }) => (
                 <MenuItem value={id}>{name}</MenuItem>
               ))}
             </Select>
-
-            <div style={{ marginTop: "10px" }} />
-            <Select value={loadBalancers} onChange={handleLoadBalancerChange}>
+          </FormControl>
+          <div style={{ marginTop: "10px" }} />
+          <FormControl fullWidth>
+            <InputLabel id="lb-label">Load Balancers</InputLabel>
+            <Select
+              multiple
+              labelId="lb-label"
+              value={loadBalancers}
+              onChange={handleLoadBalancerChange}
+              input={<OutlinedInput label="Load Balancers" />}
+              renderValue={(selected) => {
+                console.log({ selected });
+                return selected
+                  .map((id) => data?.loadBalancers!.find(({ id: lb }) => lb === id)!.name)
+                  .join(", ");
+              }}
+            >
               {data?.loadBalancers.map(({ name, id }) => (
-                <MenuItem value={id}>{name}</MenuItem>
+                <MenuItem value={id}>
+                  <Checkbox checked={loadBalancers.indexOf(id!) > -1} />
+                  <ListItemText primary={name} />
+                </MenuItem>
               ))}
             </Select>
-            <div style={{ marginTop: "10px" }} />
+          </FormControl>
+          <div style={{ marginTop: "10px" }} />
+          <FormControl fullWidth>
             <TextField value={port} onChange={handlePortChange} label="Port" variant="outlined" />
-            <div style={{ marginTop: "10px" }} />
+          </FormControl>
+          <div style={{ marginTop: "10px" }} />
+          <FormControl fullWidth>
             <TextField
               value={backend}
               onChange={handleBackendChange}
               label="Backend"
               variant="outlined"
             />
-            <div style={{ marginTop: "10px" }} />
+          </FormControl>
+
+          <div style={{ marginTop: "10px" }} />
+          <FormControl fullWidth>
             <TextField
               value={server}
               onChange={handleServerChange}
               label="Server"
               variant="outlined"
             />
-            <div style={{ marginTop: "10px" }} />
-            <TextField
-              value={basicAuth}
-              onChange={handleAuthChange}
-              label="Auth String"
-              variant="outlined"
-            />
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <div>
-                HAproxy
-                <Switch checked={haProxy} onChange={handleHaproxyChange} />
-              </div>
-            </div>
-
-            <Button
-              fullWidth
-              style={{
-                display: "flex",
-                justifyContent: "center",
-              }}
-              variant="outlined"
-              onClick={() => {
-                submit({
-                  variables: {
-                    backend,
-                    chain,
-                    haProxy,
-                    host,
-                    port,
-                    server,
-                    basicAuth,
-                    loadBalancers: [loadBalancers],
-                    url: `http://${ip}:${port}`,
-                  },
-                });
-              }}
-            >
-              Submit
-            </Button>
           </FormControl>
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <div>
+              HAproxy
+              <Switch checked={haProxy} onChange={handleHaproxyChange} />
+            </div>
+          </div>
+
+          <Button
+            fullWidth
+            style={{
+              display: "flex",
+              justifyContent: "center",
+            }}
+            variant="outlined"
+            onClick={() => {
+              submit({
+                variables: {
+                  backend,
+                  chain,
+                  haProxy,
+                  host,
+                  port,
+                  server,
+                  loadBalancers: [loadBalancers],
+                  url: `http://${ip}:${port}`,
+                },
+              });
+            }}
+          >
+            Submit
+          </Button>
         </Paper>
       </div>
     </>
