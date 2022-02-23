@@ -9,7 +9,7 @@ export interface IWebhook {
 
 const webhookSchema = new Schema<IWebhook>(
   {
-    chain: { type: Schema.Types.ObjectId, ref: "chains" },
+    chain: { type: Schema.Types.ObjectId, ref: "chains", unique: true },
     location: String,
     url: String,
   },
