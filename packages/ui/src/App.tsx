@@ -11,7 +11,7 @@ import Container from "@mui/material/Container";
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { Route } from "react-router-dom";
-import { Home, Chains, Hosts, Logs, Nodes, Oracles, Settings, Webhooks } from "./pages";
+import { Home, Chains, Hosts, Nodes, Oracles, Settings, Webhooks } from "./pages";
 import { Nav } from "./components";
 
 const drawerWidth: number = 240;
