@@ -8,7 +8,7 @@ export interface IOracle {
 
 const oracleSchema = new Schema<IOracle>(
   {
-    chain: { type: Schema.Types.ObjectId, ref: "chains" },
+    chain: { type: Schema.Types.ObjectId, ref: "chains", unique: true },
     urls: [String],
   },
   { timestamps: true },
