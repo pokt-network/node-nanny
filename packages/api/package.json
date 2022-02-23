@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start:graphql": "pnpm build && ts-node -r tsconfig-paths/register ./src/gql-server.ts",
+    "start:rest": "pnpm build && ts-node -r tsconfig-paths/register ./src/rest/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b .",
     "build:watch": "tsc -b -w .",
