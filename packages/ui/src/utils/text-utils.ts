@@ -1,4 +1,4 @@
-const abbreviations = ["aws", "id", "ip", "url"];
+const abbreviations = ["aws", "id", "ip", "ssl", "url"];
 
 export const formatHeaderCell = (field: string): string => {
   const uppercased = field[0].toUpperCase() + field.slice(1);
