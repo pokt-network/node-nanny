@@ -16,16 +16,18 @@ importers:
     specifiers:
       '@pokt-foundation/node-monitoring-core': workspace:^0.1.0
       dotenv: ^10.0.0
+      ts-node: ^10.1.0
     dependencies:
       '@pokt-foundation/node-monitoring-core': link:../core
       dotenv: 10.0.0
+    devDependencies:
+      ts-node: 10.4.0_typescript@4.5.5
 
   packages/api:
     specifiers:
       '@graphql-codegen/cli': 2.6.2
       '@graphql-codegen/typescript': 2.4.5
       '@graphql-codegen/typescript-operations': 2.3.2
-      '@graphql-codegen/typescript-react-apollo': 3.2.8
       '@pokt-foundation/node-monitoring-core': workspace:^0.1.0
       apollo-server: ^3.5.0
       dotenv: ^10.0.0
@@ -41,7 +43,6 @@ importers:
       '@graphql-codegen/cli': 2.6.2_graphql@16.0.1+typescript@4.5.5
       '@graphql-codegen/typescript': 2.4.5_graphql@16.0.1
       '@graphql-codegen/typescript-operations': 2.3.2_graphql@16.0.1
-      '@graphql-codegen/typescript-react-apollo': 3.2.8_graphql@16.0.1
       ts-node: 10.4.0_typescript@4.5.5
       tsconfig-paths: 3.12.0
 
@@ -2742,23 +2743,6 @@ packages:
       '@graphql-codegen/typescript': 2.4.5_graphql@16.0.1
       '@graphql-codegen/visitor-plugin-common': 2.7.1_graphql@16.0.1
       auto-bind: 4.0.0
-      graphql: 16.0.1
-      tslib: 2.3.1
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-    dev: true
-
-  /@graphql-codegen/typescript-react-apollo/3.2.8_graphql@16.0.1:
-    resolution: {integrity: sha512-XmYeBSS3KZF9WePMN5RqYwOHbDybhOxB89C+fvUscFX8MVI5DugMI99qYsdqS8mWQfElRe8ib68zKPaIGTnC0w==}
-    peerDependencies:
-      graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-      graphql-tag: ^2.0.0
-    dependencies:
-      '@graphql-codegen/plugin-helpers': 2.4.1_graphql@16.0.1
-      '@graphql-codegen/visitor-plugin-common': 2.7.1_graphql@16.0.1
-      auto-bind: 4.0.0
-      change-case-all: 1.0.14
       graphql: 16.0.1
       tslib: 2.3.1
     transitivePeerDependencies:
