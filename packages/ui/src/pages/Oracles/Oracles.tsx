@@ -8,6 +8,8 @@ import { OraclesForm } from "./OraclesForm";
 export function Oracles() {
   const { data, error } = useQuery<{ oracles: IOracle[] }>(GET_ALL_ORACLES);
 
+  if (error) console.log({ error });
+
   return (
     <div
       style={{
