@@ -61,4 +61,6 @@ const nodesSchema = new Schema<INode>(
   { collection: "nodes", timestamps: true },
 );
 
+nodesSchema.index({ port: 1, server: 1 }, { unique: true });
+
 export const NodesModel: Model<INode> = model("nodes", nodesSchema);

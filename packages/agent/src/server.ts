@@ -13,7 +13,7 @@ const port = 3001;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.get("/ping", (req, res) => {
+app.get("/ping", (_req, res) => {
   return res.json({ status: "ok" });
 });
 
