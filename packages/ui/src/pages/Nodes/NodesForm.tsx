@@ -27,7 +27,7 @@ interface HostsAndChainsData {
 export function NodesForm() {
   const [chain, setChain] = useState("");
   const [host, setHost] = useState("");
-  const [ip, setIP] = useState("");
+  const [ip, setIp] = useState("");
   const [loadBalancers, setLoadBalancers] = useState<string[]>([]);
   const [port, setPort] = useState(0);
   const [backend, setBackend] = useState("");
@@ -35,7 +35,10 @@ export function NodesForm() {
   const [ssl, setSSL] = useState("");
   const [haProxy, setHaproxy] = useState(true);
 
-  const [submit] = useMutation<{ createNode: INode }>(CREATE_NODE);
+  const [submit] = useMutation<{ createNode: INode }>(CREATE_NODE, {
+    onCompleted: (data) => console.log({ data }),
+    onError: (error) => console.log({ error }),
+  });
   const { loading, error, data } = useQuery<HostsAndChainsData>(GET_HOSTS_CHAINS_LB);
 
   const handleChainChange = (event: SelectChangeEvent<typeof chain>) => {
@@ -44,22 +47,17 @@ export function NodesForm() {
 
   const handleHostChange = (event: SelectChangeEvent<typeof host>) => {
     if (data?.hosts) {
-      const index = data.hosts.findIndex((item) => item.id === event.target.value);
-      const ip = data.hosts[index].ip;
-      setIP(ip!);
+      const { ip } = data.hosts.find(({ id }) => id === event.target.value)!;
+      setIp(ip!);
+      console.log({ ip });
     }
 
     setHost(event.target.value);
   };
 
-  const handleLoadBalancerChange = (event: SelectChangeEvent<typeof loadBalancers>) => {
-    const {
-      target: { value },
-    } = event;
-    setLoadBalancers(
-      // On autofill we get a stringified value.
-      typeof value === "string" ? value.split(",") : value,
-    );
+  const handleLoadBalancerChange = ({ target }: SelectChangeEvent<typeof loadBalancers>) => {
+    const { value } = target;
+    setLoadBalancers(typeof value === "string" ? value.split(",") : value);
   };
 
   const handlePortChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -94,7 +92,7 @@ export function NodesForm() {
           rowGap: "10px",
         }}
       >
-        <Paper style={{ width: "200%" }} variant="outlined">
+        <Paper style={{ width: "200%", padding: 10 }} variant="outlined">
           <FormControl fullWidth>
             <InputLabel id="chain-label">Chain</InputLabel>
             <Select labelId="chain-label" value={chain} label="Chain" onChange={handleChainChange}>
@@ -122,7 +120,6 @@ export function NodesForm() {
               onChange={handleLoadBalancerChange}
               input={<OutlinedInput label="Load Balancers" />}
               renderValue={(selected) => {
-                console.log({ selected });
                 return selected
                   .map((id) => data?.loadBalancers!.find(({ id: lb }) => lb === id)!.name)
                   .join(", ");
@@ -182,7 +179,7 @@ export function NodesForm() {
                   host,
                   port,
                   server,
-                  loadBalancers: [loadBalancers],
+                  loadBalancers,
                   url: `http://${ip}:${port}`,
                 },
               });

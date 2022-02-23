@@ -21,7 +21,7 @@ export const CREATE_HOST = gql`
 `;
 
 export const CREATE_NODE = gql`
-  mutation(
+  mutation createNode(
     $backend: String
     $chain: ID
     $haProxy: Boolean
@@ -29,7 +29,6 @@ export const CREATE_NODE = gql`
     $port: Int
     $server: String
     $ssl: Boolean
-    $basicAuth: String
     $url: String
     $loadBalancers: [ID]
   ) {
@@ -42,7 +41,6 @@ export const CREATE_NODE = gql`
         port: $port
         server: $server
         ssl: $ssl
-        basicAuth: $basicAuth
         url: $url
         loadBalancers: $loadBalancers
       }
@@ -63,7 +61,7 @@ export const CREATE_ORACLE = gql`
 `;
 
 export const CREATE_WEBHOOK = gql`
-  mutation($chain: String, $url: String, $location: String) {
+  mutation ($chain: String, $url: String, $location: String) {
     createWebhook(chain: $chain, url: $url, location: $location) {
       url
     }
