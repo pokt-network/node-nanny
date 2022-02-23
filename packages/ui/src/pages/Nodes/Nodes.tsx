@@ -8,6 +8,8 @@ import { NodesForm } from "./NodesForm";
 export function Nodes() {
   const { data, error } = useQuery<{ nodes: INode[] }>(GET_ALL_NODES);
 
+  if (error) console.log("ERROR LOADING NODES", error);
+
   return (
     <div
       style={{
