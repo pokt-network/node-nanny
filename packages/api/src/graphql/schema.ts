@@ -94,7 +94,7 @@ const typeDefs = gql`
     updateNodeInRotation(id: ID, action: String): String
 
     deleteNode(id: ID): Node
-    deletehost(id: ID): Host
+    deleteHost(id: ID): Host
     deleteOracle(id: ID): Oracle
     deleteChain(id: ID): Chain
   }
