@@ -4,8 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start:graphql": "pnpm build && ts-node -r tsconfig-paths/register ./src/gql-server.ts",
-    "start:rest": "pnpm build && ts-node -r tsconfig-paths/register ./src/rest/server.ts",
+    "start:graphql": "pnpm build && node ./dist/graphql/server.js",
+    "start:rest": "pnpm build && node ./dist/rest/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b .",
     "build:watch": "tsc -b -w .",
@@ -19,8 +19,6 @@
   },
   "devDependencies": {
     "@graphql-codegen/cli": "2.6.2",
-    "ts-node": "^10.1.0",
-    "tsconfig-paths": "^3.12.0",
     "@graphql-codegen/typescript-operations": "2.3.2",
     "@graphql-codegen/typescript": "2.4.5"
   }
