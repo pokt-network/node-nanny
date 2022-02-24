@@ -3,6 +3,7 @@ import axios, { AxiosInstance } from "axios";
 import { Alert, DataDog } from "../../services";
 import { NodesModel, INode, HostsModel } from "../../models";
 import { HealthTypes, DataDogTypes } from "../../types";
+import { ILoadBalancerIPs } from "./types";
 
 export class Service {
   private agent: AxiosInstance;
@@ -24,10 +25,10 @@ export class Service {
   }
 
   private async getNode(id): Promise<INode> {
-    return await NodesModel.findById(id).exec();
+    return await NodesModel.findById(id).populate("chain").populate("host").exec();
   }
 
-  private async getLoadBalancers() {
+  private async getLoadBalancers(): Promise<ILoadBalancerIPs[]> {
     if (process.env.MONITOR_TEST === "1") {
       return [
         {
@@ -134,14 +135,20 @@ export class Service {
 
       return reboot;
     }
+
     return;
   }
 
-  async removeFromRotation(id: string) {
+  async removeFromRotation(id: string): Promise<boolean> {
     const { backend, server, hostname, host, chain, container } = await this.getNode(id);
     const loadBalancers = await this.getLoadBalancers();
+
+    console.log("FIRING REMOVE FROM ROTATION", {
+      node: { backend, server, hostname, host, chain, container },
+      loadBalancers,
+    });
     try {
-      await Promise.all(
+      const TEST = await Promise.all(
         loadBalancers.map(({ internalHostName }) =>
           this.agent.post(`http://${internalHostName}:3001/webhook/lb/disable`, {
             backend,
@@ -150,17 +157,21 @@ export class Service {
         ),
       );
 
+      console.log("AFTER PROMISE.ALL", TEST);
+
       return await this.alert.sendInfo({
         title: "Removed from rotation",
-        message: `${hostname ? hostname : `${host.name}/${chain.name}/${container}`} removed from ${backend}`,
+        message: `${
+          hostname ? hostname : `${host.name}/${chain.name}/${container}`
+        } removed from ${backend}`,
         chain: chain.name,
       });
     } catch (error) {
-      throw new Error(`could not remove ${backend} ${server}from rotation, ${error}`);
+      throw new Error(`Could not remove ${backend} ${server} from rotation, ${error}`);
     }
   }
 
-  async addToRotation(id: string) {
+  async addToRotation(id: string): Promise<boolean> {
     const { backend, server, hostname, host, chain, container } = await this.getNode(id);
     const loadBalancers = await this.getLoadBalancers();
     try {
@@ -174,11 +185,13 @@ export class Service {
       );
       return await this.alert.sendInfo({
         title: "Added to rotation",
-        message: `${hostname ? hostname : `${host.name}/${chain.name}/${container}`} added to ${backend}`,
+        message: `${
+          hostname ? hostname : `${host.name}/${chain.name}/${container}`
+        } added to ${backend}`,
         chain: chain.name,
       });
     } catch (error) {
-      throw new Error(`could not add ${backend} ${server} rotation, ${error}`);
+      throw new Error(`Could not add ${backend} ${server} rotation, ${error}`);
     }
   }
 
