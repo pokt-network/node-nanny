@@ -97,6 +97,7 @@ export class Service {
       poktType,
       monitorId,
     } = await this.getNode(id);
+    console.log("FIRING REBOOT FOR NODE: ", { hostname, chain, host });
 
     const Host = await HostsModel.findOne({ name: host.name }).exec();
 
