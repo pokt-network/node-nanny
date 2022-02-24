@@ -1,6 +1,7 @@
 import { EC2 } from "aws-sdk";
 import axios, { AxiosInstance } from "axios";
-import { Alert, DataDog } from "../../services";
+
+import { Alert, DataDog } from "..";
 import { NodesModel, INode, HostsModel } from "../../models";
 import { HealthTypes, DataDogTypes } from "../../types";
 import { ILoadBalancerIPs } from "./types";
@@ -132,6 +133,8 @@ export class Service {
         } rebooted \n ${reboot}`,
         chain: chain.name,
       });
+
+      console.log("REBOOT", { reboot });
 
       return reboot;
     }
