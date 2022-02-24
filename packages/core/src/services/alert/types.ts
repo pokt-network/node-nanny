@@ -7,7 +7,7 @@ export enum Webhooks {
   WEBHOOK_NON_CRITICAL_TEST = "https://discord.com/api/webhooks/895805666109841418/S8m3T6TB7jUEyfC3KuDNPGIIlzspUyH1_qRevyhzpi4WQb-OynxZK1Qra9uA4bTFXqQ3",
   WEBHOOK_LOGS_TEST = "https://discord.com/api/webhooks/895805747248660550/izL7W9LwsQijskZyFuYzB551-uhOL7k5uzih3IoTzt578oz_JWsw7VUQlz7ORp5bnDXX",
   WEBHOOK_ERRORS_TEST = "https://discord.com/api/webhooks/895805822569943060/EBN7fVY1KU2Xunl66hk0awg33Y1ajZpQC6EkMMH1L66tGwOMJ2t1czfygTabbTJmM-QB",
-  DATADOG_ALERTS = "https://discord.com/api/webhooks/912802442201141299/BUtDZp0zYY5ObjtylJ23k0bEEqUfkR0O7rbJIPAXuyLH8Fee7-OmqwD1MT-MSGStWfas"
+  DATADOG_ALERTS = "https://discord.com/api/webhooks/912802442201141299/BUtDZp0zYY5ObjtylJ23k0bEEqUfkR0O7rbJIPAXuyLH8Fee7-OmqwD1MT-MSGStWfas",
 }
 
 interface SendMessageFields {
@@ -45,4 +45,10 @@ export enum AlertColor {
   SUCCESS = 3066993,
   WARNING = 16776960,
   INFO = 3447003,
+}
+
+export interface IWebhookMessageParams {
+  title: string;
+  message: string;
+  chain: string;
 }

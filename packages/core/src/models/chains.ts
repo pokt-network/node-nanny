@@ -1,6 +1,7 @@
 import { Schema, model, Model } from "mongoose";
 
 export interface IChain {
+  id: Schema.Types.ObjectId;
   chain: string;
   name: string;
   type: string;
@@ -9,6 +10,7 @@ export interface IChain {
 
 export const chainSchema = new Schema<IChain>(
   {
+    id: Schema.Types.ObjectId,
     name: { type: String, unique: true },
     chain: String,
     type: String,
