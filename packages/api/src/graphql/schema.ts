@@ -96,6 +96,10 @@ const typeDefs = gql`
     deleteHost(id: ID): Host
     deleteOracle(id: ID): Oracle
     deleteChain(id: ID): Chain
+
+    enableHaProxyServer(id: ID): Boolean
+    disableHaProxyServer(id: ID): Boolean
+    rebootServer(id: ID): Boolean
   }
 `;
 
