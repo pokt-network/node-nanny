@@ -27,6 +27,8 @@ export interface INode {
   docker: boolean;
   ssl: boolean;
   loadBalancers: string[];
+  // temp
+  basicAuth?: string;
 }
 
 const nodesSchema = new Schema<INode>(
