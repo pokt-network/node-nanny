@@ -7,7 +7,7 @@ export enum Webhooks {
   WEBHOOK_NON_CRITICAL_TEST = "***REMOVED***",
   WEBHOOK_LOGS_TEST = "***REMOVED***",
   WEBHOOK_ERRORS_TEST = "***REMOVED***",
-  DATADOG_ALERTS = "***REMOVED***"
+  DATADOG_ALERTS = "***REMOVED***",
 }
 
 interface SendMessageFields {
@@ -45,4 +45,10 @@ export enum AlertColor {
   SUCCESS = 3066993,
   WARNING = 16776960,
   INFO = 3447003,
+}
+
+export interface IWebhookMessageParams {
+  title: string;
+  message: string;
+  chain: string;
 }
