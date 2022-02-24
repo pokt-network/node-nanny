@@ -1,47 +1,18 @@
 import axios, { AxiosInstance } from "axios";
+
 import { Alert } from "../../..";
 import { LoadBalancerStatus, LoadBalancer } from "../../types";
+import { AlertTypes } from "../../../../types";
 import { HostsModel, NodesModel, INode } from "../../../../models";
 import { ErrorConditions } from "../../../health/types";
 
 export default class Service {
-  sendError: ({
-    title,
-    message,
-    chain,
-  }: {
-    title: any;
-    message: any;
-    chain: any;
-  }) => Promise<boolean>;
-  sendInfo: ({
-    title,
-    message,
-    chain,
-  }: {
-    title: any;
-    message: any;
-    chain: any;
-  }) => Promise<boolean>;
-  sendWarn: ({
-    title,
-    message,
-    chain,
-  }: {
-    title: any;
-    message: any;
-    chain: any;
-  }) => Promise<boolean>;
-  sendSucess: ({
-    title,
-    message,
-    chain,
-  }: {
-    title: any;
-    message: any;
-    chain: any;
-  }) => Promise<boolean>;
+  sendError: ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
+  sendInfo: ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
+  sendWarn: ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
+  sendSucess: ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
   ErrorConditions: typeof ErrorConditions;
+
   constructor() {
     this.sendError = new Alert().sendError;
     this.sendInfo = new Alert().sendInfo;
