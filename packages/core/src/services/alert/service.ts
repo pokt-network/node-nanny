@@ -1,6 +1,5 @@
 import { api } from "@pagerduty/pdjs";
 import axios, { AxiosInstance } from "axios";
-import { Types } from "mongoose";
 import {
   AlertColor,
   SendMessageInput,
@@ -26,7 +25,7 @@ export class Service {
   }
 
   async getWebhookUrl(chain: string): Promise<string> {
-    const { url } = await WebhookModel.findOne({ chain: chain as any }).exec();
+    const { url } = await WebhookModel.findOne({ chain }).exec();
     return url;
   }
 
@@ -71,11 +70,11 @@ export class Service {
     }
   };
 
-  sendInfo = async ({ title, message, chain }) => {
+  sendInfo = async ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.INFO,
-      channel: await this.getWebhookUrl(chain.toUpperCase()),
+      channel: await this.getWebhookUrl(chain),
       fields: [{ name: "Info", value: message }],
     });
   };
