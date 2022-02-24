@@ -2,8 +2,8 @@ import { ApolloServer } from "apollo-server";
 import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
 import { config } from "dotenv";
 
-import resolvers from "graphql/resolvers";
-import typeDefs from "graphql/schema";
+import resolvers from "./resolvers";
+import typeDefs from "./schema";
 
 config();
 
