@@ -1,12 +1,12 @@
 import express from "express";
 import { config } from "dotenv";
-import { Event, DataDog, Retool, Infra } from "@pokt-foundation/node-monitoring-core/dist/services";
+import { Event, DataDog, Client, Infra } from "@pokt-foundation/node-monitoring-core/dist/services";
 import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
 
 config();
 const event = new Event.DataDog();
 const dd = new DataDog();
-const retool = new Retool();
+const retool = new Client();
 const infra = new Infra();
 const app = express();
 const port = 3000;

@@ -5,5 +5,5 @@ export { Service as HAProxy } from "./haproxy";
 export { Service as Health } from "./health";
 export { Service as Log } from "./log";
 export { Service as Reboot } from "./reboot";
-export { Service as Retool } from "./retool";
+export { Service as Client } from "./client";
 export { Service as Infra } from "./infra";
