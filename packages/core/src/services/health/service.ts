@@ -446,7 +446,7 @@ export class Service {
       _id: { $ne: id },
     }).exec();
 
-    let { urls: externalNodes } = await OraclesModel.findOne({ chain }).exec();
+    let { urls: externalNodes } = await OraclesModel.findOne({ chain: chain.name }).exec();
 
     let referenceUrls = await this.checkExternalUrls(externalNodes);
 

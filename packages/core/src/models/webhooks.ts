@@ -1,15 +1,14 @@
 import { Schema, model, Model } from "mongoose";
-import { IChain } from "./chains";
 
 export interface IWebhook {
-  chain: IChain;
+  chain: string;
   location: string;
   url: string;
 }
 
 const webhookSchema = new Schema<IWebhook>(
   {
-    chain: { type: Schema.Types.ObjectId, ref: "chains", unique: true },
+    chain: { type: String, unique: true },
     location: String,
     url: String,
   },
