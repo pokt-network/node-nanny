@@ -75,7 +75,7 @@ const typeDefs = gql`
     oracles: [Oracle]
     webhooks: [Webhook]
 
-    haProxyStatus(id: String): String
+    getHaProxyStatus(id: ID): Int
     nodeStatus(id: String): String
   }
 
