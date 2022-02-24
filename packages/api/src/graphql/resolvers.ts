@@ -13,13 +13,17 @@ const resolvers = {
   Query: {
     chains: async () => await ChainsModel.find({}).exec(),
     hosts: async (_, { loadBalancer }) => {
-      const query = loadBalancer === true ? { loadBalancer } : {};
+      const query = loadBalancer ? { loadBalancer } : {};
       return await HostsModel.find(query).sort({ name: 1 }).exec();
     },
     logs: async ({ id }) => await LogsModel.find({ label: id }).exec(),
     nodes: async () => await NodesModel.find({}).populate("chain").populate("host").exec(),
     oracles: async () => await OraclesModel.find({}).populate("chain").exec(),
     webhooks: async () => await WebhookModel.find({}).exec(),
+
+    getHaProxyStatus: async (_, { id }) => {
+      return await new RetoolService().getHaProxyStatus(id);
+    },
   },
 
   Mutation: {
@@ -44,11 +48,9 @@ const resolvers = {
     },
 
     enableHaProxyServer: async (_, { id }) => {
-      console.log("FIRING ENABLE RES");
       return await new RetoolService().addToRotation(id);
     },
     disableHaProxyServer: async (_, { id }) => {
-      console.log("FIRING DISABLE RES");
       return await new RetoolService().removeFromRotation(id);
     },
     rebootServer: async (_, { id }) => {

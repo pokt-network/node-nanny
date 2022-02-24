@@ -144,7 +144,7 @@ export class Service {
     const loadBalancers = await this.getLoadBalancers();
 
     try {
-      const [{ data, status }] = await Promise.all(
+      await Promise.all(
         loadBalancers.map(({ internalHostName }) =>
           this.agent.post(`http://${internalHostName}:3001/webhook/lb/disable`, {
             backend,
