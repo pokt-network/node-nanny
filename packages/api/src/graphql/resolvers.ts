@@ -6,8 +6,7 @@ import {
   LogsModel,
   WebhookModel,
 } from "@pokt-foundation/node-monitoring-core/dist/models";
-// DEV NOTE -> Rename Retool Service to something else?
-import { Retool as RetoolService } from "@pokt-foundation/node-monitoring-core/dist/services";
+import { Client as ClientService } from "@pokt-foundation/node-monitoring-core/dist/services";
 
 const resolvers = {
   Query: {
@@ -22,7 +21,7 @@ const resolvers = {
     webhooks: async () => await WebhookModel.find({}).exec(),
 
     getHaProxyStatus: async (_, { id }) => {
-      return await new RetoolService().getHaProxyStatus(id);
+      return await new ClientService().getHaProxyStatus(id);
     },
   },
 
@@ -48,13 +47,13 @@ const resolvers = {
     },
 
     enableHaProxyServer: async (_, { id }) => {
-      return await new RetoolService().addToRotation(id);
+      return await new ClientService().addToRotation(id);
     },
     disableHaProxyServer: async (_, { id }) => {
-      return await new RetoolService().removeFromRotation(id);
+      return await new ClientService().removeFromRotation(id);
     },
     rebootServer: async (_, { id }) => {
-      return await new RetoolService().rebootServer(id);
+      return await new ClientService().rebootServer(id);
     },
   },
 
