@@ -44,9 +44,11 @@ const resolvers = {
     },
 
     enableHaProxyServer: async (_, { id }) => {
+      console.log("FIRING ENABLE RES");
       return await new RetoolService().addToRotation(id);
     },
     disableHaProxyServer: async (_, { id }) => {
+      console.log("FIRING DISABLE RES");
       return await new RetoolService().removeFromRotation(id);
     },
     rebootServer: async (_, { id }) => {
@@ -74,16 +76,10 @@ const resolvers = {
     id(oracle: any) {
       return oracle._id;
     },
-    chain(oracle: any) {
-      return oracle.chain.name;
-    },
   },
   Webhook: {
     id(webhook: any) {
       return webhook._id;
-    },
-    chain(oracle: any) {
-      return oracle.chain.name;
     },
   },
 };

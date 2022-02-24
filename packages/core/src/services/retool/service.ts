@@ -143,12 +143,8 @@ export class Service {
     const { backend, server, hostname, host, chain, container } = await this.getNode(id);
     const loadBalancers = await this.getLoadBalancers();
 
-    console.log("FIRING REMOVE FROM ROTATION", {
-      node: { backend, server, hostname, host, chain, container },
-      loadBalancers,
-    });
     try {
-      const TEST = await Promise.all(
+      const [{ data, status }] = await Promise.all(
         loadBalancers.map(({ internalHostName }) =>
           this.agent.post(`http://${internalHostName}:3001/webhook/lb/disable`, {
             backend,
@@ -156,8 +152,6 @@ export class Service {
           }),
         ),
       );
-
-      console.log("AFTER PROMISE.ALL", TEST);
 
       return await this.alert.sendInfo({
         title: "Removed from rotation",
