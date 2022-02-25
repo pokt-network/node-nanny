@@ -1,1 +1,4 @@
-export interface Reboot {}
+export enum ENodeTypes {
+  DATA = "data",
+  POKT = "pokt",
+}

@@ -1,4 +1,4 @@
-import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { useMutation, useQuery } from "@apollo/client";
 import {
   Button,
@@ -13,6 +13,7 @@ import {
   SelectChangeEvent,
   Switch,
   TextField,
+  Typography,
 } from "@mui/material";
 
 import { CREATE_NODE, GET_HOSTS_CHAINS_LB } from "queries";
@@ -82,6 +83,9 @@ export function NodesForm() {
     <>
       <div style={{ display: "flex", flexDirection: "column" }}>
         <Paper style={{ width: "200%", padding: 10 }} variant="outlined">
+          <Typography align="center" variant="h6" gutterBottom>
+            Add New Node
+          </Typography>
           <FormControl fullWidth>
             <InputLabel id="chain-label">Chain</InputLabel>
             <Select labelId="chain-label" value={chain} label="Chain" onChange={handleChainChange}>
