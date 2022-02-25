@@ -6,7 +6,7 @@ export {
 } from "../datadog/types";
 export { Webhooks as DiscordChannel } from "../alert/types";
 export { ErrorConditions as BlockChainMonitorEvents } from "../health/types";
-export { SupportedBlockChains } from "../health/types";
+export { ESupportedBlockChains } from "../health/types";
 
 export enum PocketTypes {
   PEER = "peer",
