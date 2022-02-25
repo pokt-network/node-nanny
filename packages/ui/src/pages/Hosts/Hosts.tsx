@@ -6,9 +6,10 @@ import { IHost } from "types";
 import { HostsForm } from "./HostsForm";
 
 export function Hosts() {
-  const { data, error } = useQuery<{ hosts: IHost[] }>(GET_ALL_HOSTS);
+  const { data, error, loading } = useQuery<{ hosts: IHost[] }>(GET_ALL_HOSTS);
 
-  if (error) console.log({ error });
+  if (loading) return <>Loading...</>;
+  if (error) return <>Error! ${error.message}</>;
 
   return (
     <div
