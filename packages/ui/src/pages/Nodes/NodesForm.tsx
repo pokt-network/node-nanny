@@ -80,17 +80,7 @@ export function NodesForm() {
 
   return (
     <>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          padding: "10px",
-          columnGap: "10px",
-          rowGap: "10px",
-        }}
-      >
+      <div style={{ display: "flex", flexDirection: "column" }}>
         <Paper style={{ width: "200%", padding: 10 }} variant="outlined">
           <FormControl fullWidth>
             <InputLabel id="chain-label">Chain</InputLabel>

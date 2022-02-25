@@ -8,6 +8,7 @@ import {
 } from "@pokt-foundation/node-monitoring-core/dist/models";
 import { Client as ClientService } from "@pokt-foundation/node-monitoring-core/dist/services";
 
+//TESTING 123
 const resolvers = {
   Query: {
     chains: async () => await ChainsModel.find({}).exec(),
@@ -46,6 +47,12 @@ const resolvers = {
       return await WebhookModel.create(webhook);
     },
 
+    muteMonitor: async (_, { id }) => {
+      return await new ClientService().muteMonitor(id);
+    },
+    unmuteMonitor: async (_, { id }) => {
+      return await new ClientService().unmuteMonitor(id);
+    },
     enableHaProxyServer: async (_, { id }) => {
       return await new ClientService().addToRotation(id);
     },
