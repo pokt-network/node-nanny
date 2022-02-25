@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@apollo/client";
 import {
   Button,
   FormControl,
+  InputLabel,
   MenuItem,
   Paper,
   Select,
@@ -18,7 +19,7 @@ const locations = ["NL", "DE", "USE1", "USE2", "USW2", "HK", "SG", "LDN"];
 export function WebhooksForm() {
   const [chain, setChain] = useState("");
   const [url, setUrl] = useState("");
-  const [location, setLocation] = useState("NL");
+  const [location, setLocation] = useState("");
 
   const [submit] = useMutation<{ createWebhook: IWebhook }>(CREATE_WEBHOOK);
   const { loading, error, data } = useQuery<{ chains: IChain[] }>(GET_ALL_CHAINS);
@@ -40,36 +41,49 @@ export function WebhooksForm() {
   return (
     <>
       <div>
-        <Paper style={{ width: "200%" }} variant="outlined">
+        <Paper style={{ width: "200%", padding: 10 }} variant="outlined">
           <FormControl fullWidth>
-            <Select value={location} onChange={handleLocationChange}>
+            <InputLabel id="location-label">Location</InputLabel>
+            <Select
+              labelId="location-label"
+              value={location}
+              label="Location"
+              onChange={handleLocationChange}
+            >
               {locations.map((location) => (
                 <MenuItem value={location}>{location}</MenuItem>
               ))}
             </Select>
-            <Select placeholder="Select Chain" value={chain} onChange={handleChainChange}>
+          </FormControl>
+          <div style={{ marginTop: "10px" }} />
+          <FormControl fullWidth>
+            <InputLabel id="chain-label">Chain</InputLabel>
+            <Select labelId="chain-label" value={chain} label="Chain" onChange={handleChainChange}>
               {data?.chains.map(({ name, id }) => (
                 <MenuItem value={id}>{name}</MenuItem>
               ))}
             </Select>
-            <TextField value={url} onChange={handleUrlChange} label="URL" variant="outlined" />
-
-            <Button
-              fullWidth
-              style={{
-                display: "flex",
-                justifyContent: "center",
-              }}
-              variant="outlined"
-              onClick={() => {
-                submit({ variables: { chain, url } });
-                // setChain("");
-                setUrl("");
-              }}
-            >
-              Submit
-            </Button>
           </FormControl>
+          <div style={{ marginTop: "10px" }} />
+          <FormControl fullWidth>
+            <TextField value={url} onChange={handleUrlChange} label="URL" variant="outlined" />
+          </FormControl>
+          <div style={{ marginTop: "10px" }} />
+          <Button
+            fullWidth
+            style={{
+              display: "flex",
+              justifyContent: "center",
+            }}
+            variant="outlined"
+            onClick={() => {
+              submit({ variables: { chain, url } });
+              // setChain("");
+              setUrl("");
+            }}
+          >
+            Submit
+          </Button>
         </Paper>
       </div>
     </>

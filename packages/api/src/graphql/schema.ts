@@ -75,7 +75,7 @@ const typeDefs = gql`
     oracles: [Oracle]
     webhooks: [Webhook]
 
-    getHaProxyStatus(id: ID): Int
+    getHaProxyStatus(id: ID!): Int
     nodeStatus(id: String): String
   }
 
@@ -97,9 +97,10 @@ const typeDefs = gql`
     deleteOracle(id: ID): Oracle
     deleteChain(id: ID): Chain
 
-    enableHaProxyServer(id: ID): Boolean
-    disableHaProxyServer(id: ID): Boolean
-    rebootServer(id: ID): Boolean
+    muteMonitor(id: ID!): Boolean
+    unmuteMonitor(id: ID!): Boolean
+    disableHaProxyServer(id: ID!): Boolean
+    rebootServer(id: ID!): Boolean
   }
 `;
 
