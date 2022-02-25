@@ -11,7 +11,7 @@ import typeDefs from "./schema";
   console.log(`GraphQL server starting up ...`);
 
   await connect();
-  console.log(`MongoDB connection established ...\nURI: ${process.env.MONGO_URI}`);
+  console.log(`MongoDB connection established ...`);
 
   const { url } = await new ApolloServer({ typeDefs, resolvers }).listen();
   console.log(`🚀  GraphQL server ready at ${url}`);

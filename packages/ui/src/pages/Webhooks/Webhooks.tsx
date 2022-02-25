@@ -6,9 +6,10 @@ import { IWebhook } from "types";
 import { WebhooksForm } from "./WebhooksForm";
 
 export function Webhooks() {
-  const { data, error } = useQuery<{ webhooks: IWebhook[] }>(GET_ALL_WEBHOOKS);
+  const { data, error, loading } = useQuery<{ webhooks: IWebhook[] }>(GET_ALL_WEBHOOKS);
 
-  if (error) console.log({ error });
+  if (loading) return <>Loading...</>;
+  if (error) return <>Error! ${error.message}</>;
 
   return (
     <div
