@@ -99,6 +99,8 @@ export class Service {
       monitorId,
     } = await this.getNode(id);
 
+    console.log("REBOOTING SERVER", host);
+
     const Host = await HostsModel.findOne({ name: host.name }).exec();
 
     if (!!Host) {
