@@ -6,9 +6,10 @@ import { IOracle } from "types";
 import { OraclesForm } from "./OraclesForm";
 
 export function Oracles() {
-  const { data, error } = useQuery<{ oracles: IOracle[] }>(GET_ALL_ORACLES);
+  const { data, error, loading } = useQuery<{ oracles: IOracle[] }>(GET_ALL_ORACLES);
 
-  if (error) console.log({ error });
+  if (loading) return <>Loading...</>;
+  if (error) return <>Error! ${error.message}</>;
 
   return (
     <div
