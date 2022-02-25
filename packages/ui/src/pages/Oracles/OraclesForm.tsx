@@ -5,6 +5,7 @@ import {
   Paper,
   Button,
   FormControl,
+  InputLabel,
   MenuItem,
   Select,
   SelectChangeEvent,
@@ -42,15 +43,17 @@ export function OraclesForm() {
   return (
     <>
       <div>
-        <Paper style={{ width: "200%" }} variant="outlined">
+        <Paper style={{ width: "200%", padding: 10 }} variant="outlined">
           <FormControl fullWidth>
-            <Select placeholder="Select Chain" value={chain} onChange={handleChainChange}>
+            <InputLabel id="chain-label">Chain</InputLabel>
+            <Select labelId="chain-label" value={chain} label="Chain" onChange={handleChainChange}>
               {data?.chains.map(({ name, id }) => (
                 <MenuItem value={id}>{name}</MenuItem>
               ))}
             </Select>
+            <div style={{ marginTop: "10px" }} />
             <TextField value={url} onChange={handleUrlChange} label="URL" variant="outlined" />
-
+            <div style={{ marginTop: "10px" }} />
             <Button
               fullWidth
               style={{
