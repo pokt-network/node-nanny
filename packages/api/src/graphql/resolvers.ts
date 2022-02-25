@@ -21,6 +21,9 @@ const resolvers = {
     oracles: async () => await OraclesModel.find({}).populate("chain").exec(),
     webhooks: async () => await WebhookModel.find({}).exec(),
 
+    getMuteStatus: async (_, { id }) => {
+      return await new ClientService().getMuteStatus(id);
+    },
     getHaProxyStatus: async (_, { id }) => {
       return await new ClientService().getHaProxyStatus(id);
     },
