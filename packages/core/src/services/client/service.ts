@@ -3,7 +3,7 @@ import axios, { AxiosInstance } from "axios";
 
 import { Alert, DataDog } from "..";
 import { NodesModel, INode, HostsModel } from "../../models";
-import { HealthTypes, DataDogTypes } from "../../types";
+import { HealthTypes, DataDogTypes, RebootTypes } from "../../types";
 import { ILoadBalancerIPs } from "./types";
 
 export class Service {
@@ -74,7 +74,7 @@ export class Service {
     return 1;
   }
 
-  async getMuteStatus(id: string) {
+  async getMuteStatus(id: string): Promise<boolean> {
     const { monitorId } = await this.getNode(id);
     const { options } = await this.dd.getMonitor(monitorId);
     return !options.silenced.hasOwnProperty("*");
@@ -86,7 +86,7 @@ export class Service {
     return !(status === DataDogTypes.Status.ALERT);
   }
 
-  async rebootServer(id: string) {
+  async rebootServer(id: string): Promise<string> {
     const {
       host,
       chain,
@@ -97,7 +97,6 @@ export class Service {
       poktType,
       monitorId,
     } = await this.getNode(id);
-    console.log("FIRING REBOOT FOR NODE: ", { hostname, chain, host });
 
     const Host = await HostsModel.findOne({ name: host.name }).exec();
 
@@ -108,22 +107,28 @@ export class Service {
         ip = "localhost";
       }
 
-      let reboot;
+      let reboot: string;
 
       if (chain.type === HealthTypes.SupportedBlockChains.POKT) {
-        const { data } = await this.agent.post(`http://${ip}:3001/webhook/docker/reboot`, {
-          name: container,
-          type: "pokt",
-          nginx,
-          poktType,
-        });
+        const { data } = await this.agent.post<{ reboot: string }>(
+          `http://${ip}:3001/webhook/docker/reboot`,
+          {
+            name: container,
+            type: RebootTypes.ENodeTypes.POKT,
+            nginx,
+            poktType,
+          },
+        );
         reboot = data.reboot;
       } else {
-        const { data } = await this.agent.post(`http://${ip}:3001/webhook/docker/reboot`, {
-          name: container,
-          type: "data",
-          compose,
-        });
+        const { data } = await this.agent.post<{ reboot: string }>(
+          `http://${ip}:3001/webhook/docker/reboot`,
+          {
+            name: container,
+            type: RebootTypes.ENodeTypes.DATA,
+            compose,
+          },
+        );
         reboot = data.reboot;
       }
       await this.dd.muteMonitor({ id: monitorId, minutes: 5 });
@@ -134,8 +139,6 @@ export class Service {
         } rebooted \n ${reboot}`,
         chain: chain.name,
       });
-
-      console.log("REBOOT", { reboot });
 
       return reboot;
     }

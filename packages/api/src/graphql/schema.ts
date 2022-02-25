@@ -76,6 +76,7 @@ const typeDefs = gql`
     webhooks: [Webhook]
 
     getHaProxyStatus(id: ID!): Int
+    getMuteStatus(id: ID!): Boolean
     nodeStatus(id: String): String
   }
 
@@ -101,7 +102,7 @@ const typeDefs = gql`
     unmuteMonitor(id: ID!): Boolean
     enableHaProxyServer(id: ID!): Boolean
     disableHaProxyServer(id: ID!): Boolean
-    rebootServer(id: ID!): Boolean
+    rebootServer(id: ID!): String
   }
 `;
 
