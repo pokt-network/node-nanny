@@ -101,7 +101,7 @@ export class Service {
 
     const Host = await HostsModel.findOne({ name: host.name }).exec();
 
-    if (!!Host) {
+    if (Host) {
       let { internalIpaddress: ip } = Host;
 
       if (process.env.MONITOR_TEST === "1") {
