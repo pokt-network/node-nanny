@@ -39,7 +39,9 @@ export function Nodes() {
           <NodeStatus selectedNode={selectedNode!} />
         </div>
         <Table
+          type="Nodes"
           paginate
+          searchable
           rows={data.nodes}
           selectedRow={selectedNode?.id}
           onSelectRow={setSelectedNode}

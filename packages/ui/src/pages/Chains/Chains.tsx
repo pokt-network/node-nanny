@@ -23,7 +23,7 @@ export function Chains() {
       <div style={{ marginBottom: "16px" }}>
         <ChainsForm />
       </div>
-      {data && <Table paginate rows={data.chains} />}
+      {data && <Table type="Chains" searchable paginate rows={data.chains} />}
     </div>
   );
 }

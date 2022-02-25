@@ -10,9 +10,11 @@ import {
   TablePagination,
   TableRow,
   TableSortLabel,
+  Typography,
 } from "@mui/material";
 
 import { formatHeaderCell } from "utils";
+import SearchBar from "./SearchBar";
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -78,24 +80,30 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 interface TableProps {
   rows: { [key: string]: any }[];
   height?: number;
+  searchable?: boolean;
   paginate?: boolean;
   numPerPage?: number;
   selectedRow?: string;
+  type?: string;
   onSelectRow?: Dispatch<SetStateAction<any>>;
 }
 
 export function Table({
   rows,
   height,
+  searchable,
   paginate,
   numPerPage,
   selectedRow,
+  type,
   onSelectRow,
 }: TableProps) {
   const [order, setOrder] = useState<Order>("asc");
-  const [orderBy, setOrderBy] = useState("calories");
+  const [orderBy, setOrderBy] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(paginate ? numPerPage || 25 : rows.length);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  // const [page, setPage] = useState(0);
 
   const handleRequestSort = (_event: MouseEvent<unknown>, property: any) => {
     const isAsc = orderBy === property && order === "asc";
@@ -116,7 +124,20 @@ export function Table({
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Paper sx={{ width: "100%", overflow: "hidden" }}>
+      <Paper sx={{ width: "100%", overflow: "hidden", padding: "16px" }}>
+        {type && (
+          <Typography align="center" variant="h4" gutterBottom>
+            {type}
+          </Typography>
+        )}
+        {searchable && (
+          <SearchBar
+            value={searchTerm}
+            handleChange={setSearchTerm}
+            type={type}
+            sx={{ width: "50%", marginBottom: "16px" }}
+          />
+        )}
         <TableContainer sx={{ maxHeight: height || 600 }}>
           <MUITable stickyHeader sx={{ minWidth: 750 }} aria-labelledby="tableTitle" size={"small"}>
             <EnhancedTableHead
@@ -129,6 +150,11 @@ export function Table({
             <TableBody>
               {rows
                 .slice()
+                .filter((row) => {
+                  if (!searchable) return row;
+                  const rowSearch = Object.values(row).join().toLowerCase().trim();
+                  if (rowSearch.includes(searchTerm.toLowerCase().trim())) return row;
+                })
                 .sort(getComparator(order, orderBy))
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row) => {
