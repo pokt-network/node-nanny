@@ -3,8 +3,8 @@ import { useLazyQuery, useMutation } from "@apollo/client";
 import { Button, CircularProgress, FormControl, Paper, Typography } from "@mui/material";
 
 import {
-  DISABLE_HAPROXY_SERVER,
-  ENABLE_HAPROXY_SERVER,
+  DISABLE_HAPROXY,
+  ENABLE_HAPROXY,
   GET_NODE_STATUS,
   MUTE_MONITOR,
   REBOOT_SERVER,
@@ -23,22 +23,22 @@ interface INodeStatusProps {
 
 export function NodeStatus({ selectedNode }: INodeStatusProps) {
   const [rebooting, setRebooting] = useState<boolean>(false);
+
   const [getStatus, { data, error, loading }] = useLazyQuery<INodeStatus>(GET_NODE_STATUS);
-  const onCompleted = () => getStatus();
   const [rebootServer] = useMutation<boolean>(REBOOT_SERVER, {
-    onCompleted: (data) => {
+    onCompleted: () => {
       setTimeout(() => {
-        onCompleted();
+        getStatus();
         setRebooting(false);
       }, 10000);
     },
-    // DEVNOTE -> Add error display
-    onError: (error) => setRebooting(false),
+    // DEV NOTE -> Add error display to UI
+    onError: (_error) => setRebooting(false),
   });
-  const [enableHaProxy] = useMutation<boolean>(ENABLE_HAPROXY_SERVER, { onCompleted });
-  const [disableHaProxy] = useMutation<boolean>(DISABLE_HAPROXY_SERVER, { onCompleted });
-  const [muteMonitor] = useMutation<boolean>(MUTE_MONITOR, { onCompleted });
-  const [unmuteMonitor] = useMutation<boolean>(UNMUTE_MONITOR, { onCompleted });
+  const [enable] = useMutation<boolean>(ENABLE_HAPROXY, { onCompleted: () => getStatus() });
+  const [disable] = useMutation<boolean>(DISABLE_HAPROXY, { onCompleted: () => getStatus() });
+  const [muteMonitor] = useMutation<boolean>(MUTE_MONITOR, { onCompleted: () => getStatus() });
+  const [unmuteMonitor] = useMutation<boolean>(UNMUTE_MONITOR, { onCompleted: () => getStatus() });
 
   useEffect(() => {
     const { id } = selectedNode;
@@ -53,9 +53,7 @@ export function NodeStatus({ selectedNode }: INodeStatusProps) {
   };
 
   const handleHaProxyToggle = (id: string, haProxyStatus: -1 | 0 | 1) =>
-    haProxyStatus === 0
-      ? disableHaProxy({ variables: { id } })
-      : enableHaProxy({ variables: { id } });
+    haProxyStatus === 0 ? disable({ variables: { id } }) : enable({ variables: { id } });
 
   const handleMuteToggle = (id: string, muted: boolean) =>
     muted ? unmuteMonitor({ variables: { id } }) : muteMonitor({ variables: { id } });
