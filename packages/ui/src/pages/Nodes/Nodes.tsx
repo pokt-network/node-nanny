@@ -11,7 +11,7 @@ export function Nodes() {
   const [selectedNode, setSelectedNode] = useState<INode | undefined>(undefined);
   const { data, error, loading } = useQuery<{ nodes: INode[] }>(GET_ALL_NODES);
 
-  useEffect(() => data?.nodes[0] && setSelectedNode(data!.nodes[0]), [data]);
+  useEffect(() => data && setSelectedNode(data.nodes[0]), [data]);
 
   if (loading && !selectedNode) return <>Loading...</>;
   if (error) return <>Error! ${error.message}</>;
@@ -38,14 +38,12 @@ export function Nodes() {
           <NodesForm />
           <NodeStatus selectedNode={selectedNode!} />
         </div>
-        {data && (
-          <Table
-            paginate
-            rows={data.nodes}
-            selectedRow={selectedNode?.id}
-            onSelectRow={setSelectedNode}
-          />
-        )}
+        <Table
+          paginate
+          rows={data.nodes}
+          selectedRow={selectedNode?.id}
+          onSelectRow={setSelectedNode}
+        />
       </div>
     );
   }

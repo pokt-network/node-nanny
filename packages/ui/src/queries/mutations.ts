@@ -74,13 +74,13 @@ export const REBOOT_SERVER = gql`
   }
 `;
 
-export const ENABLE_HAPROXY_SERVER = gql`
+export const ENABLE_HAPROXY = gql`
   mutation EnableHaProxyServer($id: ID!) {
     enableHaProxyServer(id: $id)
   }
 `;
 
-export const DISABLE_HAPROXY_SERVER = gql`
+export const DISABLE_HAPROXY = gql`
   mutation DisableHaProxyServer($id: ID!) {
     disableHaProxyServer(id: $id)
   }
