@@ -23,7 +23,7 @@ export function Hosts() {
       <div style={{ marginBottom: "16px" }}>
         <HostsForm />
       </div>
-      {data && <Table paginate rows={data.hosts} />}
+      {data && <Table type="Hosts" searchable paginate rows={data.hosts} />}
     </div>
   );
 }
