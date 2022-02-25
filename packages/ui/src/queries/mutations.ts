@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 
 export const CREATE_CHAIN = gql`
-  mutation createChain($name: String!, $type: String!, $variance: Int) {
+  mutation CreateChain($name: String!, $type: String!, $variance: Int) {
     createChain(name: $name, type: $type, variance: $variance) {
       name
       type
@@ -11,7 +11,7 @@ export const CREATE_CHAIN = gql`
 `;
 
 export const CREATE_HOST = gql`
-  mutation createHost($name: String, $ip: String, $loadBalancer: Boolean, $location: String) {
+  mutation CreateHost($name: String, $ip: String, $loadBalancer: Boolean, $location: String) {
     createHost(name: $name, ip: $ip, loadBalancer: $loadBalancer, location: $location) {
       name
       ip
@@ -21,7 +21,7 @@ export const CREATE_HOST = gql`
 `;
 
 export const CREATE_NODE = gql`
-  mutation createNode(
+  mutation CreateNode(
     $backend: String
     $chain: ID
     $haProxy: Boolean
@@ -52,7 +52,7 @@ export const CREATE_NODE = gql`
 `;
 
 export const CREATE_ORACLE = gql`
-  mutation createOracle($chain: String, $url: String) {
+  mutation CreateOracle($chain: String, $url: String) {
     createOracle(chain: $chain, url: $url) {
       id
       urls
@@ -61,9 +61,39 @@ export const CREATE_ORACLE = gql`
 `;
 
 export const CREATE_WEBHOOK = gql`
-  mutation ($chain: String, $url: String, $location: String) {
+  mutation CreateWebhook($chain: String, $url: String, $location: String) {
     createWebhook(chain: $chain, url: $url, location: $location) {
       url
     }
+  }
+`;
+
+export const REBOOT_SERVER = gql`
+  mutation RebootServer($rebootServerId: ID!) {
+    rebootServer(id: $rebootServerId)
+  }
+`;
+
+export const ENABLE_HAPROXY_SERVER = gql`
+  mutation EnableHaProxyServer($id: ID!) {
+    enableHaProxyServer(id: $id)
+  }
+`;
+
+export const DISABLE_HAPROXY_SERVER = gql`
+  mutation DisableHaProxyServer($id: ID!) {
+    disableHaProxyServer(id: $id)
+  }
+`;
+
+export const MUTE_MONITOR = gql`
+  mutation MuteMonitor($id: ID!) {
+    muteMonitor(id: $id)
+  }
+`;
+
+export const UNMUTE_MONITOR = gql`
+  mutation UnmuteMonitor($id: ID!) {
+    unmuteMonitor(id: $id)
   }
 `;
