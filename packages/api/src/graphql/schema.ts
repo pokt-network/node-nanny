@@ -99,6 +99,7 @@ const typeDefs = gql`
 
     muteMonitor(id: ID!): Boolean
     unmuteMonitor(id: ID!): Boolean
+    enableHaProxyServer(id: ID!): Boolean
     disableHaProxyServer(id: ID!): Boolean
     rebootServer(id: ID!): Boolean
   }

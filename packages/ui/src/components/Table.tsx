@@ -1,4 +1,4 @@
-import { ChangeEvent, MouseEvent, useState } from "react";
+import { ChangeEvent, Dispatch, MouseEvent, SetStateAction, useState } from "react";
 import {
   Box,
   Paper,
@@ -80,9 +80,18 @@ interface TableProps {
   height?: number;
   paginate?: boolean;
   numPerPage?: number;
+  selectedRow?: string;
+  onSelectRow?: Dispatch<SetStateAction<any>>;
 }
 
-export function Table({ rows, height, paginate, numPerPage }: TableProps) {
+export function Table({
+  rows,
+  height,
+  paginate,
+  numPerPage,
+  selectedRow,
+  onSelectRow,
+}: TableProps) {
   const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [page, setPage] = useState(0);
@@ -94,7 +103,7 @@ export function Table({ rows, height, paginate, numPerPage }: TableProps) {
     setOrderBy(property);
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
   };
 
@@ -127,13 +136,21 @@ export function Table({ rows, height, paginate, numPerPage }: TableProps) {
                   return (
                     <TableRow
                       key={String(row.id)}
-                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                      sx={{
+                        "&:last-child td, &:last-child th": { border: 0 },
+                        cursor: `${!!onSelectRow ? "pointer" : "default"}`,
+                      }}
+                      hover={!!onSelectRow}
+                      selected={selectedRow === String(row.id)}
                     >
                       {Object.entries(row)
                         .filter(([key]) => key !== "id")
                         .map(([_, value], i) => {
                           return (
-                            <TableCell align={!i ? "left" : "right"}>
+                            <TableCell
+                              align={!i ? "left" : "right"}
+                              onClick={() => onSelectRow?.(row)}
+                            >
                               {Array.isArray(value) ? value.join(", ") : value}
                             </TableCell>
                           );
