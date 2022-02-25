@@ -23,7 +23,7 @@ export function Webhooks() {
       <div style={{ marginBottom: "16px" }}>
         <WebhooksForm />
       </div>
-      {data && <Table paginate rows={data.webhooks} />}
+      {data && <Table type="Webhooks" searchable paginate rows={data.webhooks} />}
     </div>
   );
 }
