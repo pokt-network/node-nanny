@@ -1,19 +1,16 @@
 import { exec } from "child_process";
 import path from "path";
 
-enum NodeTypes {
-  DATA = "data",
-  POKT = "pokt",
-}
+import { ENodeTypes } from "./types";
 
 export class Service {
   rebootDockerContainerFromAgent({ name, type, compose, nginx, poktType }) {
     let cmd, script;
-    if (type == NodeTypes.DATA) {
+    if (type == ENodeTypes.DATA) {
       script = path.resolve(__dirname, "../../../scripts/agent_reboot.sh");
       cmd = `sh ${script} ${name} ${compose}`;
     }
-    if (type === NodeTypes.POKT) {
+    if (type === ENodeTypes.POKT) {
       script = path.resolve(__dirname, "../../../scripts/agent_reboot_pokt.sh");
       cmd = `sh ${script} ${name} ${nginx} ${poktType}`;
     }
