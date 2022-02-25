@@ -8,7 +8,6 @@ import {
 } from "@pokt-foundation/node-monitoring-core/dist/models";
 import { Client as ClientService } from "@pokt-foundation/node-monitoring-core/dist/services";
 
-//TESTING 123
 const resolvers = {
   Query: {
     chains: async () => await ChainsModel.find({}).exec(),
