@@ -8,7 +8,7 @@ import {
   LoadBalancerStatus,
   Limits,
   LoadBalancer,
-  SupportedBlockChains,
+  ESupportedBlockChains,
   PocketTypes,
 } from "../../types";
 import { INode, NodesModel, HostsModel } from "../../../../models";
@@ -60,7 +60,7 @@ export class Service {
     console.log("isPeersOk", chain, nodeId);
     //todo this is just a temp fix for the pocket nodes, needs more sophistiacted handling to check peers
     if (
-      chain.toUpperCase() === SupportedBlockChains.POKT ||
+      chain.toUpperCase() === ESupportedBlockChains.POKT ||
       chain.toUpperCase() === "POKT-DIS" ||
       chain.toUpperCase() === "POKT-MAIN" ||
       chain.toUpperCase() === "POKT-BT"
@@ -165,7 +165,7 @@ export class Service {
 
       let reboot;
       try {
-        if (chain.type === SupportedBlockChains.POKT) {
+        if (chain.type === ESupportedBlockChains.POKT) {
           const { data } = await this.agent.post(`http://${ip}:3001/webhook/docker/reboot`, {
             name: container,
             type: "pokt",
@@ -287,7 +287,7 @@ export class Service {
 
     /*++++++++++++++++++++++++TRIGGERED++++++++++++++++++++++++++++++++ */
     if (transition === EventTransitions.TRIGGERED) {
-      if (node.chain.name === SupportedBlockChains.ETH) {
+      if (node.chain.name === ESupportedBlockChains.ETH) {
         await this.alert.createPagerDutyIncident({
           title: "Problem with Ethereum Node!",
           details: `${title}\n${event}\n${link}`,
@@ -349,7 +349,7 @@ export class Service {
 
       /*============================NO_RESPONSE and OFFLINE POKT ==========================*/
       if (
-        node.chain.type === SupportedBlockChains.POKT &&
+        node.chain.type === ESupportedBlockChains.POKT &&
         (event === BlockChainMonitorEvents.NO_RESPONSE || event === BlockChainMonitorEvents.OFFLINE)
       ) {
         const badCount = await this.checkPocketPeers({ nodeId, poktType });
@@ -477,7 +477,7 @@ export class Service {
           });
         }
 
-        if (node.chain.type === SupportedBlockChains.POKT) {
+        if (node.chain.type === ESupportedBlockChains.POKT) {
           const badCount = await this.checkPocketPeers({ nodeId, poktType });
           if (poktType === PocketTypes.DISPATCH && badCount >= this.threshold) {
             await this.alert.createPagerDutyIncident({
