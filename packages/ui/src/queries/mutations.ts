@@ -69,8 +69,8 @@ export const CREATE_WEBHOOK = gql`
 `;
 
 export const REBOOT_SERVER = gql`
-  mutation RebootServer($rebootServerId: ID!) {
-    rebootServer(id: $rebootServerId)
+  mutation RebootServer($id: ID!) {
+    rebootServer(id: $id)
   }
 `;
 
