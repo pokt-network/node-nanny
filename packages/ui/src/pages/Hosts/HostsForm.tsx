@@ -42,19 +42,21 @@ export function HostsForm() {
   return (
     <>
       <div>
-        <Paper style={{ width: "200%" }} variant="outlined">
+        <Paper style={{ width: "200%", padding: 10 }} variant="outlined">
           <FormControl fullWidth>
             <Select value={location} onChange={handleLocationChange}>
               {locations.map((location) => (
                 <MenuItem value={location}>{location}</MenuItem>
               ))}
             </Select>
+            <div style={{ marginTop: "10px" }} />
             <TextField
               value={name}
               onChange={handleNameChange}
               label="Host Name"
               variant="outlined"
             />
+            <div style={{ marginTop: "10px" }} />
             <TextField value={ip} onChange={handleIPChange} label="Host IP" variant="outlined" />
             <div>
               Load Balancer
