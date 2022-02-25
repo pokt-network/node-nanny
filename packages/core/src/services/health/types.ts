@@ -2,7 +2,7 @@ export enum NCResponse {
   SUCCESS = "succeeded!",
 }
 
-export enum SupportedBlockChains {
+export enum ESupportedBlockChains {
   AVA = "AVA",
   AVATST = "AVATST",
   ETH = "ETH",
@@ -17,7 +17,7 @@ export enum SupportedBlockChains {
   GOE = "GOE",
   KOV = "KOV",
   HEI = "HEI",
-  POKT = "POKT"
+  POKT = "POKT",
 }
 
 export enum SupportedBlockChainTypes {
@@ -28,7 +28,7 @@ export enum SupportedBlockChainTypes {
   POKT = "POKT",
   SOL = "SOL",
   ALG = "ALG",
-  HRM = "HRM"
+  HRM = "HRM",
 }
 
 export enum ErrorConditions {
@@ -37,7 +37,7 @@ export enum ErrorConditions {
   NO_RESPONSE = "NO_RESPONSE",
   NOT_SYNCHRONIZED = "NOT_SYNCHRONIZED",
   NO_PEERS = "NO_PEERS",
-  PEER_NOT_SYNCHRONIZED = "PEER_NOT_SYNCHRONIZED"
+  PEER_NOT_SYNCHRONIZED = "PEER_NOT_SYNCHRONIZED",
 }
 
 export enum ErrorStatus {
