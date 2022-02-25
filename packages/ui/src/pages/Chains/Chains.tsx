@@ -6,9 +6,10 @@ import { IChain } from "types";
 import ChainsForm from "./ChainsForm";
 
 export function Chains() {
-  const { data, error } = useQuery<{ chains: IChain[] }>(GET_ALL_CHAINS);
+  const { data, error, loading } = useQuery<{ chains: IChain[] }>(GET_ALL_CHAINS);
 
-  if (error) console.log({ error });
+  if (loading) return <>Loading...</>;
+  if (error) return <>Error! ${error.message}</>;
 
   return (
     <div
