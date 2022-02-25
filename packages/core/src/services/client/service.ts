@@ -77,7 +77,8 @@ export class Service {
   async getMuteStatus(id: string): Promise<boolean> {
     const { monitorId } = await this.getNode(id);
     const { options } = await this.dd.getMonitor(monitorId);
-    return !options.silenced.hasOwnProperty("*");
+    const muted = options.silenced.hasOwnProperty("*");
+    return muted;
   }
 
   async getMonitorStatus(id: string) {
@@ -196,14 +197,16 @@ export class Service {
     }
   }
 
-  async muteMonitor(id: string) {
+  async muteMonitor(id: string): Promise<boolean> {
     const { monitorId } = await this.getNode(id);
-    return await this.dd.muteMonitor({ id: monitorId, minutes: 525600 });
+    const response = await this.dd.muteMonitor({ id: monitorId, minutes: 525600 });
+    return !!response;
   }
 
-  async unmuteMonitor(id: string) {
+  async unmuteMonitor(id: string): Promise<boolean> {
     const { monitorId } = await this.getNode(id);
-    return await this.dd.unmuteMonitor({ id: monitorId });
+    const response = await this.dd.unmuteMonitor({ id: monitorId });
+    return !!response;
   }
 
   async getInstanceDetails(awsInstanceId: string) {

@@ -79,6 +79,6 @@ export const GET_HOSTS_CHAINS_LB = gql`
 export const GET_NODE_STATUS = gql`
   query GetNodeStatus($id: ID!) {
     haProxyStatus: getHaProxyStatus(id: $id)
-    muteStatus: getMuteStatus(id: $id)
+    muted: getMuteStatus(id: $id)
   }
 `;
