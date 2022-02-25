@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@apollo/client";
 
 import { Table } from "components";
@@ -7,6 +8,7 @@ import { NodesForm } from "./NodesForm";
 import { NodeStatus } from "./NodeStatus";
 
 export function Nodes() {
+  const [selectedNode, setSelectedNode] = useState<INode | undefined>(undefined);
   const { data, error } = useQuery<{ nodes: INode[] }>(GET_ALL_NODES);
 
   if (error) console.log("ERROR LOADING NODES", error);
@@ -30,9 +32,16 @@ export function Nodes() {
         }}
       >
         <NodesForm />
-        <NodeStatus />
+        <NodeStatus selectedNode={selectedNode!} />
       </div>
-      {data && <Table paginate rows={data.nodes} />}
+      {data && (
+        <Table
+          paginate
+          rows={data.nodes}
+          selectedRow={selectedNode?.id}
+          onSelectRow={setSelectedNode}
+        />
+      )}
     </div>
   );
 }
