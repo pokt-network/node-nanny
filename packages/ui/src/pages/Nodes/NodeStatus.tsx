@@ -1,12 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLazyQuery, useMutation } from "@apollo/client";
-import { Button, FormControl, Paper, Typography } from "@mui/material";
+import { Button, CircularProgress, FormControl, Paper, Typography } from "@mui/material";
 
 import {
   DISABLE_HAPROXY_SERVER,
   ENABLE_HAPROXY_SERVER,
   GET_NODE_STATUS,
   MUTE_MONITOR,
+  REBOOT_SERVER,
   UNMUTE_MONITOR,
 } from "queries";
 import { INode } from "types";
@@ -21,8 +22,19 @@ interface INodeStatusProps {
 }
 
 export function NodeStatus({ selectedNode }: INodeStatusProps) {
+  const [rebooting, setRebooting] = useState<boolean>(false);
   const [getStatus, { data, error, loading }] = useLazyQuery<INodeStatus>(GET_NODE_STATUS);
   const onCompleted = () => getStatus();
+  const [rebootServer] = useMutation<boolean>(REBOOT_SERVER, {
+    onCompleted: (data) => {
+      setTimeout(() => {
+        onCompleted();
+        setRebooting(false);
+      }, 10000);
+    },
+    // DEVNOTE -> Add error display
+    onError: (error) => setRebooting(false),
+  });
   const [enableHaProxy] = useMutation<boolean>(ENABLE_HAPROXY_SERVER, { onCompleted });
   const [disableHaProxy] = useMutation<boolean>(DISABLE_HAPROXY_SERVER, { onCompleted });
   const [muteMonitor] = useMutation<boolean>(MUTE_MONITOR, { onCompleted });
@@ -32,6 +44,21 @@ export function NodeStatus({ selectedNode }: INodeStatusProps) {
     const { id } = selectedNode;
     getStatus({ variables: { id } });
   }, [getStatus, selectedNode]);
+
+  const handleRebootServer = (id: string): void => {
+    if (!rebooting) {
+      setRebooting(true);
+      rebootServer({ variables: { id } });
+    }
+  };
+
+  const handleHaProxyToggle = (id: string, haProxyStatus: -1 | 0 | 1) =>
+    haProxyStatus === 0
+      ? disableHaProxy({ variables: { id } })
+      : enableHaProxy({ variables: { id } });
+
+  const handleMuteToggle = (id: string, muted: boolean) =>
+    muted ? unmuteMonitor({ variables: { id } }) : muteMonitor({ variables: { id } });
 
   if (loading) return <>Loading...</>;
   if (error) return <> Error! ${error.message}</>;
@@ -69,8 +96,14 @@ export function NodeStatus({ selectedNode }: INodeStatusProps) {
             </Paper>
             <div style={{ marginTop: "10px" }} />
             <Paper style={{ padding: 10 }} variant="outlined">
-              <Typography variant="h6">HAProxy Status: {haProxyStatusText}</Typography>
-              <Typography variant="h6">Mute Status: {muteStatusText}</Typography>
+              {rebooting ? (
+                <Typography variant="h4">Rebooting...</Typography>
+              ) : (
+                <>
+                  <Typography variant="h6">HAProxy Status: {haProxyStatusText}</Typography>
+                  <Typography variant="h6">Mute Status: {muteStatusText}</Typography>
+                </>
+              )}
             </Paper>
             <div style={{ marginTop: "10px" }} />
             <Paper
@@ -82,19 +115,24 @@ export function NodeStatus({ selectedNode }: INodeStatusProps) {
                   fullWidth
                   style={{ display: "flex", justifyContent: "center" }}
                   variant="outlined"
+                  onClick={() => handleRebootServer(id)}
+                  disabled={haProxyStatus !== 0}
                 >
-                  Reboot Server
+                  {rebooting ? (
+                    <>
+                      <CircularProgress size={20} sx={{ marginRight: "8px" }} />
+                      Rebooting Server...
+                    </>
+                  ) : (
+                    "Reboot Server"
+                  )}
                 </Button>
                 <div style={{ marginTop: "10px" }} />
                 <Button
                   fullWidth
                   style={{ display: "flex", justifyContent: "center" }}
                   variant="outlined"
-                  onClick={() =>
-                    haProxyStatus === 0
-                      ? disableHaProxy({ variables: { id } })
-                      : enableHaProxy({ variables: { id } })
-                  }
+                  onClick={() => handleHaProxyToggle(id, haProxyStatus)}
                   disabled={haProxyStatus === -1}
                 >
                   {{ "-1": "No HAProxy", 0: "Disable HAProxy", 1: "Enable HAProxy" }[haProxyStatus]}
@@ -104,11 +142,7 @@ export function NodeStatus({ selectedNode }: INodeStatusProps) {
                   fullWidth
                   style={{ display: "flex", justifyContent: "center" }}
                   variant="outlined"
-                  onClick={() =>
-                    muted
-                      ? unmuteMonitor({ variables: { id } })
-                      : muteMonitor({ variables: { id } })
-                  }
+                  onClick={() => handleMuteToggle(id, muted)}
                 >
                   {muted ? "Unmute Monitor" : "Mute Monitor"}
                 </Button>
