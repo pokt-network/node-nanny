@@ -109,7 +109,7 @@ export class Service {
 
       let reboot: string;
 
-      if (chain.type === HealthTypes.SupportedBlockChains.POKT) {
+      if (chain.type === HealthTypes.ESupportedBlockChains.POKT) {
         const { data } = await this.agent.post<{ reboot: string }>(
           `http://${ip}:3001/webhook/docker/reboot`,
           {
