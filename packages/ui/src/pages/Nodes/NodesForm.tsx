@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
 import { useMutation, useQuery } from "@apollo/client";
 import {
   Button,
@@ -18,7 +18,7 @@ import {
 import { CREATE_NODE, GET_HOSTS_CHAINS_LB } from "queries";
 import { IChain, IHost, INode } from "types";
 
-interface HostsAndChainsData {
+interface IHostsAndChainsData {
   chains: IChain[];
   hosts: IHost[];
   loadBalancers: IHost[];
@@ -38,7 +38,7 @@ export function NodesForm() {
     onCompleted: (data) => console.log({ data }),
     onError: (error) => console.log({ error }),
   });
-  const { loading, error, data } = useQuery<HostsAndChainsData>(GET_HOSTS_CHAINS_LB);
+  const { loading, error, data } = useQuery<IHostsAndChainsData>(GET_HOSTS_CHAINS_LB);
 
   const handleChainChange = (event: SelectChangeEvent<typeof chain>) => {
     setChain(event.target.value);
