@@ -103,7 +103,6 @@ export function Table({
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(paginate ? numPerPage || 25 : rows.length);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  // const [page, setPage] = useState(0);
 
   const handleRequestSort = (_event: MouseEvent<unknown>, property: any) => {
     const isAsc = orderBy === property && order === "asc";
@@ -135,11 +134,11 @@ export function Table({
             value={searchTerm}
             handleChange={setSearchTerm}
             type={type}
-            sx={{ width: "50%", marginBottom: "16px" }}
+            sx={{ marginBottom: "16px" }}
           />
         )}
         <TableContainer sx={{ maxHeight: height || 600 }}>
-          <MUITable stickyHeader sx={{ minWidth: 750 }} aria-labelledby="tableTitle" size={"small"}>
+          <MUITable stickyHeader sx={{ minWidth: 750 }} aria-labelledby="tableTitle" size="small">
             <EnhancedTableHead
               rows={rows}
               order={order}
@@ -150,11 +149,15 @@ export function Table({
             <TableBody>
               {rows
                 .slice()
-                .filter((row) => {
-                  if (!searchable) return row;
-                  const rowSearch = Object.values(row).join().toLowerCase().trim();
-                  if (rowSearch.includes(searchTerm.toLowerCase().trim())) return row;
-                })
+                .filter(
+                  (row) =>
+                    !searchable ||
+                    Object.values(row)
+                      .join()
+                      .toLowerCase()
+                      .trim()
+                      .includes(searchTerm.toLowerCase().trim()),
+                )
                 .sort(getComparator(order, orderBy))
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row) => {
@@ -163,7 +166,7 @@ export function Table({
                       key={String(row.id)}
                       sx={{
                         "&:last-child td, &:last-child th": { border: 0 },
-                        cursor: `${!!onSelectRow ? "pointer" : "default"}`,
+                        cursor: `${onSelectRow ? "pointer" : "default"}`,
                       }}
                       hover={!!onSelectRow}
                       selected={selectedRow === String(row.id)}
