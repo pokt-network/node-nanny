@@ -8,7 +8,7 @@ import {
   NCResponse,
   HealthResponse,
   SupportedBlockChainTypes,
-  SupportedBlockChains,
+  ESupportedBlockChains,
 } from "./types";
 
 import { hexToDec } from "../../utils";
@@ -470,7 +470,9 @@ export class Service {
       let peers;
       let numPeers;
 
-      if (!(chain.name == SupportedBlockChains.POL || chain.name == SupportedBlockChains.POLTST)) {
+      if (
+        !(chain.name == ESupportedBlockChains.POL || chain.name == ESupportedBlockChains.POLTST)
+      ) {
         peers = await this.getPeers(url, basicAuth);
         numPeers = hexToDec(peers.result);
       }

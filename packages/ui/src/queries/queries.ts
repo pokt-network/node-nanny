@@ -59,7 +59,7 @@ export const GET_ALL_WEBHOOKS = gql`
 `;
 
 export const GET_HOSTS_CHAINS_LB = gql`
-  query getHostsChainsAndLoadBalancers {
+  query GetHostsChainsAndLoadBalancers {
     hosts {
       id
       name
