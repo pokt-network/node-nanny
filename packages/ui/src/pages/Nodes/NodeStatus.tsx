@@ -18,13 +18,11 @@ import {
 // import { CREATE_NODE, GET_HOSTS_CHAINS_LB } from "queries";
 import { IChain, IHost, INode } from "types";
 
-interface HostsAndChainsData {
-  chains: IChain[];
-  hosts: IHost[];
-  loadBalancers: IHost[];
+interface INodeStatusProps {
+  selectedNode: INode;
 }
 
-export function NodeStatus() {
+export function NodeStatus({ selectedNode }: INodeStatusProps) {
   // if (loading) return <>Loading...</>;
   // if (error) return <> Error! ${error.message}</>;
 
@@ -38,9 +36,9 @@ export function NodeStatus() {
           alignItems: "center",
         }}
       >
-        <Paper style={{ width: "200%", padding: 10 }} variant="outlined">
+        <Paper style={{ width: 434, padding: 10 }} variant="outlined">
           <Paper style={{ width: "100%", padding: 10 }} variant="outlined">
-            Node Status
+            {`${selectedNode?.backend} Node Status`}
           </Paper>
           <div style={{ marginTop: "10px" }} />
           <Paper
