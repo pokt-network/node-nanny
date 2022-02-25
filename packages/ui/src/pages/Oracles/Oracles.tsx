@@ -23,7 +23,7 @@ export function Oracles() {
       <div style={{ marginBottom: "16px" }}>
         <OraclesForm />
       </div>
-      {data && <Table paginate rows={data.oracles} />}
+      {data && <Table type="Oracles" searchable rows={data.oracles} />}
     </div>
   );
 }
