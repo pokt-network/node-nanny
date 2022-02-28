@@ -35,13 +35,6 @@ export class Service {
       .exec();
   }
 
-  private async getLoadBalancers(): Promise<ILoadBalancerIPs[]> {
-    if (process.env.MONITOR_TEST === "1") {
-      return [{ ip: "127.0.0.1" }, { ip: "127.0.0.1" }];
-    }
-    return await HostsModel.find({ loadBalancer: true }, { ip: 1 }).exec();
-  }
-
   async getHaProxyStatus(id: string) {
     const { backend, haProxy, server, loadBalancers } = await this.getNode(id);
     if (haProxy === false) {
@@ -58,7 +51,9 @@ export class Service {
         });
         results.push(data);
       } catch (error) {
-        throw new Error(`Could not get backend status, ${ip} ${server} ${backend} ${error}`);
+        throw new Error(
+          `Could not get backend status, ${ip} ${server} ${backend} ${error}`,
+        );
       }
     }
     if (results.every(({ status }) => status === true)) {
@@ -141,9 +136,15 @@ export class Service {
   }
 
   async removeFromRotation(id: string): Promise<boolean> {
-    const { backend, server, hostname, host, chain, container, loadBalancers } = await this.getNode(
-      id,
-    );
+    const {
+      backend,
+      server,
+      hostname,
+      host,
+      chain,
+      container,
+      loadBalancers,
+    } = await this.getNode(id);
 
     try {
       await Promise.all(
@@ -168,9 +169,15 @@ export class Service {
   }
 
   async addToRotation(id: string): Promise<boolean> {
-    const { backend, server, hostname, host, chain, container, loadBalancers } = await this.getNode(
-      id,
-    );
+    const {
+      backend,
+      server,
+      hostname,
+      host,
+      chain,
+      container,
+      loadBalancers,
+    } = await this.getNode(id);
 
     try {
       await Promise.all(
