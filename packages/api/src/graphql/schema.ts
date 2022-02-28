@@ -27,10 +27,10 @@ const typeDefs = gql`
 
   type Node {
     id: ID!
-    backend: String
     chain: Chain
-    haProxy: Boolean
     host: Host
+    backend: String
+    haProxy: Boolean
     port: Int
     server: String
     url: String

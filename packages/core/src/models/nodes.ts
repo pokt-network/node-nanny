@@ -6,17 +6,21 @@ export interface INode {
   id: Schema.Types.ObjectId;
   chain: IChain;
   host: IHost;
-  backend: string;
-  container: string;
   haProxy: boolean;
+  port: number;
+  url: string;
+  loadBalancers?: IHost[];
+  backend?: string;
+  server?: string;
+  ssl?: boolean;
+
+  // Old model
+  container: string;
   hasPeer: boolean;
   hostname: string;
   reboot: boolean;
   monitorId: string;
-  port: number;
-  server: string;
   threshold: number;
-  url: string;
   variance: number;
   logGroup: string;
   nginx: string;
@@ -25,8 +29,6 @@ export interface INode {
   service: string;
   removeNoResponse: boolean;
   docker: boolean;
-  ssl: boolean;
-  loadBalancers: string[];
   // temp
   basicAuth?: string;
 }
@@ -34,19 +36,23 @@ export interface INode {
 const nodesSchema = new Schema<INode>(
   {
     id: Schema.Types.ObjectId,
-    chain: { type: Schema.Types.ObjectId, ref: "chains" },
-    host: { type: Schema.Types.ObjectId, ref: "hosts" },
+    chain: { type: Schema.Types.ObjectId, ref: "chains", required: true },
+    host: { type: Schema.Types.ObjectId, ref: "hosts", required: true },
+    haProxy: { type: Boolean, required: true },
+    port: { type: Number, required: true },
+    url: { type: String, required: true },
+    loadBalancers: [{ type: Schema.Types.ObjectId, ref: "hosts" }],
     backend: String,
+    server: String,
+    ssl: Boolean,
+
+    // Old model
     container: String,
-    haProxy: Boolean,
     reboot: Boolean,
     hasPeer: Boolean,
     hostname: String,
     monitorId: String,
-    port: Number,
-    server: String,
     threshold: Number,
-    url: String,
     variance: Number,
     logGroup: String,
     nginx: String,
@@ -55,8 +61,6 @@ const nodesSchema = new Schema<INode>(
     docker: Boolean,
     service: String,
     removeNoResponse: Boolean,
-    ssl: Boolean,
-    loadBalancers: [Schema.Types.ObjectId],
   },
   { collection: "nodes", timestamps: true },
 );
