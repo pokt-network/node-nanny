@@ -1,12 +1,17 @@
 import express from "express";
 import { config } from "dotenv";
-import { Event, DataDog, Client, Infra } from "@pokt-foundation/node-monitoring-core/dist/services";
+import {
+  Event,
+  DataDog,
+  Automation,
+  Infra,
+} from "@pokt-foundation/node-monitoring-core/dist/services";
 import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
 
 config();
 const event = new Event.DataDog();
 const dd = new DataDog();
-const retool = new Client();
+const automation = new Automation();
 const infra = new Infra();
 const app = express();
 const port = 3000;
@@ -43,90 +48,90 @@ app.post("/admin/monitor/onboard", async ({ body }, res) => {
   }
 });
 
-app.get("/retool/monitor/status/:id", async (req, res) => {
+app.get("/automation/monitor/status/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const status = await retool.getMonitorStatus(id);
+    const status = await automation.getMonitorStatus(id);
     return res.status(200).json({ status });
   } catch (error) {
     res.sendStatus(500);
   }
 });
 
-app.post("/retool/host/add", async (req, res) => {
+app.post("/automation/host/add", async (req, res) => {
   const { awsInstanceId, loadBalancer } = req.body;
   try {
-    const status = await retool.findAndStoreAWSHost({ awsInstanceId, loadBalancer });
+    const status = await automation.findAndStoreAWSHost({ awsInstanceId, loadBalancer });
     return res.status(201).json({ status });
   } catch (error) {
     res.sendStatus(500);
   }
 });
 
-app.get("/retool/monitor/mute/status/:id", async (req, res) => {
+app.get("/automation/monitor/mute/status/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const status = await retool.getMuteStatus(id);
+    const status = await automation.getMuteStatus(id);
     return res.status(200).json({ status });
   } catch (error) {
     res.sendStatus(500);
   }
 });
 
-app.post("/retool/monitor/mute/:id", async (req, res) => {
+app.post("/automation/monitor/mute/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const status = await retool.muteMonitor(id);
+    const status = await automation.muteMonitor(id);
     return res.status(200).json({ status });
   } catch (error) {
     res.sendStatus(500);
   }
 });
 
-app.post("/retool/monitor/unmute/:id", async (req, res) => {
+app.post("/automation/monitor/unmute/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const status = await retool.unmuteMonitor(id);
+    const status = await automation.unmuteMonitor(id);
     return res.status(200).json({ status });
   } catch (error) {
     res.sendStatus(500);
   }
 });
 
-app.get("/retool/lb/status/:id", async (req, res) => {
+app.get("/automation/lb/status/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const status = await retool.getHaProxyStatus(id);
+    const status = await automation.getHaProxyStatus(id);
     return res.status(200).json({ status });
   } catch (error) {
     res.sendStatus(500);
   }
 });
 
-app.post("/retool/lb/enable/:id", async (req, res) => {
+app.post("/automation/lb/enable/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const status = await retool.addToRotation(id);
+    const status = await automation.addToRotation(id);
     return res.status(200).json({ status });
   } catch (error) {
     res.sendStatus(500);
   }
 });
 
-app.post("/retool/lb/disable/:id", async (req, res) => {
+app.post("/automation/lb/disable/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const status = await retool.removeFromRotation(id);
+    const status = await automation.removeFromRotation(id);
     return res.status(200).json({ status });
   } catch (error) {
     res.sendStatus(500);
   }
 });
 
-app.post("/retool/reboot/:id", async (req, res) => {
+app.post("/automation/reboot/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const status = await retool.rebootServer(id);
+    const status = await automation.rebootServer(id);
     return res.status(200).json({ status });
   } catch (error) {
     res.sendStatus(500);
