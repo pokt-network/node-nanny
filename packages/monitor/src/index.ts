@@ -4,6 +4,7 @@ import { NodesModel } from "@pokt-foundation/node-monitoring-core/dist/models";
 import { HealthTypes } from "@pokt-foundation/node-monitoring-core/dist/types";
 import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
 import { Publish } from "./publish";
+
 config();
 
 type Config = {
@@ -20,6 +21,14 @@ enum EventOptions {
   REDIS = "redis",
   DATADOG = "datadog",
 }
+
+const interval = 30000;
+// const interval = 10000;
+
+console.log("ENV VARS", {
+  logger: process.env.MONITOR_LOGGER,
+  event: process.env.MONITOR_EVENT,
+});
 
 export class App {
   private log: Log;
@@ -39,8 +48,11 @@ export class App {
 
   async main() {
     await connect();
-    const nodes = await NodesModel.find().populate("host").populate("chain").exec();
-    console.log(nodes)
+    const nodes = await NodesModel.find({ chain: { $ne: null }, host: { $ne: null } })
+      .populate("host")
+      .populate("chain")
+      .exec();
+    // console.log(nodes);
     for (const node of nodes) {
       node.id = node._id;
       setInterval(async () => {
@@ -67,7 +79,7 @@ export class App {
           message: JSON.stringify(healthResponse),
           level: status === HealthTypes.ErrorStatus.ERROR ? "error" : "info",
         });
-      }, 10000);
+      }, interval);
     }
   }
 }
