@@ -6,7 +6,7 @@ import {
   LogsModel,
   WebhookModel,
 } from "@pokt-foundation/node-monitoring-core/dist/models";
-import { Client as ClientService } from "@pokt-foundation/node-monitoring-core/dist/services";
+import { Automation as AutomationService } from "@pokt-foundation/node-monitoring-core/dist/services";
 
 const resolvers = {
   Query: {
@@ -21,10 +21,10 @@ const resolvers = {
     webhooks: async () => await WebhookModel.find({}).exec(),
 
     getMuteStatus: async (_, { id }) => {
-      return await new ClientService().getMuteStatus(id);
+      return await new AutomationService().getMuteStatus(id);
     },
     getHaProxyStatus: async (_, { id }) => {
-      return await new ClientService().getHaProxyStatus(id);
+      return await new AutomationService().getHaProxyStatus(id);
     },
   },
 
@@ -50,19 +50,19 @@ const resolvers = {
     },
 
     muteMonitor: async (_, { id }) => {
-      return await new ClientService().muteMonitor(id);
+      return await new AutomationService().muteMonitor(id);
     },
     unmuteMonitor: async (_, { id }) => {
-      return await new ClientService().unmuteMonitor(id);
+      return await new AutomationService().unmuteMonitor(id);
     },
     enableHaProxyServer: async (_, { id }) => {
-      return await new ClientService().addToRotation(id);
+      return await new AutomationService().addToRotation(id);
     },
     disableHaProxyServer: async (_, { id }) => {
-      return await new ClientService().removeFromRotation(id);
+      return await new AutomationService().removeFromRotation(id);
     },
     rebootServer: async (_, { id }) => {
-      return await new ClientService().rebootServer(id);
+      return await new AutomationService().rebootServer(id);
     },
   },
 

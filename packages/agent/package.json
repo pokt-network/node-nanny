@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc -b .",
-    "start": "pnpm build && ts-node ./src/server.ts",
+    "start": "pnpm build && ts-node ./dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
