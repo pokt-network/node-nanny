@@ -34,7 +34,7 @@ export class Service {
         path: `/api/v2/logs?dd-api-key=${process.env.DD_API_KEY}&ddsource=nodejs&service=${name}`,
         ssl: true,
       }),
-    }[ this.config.logger];
+    }[this.config.logger];
 
     return createLogger({
       level: "info",

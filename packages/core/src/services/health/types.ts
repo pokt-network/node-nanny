@@ -22,9 +22,8 @@ export enum ESupportedBlockChains {
 
 export enum SupportedBlockChainTypes {
   EVM = "EVM",
-  ETH = "ETH",
   AVA = "AVA",
-  HEI = "HEI",
+  TMT = "TMT",
   POKT = "POKT",
   SOL = "SOL",
   ALG = "ALG",
