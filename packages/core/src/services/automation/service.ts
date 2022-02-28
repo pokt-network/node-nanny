@@ -6,6 +6,8 @@ import { NodesModel, INode, HostsModel } from "../../models";
 import { HealthTypes, DataDogTypes, RebootTypes } from "../../types";
 import { ILoadBalancerIPs } from "./types";
 
+const testLoadBalancer = [{ ip: "127.0.0.1" }];
+
 export class Service {
   private agent: AxiosInstance;
   private alert: Alert;
@@ -25,47 +27,38 @@ export class Service {
     });
   }
 
-  private async getNode(id): Promise<INode> {
-    return await NodesModel.findById(id).populate("chain").populate("host").exec();
+  private async getNode(id: string): Promise<INode> {
+    return await NodesModel.findById(id)
+      .populate("chain")
+      .populate("host")
+      .populate("loadBalancers")
+      .exec();
   }
 
   private async getLoadBalancers(): Promise<ILoadBalancerIPs[]> {
     if (process.env.MONITOR_TEST === "1") {
-      return [
-        {
-          internalHostName: "ip-10-0-0-102.us-east-2.compute.internal",
-          externalHostName: "ec2-18-118-59-87.us-east-2.compute.amazonaws.com",
-        },
-        {
-          internalHostName: "ip-10-0-0-85.us-east-2.compute.internal",
-          externalHostName: "ec2-18-189-159-188.us-east-2.compute.amazonaws.com",
-        },
-      ];
+      return [{ ip: "127.0.0.1" }, { ip: "127.0.0.1" }];
     }
-    return await HostsModel.find(
-      { loadBalancer: true },
-      { internalHostName: 1, externalHostName: 1 },
-    ).exec();
+    return await HostsModel.find({ loadBalancer: true }, { ip: 1 }).exec();
   }
 
   async getHaProxyStatus(id: string) {
-    const { backend, haProxy, server } = await this.getNode(id);
+    const { backend, haProxy, server, loadBalancers } = await this.getNode(id);
     if (haProxy === false) {
       return -1;
     }
-    const loadBalancers = await this.getLoadBalancers();
+
     const results = [];
-    for (const { internalHostName } of loadBalancers) {
+
+    for (const { ip } of loadBalancers) {
       try {
-        const { data } = await this.agent.post(
-          `http://${internalHostName}:3001/webhook/lb/status`,
-          { backend, server },
-        );
+        const { data } = await this.agent.post(`http://${ip}:3001/webhook/lb/status`, {
+          backend,
+          server,
+        });
         results.push(data);
       } catch (error) {
-        throw new Error(
-          `could not get backend status, ${internalHostName} ${server} ${backend} ${error}`,
-        );
+        throw new Error(`Could not get backend status, ${ip} ${server} ${backend} ${error}`);
       }
     }
     if (results.every(({ status }) => status === true)) {
@@ -102,7 +95,7 @@ export class Service {
     const Host = await HostsModel.findOne({ name: host.name }).exec();
 
     if (Host) {
-      let { internalIpaddress: ip } = Host;
+      let { ip } = Host;
 
       if (process.env.MONITOR_TEST === "1") {
         ip = "localhost";
@@ -148,13 +141,14 @@ export class Service {
   }
 
   async removeFromRotation(id: string): Promise<boolean> {
-    const { backend, server, hostname, host, chain, container } = await this.getNode(id);
-    const loadBalancers = await this.getLoadBalancers();
+    const { backend, server, hostname, host, chain, container, loadBalancers } = await this.getNode(
+      id,
+    );
 
     try {
       await Promise.all(
-        loadBalancers.map(({ internalHostName }) =>
-          this.agent.post(`http://${internalHostName}:3001/webhook/lb/disable`, {
+        loadBalancers.map(({ ip }) =>
+          this.agent.post(`http://${ip}:3001/webhook/lb/disable`, {
             backend,
             server,
           }),
@@ -174,12 +168,14 @@ export class Service {
   }
 
   async addToRotation(id: string): Promise<boolean> {
-    const { backend, server, hostname, host, chain, container } = await this.getNode(id);
-    const loadBalancers = await this.getLoadBalancers();
+    const { backend, server, hostname, host, chain, container, loadBalancers } = await this.getNode(
+      id,
+    );
+
     try {
       await Promise.all(
-        loadBalancers.map(({ internalHostName }) =>
-          this.agent.post(`http://${internalHostName}:3001/webhook/lb/enable`, {
+        loadBalancers.map(({ ip }) =>
+          this.agent.post(`http://${ip}:3001/webhook/lb/enable`, {
             backend,
             server,
           }),
@@ -220,7 +216,7 @@ export class Service {
       const instance = details.Reservations[0].Instances[0];
       const {
         PrivateDnsName: internalHostName,
-        PrivateIpAddress: internalIpaddress,
+        PrivateIpAddress: ip,
         PublicDnsName: externalHostName,
       } = instance;
 
@@ -228,7 +224,7 @@ export class Service {
 
       return {
         name,
-        internalIpaddress,
+        ip,
         internalHostName,
         externalHostName,
         awsInstanceId,

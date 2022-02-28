@@ -212,7 +212,7 @@ export class Service {
     }
   };
 
-  private getHeimdallNodeHealth = async ({
+  private getTendermintNodeHealth = async ({
     url,
     host,
     chain,
@@ -628,13 +628,15 @@ export class Service {
   async getNodeHealth(node: INode): Promise<HealthResponse> {
     const { chain } = node;
     if (!Object.keys(SupportedBlockChainTypes).includes(chain.type)) {
+      console.log({ chain, node });
       throw new Error(`${chain.type} is not a supported chain type`);
     }
+    console.log("CHAIN", chain);
     return await {
       ALG: this.getAlgorandNodeHealth,
       AVA: this.getAvaNodeHealth,
       EVM: this.getEVMNodeHealth,
-      HEI: this.getHeimdallNodeHealth, // DEV NOTE -> Change to Tendermint
+      TMT: this.getTendermintNodeHealth,
       HRM: this.getHarmonyNodeHealth,
       POKT: this.getPocketNodeHealth,
       SOL: this.getSolNodeHealth,
