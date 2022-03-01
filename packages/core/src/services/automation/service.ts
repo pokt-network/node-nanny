@@ -191,16 +191,16 @@ export class Service {
     }
   }
 
-  async muteMonitor(id: string): Promise<boolean> {
-    const { monitorId } = await this.getNode(id);
-    const response = await this.dd.muteMonitor({ id: monitorId, minutes: 525600 });
-    return !!response;
+  async muteMonitor(id: string): Promise<void> {
+    NodesModel.updateOne({ _id: id }, { muted: true }).exec();
+
+    // DEV NOTE -> Implement logic to restart monitor
   }
 
-  async unmuteMonitor(id: string): Promise<boolean> {
-    const { monitorId } = await this.getNode(id);
-    const response = await this.dd.unmuteMonitor({ id: monitorId });
-    return !!response;
+  async unmuteMonitor(id: string): Promise<void> {
+    await NodesModel.updateOne({ _id: id }, { muted: false });
+
+    // DEV NOTE -> Implement logic to restart monitor
   }
 
   async getInstanceDetails(awsInstanceId: string) {
