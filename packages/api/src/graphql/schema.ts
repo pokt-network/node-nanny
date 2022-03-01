@@ -27,15 +27,16 @@ const typeDefs = gql`
 
   type Node {
     id: ID!
-    chain: Chain
-    host: Host
-    backend: String
-    haProxy: Boolean
-    port: Int
-    server: String
-    url: String
-    ssl: Boolean
+    chain: Chain!
+    host: Host!
+    haProxy: Boolean!
+    port: Int!
+    url: String!
+    muted: Boolean!
     loadBalancers: [ID]
+    backend: String
+    server: String
+    ssl: Boolean
   }
 
   # EVM chains only
@@ -48,8 +49,8 @@ const typeDefs = gql`
   type Webhook {
     id: ID!
     chain: String!
+    url: String!
     location: String
-    url: String
   }
 
   # Inputs
@@ -71,6 +72,7 @@ const typeDefs = gql`
     chains: [Chain]
     hosts(loadBalancer: Boolean): [Host]
     logs(id: String): [Log]
+    node(id: ID!): Node
     nodes: [Node]
     oracles: [Oracle]
     webhooks: [Webhook]
@@ -98,8 +100,8 @@ const typeDefs = gql`
     deleteOracle(id: ID): Oracle
     deleteChain(id: ID): Chain
 
-    muteMonitor(id: ID!): Boolean
-    unmuteMonitor(id: ID!): Boolean
+    muteMonitor(id: ID!): Node
+    unmuteMonitor(id: ID!): Node
     enableHaProxyServer(id: ID!): Boolean
     disableHaProxyServer(id: ID!): Boolean
     rebootServer(id: ID!): String

@@ -11,12 +11,10 @@ export function Nodes() {
   const [selectedNode, setSelectedNode] = useState<INode | undefined>(undefined);
   const { data, error, loading } = useQuery<{ nodes: INode[] }>(GET_ALL_NODES);
 
-  useEffect(() => data && setSelectedNode(data.nodes[0]), [data]);
-
   if (loading && !selectedNode) return <>Loading...</>;
   if (error) return <>Error! ${error.message}</>;
 
-  if (data && selectedNode) {
+  if (data) {
     return (
       <div
         style={{
@@ -36,7 +34,9 @@ export function Nodes() {
           }}
         >
           <NodesForm />
-          <NodeStatus selectedNode={selectedNode!} />
+          {selectedNode && (
+            <NodeStatus selectedNode={selectedNode} setSelectedNode={setSelectedNode} />
+          )}
         </div>
         <Table
           type="Nodes"
