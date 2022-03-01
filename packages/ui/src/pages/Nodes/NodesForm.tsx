@@ -55,7 +55,9 @@ export function NodesForm() {
     setHost(event.target.value);
   };
 
-  const handleLoadBalancerChange = ({ target }: SelectChangeEvent<typeof loadBalancers>) => {
+  const handleLoadBalancerChange = ({
+    target,
+  }: SelectChangeEvent<typeof loadBalancers>) => {
     const { value } = target;
     setLoadBalancers(typeof value === "string" ? value.split(",") : value);
   };
@@ -88,18 +90,32 @@ export function NodesForm() {
           </Typography>
           <FormControl fullWidth>
             <InputLabel id="chain-label">Chain</InputLabel>
-            <Select labelId="chain-label" value={chain} label="Chain" onChange={handleChainChange}>
+            <Select
+              labelId="chain-label"
+              value={chain}
+              label="Chain"
+              onChange={handleChainChange}
+            >
               {data?.chains.map(({ name, id }) => (
-                <MenuItem value={id}>{name}</MenuItem>
+                <MenuItem key={id} value={id}>
+                  {name}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
           <div style={{ marginTop: "10px" }} />
           <FormControl fullWidth>
             <InputLabel id="host-label">Host</InputLabel>
-            <Select labelId="host-label" value={host} label="Host" onChange={handleHostChange}>
+            <Select
+              labelId="host-label"
+              value={host}
+              label="Host"
+              onChange={handleHostChange}
+            >
               {data?.hosts.map(({ name, id }) => (
-                <MenuItem value={id}>{name}</MenuItem>
+                <MenuItem key={id} value={id}>
+                  {name}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -119,7 +135,7 @@ export function NodesForm() {
               }}
             >
               {data?.loadBalancers.map(({ name, id }) => (
-                <MenuItem value={id}>
+                <MenuItem key={id} value={id}>
                   <Checkbox checked={loadBalancers.indexOf(id!) > -1} />
                   <ListItemText primary={name} />
                 </MenuItem>
@@ -128,7 +144,12 @@ export function NodesForm() {
           </FormControl>
           <div style={{ marginTop: "10px" }} />
           <FormControl fullWidth>
-            <TextField value={port} onChange={handlePortChange} label="Port" variant="outlined" />
+            <TextField
+              value={port}
+              onChange={handlePortChange}
+              label="Port"
+              variant="outlined"
+            />
           </FormControl>
           <div style={{ marginTop: "10px" }} />
           <FormControl fullWidth>
@@ -149,7 +170,9 @@ export function NodesForm() {
               variant="outlined"
             />
           </FormControl>
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <div
+            style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+          >
             <div>
               HAproxy
               <Switch checked={haProxy} onChange={handleHaproxyChange} />
