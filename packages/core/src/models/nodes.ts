@@ -9,6 +9,7 @@ export interface INode {
   haProxy: boolean;
   port: number;
   url: string;
+  muted: boolean;
   loadBalancers?: IHost[];
   backend?: string;
   server?: string;
@@ -41,6 +42,7 @@ const nodesSchema = new Schema<INode>(
     haProxy: { type: Boolean, required: true },
     port: { type: Number, required: true },
     url: { type: String, required: true },
+    muted: { type: Boolean, required: true, default: false },
     loadBalancers: [{ type: Schema.Types.ObjectId, ref: "hosts" }],
     backend: String,
     server: String,
