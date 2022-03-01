@@ -45,14 +45,15 @@ interface EnhancedTableProps {
   rowCount: number;
 }
 
-function EnhancedTableHead(props: EnhancedTableProps) {
-  const { rows, order, orderBy, onRequestSort } = props;
+function EnhancedTableHead({ rows, order, orderBy, onRequestSort }: EnhancedTableProps) {
   const createSortHandler = (property: any) => (event: MouseEvent<unknown>) => {
     onRequestSort(event, property);
   };
-  const headCells = Object.keys(rows[0])
-    .filter((value) => value !== "id")
-    .map((column) => ({ id: column, label: formatHeaderCell(column) }));
+  const headCells = rows.length
+    ? Object.keys(rows[0])
+        .filter((value) => value !== "id" && value !== "__typename")
+        .map((column) => ({ id: column, label: formatHeaderCell(column) }))
+    : [];
 
   return (
     <TableHead>
@@ -156,6 +157,7 @@ export function Table({
             <TableBody>
               {rows
                 .slice()
+
                 .filter(
                   (row) =>
                     !searchable ||
@@ -179,7 +181,7 @@ export function Table({
                       selected={selectedRow === String(row.id)}
                     >
                       {Object.entries(row)
-                        .filter(([key]) => key !== "id")
+                        .filter(([key]) => key !== "id" && key !== "__typename")
                         .map(([_, value], i) => {
                           return (
                             <TableCell
@@ -187,7 +189,7 @@ export function Table({
                               align={!i ? "left" : "right"}
                               onClick={() => onSelectRow?.(row)}
                             >
-                              {Array.isArray(value) ? value.join(", ") : value}
+                              {Array.isArray(value) ? value.join(", ") : String(value)}
                             </TableCell>
                           );
                         })}
