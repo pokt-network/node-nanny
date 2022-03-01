@@ -16,7 +16,10 @@ const resolvers = {
       return await HostsModel.find(query).sort({ name: 1 }).exec();
     },
     logs: async ({ id }) => await LogsModel.find({ label: id }).exec(),
-    nodes: async () => await NodesModel.find({}).populate("chain").populate("host").exec(),
+    node: async (_, { id }) =>
+      await NodesModel.find({ _id: id }).populate("chain").populate("host").exec(),
+    nodes: async () =>
+      await NodesModel.find({}).populate("chain").populate("host").exec(),
     oracles: async () => await OraclesModel.find({}).populate("chain").exec(),
     webhooks: async () => await WebhookModel.find({}).exec(),
 
@@ -43,7 +46,10 @@ const resolvers = {
       if (!doesExist) {
         return await OraclesModel.create({ chain, urls: [url] });
       }
-      return await OraclesModel.findOneAndUpdate({ chain }, { $push: { urls: url } }).exec();
+      return await OraclesModel.findOneAndUpdate(
+        { chain },
+        { $push: { urls: url } },
+      ).exec();
     },
     createWebhook: async (_, webhook) => {
       return await WebhookModel.create(webhook);
