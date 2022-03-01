@@ -191,16 +191,17 @@ export class Service {
     }
   }
 
-  async muteMonitor(id: string): Promise<void> {
-    NodesModel.updateOne({ _id: id }, { muted: true }).exec();
-
+  async muteMonitor(id: string): Promise<INode> {
+    await NodesModel.updateOne({ _id: id }, { muted: true }).exec();
     // DEV NOTE -> Implement logic to restart monitor
+    return await this.getNode(id);
   }
 
-  async unmuteMonitor(id: string): Promise<void> {
+  async unmuteMonitor(id: string): Promise<INode> {
     await NodesModel.updateOne({ _id: id }, { muted: false });
 
     // DEV NOTE -> Implement logic to restart monitor
+    return await this.getNode(id);
   }
 
   async getInstanceDetails(awsInstanceId: string) {

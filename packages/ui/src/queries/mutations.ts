@@ -11,7 +11,12 @@ export const CREATE_CHAIN = gql`
 `;
 
 export const CREATE_HOST = gql`
-  mutation CreateHost($name: String, $ip: String, $loadBalancer: Boolean, $location: String) {
+  mutation CreateHost(
+    $name: String
+    $ip: String
+    $loadBalancer: Boolean
+    $location: String
+  ) {
     createHost(name: $name, ip: $ip, loadBalancer: $loadBalancer, location: $location) {
       name
       ip
@@ -88,12 +93,18 @@ export const DISABLE_HAPROXY = gql`
 
 export const MUTE_MONITOR = gql`
   mutation MuteMonitor($id: ID!) {
-    muteMonitor(id: $id)
+    muteMonitor(id: $id) {
+      id
+      muted
+    }
   }
 `;
 
 export const UNMUTE_MONITOR = gql`
   mutation UnmuteMonitor($id: ID!) {
-    unmuteMonitor(id: $id)
+    unmuteMonitor(id: $id) {
+      id
+      muted
+    }
   }
 `;
