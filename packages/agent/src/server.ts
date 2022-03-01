@@ -65,7 +65,6 @@ app.post("/webhook/lb/enable", async ({ body }, res) => {
 
 app.post("/webhook/lb/status", async ({ body }, res) => {
   const { backend, server } = body;
-  console.log("FIRING HERE!!!", { backend, server });
   try {
     const status = await lb.getServerStatus({ backend, server });
     return res.json({ status });
