@@ -101,7 +101,9 @@ export function Table({
   const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState("");
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(paginate ? numPerPage || 25 : rows.length);
+  const [rowsPerPage, setRowsPerPage] = useState(
+    paginate ? numPerPage || 25 : rows.length,
+  );
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   const handleRequestSort = (_event: MouseEvent<unknown>, property: any) => {
@@ -138,7 +140,12 @@ export function Table({
           />
         )}
         <TableContainer sx={{ maxHeight: height || 600 }}>
-          <MUITable stickyHeader sx={{ minWidth: 750 }} aria-labelledby="tableTitle" size="small">
+          <MUITable
+            stickyHeader
+            sx={{ minWidth: 750 }}
+            aria-labelledby="tableTitle"
+            size="small"
+          >
             <EnhancedTableHead
               rows={rows}
               order={order}
@@ -176,6 +183,7 @@ export function Table({
                         .map(([_, value], i) => {
                           return (
                             <TableCell
+                              key={value}
                               align={!i ? "left" : "right"}
                               onClick={() => onSelectRow?.(row)}
                             >

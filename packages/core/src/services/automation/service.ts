@@ -4,9 +4,6 @@ import axios, { AxiosInstance } from "axios";
 import { Alert, DataDog } from "..";
 import { NodesModel, INode, HostsModel } from "../../models";
 import { HealthTypes, DataDogTypes, RebootTypes } from "../../types";
-import { ILoadBalancerIPs } from "./types";
-
-const testLoadBalancer = [{ ip: "127.0.0.1" }];
 
 export class Service {
   private agent: AxiosInstance;
@@ -28,7 +25,7 @@ export class Service {
   }
 
   private async getNode(id: string): Promise<INode> {
-    return await NodesModel.findById(id)
+    return NodesModel.findById(id)
       .populate("chain")
       .populate("host")
       .populate("loadBalancers")
@@ -41,27 +38,28 @@ export class Service {
       return -1;
     }
 
-    const results = [];
-
+    const results: (boolean | -1)[] = [];
     for (const { ip } of loadBalancers) {
       try {
-        const { data } = await this.agent.post(`http://${ip}:3001/webhook/lb/status`, {
-          backend,
-          server,
-        });
-        results.push(data);
+        const { data } = await this.agent.post<{ status: boolean | -1 }>(
+          `http://${ip}:3001/webhook/lb/status`,
+          { backend, server },
+        );
+        results.push(data.status);
       } catch (error) {
         throw new Error(
           `Could not get backend status, ${ip} ${server} ${backend} ${error}`,
         );
       }
     }
-    if (results.every(({ status }) => status === true)) {
+
+    if (results.every((status) => status === true)) {
       return 0;
     }
     return 1;
   }
 
+  // DEV NOTE -> Need to rewrite to be logger-agnostic
   async getMuteStatus(id: string): Promise<boolean> {
     const { monitorId } = await this.getNode(id);
     const { options } = await this.dd.getMonitor(monitorId);
@@ -169,15 +167,9 @@ export class Service {
   }
 
   async addToRotation(id: string): Promise<boolean> {
-    const {
-      backend,
-      server,
-      hostname,
-      host,
-      chain,
-      container,
-      loadBalancers,
-    } = await this.getNode(id);
+    const { backend, server, host, chain, container, loadBalancers } = await this.getNode(
+      id,
+    );
 
     try {
       await Promise.all(
@@ -188,11 +180,10 @@ export class Service {
           }),
         ),
       );
+
       return await this.alert.sendInfo({
         title: "Added to rotation",
-        message: `${
-          hostname ? hostname : `${host.name}/${chain.name}/${container}`
-        } added to ${backend}`,
+        message: `${host.name}/${chain.name}/${container} to ${backend}`,
         chain: chain.name,
       });
     } catch (error) {
