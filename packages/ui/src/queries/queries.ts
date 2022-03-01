@@ -23,6 +23,21 @@ export const GET_ALL_HOSTS = gql`
   }
 `;
 
+export const GET_ONE_NODE = gql`
+  query Nodes($id: ID!) {
+    node(id: $id) {
+      id
+      backend
+      port
+      server
+      url
+      ssl
+      muted
+      loadBalancers
+    }
+  }
+`;
+
 export const GET_ALL_NODES = gql`
   query Nodes {
     nodes {
@@ -32,6 +47,7 @@ export const GET_ALL_NODES = gql`
       server
       url
       ssl
+      muted
       loadBalancers
     }
   }
@@ -79,6 +95,5 @@ export const GET_HOSTS_CHAINS_LB = gql`
 export const GET_NODE_STATUS = gql`
   query GetNodeStatus($id: ID!) {
     haProxyStatus: getHaProxyStatus(id: $id)
-    # muted: getMuteStatus(id: $id)
   }
 `;

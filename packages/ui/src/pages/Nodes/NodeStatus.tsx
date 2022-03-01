@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useLazyQuery, useMutation } from "@apollo/client";
 import { Button, CircularProgress, FormControl, Paper, Typography } from "@mui/material";
 
@@ -14,17 +14,20 @@ import { INode } from "types";
 
 interface INodeStatus {
   haProxyStatus: -1 | 0 | 1;
-  muted: boolean;
 }
 
 interface INodeStatusProps {
   selectedNode: INode;
+  setSelectedNode: Dispatch<React.SetStateAction<INode | undefined>>;
 }
 
-export function NodeStatus({ selectedNode }: INodeStatusProps) {
+export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) {
+  const { id, backend, port, server, url, muted } = selectedNode;
+
   const [rebooting, setRebooting] = useState<boolean>(false);
 
-  const [getStatus, { data, error, loading }] = useLazyQuery<INodeStatus>(GET_NODE_STATUS);
+  const [getStatus, { data, error, loading }] =
+    useLazyQuery<INodeStatus>(GET_NODE_STATUS);
   const [rebootServer] = useMutation<boolean>(REBOOT_SERVER, {
     onCompleted: () => {
       setTimeout(() => {
@@ -35,15 +38,29 @@ export function NodeStatus({ selectedNode }: INodeStatusProps) {
     // DEV NOTE -> Add error display to UI
     onError: (_error) => setRebooting(false),
   });
-  const [enable] = useMutation<boolean>(ENABLE_HAPROXY, { onCompleted: () => getStatus() });
-  const [disable] = useMutation<boolean>(DISABLE_HAPROXY, { onCompleted: () => getStatus() });
-  const [muteMonitor] = useMutation<boolean>(MUTE_MONITOR, { onCompleted: () => getStatus() });
-  const [unmuteMonitor] = useMutation<boolean>(UNMUTE_MONITOR, { onCompleted: () => getStatus() });
+  const [enable] = useMutation<boolean>(ENABLE_HAPROXY, {
+    onCompleted: () => getStatus(),
+  });
+  const [disable] = useMutation<boolean>(DISABLE_HAPROXY, {
+    onCompleted: () => getStatus(),
+  });
+
+  const [muteMonitor] = useMutation<{ muteMonitor: INode }>(MUTE_MONITOR, {
+    onCompleted: ({ muteMonitor }) => {
+      const { muted } = muteMonitor;
+      setSelectedNode({ ...selectedNode, muted });
+    },
+  });
+  const [unmuteMonitor] = useMutation<{ unmuteMonitor: INode }>(UNMUTE_MONITOR, {
+    onCompleted: ({ unmuteMonitor }) => {
+      const { muted } = unmuteMonitor;
+      setSelectedNode({ ...selectedNode, muted });
+    },
+  });
 
   useEffect(() => {
-    const { id } = selectedNode;
-    getStatus({ variables: { id } });
-  }, [getStatus, selectedNode]);
+    getStatus({ variables: { id: selectedNode.id } });
+  }, [getStatus]);
 
   const handleRebootServer = (id: string): void => {
     if (!rebooting) {
@@ -55,16 +72,16 @@ export function NodeStatus({ selectedNode }: INodeStatusProps) {
   const handleHaProxyToggle = (id: string, haProxyStatus: -1 | 0 | 1) =>
     haProxyStatus === 0 ? disable({ variables: { id } }) : enable({ variables: { id } });
 
-  const handleMuteToggle = (id: string, muted: boolean) =>
+  const handleMuteToggle = (id: string) => {
+    console.log("FIRING MUTE UNMUTE", muted);
     muted ? unmuteMonitor({ variables: { id } }) : muteMonitor({ variables: { id } });
+  };
 
   if (loading) return <>Loading...</>;
   if (error) return <> Error! ${error.message}</>;
 
-  if (data && selectedNode) {
-    const { haProxyStatus, muted } = data;
-    const { id, backend, port, server, url } = selectedNode;
-
+  if (data) {
+    const { haProxyStatus } = data;
     const haProxyStatusText = {
       "-1": "No HAProxy",
       "0": "OK",
@@ -98,14 +115,21 @@ export function NodeStatus({ selectedNode }: INodeStatusProps) {
                 <Typography variant="h4">Rebooting...</Typography>
               ) : (
                 <>
-                  <Typography variant="h6">HAProxy Status: {haProxyStatusText}</Typography>
+                  <Typography variant="h6">
+                    HAProxy Status: {haProxyStatusText}
+                  </Typography>
                   <Typography variant="h6">Mute Status: {muteStatusText}</Typography>
                 </>
               )}
             </Paper>
             <div style={{ marginTop: "10px" }} />
             <Paper
-              style={{ display: "flex", flexDirection: "column", width: "100%", padding: 10 }}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                width: "100%",
+                padding: 10,
+              }}
               variant="outlined"
             >
               <FormControl fullWidth>
@@ -133,14 +157,18 @@ export function NodeStatus({ selectedNode }: INodeStatusProps) {
                   onClick={() => handleHaProxyToggle(id, haProxyStatus)}
                   disabled={haProxyStatus === -1}
                 >
-                  {{ "-1": "No HAProxy", 0: "Disable HAProxy", 1: "Enable HAProxy" }[haProxyStatus]}
+                  {
+                    { "-1": "No HAProxy", 0: "Disable HAProxy", 1: "Enable HAProxy" }[
+                      haProxyStatus
+                    ]
+                  }
                 </Button>
                 <div style={{ marginTop: "10px" }} />
                 <Button
                   fullWidth
                   style={{ display: "flex", justifyContent: "center" }}
                   variant="outlined"
-                  onClick={() => handleMuteToggle(id, muted)}
+                  onClick={() => handleMuteToggle(id)}
                 >
                   {muted ? "Unmute Monitor" : "Mute Monitor"}
                 </Button>
