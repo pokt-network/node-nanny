@@ -3,12 +3,15 @@ import { exec } from "child_process";
 export class Service {
   private async getCurrentStateByChainCommand(backend): Promise<string> {
     return new Promise((resolve, reject) => {
-      exec(`echo "show servers state ${backend}" | nc -v localhost 9999`, (error, stdout) => {
-        if (error) {
-          reject(`error: ${error.message}`);
-        }
-        resolve(stdout);
-      });
+      exec(
+        `echo "show servers state ${backend}" | nc -v localhost 9999`,
+        (error, stdout) => {
+          if (error) {
+            reject(`error: ${error.message}`);
+          }
+          resolve(stdout);
+        },
+      );
     });
   }
 
@@ -23,6 +26,7 @@ export class Service {
       });
     });
   }
+
   async enableServer({ backend, server }) {
     const cmd = `echo "enable server ${backend}/${server}" | nc -v localhost 9999`;
     return new Promise((resolve, reject) => {
