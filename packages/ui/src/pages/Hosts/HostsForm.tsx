@@ -1,5 +1,5 @@
 import { ChangeEvent, useState } from "react";
-import { useMutation } from "@apollo/client";
+import { ApolloQueryResult } from "@apollo/client";
 import {
   Paper,
   Select,
@@ -11,17 +11,20 @@ import {
   MenuItem,
 } from "@mui/material";
 
-import { CREATE_HOST } from "queries";
+import { IHostsQuery, useCreateHostMutation, useLocationsQuery } from "types";
 
-const locations = ["NL", "DE", "USE1", "USE2", "USW2", "HK", "SG", "LDN"];
+interface HostsFormProps {
+  refetchHosts: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>;
+}
 
-export function HostsForm() {
+export function HostsForm({ refetchHosts }: HostsFormProps) {
   const [name, setName] = useState("");
   const [ip, setIP] = useState("");
   const [loadBalancer, setLoadBalancer] = useState(true);
   const [location, setLocation] = useState("NL");
 
-  const [submit] = useMutation(CREATE_HOST);
+  const { data, error, loading } = useLocationsQuery();
+  const [submit] = useCreateHostMutation({ onCompleted: () => refetchHosts() });
 
   const handleLocationChange = (event: SelectChangeEvent<typeof location>) => {
     setLocation(event.target.value);
@@ -39,14 +42,17 @@ export function HostsForm() {
     setLoadBalancer(event.target.checked);
   };
 
+  if (loading) return <>Loading...</>;
+  if (error) return <>Error! ${error.message}</>;
+
   return (
     <>
       <div>
         <Paper style={{ width: "200%", padding: 10 }} variant="outlined">
           <FormControl fullWidth>
             <Select value={location} onChange={handleLocationChange}>
-              {locations.map((location) => (
-                <MenuItem value={location}>{location}</MenuItem>
+              {data?.locations.map(({ id, name }) => (
+                <MenuItem value={id}>{name}</MenuItem>
               ))}
             </Select>
             <div style={{ marginTop: "10px" }} />
@@ -57,7 +63,12 @@ export function HostsForm() {
               variant="outlined"
             />
             <div style={{ marginTop: "10px" }} />
-            <TextField value={ip} onChange={handleIPChange} label="Host IP" variant="outlined" />
+            <TextField
+              value={ip}
+              onChange={handleIPChange}
+              label="Host IP"
+              variant="outlined"
+            />
             <div>
               Load Balancer
               <Switch checked={loadBalancer} onChange={handleLBChange} />
@@ -71,8 +82,8 @@ export function HostsForm() {
               }}
               variant="outlined"
               onClick={() => {
-                console.log({ name, ip, loadBalancer } as any);
                 submit({ variables: { name, ip, loadBalancer, location } });
+                setLocation("");
                 setName("");
                 setIP("");
                 setLoadBalancer(true);
