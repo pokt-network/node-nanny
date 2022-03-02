@@ -1,6 +1,5 @@
 import { ChangeEvent } from "react";
 import { useState } from "react";
-import { useMutation, useQuery } from "@apollo/client";
 import {
   Paper,
   Button,
@@ -12,22 +11,14 @@ import {
   TextField,
 } from "@mui/material";
 
-import { CREATE_ORACLE, GET_ALL_CHAINS } from "queries";
-
-interface Chain {
-  id: string;
-  name: string;
-  type: string;
-}
-interface ChainsData {
-  chains: Chain[];
-}
+import { useChainsQuery, useCreateOracleMutation } from "types";
 
 export function OraclesForm() {
   const [chain, setChain] = useState("");
   const [url, setUrl] = useState("");
-  const [submit] = useMutation(CREATE_ORACLE);
-  const { loading, error, data } = useQuery<ChainsData>(GET_ALL_CHAINS);
+
+  const [submit] = useCreateOracleMutation();
+  const { loading, error, data } = useChainsQuery();
 
   const handleUrlChange = (event: ChangeEvent<HTMLInputElement>) => {
     setUrl(event.target.value);
@@ -46,13 +37,23 @@ export function OraclesForm() {
         <Paper style={{ width: "200%", padding: 10 }} variant="outlined">
           <FormControl fullWidth>
             <InputLabel id="chain-label">Chain</InputLabel>
-            <Select labelId="chain-label" value={chain} label="Chain" onChange={handleChainChange}>
+            <Select
+              labelId="chain-label"
+              value={chain}
+              label="Chain"
+              onChange={handleChainChange}
+            >
               {data?.chains.map(({ name, id }) => (
                 <MenuItem value={id}>{name}</MenuItem>
               ))}
             </Select>
             <div style={{ marginTop: "10px" }} />
-            <TextField value={url} onChange={handleUrlChange} label="URL" variant="outlined" />
+            <TextField
+              value={url}
+              onChange={handleUrlChange}
+              label="URL"
+              variant="outlined"
+            />
             <div style={{ marginTop: "10px" }} />
             <Button
               fullWidth
