@@ -12,9 +12,9 @@ export const chainSchema = new Schema<IChain>(
   {
     id: Schema.Types.ObjectId,
     name: { type: String, unique: true },
-    chain: String,
-    type: String,
-    variance: Number,
+    chain: {type: String, required: true},
+    type: {type: String, required: true},,
+    variance: {type: Number, required: true},,
   },
   { timestamps: true },
 );
