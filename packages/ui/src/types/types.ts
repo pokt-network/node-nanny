@@ -17,17 +17,17 @@ export type Scalars = {
 
 export type IChain = {
   id: Scalars['ID'];
-  name?: Maybe<Scalars['String']>;
-  type?: Maybe<Scalars['String']>;
+  name: Scalars['String'];
+  type: Scalars['String'];
   variance?: Maybe<Scalars['Int']>;
 };
 
 export type IHost = {
   id: Scalars['ID'];
-  ip?: Maybe<Scalars['String']>;
-  loadBalancer?: Maybe<Scalars['Boolean']>;
+  ip: Scalars['String'];
+  loadBalancer: Scalars['Boolean'];
   location?: Maybe<Scalars['String']>;
-  name?: Maybe<Scalars['String']>;
+  name: Scalars['String'];
 };
 
 export type ILocation = {
@@ -37,10 +37,10 @@ export type ILocation = {
 
 export type ILog = {
   id: Scalars['ID'];
-  label?: Maybe<Scalars['ID']>;
-  level?: Maybe<Scalars['String']>;
-  message?: Maybe<Scalars['String']>;
-  timestamp?: Maybe<Scalars['String']>;
+  label: Scalars['ID'];
+  level: Scalars['String'];
+  message: Scalars['String'];
+  timestamp: Scalars['String'];
 };
 
 export type IMutation = {
@@ -53,11 +53,11 @@ export type IMutation = {
   deleteHost?: Maybe<IHost>;
   deleteNode?: Maybe<INode>;
   deleteOracle?: Maybe<IOracle>;
-  disableHaProxyServer?: Maybe<Scalars['Boolean']>;
-  enableHaProxyServer?: Maybe<Scalars['Boolean']>;
-  muteMonitor?: Maybe<INode>;
-  rebootServer?: Maybe<Scalars['String']>;
-  unmuteMonitor?: Maybe<INode>;
+  disableHaProxyServer: Scalars['Boolean'];
+  enableHaProxyServer: Scalars['Boolean'];
+  muteMonitor: INode;
+  rebootServer: Scalars['String'];
+  unmuteMonitor: INode;
   updateChain?: Maybe<IChain>;
   updateHost?: Maybe<IHost>;
   updateNode?: Maybe<INode>;
@@ -208,15 +208,15 @@ export type IOracle = {
 
 export type IQuery = {
   chains: Array<IChain>;
-  getHaProxyStatus?: Maybe<Scalars['Int']>;
-  hosts?: Maybe<Array<Maybe<IHost>>>;
+  getHaProxyStatus: Scalars['Int'];
+  hosts: Array<IHost>;
   locations: Array<ILocation>;
-  logs?: Maybe<Array<Maybe<ILog>>>;
-  node?: Maybe<INode>;
-  nodeStatus?: Maybe<Scalars['String']>;
-  nodes?: Maybe<Array<Maybe<INode>>>;
-  oracles?: Maybe<Array<Maybe<IOracle>>>;
-  webhooks?: Maybe<Array<Maybe<IWebhook>>>;
+  logs: Array<ILog>;
+  node: INode;
+  nodeStatus: Scalars['String'];
+  nodes: Array<INode>;
+  oracles: Array<IOracle>;
+  webhooks: Array<IWebhook>;
 };
 
 
@@ -258,7 +258,7 @@ export type ICreateChainMutationVariables = Exact<{
 }>;
 
 
-export type ICreateChainMutation = { createChain?: { name?: string | null, type?: string | null, variance?: number | null } | null };
+export type ICreateChainMutation = { createChain?: { name: string, type: string, variance?: number | null } | null };
 
 export type ICreateHostMutationVariables = Exact<{
   name?: InputMaybe<Scalars['String']>;
@@ -268,7 +268,7 @@ export type ICreateHostMutationVariables = Exact<{
 }>;
 
 
-export type ICreateHostMutation = { createHost?: { name?: string | null, ip?: string | null, loadBalancer?: boolean | null } | null };
+export type ICreateHostMutation = { createHost?: { name: string, ip: string, loadBalancer: boolean } | null };
 
 export type ICreateNodeMutationVariables = Exact<{
   backend?: InputMaybe<Scalars['String']>;
@@ -307,45 +307,45 @@ export type IRebootServerMutationVariables = Exact<{
 }>;
 
 
-export type IRebootServerMutation = { rebootServer?: string | null };
+export type IRebootServerMutation = { rebootServer: string };
 
 export type IEnableHaProxyServerMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type IEnableHaProxyServerMutation = { enableHaProxyServer?: boolean | null };
+export type IEnableHaProxyServerMutation = { enableHaProxyServer: boolean };
 
 export type IDisableHaProxyServerMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type IDisableHaProxyServerMutation = { disableHaProxyServer?: boolean | null };
+export type IDisableHaProxyServerMutation = { disableHaProxyServer: boolean };
 
 export type IMuteMonitorMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type IMuteMonitorMutation = { muteMonitor?: { id: string, muted: boolean } | null };
+export type IMuteMonitorMutation = { muteMonitor: { id: string, muted: boolean } };
 
 export type IUnmuteMonitorMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type IUnmuteMonitorMutation = { unmuteMonitor?: { id: string, muted: boolean } | null };
+export type IUnmuteMonitorMutation = { unmuteMonitor: { id: string, muted: boolean } };
 
 export type IChainsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IChainsQuery = { chains: Array<{ id: string, name?: string | null, type?: string | null, variance?: number | null }> };
+export type IChainsQuery = { chains: Array<{ id: string, name: string, type: string, variance?: number | null }> };
 
 export type IHostsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IHostsQuery = { hosts?: Array<{ id: string, name?: string | null, ip?: string | null, loadBalancer?: boolean | null, location?: string | null } | null> | null };
+export type IHostsQuery = { hosts: Array<{ id: string, name: string, ip: string, loadBalancer: boolean, location?: string | null }> };
 
 export type ILocationsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -357,34 +357,34 @@ export type INodeQueryVariables = Exact<{
 }>;
 
 
-export type INodeQuery = { node?: { id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, loadBalancers?: Array<string | null> | null } | null };
+export type INodeQuery = { node: { id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, loadBalancers?: Array<string | null> | null } };
 
 export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type INodesQuery = { nodes?: Array<{ id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, loadBalancers?: Array<string | null> | null } | null> | null };
+export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, loadBalancers?: Array<string | null> | null }> };
 
 export type IOraclesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IOraclesQuery = { oracles?: Array<{ id: string, chain: string, urls?: Array<string | null> | null } | null> | null };
+export type IOraclesQuery = { oracles: Array<{ id: string, chain: string, urls?: Array<string | null> | null }> };
 
 export type IWebhooksQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IWebhooksQuery = { webhooks?: Array<{ id: string, location?: string | null, chain: string, url: string } | null> | null };
+export type IWebhooksQuery = { webhooks: Array<{ id: string, location?: string | null, chain: string, url: string }> };
 
 export type IGetHostsChainsAndLoadBalancersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IGetHostsChainsAndLoadBalancersQuery = { hosts?: Array<{ id: string, name?: string | null, ip?: string | null } | null> | null, chains: Array<{ id: string, name?: string | null }>, loadBalancers?: Array<{ id: string, name?: string | null } | null> | null };
+export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip: string }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string }> };
 
 export type IGetNodeStatusQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type IGetNodeStatusQuery = { haProxyStatus?: number | null };
+export type IGetNodeStatusQuery = { haProxyStatus: number };
 
 
 export const CreateChainDocument = gql`
