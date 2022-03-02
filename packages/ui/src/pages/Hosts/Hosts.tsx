@@ -1,12 +1,9 @@
-import { useQuery } from "@apollo/client";
-
 import { Table } from "components";
-import { GET_ALL_HOSTS } from "queries";
-import { IHost } from "types";
+import { useHostsQuery } from "types";
 import { HostsForm } from "./HostsForm";
 
 export function Hosts() {
-  const { data, error, loading } = useQuery<{ hosts: IHost[] }>(GET_ALL_HOSTS);
+  const { data, error, loading, refetch } = useHostsQuery();
 
   if (loading) return <>Loading...</>;
   if (error) return <>Error! ${error.message}</>;
@@ -22,7 +19,7 @@ export function Hosts() {
       }}
     >
       <div style={{ marginBottom: "16px" }}>
-        <HostsForm />
+        <HostsForm refetchHosts={refetch} />
       </div>
       {data && <Table type="Hosts" searchable paginate rows={data.hosts} />}
     </div>
