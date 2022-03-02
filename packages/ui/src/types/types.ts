@@ -207,7 +207,7 @@ export type IOracle = {
 };
 
 export type IQuery = {
-  chains?: Maybe<Array<Maybe<IChain>>>;
+  chains: Array<IChain>;
   getHaProxyStatus?: Maybe<Scalars['Int']>;
   hosts?: Maybe<Array<Maybe<IHost>>>;
   locations: Array<ILocation>;
@@ -340,7 +340,7 @@ export type IUnmuteMonitorMutation = { unmuteMonitor?: { id: string, muted: bool
 export type IChainsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IChainsQuery = { chains?: Array<{ id: string, name?: string | null, type?: string | null, variance?: number | null } | null> | null };
+export type IChainsQuery = { chains: Array<{ id: string, name?: string | null, type?: string | null, variance?: number | null }> };
 
 export type IHostsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -377,7 +377,7 @@ export type IWebhooksQuery = { webhooks?: Array<{ id: string, location?: string 
 export type IGetHostsChainsAndLoadBalancersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IGetHostsChainsAndLoadBalancersQuery = { hosts?: Array<{ id: string, name?: string | null, ip?: string | null } | null> | null, chains?: Array<{ id: string, name?: string | null } | null> | null, loadBalancers?: Array<{ id: string, name?: string | null } | null> | null };
+export type IGetHostsChainsAndLoadBalancersQuery = { hosts?: Array<{ id: string, name?: string | null, ip?: string | null } | null> | null, chains: Array<{ id: string, name?: string | null }>, loadBalancers?: Array<{ id: string, name?: string | null } | null> | null };
 
 export type IGetNodeStatusQueryVariables = Exact<{
   id: Scalars['ID'];
