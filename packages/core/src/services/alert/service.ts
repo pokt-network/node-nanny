@@ -25,11 +25,20 @@ export class Service {
   }
 
   async getWebhookUrl(chain: string): Promise<string> {
-    const { url } = await WebhookModel.findOne({ chain }).exec();
-    return url;
+    try {
+      const { url } = await WebhookModel.findOne({ chain }).exec();
+      return url;
+    } catch (error) {
+      throw `Could not find Webhook for chain ${chain}`;
+    }
   }
 
-  async sendDiscordMessage({ title, color, fields, channel }: SendMessageInput): Promise<boolean> {
+  async sendDiscordMessage({
+    title,
+    color,
+    fields,
+    channel,
+  }: SendMessageInput): Promise<boolean> {
     const embeds = [{ title, color, fields }];
 
     try {
