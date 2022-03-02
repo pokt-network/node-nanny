@@ -9,7 +9,7 @@ export class Service {
       expireAfterSeconds: 60,
       label: id,
       collection: "logs",
-      leaveConnectionOpen: false, //DEV NOTE --> Trial setting this as true re: # of connections
+      leaveConnectionOpen: false,
     });
 
     return createLogger({
