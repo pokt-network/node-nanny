@@ -8,9 +8,9 @@ export interface IWebhook {
 
 const webhookSchema = new Schema<IWebhook>(
   {
-    chain: { type: String, unique: true },
+    chain: { type: String, required: true, unique: true },
+    url: { type: String, required: true },
     location: String,
-    url: String,
   },
   { timestamps: true },
 );

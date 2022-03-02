@@ -59,8 +59,9 @@ export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) 
   });
 
   useEffect(() => {
-    getStatus({ variables: { id: selectedNode.id } });
-  }, [getStatus]);
+    const { id } = selectedNode;
+    getStatus({ variables: { id } });
+  }, [getStatus, selectedNode]);
 
   const handleRebootServer = (id: string): void => {
     if (!rebooting) {
