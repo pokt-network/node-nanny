@@ -1,5 +1,4 @@
 import { ChangeEvent, useState } from "react";
-import { useMutation, useQuery } from "@apollo/client";
 import {
   Button,
   Checkbox,
@@ -16,14 +15,11 @@ import {
   Typography,
 } from "@mui/material";
 
-import { CREATE_NODE, GET_HOSTS_CHAINS_LB } from "queries";
-import { IChain, IHost, INode } from "types";
-
-interface IHostsAndChainsData {
-  chains: IChain[];
-  hosts: IHost[];
-  loadBalancers: IHost[];
-}
+import {
+  INode,
+  useCreateNodeMutation,
+  useGetHostsChainsAndLoadBalancersQuery,
+} from "types";
 
 export function NodesForm() {
   const [chain, setChain] = useState("");
@@ -35,11 +31,11 @@ export function NodesForm() {
   const [server, setServer] = useState("");
   const [haProxy, setHaproxy] = useState(true);
 
-  const [submit] = useMutation<{ createNode: INode }>(CREATE_NODE, {
+  const { loading, error, data } = useGetHostsChainsAndLoadBalancersQuery();
+  const [submit] = useCreateNodeMutation({
     onCompleted: (data) => console.log({ data }),
     onError: (error) => console.log({ error }),
   });
-  const { loading, error, data } = useQuery<IHostsAndChainsData>(GET_HOSTS_CHAINS_LB);
 
   const handleChainChange = (event: SelectChangeEvent<typeof chain>) => {
     setChain(event.target.value);
