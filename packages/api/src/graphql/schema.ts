@@ -4,16 +4,16 @@ const typeDefs = gql`
   # Types
   type Chain {
     id: ID!
-    name: String
-    type: String
+    name: String!
+    type: String!
     variance: Int
   }
 
   type Host {
     id: ID!
-    name: String
-    ip: String
-    loadBalancer: Boolean
+    name: String!
+    ip: String!
+    loadBalancer: Boolean!
     location: String
   }
 
@@ -24,10 +24,10 @@ const typeDefs = gql`
 
   type Log {
     id: ID!
-    timestamp: String
-    level: String
-    message: String
-    label: ID
+    timestamp: String!
+    level: String!
+    message: String!
+    label: ID!
   }
 
   type Node {
@@ -75,16 +75,16 @@ const typeDefs = gql`
   # Resolvers
   type Query {
     chains: [Chain!]!
-    hosts(loadBalancer: Boolean): [Host]
+    hosts(loadBalancer: Boolean): [Host!]!
     locations: [Location!]!
-    logs(id: String): [Log]
-    node(id: ID!): Node
-    nodes: [Node]
-    oracles: [Oracle]
-    webhooks: [Webhook]
+    logs(id: String): [Log!]!
+    node(id: ID!): Node!
+    nodes: [Node!]!
+    oracles: [Oracle!]!
+    webhooks: [Webhook!]!
 
-    getHaProxyStatus(id: ID!): Int
-    nodeStatus(id: String): String
+    getHaProxyStatus(id: ID!): Int!
+    nodeStatus(id: String): String!
   }
 
   type Mutation {
@@ -105,11 +105,11 @@ const typeDefs = gql`
     deleteOracle(id: ID): Oracle
     deleteChain(id: ID): Chain
 
-    muteMonitor(id: ID!): Node
-    unmuteMonitor(id: ID!): Node
-    enableHaProxyServer(id: ID!): Boolean
-    disableHaProxyServer(id: ID!): Boolean
-    rebootServer(id: ID!): String
+    muteMonitor(id: ID!): Node!
+    unmuteMonitor(id: ID!): Node!
+    enableHaProxyServer(id: ID!): Boolean!
+    disableHaProxyServer(id: ID!): Boolean!
+    rebootServer(id: ID!): String!
   }
 `;
 
