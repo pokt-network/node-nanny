@@ -50,6 +50,8 @@ export class App {
       .populate("chain")
       .exec();
 
+    console.log(`MONITORING ${nodes.length} NODES ....`);
+
     for await (const node of nodes) {
       node.id = node._id;
       const logger = this.log.init(node.id);
@@ -61,7 +63,6 @@ export class App {
         if (healthResponse) {
           status = healthResponse.status;
         }
-
         if (healthResponse.status == HealthTypes.ErrorStatus.OK) {
           console.log("\x1b[32m%s\x1b[0m", JSON.stringify(healthResponse));
         }
