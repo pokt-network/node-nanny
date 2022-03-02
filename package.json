@@ -14,6 +14,11 @@
     "start:monitor": "pnpm i && pnpm build && pm2 start node-nanny.config.js --only monitor",
     "start:ui": "pnpm i && pnpm build && pm2 start node-nanny.config.js --only ui",
     "stop:all": "pm2 stop node-nanny.config.js",
+    "stop:agent": "pm2 stop node-nanny.config.js --only agent",
+    "stop:api": "pm2 stop node-nanny.config.js --only graphql-api",
+    "stop:event": "pm2 stop node-nanny.config.js --only event-consumer",
+    "stop:monitor": "pm2 stop node-nanny.config.js --only monitor",
+    "stop:ui": "pm2 stop node-nanny.config.js --only ui",
     "restart:all": "pm2 restart node-nanny.config.js",
     "kill": "pm2 kill"
   },
