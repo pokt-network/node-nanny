@@ -25,7 +25,7 @@ export class Service {
   }
 
   private async getNode(id: string): Promise<INode> {
-    return NodesModel.findById(id)
+    return await NodesModel.findById(id)
       .populate("chain")
       .populate("host")
       .populate("loadBalancers")
@@ -57,14 +57,6 @@ export class Service {
       return 0;
     }
     return 1;
-  }
-
-  // DEV NOTE -> Need to rewrite to be logger-agnostic
-  async getMuteStatus(id: string): Promise<boolean> {
-    const { monitorId } = await this.getNode(id);
-    const { options } = await this.dd.getMonitor(monitorId);
-    const muted = options.silenced.hasOwnProperty("*");
-    return muted;
   }
 
   async getMonitorStatus(id: string) {
@@ -134,15 +126,9 @@ export class Service {
   }
 
   async removeFromRotation(id: string): Promise<boolean> {
-    const {
-      backend,
-      server,
-      hostname,
-      host,
-      chain,
-      container,
-      loadBalancers,
-    } = await this.getNode(id);
+    const { backend, server, host, chain, container, loadBalancers } = await this.getNode(
+      id,
+    );
 
     try {
       await Promise.all(
@@ -153,16 +139,18 @@ export class Service {
           }),
         ),
       );
+    } catch (error) {
+      throw new Error(`Could not remove ${backend} ${server} from rotation. ${error}`);
+    }
 
+    try {
       return await this.alert.sendInfo({
         title: "Removed from rotation",
-        message: `${
-          hostname ? hostname : `${host.name}/${chain.name}/${container}`
-        } removed from ${backend}`,
+        message: `${host.name}/${chain.name}/${container} removed from ${backend}`,
         chain: chain.name,
       });
     } catch (error) {
-      throw new Error(`Could not remove ${backend} ${server} from rotation, ${error}`);
+      throw new Error(`Could not send webhook alert. ${error}`);
     }
   }
 
@@ -180,14 +168,18 @@ export class Service {
           }),
         ),
       );
+    } catch (error) {
+      throw new Error(`Could not add ${backend} ${server} to rotation. ${error}`);
+    }
 
+    try {
       return await this.alert.sendInfo({
         title: "Added to rotation",
         message: `${host.name}/${chain.name}/${container} to ${backend}`,
         chain: chain.name,
       });
     } catch (error) {
-      throw new Error(`Could not add ${backend} ${server} rotation, ${error}`);
+      throw new Error(`Could not send webhook alert. ${error}`);
     }
   }
 

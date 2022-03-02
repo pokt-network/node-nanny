@@ -68,16 +68,6 @@ app.post("/automation/host/add", async (req, res) => {
   }
 });
 
-app.get("/automation/monitor/mute/status/:id", async (req, res) => {
-  const { id } = req.params;
-  try {
-    const status = await automation.getMuteStatus(id);
-    return res.status(200).json({ status });
-  } catch (error) {
-    res.sendStatus(500);
-  }
-});
-
 app.post("/automation/monitor/mute/:id", async (req, res) => {
   const { id } = req.params;
   try {

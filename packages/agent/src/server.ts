@@ -57,6 +57,7 @@ app.post("/webhook/lb/enable", async ({ body }, res) => {
   const { backend, server } = body;
   try {
     const status = await lb.enableServer({ backend, server });
+
     return res.json({ status });
   } catch (error) {
     return res.status(500).send(error);
