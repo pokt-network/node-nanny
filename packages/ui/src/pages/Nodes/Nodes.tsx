@@ -1,15 +1,13 @@
-import { useEffect, useState } from "react";
-import { useQuery } from "@apollo/client";
+import { useState } from "react";
 
 import { Table } from "components";
-import { GET_ALL_NODES } from "queries";
-import { INode } from "types";
+import { INode, useNodesQuery } from "types";
 import { NodesForm } from "./NodesForm";
 import { NodeStatus } from "./NodeStatus";
 
 export function Nodes() {
   const [selectedNode, setSelectedNode] = useState<INode | undefined>(undefined);
-  const { data, error, loading } = useQuery<{ nodes: INode[] }>(GET_ALL_NODES);
+  const { data, error, loading } = useNodesQuery();
 
   if (loading && !selectedNode) return <>Loading...</>;
   if (error) return <>Error! ${error.message}</>;
