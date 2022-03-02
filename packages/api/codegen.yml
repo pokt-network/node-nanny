@@ -1,10 +1,12 @@
 overwrite: true
 schema: "./src/graphql/schema.ts"
+documents: "./src/graphql/*.graphql"
 config:
   typesPrefix: I
   skipTypename: true
 generates:
   ../ui/src/types/types.ts:
     plugins:
-      - "typescript"
-      - "typescript-operations"
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
