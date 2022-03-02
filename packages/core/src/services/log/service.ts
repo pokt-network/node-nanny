@@ -1,6 +1,8 @@
 import { createLogger, format, transports, Logger } from "winston";
 import "winston-mongodb";
 
+import { ILogWriteParams } from "./types";
+
 //move types to shared
 type Config = {
   logger: LoggerOptions;
@@ -17,24 +19,14 @@ enum EventOptions {
 }
 
 export class Service {
-  private config: Config;
-  constructor(config) {
-    this.config = config;
-  }
-
-  init({ name, id }: { name: string; id: string }): Logger {
-    const transport = {
-      mongodb: new transports.MongoDB({
-        db: process.env.MONGO_URI,
-        expireAfterSeconds: 60,
-        label: id,
-      }),
-      datadog: new transports.Http({
-        host: "http-intake.logs.datadoghq.eu",
-        path: `/api/v2/logs?dd-api-key=${process.env.DD_API_KEY}&ddsource=nodejs&service=${name}`,
-        ssl: true,
-      }),
-    }[this.config.logger];
+  public init(id: string): Logger {
+    const transport = new transports.MongoDB({
+      db: process.env.MONGO_URI,
+      expireAfterSeconds: 60,
+      label: id,
+      collection: "logs",
+      leaveConnectionOpen: false,
+    });
 
     return createLogger({
       level: "info",
@@ -44,18 +36,7 @@ export class Service {
     });
   }
 
-  async write({
-    name,
-    message,
-    level,
-    id,
-  }: {
-    name: string;
-    message: string;
-    level: string;
-    id: string;
-  }) {
-    const logger = this.init({ name, id });
-    return await logger.log(level, message);
-  }
+  public write = async ({ message, level, logger }: ILogWriteParams) => {
+    return logger.log(level, message);
+  };
 }
