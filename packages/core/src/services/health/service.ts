@@ -59,7 +59,9 @@ export class Service {
       return data;
     } catch (error) {
       throw new Error(
-        `getBlockHeight could not contact blockchain node ${JSON.stringify(error)} ${url}`,
+        `getBlockHeight could not contact blockchain node ${JSON.stringify(
+          error,
+        )} ${url}`,
       );
     }
   }
@@ -164,7 +166,12 @@ export class Service {
     }
   };
 
-  private getAvaNodeHealth = async ({ url, host, chain, basicAuth }): Promise<HealthResponse> => {
+  private getAvaNodeHealth = async ({
+    url,
+    host,
+    chain,
+    basicAuth,
+  }): Promise<HealthResponse> => {
     const name = `${host.name}/${chain.name}`;
     let options;
     if (basicAuth) {
@@ -355,7 +362,10 @@ export class Service {
   //   }
   // }
 
-  private async getReferenceBlockHeight({ endpoints, variance }, hmy: boolean): Promise<number> {
+  private async getReferenceBlockHeight(
+    { endpoints, variance },
+    hmy: boolean,
+  ): Promise<number> {
     const resolved = [];
     for (const { url, auth } of endpoints) {
       try {
@@ -369,8 +379,6 @@ export class Service {
       .filter((reading) => reading.result)
       .map(({ result }) => hexToDec(result));
     //const height = this.getBestBlockHeight({ readings, variance });
-
-    console.log("READINGS", readings.sort()[0]);
 
     return readings.sort()[0];
   }
@@ -420,7 +428,10 @@ export class Service {
     return await this.getEVMNodeHealth(node, true);
   };
 
-  private getEVMNodeHealth = async (node: INode, hmy?: boolean): Promise<HealthResponse> => {
+  private getEVMNodeHealth = async (
+    node: INode,
+    hmy?: boolean,
+  ): Promise<HealthResponse> => {
     const { chain, url, variance, host, id, port, basicAuth, server } = node;
     const name = `${host.name}/${chain.name}/${server}`;
     //Check if node is online and RPC up
@@ -446,7 +457,9 @@ export class Service {
       _id: { $ne: id },
     }).exec();
 
-    let { urls: externalNodes } = await OraclesModel.findOne({ chain: chain.name }).exec();
+    let { urls: externalNodes } = await OraclesModel.findOne({
+      chain: chain.name,
+    }).exec();
 
     let referenceUrls = await this.checkExternalUrls(externalNodes);
 
@@ -471,7 +484,10 @@ export class Service {
       let numPeers;
 
       if (
-        !(chain.name == ESupportedBlockChains.POL || chain.name == ESupportedBlockChains.POLTST)
+        !(
+          chain.name == ESupportedBlockChains.POL ||
+          chain.name == ESupportedBlockChains.POLTST
+        )
       ) {
         peers = await this.getPeers(url, basicAuth);
         numPeers = hexToDec(peers.result);
@@ -540,7 +556,9 @@ export class Service {
   };
 
   private getPocketNodeHealth = async ({ hostname, port, variance, id }: INode) => {
-    const { height: isRpcResponding } = await this.getPocketHeight(`https://${hostname}:${port}`);
+    const { height: isRpcResponding } = await this.getPocketHeight(
+      `https://${hostname}:${port}`,
+    );
     if (isRpcResponding === 0) {
       return {
         name: hostname,
@@ -568,7 +586,9 @@ export class Service {
     }
 
     //get highest block height from reference nodes
-    const poktnodes = referenceNodes.map(({ hostname, port }) => `https://${hostname}:${port}`);
+    const poktnodes = referenceNodes.map(
+      ({ hostname, port }) => `https://${hostname}:${port}`,
+    );
 
     const pocketheight = await Promise.all(
       await poktnodes.map(async (node) => this.getPocketHeight(node)),
@@ -627,11 +647,11 @@ export class Service {
 
   async getNodeHealth(node: INode): Promise<HealthResponse> {
     const { chain } = node;
+
     if (!Object.keys(SupportedBlockChainTypes).includes(chain.type)) {
-      console.log({ chain, node });
       throw new Error(`${chain.type} is not a supported chain type`);
     }
-    console.log("CHAIN", chain);
+
     return await {
       ALG: this.getAlgorandNodeHealth,
       AVA: this.getAvaNodeHealth,
