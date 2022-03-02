@@ -74,7 +74,7 @@ const typeDefs = gql`
 
   # Resolvers
   type Query {
-    chains: [Chain]
+    chains: [Chain!]!
     hosts(loadBalancer: Boolean): [Host]
     locations: [Location!]!
     logs(id: String): [Log]

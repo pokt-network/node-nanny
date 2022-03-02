@@ -1,13 +1,9 @@
-import { useQuery } from "@apollo/client";
-
 import { Table } from "components";
-import { GET_ALL_WEBHOOKS } from "queries";
-import { IWebhook } from "types";
+import { useWebhooksQuery } from "types";
 import { WebhooksForm } from "./WebhooksForm";
 
 export function Webhooks() {
-  const { data, error, loading, refetch } =
-    useQuery<{ webhooks: IWebhook[] }>(GET_ALL_WEBHOOKS);
+  const { data, error, loading, refetch } = useWebhooksQuery();
 
   if (loading) return <>Loading...</>;
   if (error) return <>Error! ${error.message}</>;
