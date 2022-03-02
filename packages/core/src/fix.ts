@@ -1,18 +1,91 @@
-import { ChainsModel, NodesModel, WebhookModel } from "./models";
-import { Health, Event } from "./services";
 import { connect } from "./db";
+const { Client, Intents } = require("discord.js");
+
+import {
+  INode,
+  NodesModel,
+  IOracle,
+  OraclesModel,
+  ChainsModel,
+  WebhookModel,
+} from "./models";
+import { Alert, Automation, DataDog, Log, Event, Health, Infra } from "./services";
+
+const alert = new Alert();
+const dd = new DataDog();
+const retool = new Automation();
+const log = new Log();
+// const event = new Event();
 const health = new Health();
-const { Redis: Consumer } = Event;
-const event = `{"name":"bd-sg1/POL/pol1","status":"ERROR","conditions":"NOT_SYNCHRONIZED","ethSyncing":{"currentBlock":"0x16149ca","highestBlock":"0x163a6a8","knownStates":"0x0","pulledStates":"0x0","startingBlock":"0x159a57e"},"height":{"internalHeight":23153098,"externalHeight":23312829,"delta":159731},"id":"61b2c989d0d63c86ec4676cd","count":16}`;
-const locations = ["NL", "DE", "USE1", "USE2", "USW2", "HK", "SG", "LDN"];
-const exe = async () => {
+const infra = new Infra();
+
+// const fix = async () => {
+//   await connect();
+
+//   const allNodes = await NodesModel.find({ monitorId: null }).exec();
+
+//   for (const node of allNodes) {
+//     console.log(node);
+//   }
+//   // await event.processEvent(proccess);
+//   return {};
+// };
+
+// //fix().then(console.log);
+
+// const proccess = {
+//   msg:
+//     "%%%\n" +
+//     "@webhook-events-production\n" +
+//     "nodeId_61eb0705da1b8a00123fc55e\n" +
+//     "event_NOT_SYNCHRONIZED\n" +
+//     "\n" +
+//     'More than **1** log events matched in the last **5m** against the monitored query: **[status:error service:"/pocket/nodemonitoring/ethereum-2e/eth/eri1"](https://app.datadoghq.eu/logs/analytics?query=status%3Aerror+service%3A%22%2Fpocket%2Fnodemonitoring%2Fethereum-2e%2Feth%2Feri1%22&agg_m=count&agg_t=count&agg_q=%40conditions&index=)** by **@conditions**\n' +
+//     "\n" +
+//     "The monitor was last triggered at Fri Jan 21 2022 19:20:58 UTC.\n" +
+//     "\n" +
+//     "- - -\n" +
+//     "\n" +
+//     "[[Monitor Status](https://app.datadoghq.eu/monitors/4089418?to_ts=1642793158000&group=%40conditions%3ANOT_SYNCHRONIZED&from_ts=1642791958000)] · [[Edit Monitor](https://app.datadoghq.eu/monitors#4089418/edit)] · [[Related Logs](https://app.datadoghq.eu/logs/analytics?index=%2A&to_ts=1642793158000&agg_t=count&agg_m=count&agg_q=%40conditions&from_ts=1642791958000&live=false&query=status%3Aerror+service%3A%22%2Fpocket%2Fnodemonitoring%2Fethereum-2e%2Feth%2Feri1%22)]",
+//   id: "4089418",
+//   transition: "Triggered",
+//   type: "error",
+//   title: "[Triggered on {@conditions:NOT_SYNCHRONIZED}] ETHEREUM-2E/ETH/ERI1",
+//   status: "",
+//   link: "https://app.datadoghq.eu/event/event?id=6350680971864100470",
+// };
+
+const createChans = async (server) => {
+  const locations = ["NL", "LI", "DE", "USE1", "USE2", "USW2", "HK", "LDN", "SG"];
+
   await connect();
+  var guild = server;
+  const chains = await ChainsModel.find({});
+  const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
-  return await NodesModel.findOne().populate("host").populate("chain").exec();
+  // // When the client is ready, run this code (only once)
+  client.once("ready", async () => {
+    console.log("ready");
+    const server = client.guilds.cache.get(guild);
 
+    for (const location of locations) {
+      const category = await server.channels.create(`NodeNanny-${location}`, {
+        type: "GUILD_CATEGORY",
+      });
 
-  ///await new Consumer().processTriggered(event);
+      for (const { name } of chains) {
+        await server.channels.create(name, {
+          type: "text",
+          parent: category,
+        });
+
+        await WebhookModel.create({ chain: `${name}-${location}`, url: "" });
+      }
+    }
+  });
+
+  // // Login to Discord with your client's token
+  client.login(process.env.DISCORD_TOKEN);
 };
 
-exe().then(console.log)
-//error http://195.189.97.31:18545
+createChans("895712988084973629").then(console.log);
