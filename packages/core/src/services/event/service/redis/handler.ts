@@ -4,6 +4,7 @@ export class Service extends BaseService {
   constructor() {
     super();
   }
+
   processTriggered = async (event) => {
     const { id, name, ethSyncing, height, count, conditions } = JSON.parse(event);
     const { server, loadBalancers, chain: _chain } = await this.getNode(id);
@@ -52,6 +53,7 @@ export class Service extends BaseService {
     // }
     // return;
   };
+
   processReTriggered = async (event) => {
     const { id, name, ethSyncing, height, count, conditions } = JSON.parse(event);
     const { loadBalancers, chain: _chain } = await this.getNode(id);
@@ -67,6 +69,7 @@ export class Service extends BaseService {
       chain,
     });
   };
+
   processResolved = async (event) => {
     const { id, name, ethSyncing, height, count, conditions } = JSON.parse(event);
     const { server, loadBalancers, chain: _chain } = await this.getNode(id);

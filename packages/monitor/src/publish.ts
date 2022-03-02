@@ -37,10 +37,14 @@ export class Publish {
         );
       }
     }
+
     if (message.status === HealthTypes.ErrorStatus.OK) {
       if (this.map.has(id)) {
         this.map.delete(id);
-        await this.redis.publish("send-event-resolved", JSON.stringify({ ...message, id: id }));
+        await this.redis.publish(
+          "send-event-resolved",
+          JSON.stringify({ ...message, id: id }),
+        );
       }
     }
   }
