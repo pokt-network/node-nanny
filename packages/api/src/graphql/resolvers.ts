@@ -3,6 +3,7 @@ import {
   HostsModel,
   ChainsModel,
   OraclesModel,
+  LocationsModel,
   LogsModel,
   WebhookModel,
 } from "@pokt-foundation/node-monitoring-core/dist/models";
@@ -13,9 +14,10 @@ const resolvers = {
     chains: async () => await ChainsModel.find({}).exec(),
     hosts: async (_, { loadBalancer }) => {
       const query = loadBalancer ? { loadBalancer } : {};
-      return await HostsModel.find(query).sort({ name: 1 }).exec();
+      return await HostsModel.find(query).populate("location").sort({ name: 1 }).exec();
     },
     logs: async ({ id }) => await LogsModel.find({ label: id }).exec(),
+    locations: async ({ id }) => await LocationsModel.find({}).exec(),
     node: async (_, { id }) =>
       await NodesModel.find({ _id: id }).populate("chain").populate("host").exec(),
     nodes: async () =>
@@ -78,6 +80,9 @@ const resolvers = {
   Host: {
     id(host: any) {
       return host._id;
+    },
+    location(host: any) {
+      return host.location?.name;
     },
   },
   Node: {

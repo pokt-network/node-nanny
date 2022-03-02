@@ -17,6 +17,11 @@ const typeDefs = gql`
     location: String
   }
 
+  type Location {
+    id: ID!
+    name: String
+  }
+
   type Log {
     id: ID!
     timestamp: String
@@ -71,6 +76,7 @@ const typeDefs = gql`
   type Query {
     chains: [Chain]
     hosts(loadBalancer: Boolean): [Host]
+    locations: [Location]
     logs(id: String): [Log]
     node(id: ID!): Node
     nodes: [Node]
