@@ -1,4 +1,5 @@
 import { Schema, model, Model } from "mongoose";
+import { ILocation } from "./locations";
 
 export interface IHost {
   name: string;
@@ -9,7 +10,7 @@ export interface IHost {
   loadBalancer: boolean;
   hostType: string;
   ip: string;
-  location: string;
+  location: ILocation;
 }
 
 export const hostsSchema = new Schema<IHost>(
@@ -22,7 +23,7 @@ export const hostsSchema = new Schema<IHost>(
     awsInstanceId: String,
     loadBalancer: Boolean,
     hostType: String,
-    location: String,
+    location: { type: Schema.Types.ObjectId, ref: "locations" },
   },
   { timestamps: true },
 );
