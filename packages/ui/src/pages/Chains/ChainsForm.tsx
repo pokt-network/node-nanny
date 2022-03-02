@@ -1,5 +1,4 @@
 import { ChangeEvent, useState } from "react";
-import { useMutation } from "@apollo/client";
 import {
   Button,
   FormControl,
@@ -10,8 +9,7 @@ import {
   TextField,
 } from "@mui/material";
 
-import { CREATE_CHAIN } from "queries";
-import { IChain } from "types";
+import { useCreateChainMutation } from "types";
 
 const typeMenuItems = ["EVM", "AVA", "HEI", "POKT", "SOL", "ALG", "HRM"];
 
@@ -20,7 +18,7 @@ export default function ChainsForm() {
   const [type, setType] = useState("EVM");
   const [variance, setVariance] = useState(0);
 
-  const [submit] = useMutation<{ createChain: IChain }>(CREATE_CHAIN, {
+  const [submit] = useCreateChainMutation({
     onCompleted: () => {
       setName("");
       setType("");
