@@ -78,7 +78,6 @@ const typeDefs = gql`
     webhooks: [Webhook]
 
     getHaProxyStatus(id: ID!): Int
-    getMuteStatus(id: ID!): Boolean
     nodeStatus(id: String): String
   }
 
