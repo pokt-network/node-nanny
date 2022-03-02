@@ -7,9 +7,15 @@
   "scripts": {
     "build": "turbo run build",
     "build:watch": "tsc -b -w .",
-    "start:api:graphql": "cd packages/api && pnpm install && pnpm run build && node dist/graphql",
-    "start:api:rest": "cd api && pnpm run build && node dist/rest",
-    "start:ui": "export SKIP_PREFLIGHT_CHECK=true && cd packages/ui && pnpm run start"
+    "start:all": "pnpm i && pnpm build && pm2 start node-nanny.config.js",
+    "start:agent": "pnpm i && pnpm build && pm2 start node-nanny.config.js --only agent",
+    "start:api": "pnpm i && pnpm build && pm2 start node-nanny.config.js --only graphql-api",
+    "start:event": "pnpm i && pnpm build && pm2 start node-nanny.config.js --only event-consumer",
+    "start:monitor": "pnpm i && pnpm build && pm2 start node-nanny.config.js --only monitor",
+    "start:ui": "pnpm i && pnpm build && pm2 start node-nanny.config.js --only ui",
+    "stop:all": "pm2 stop node-nanny.config.js",
+    "restart:all": "pm2 restart node-nanny.config.js",
+    "kill": "pm2 kill"
   },
   "devDependencies": {
     "prettier": "2.5.1",
