@@ -17,7 +17,7 @@ const resolvers = {
       return await HostsModel.find(query).populate("location").sort({ name: 1 }).exec();
     },
     logs: async ({ id }) => await LogsModel.find({ label: id }).exec(),
-    locations: async ({ id }) => await LocationsModel.find({}).exec(),
+    locations: async () => await LocationsModel.find({}).exec(),
     node: async (_, { id }) =>
       await NodesModel.find({ _id: id }).populate("chain").populate("host").exec(),
     nodes: async () =>
@@ -83,6 +83,11 @@ const resolvers = {
     },
     location(host: any) {
       return host.location?.name;
+    },
+  },
+  Location: {
+    id(location: any) {
+      return location._id;
     },
   },
   Node: {

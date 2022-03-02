@@ -6,7 +6,6 @@
   "license": "MIT",
   "scripts": {
     "build": "turbo run build",
-    "build:watch": "tsc -b -w .",
     "start:all": "pnpm i && pnpm build && pm2 start node-nanny.config.js",
     "start:agent": "pnpm i && pnpm build && pm2 start node-nanny.config.js --only agent",
     "start:api": "pnpm i && pnpm build && pm2 start node-nanny.config.js --only graphql-api",
@@ -20,7 +19,8 @@
     "stop:monitor": "pm2 stop node-nanny.config.js --only monitor",
     "stop:ui": "pm2 stop node-nanny.config.js --only ui",
     "restart:all": "pm2 restart node-nanny.config.js",
-    "kill": "pm2 kill"
+    "kill": "pm2 kill",
+    "mongo": "mongosh local --authenticationDatabase admin -u root -p rootpassword"
   },
   "devDependencies": {
     "prettier": "2.5.1",
