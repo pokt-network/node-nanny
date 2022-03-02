@@ -1,12 +1,9 @@
-import { useQuery } from "@apollo/client";
-
 import { Table } from "components";
-import { GET_ALL_CHAINS } from "queries";
-import { IChain } from "types";
+import { useChainsQuery } from "types";
 import ChainsForm from "./ChainsForm";
 
 export function Chains() {
-  const { data, error, loading } = useQuery<{ chains: IChain[] }>(GET_ALL_CHAINS);
+  const { data, error, loading } = useChainsQuery();
 
   if (loading) return <>Loading...</>;
   if (error) return <>Error! ${error.message}</>;
