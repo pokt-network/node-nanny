@@ -6,7 +6,8 @@ import { IWebhook } from "types";
 import { WebhooksForm } from "./WebhooksForm";
 
 export function Webhooks() {
-  const { data, error, loading } = useQuery<{ webhooks: IWebhook[] }>(GET_ALL_WEBHOOKS);
+  const { data, error, loading, refetch } =
+    useQuery<{ webhooks: IWebhook[] }>(GET_ALL_WEBHOOKS);
 
   if (loading) return <>Loading...</>;
   if (error) return <>Error! ${error.message}</>;
@@ -22,7 +23,7 @@ export function Webhooks() {
       }}
     >
       <div style={{ marginBottom: "16px" }}>
-        <WebhooksForm />
+        <WebhooksForm refetchWebhooks={refetch} />
       </div>
       {data && <Table type="Webhooks" searchable paginate rows={data.webhooks} />}
     </div>
