@@ -1,5 +1,6 @@
 import { EC2 } from "aws-sdk";
 import axios, { AxiosInstance } from "axios";
+import { exec } from "child_process";
 
 import { Alert, DataDog } from "..";
 import { NodesModel, INode, HostsModel } from "../../models";
@@ -185,14 +186,23 @@ export class Service {
 
   async muteMonitor(id: string): Promise<INode> {
     await NodesModel.updateOne({ _id: id }, { muted: true }).exec();
-    // DEV NOTE -> Implement logic to restart monitor
+    await new Promise((resolve, reject) => {
+      exec("pm2 restart monitor", (error, stdout) => {
+        if (error) reject(`error: ${error.message}`);
+        resolve(stdout);
+      });
+    });
     return await this.getNode(id);
   }
 
   async unmuteMonitor(id: string): Promise<INode> {
     await NodesModel.updateOne({ _id: id }, { muted: false });
-
-    // DEV NOTE -> Implement logic to restart monitor
+    await new Promise((resolve, reject) => {
+      exec("pm2 restart monitor", (error, stdout) => {
+        if (error) reject(`error: ${error.message}`);
+        resolve(stdout);
+      });
+    });
     return await this.getNode(id);
   }
 
