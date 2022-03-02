@@ -1,24 +1,19 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { useLazyQuery, useMutation } from "@apollo/client";
 import { Button, CircularProgress, FormControl, Paper, Typography } from "@mui/material";
 
 import {
-  DISABLE_HAPROXY,
-  ENABLE_HAPROXY,
-  GET_NODE_STATUS,
-  MUTE_MONITOR,
-  REBOOT_SERVER,
-  UNMUTE_MONITOR,
-} from "queries";
-import { INode } from "types";
-
-interface INodeStatus {
-  haProxyStatus: -1 | 0 | 1;
-}
+  INode,
+  useDisableHaProxyServerMutation,
+  useEnableHaProxyServerMutation,
+  useGetNodeStatusLazyQuery,
+  useMuteMonitorMutation,
+  useRebootServerMutation,
+  useUnmuteMonitorMutation,
+} from "types";
 
 interface INodeStatusProps {
   selectedNode: INode;
-  setSelectedNode: Dispatch<React.SetStateAction<INode | undefined>>;
+  setSelectedNode: Dispatch<SetStateAction<INode | undefined>>;
 }
 
 export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) {
@@ -26,9 +21,8 @@ export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) 
 
   const [rebooting, setRebooting] = useState<boolean>(false);
 
-  const [getStatus, { data, error, loading }] =
-    useLazyQuery<INodeStatus>(GET_NODE_STATUS);
-  const [rebootServer] = useMutation<boolean>(REBOOT_SERVER, {
+  const [getStatus, { data, error, loading }] = useGetNodeStatusLazyQuery();
+  const [rebootServer] = useRebootServerMutation({
     onCompleted: () => {
       setTimeout(() => {
         getStatus();
@@ -38,20 +32,20 @@ export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) 
     // DEV NOTE -> Add error display to UI
     onError: (_error) => setRebooting(false),
   });
-  const [enable] = useMutation<boolean>(ENABLE_HAPROXY, {
+  const [enable] = useEnableHaProxyServerMutation({
     onCompleted: () => getStatus(),
   });
-  const [disable] = useMutation<boolean>(DISABLE_HAPROXY, {
+  const [disable] = useDisableHaProxyServerMutation({
     onCompleted: () => getStatus(),
   });
 
-  const [muteMonitor] = useMutation<{ muteMonitor: INode }>(MUTE_MONITOR, {
+  const [muteMonitor] = useMuteMonitorMutation({
     onCompleted: ({ muteMonitor }) => {
       const { muted } = muteMonitor;
       setSelectedNode({ ...selectedNode, muted });
     },
   });
-  const [unmuteMonitor] = useMutation<{ unmuteMonitor: INode }>(UNMUTE_MONITOR, {
+  const [unmuteMonitor] = useUnmuteMonitorMutation({
     onCompleted: ({ unmuteMonitor }) => {
       const { muted } = unmuteMonitor;
       setSelectedNode({ ...selectedNode, muted });
@@ -70,13 +64,11 @@ export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) 
     }
   };
 
-  const handleHaProxyToggle = (id: string, haProxyStatus: -1 | 0 | 1) =>
+  const handleHaProxyToggle = (id: string, haProxyStatus: number) =>
     haProxyStatus === 0 ? disable({ variables: { id } }) : enable({ variables: { id } });
 
-  const handleMuteToggle = (id: string) => {
-    console.log("FIRING MUTE UNMUTE", muted);
+  const handleMuteToggle = (id: string) =>
     muted ? unmuteMonitor({ variables: { id } }) : muteMonitor({ variables: { id } });
-  };
 
   if (loading) return <>Loading...</>;
   if (error) return <> Error! ${error.message}</>;

@@ -1,12 +1,9 @@
-import { useQuery } from "@apollo/client";
-
 import { Table } from "components";
-import { GET_ALL_ORACLES } from "queries";
-import { IOracle } from "types";
+import { useOraclesQuery } from "types";
 import { OraclesForm } from "./OraclesForm";
 
 export function Oracles() {
-  const { data, error, loading } = useQuery<{ oracles: IOracle[] }>(GET_ALL_ORACLES);
+  const { data, error, loading } = useOraclesQuery();
 
   if (loading) return <>Loading...</>;
   if (error) return <>Error! ${error.message}</>;
