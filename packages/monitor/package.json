@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "start": "pnpm build && node ./dist/index.js",
+    "start": "pnpm build && pm2 start ./dist/index.js --name \"monitor\"",
+    "start:log": "pnpm build && pm2 start ./dist/index.js --name \"monitor\" --attach",
+    "stop": "pm2 stop monitor",
+    "restart": "pm2 restart monitor",
+    "restart:log": "pm2 restart monitor --attach",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b .",
     "build:watch": "tsc -b -w ."
