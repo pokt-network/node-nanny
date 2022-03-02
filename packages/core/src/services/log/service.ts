@@ -1,22 +1,6 @@
 import { createLogger, format, transports, Logger } from "winston";
 import "winston-mongodb";
-
 import { ILogWriteParams } from "./types";
-
-//move types to shared
-type Config = {
-  logger: LoggerOptions;
-  event: EventOptions;
-};
-
-enum LoggerOptions {
-  MONGODB = "mongodb",
-  DATADOG = "datadog",
-}
-enum EventOptions {
-  REDIS = "redis",
-  DATADOG = "datadog",
-}
 
 export class Service {
   public init(id: string): Logger {
@@ -25,7 +9,7 @@ export class Service {
       expireAfterSeconds: 60,
       label: id,
       collection: "logs",
-      leaveConnectionOpen: false,
+      leaveConnectionOpen: false, //DEV NOTE --> Trial setting this as true re: # of connections
     });
 
     return createLogger({
@@ -36,7 +20,7 @@ export class Service {
     });
   }
 
-  public write = async ({ message, level, logger }: ILogWriteParams) => {
-    return logger.log(level, message);
+  public write = ({ message, level, logger }: ILogWriteParams): void => {
+    logger.log(level, message);
   };
 }
