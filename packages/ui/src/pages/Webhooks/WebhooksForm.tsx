@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "@apollo/client";
+import {
+  useMutation,
+  useQuery,
+  ApolloQueryResult,
+  OperationVariables,
+} from "@apollo/client";
 import {
   Button,
   FormControl,
@@ -16,12 +21,22 @@ import { IChain, IWebhook } from "types";
 
 const locations = ["NL", "DE", "USE1", "USE2", "USW2", "HK", "SG", "LDN"];
 
-export function WebhooksForm() {
+interface WebhooksFormProps {
+  refetchWebhooks: (variables?: Partial<OperationVariables> | undefined) => Promise<
+    ApolloQueryResult<{
+      webhooks: IWebhook[];
+    }>
+  >;
+}
+
+export function WebhooksForm({ refetchWebhooks }: WebhooksFormProps) {
   const [chain, setChain] = useState("");
   const [url, setUrl] = useState("");
   const [location, setLocation] = useState("");
 
-  const [submit] = useMutation<{ createWebhook: IWebhook }>(CREATE_WEBHOOK);
+  const [submit] = useMutation<{ createWebhook: IWebhook }>(CREATE_WEBHOOK, {
+    onCompleted: () => refetchWebhooks(),
+  });
   const { loading, error, data } = useQuery<{ chains: IChain[] }>(GET_ALL_CHAINS);
 
   const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,6 +58,31 @@ export function WebhooksForm() {
       <div>
         <Paper style={{ width: "200%", padding: 10 }} variant="outlined">
           <FormControl fullWidth>
+            <InputLabel id="chain-label">Chain</InputLabel>
+            <Select
+              labelId="chain-label"
+              value={chain}
+              label="Chain"
+              onChange={handleChainChange}
+            >
+              {data?.chains.map(({ name, id }) => (
+                <MenuItem key={id} value={name!}>
+                  {name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <div style={{ marginTop: "10px" }} />
+          <FormControl fullWidth>
+            <TextField
+              value={url}
+              onChange={handleUrlChange}
+              label="URL"
+              variant="outlined"
+            />
+          </FormControl>
+          <div style={{ marginTop: "10px" }} />
+          <FormControl fullWidth>
             <InputLabel id="location-label">Location</InputLabel>
             <Select
               labelId="location-label"
@@ -51,22 +91,11 @@ export function WebhooksForm() {
               onChange={handleLocationChange}
             >
               {locations.map((location) => (
-                <MenuItem value={location}>{location}</MenuItem>
+                <MenuItem key={location} value={location}>
+                  {location}
+                </MenuItem>
               ))}
             </Select>
-          </FormControl>
-          <div style={{ marginTop: "10px" }} />
-          <FormControl fullWidth>
-            <InputLabel id="chain-label">Chain</InputLabel>
-            <Select labelId="chain-label" value={chain} label="Chain" onChange={handleChainChange}>
-              {data?.chains.map(({ name, id }) => (
-                <MenuItem value={id}>{name}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <div style={{ marginTop: "10px" }} />
-          <FormControl fullWidth>
-            <TextField value={url} onChange={handleUrlChange} label="URL" variant="outlined" />
           </FormControl>
           <div style={{ marginTop: "10px" }} />
           <Button
@@ -77,9 +106,10 @@ export function WebhooksForm() {
             }}
             variant="outlined"
             onClick={() => {
-              submit({ variables: { chain, url } });
-              // setChain("");
+              submit({ variables: { chain, url, location } });
+              setChain("");
               setUrl("");
+              setLocation("");
             }}
           >
             Submit
