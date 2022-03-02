@@ -22,8 +22,8 @@ enum EventOptions {
   DATADOG = "datadog",
 }
 
-const interval = 30000;
-// const interval = 10000;
+// const interval = 30000;
+const interval = 10000;
 
 console.log("ENV VARS", {
   logger: process.env.MONITOR_LOGGER,
@@ -35,10 +35,11 @@ export class App {
   private health: Health;
   private config: Config;
   private publish: Publish;
+
   constructor(config) {
     this.config = config;
     this.health = new Health();
-    this.log = new Log(config);
+    this.log = new Log();
     this.publish = this.initPublish();
   }
 
@@ -54,11 +55,14 @@ export class App {
       .populate("chain")
       .exec();
 
-    for (const node of nodes) {
+    for await (const node of nodes) {
       node.id = node._id;
+      const logger = this.log.init(node.id);
+
       setInterval(async () => {
         const healthResponse = await this.health.getNodeHealth(node);
-        let status;
+
+        let status: HealthTypes.ErrorStatus;
         if (healthResponse) {
           status = healthResponse.status;
         }
@@ -66,7 +70,6 @@ export class App {
         if (healthResponse.status == HealthTypes.ErrorStatus.OK) {
           console.log("\x1b[32m%s\x1b[0m", JSON.stringify(healthResponse));
         }
-
         if (healthResponse.status == HealthTypes.ErrorStatus.ERROR) {
           console.log("\x1b[31m%s\x1b[0m", JSON.stringify(healthResponse));
         }
@@ -74,11 +77,11 @@ export class App {
         if (this.config.event === EventOptions.REDIS) {
           await this.publish.evaluate({ message: healthResponse, id: node.id });
         }
-        return await this.log.write({
-          id: node.id,
-          name: healthResponse.name,
+
+        await this.log.write({
           message: JSON.stringify(healthResponse),
           level: status === HealthTypes.ErrorStatus.ERROR ? "error" : "info",
+          logger,
         });
       }, interval);
     }
