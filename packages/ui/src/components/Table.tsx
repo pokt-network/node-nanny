@@ -79,7 +79,7 @@ function EnhancedTableHead({ rows, order, orderBy, onRequestSort }: EnhancedTabl
 }
 
 interface TableProps {
-  rows: { [key: string]: any }[];
+  rows: any;
   height?: number;
   searchable?: boolean;
   paginate?: boolean;
@@ -159,7 +159,7 @@ export function Table({
                 .slice()
 
                 .filter(
-                  (row) =>
+                  (row: any) =>
                     !searchable ||
                     Object.values(row)
                       .join()
@@ -169,7 +169,7 @@ export function Table({
                 )
                 .sort(getComparator(order, orderBy))
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row) => {
+                .map((row: any) => {
                   return (
                     <TableRow
                       key={String(row.id)}
@@ -185,7 +185,7 @@ export function Table({
                         .map(([_, value], i) => {
                           return (
                             <TableCell
-                              key={value}
+                              key={value as any}
                               align={!i ? "left" : "right"}
                               onClick={() => onSelectRow?.(row)}
                             >
