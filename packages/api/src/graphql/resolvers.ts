@@ -23,9 +23,6 @@ const resolvers = {
     oracles: async () => await OraclesModel.find({}).populate("chain").exec(),
     webhooks: async () => await WebhookModel.find({}).exec(),
 
-    getMuteStatus: async (_, { id }) => {
-      return await new AutomationService().getMuteStatus(id);
-    },
     getHaProxyStatus: async (_, { id }) => {
       return await new AutomationService().getHaProxyStatus(id);
     },
