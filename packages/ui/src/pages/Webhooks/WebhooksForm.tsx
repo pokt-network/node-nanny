@@ -1,10 +1,5 @@
 import { useState } from "react";
-import {
-  useMutation,
-  useQuery,
-  ApolloQueryResult,
-  OperationVariables,
-} from "@apollo/client";
+import { ApolloQueryResult } from "@apollo/client";
 import {
   Button,
   FormControl,
@@ -16,17 +11,15 @@ import {
   TextField,
 } from "@mui/material";
 
-import { CREATE_WEBHOOK, GET_ALL_CHAINS } from "queries";
-import { IChain, IWebhook } from "types";
-
-const locations = ["NL", "DE", "USE1", "USE2", "USW2", "HK", "SG", "LDN"];
+import {
+  IWebhooksQuery,
+  useChainsQuery,
+  useCreateWebhookMutation,
+  useLocationsQuery,
+} from "types";
 
 interface WebhooksFormProps {
-  refetchWebhooks: (variables?: Partial<OperationVariables> | undefined) => Promise<
-    ApolloQueryResult<{
-      webhooks: IWebhook[];
-    }>
-  >;
+  refetchWebhooks: (variables?: any) => Promise<ApolloQueryResult<IWebhooksQuery>>;
 }
 
 export function WebhooksForm({ refetchWebhooks }: WebhooksFormProps) {
@@ -34,10 +27,19 @@ export function WebhooksForm({ refetchWebhooks }: WebhooksFormProps) {
   const [url, setUrl] = useState("");
   const [location, setLocation] = useState("");
 
-  const [submit] = useMutation<{ createWebhook: IWebhook }>(CREATE_WEBHOOK, {
+  const {
+    data: chainsData,
+    loading: chainsLoading,
+    error: chainsError,
+  } = useChainsQuery();
+  const {
+    data: locationsData,
+    loading: locationsLoading,
+    error: locationsError,
+  } = useLocationsQuery();
+  const [submit] = useCreateWebhookMutation({
     onCompleted: () => refetchWebhooks(),
   });
-  const { loading, error, data } = useQuery<{ chains: IChain[] }>(GET_ALL_CHAINS);
 
   const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(event.target.value);
@@ -50,8 +52,9 @@ export function WebhooksForm({ refetchWebhooks }: WebhooksFormProps) {
     setChain(event.target.value);
   };
 
-  if (loading) return <>Loading...</>;
-  if (error) return <> Error! ${error.message}</>;
+  if (chainsLoading || locationsLoading) return <>Loading...</>;
+  if (chainsError || locationsError)
+    return <> Error! ${chainsError?.message || locationsError?.message}</>;
 
   return (
     <>
@@ -65,7 +68,7 @@ export function WebhooksForm({ refetchWebhooks }: WebhooksFormProps) {
               label="Chain"
               onChange={handleChainChange}
             >
-              {data?.chains.map(({ name, id }) => (
+              {chainsData?.chains.map(({ name, id }) => (
                 <MenuItem key={id} value={name!}>
                   {name}
                 </MenuItem>
@@ -90,10 +93,8 @@ export function WebhooksForm({ refetchWebhooks }: WebhooksFormProps) {
               label="Location"
               onChange={handleLocationChange}
             >
-              {locations.map((location) => (
-                <MenuItem key={location} value={location}>
-                  {location}
-                </MenuItem>
+              {locationsData?.locations.map(({ id, name }) => (
+                <MenuItem value={id}>{name}</MenuItem>
               ))}
             </Select>
           </FormControl>
