@@ -25,18 +25,13 @@ enum EventOptions {
 // const interval = 30000;
 const interval = 10000;
 
-console.log("ENV VARS", {
-  logger: process.env.MONITOR_LOGGER,
-  event: process.env.MONITOR_EVENT,
-});
-
 export class App {
   private log: Log;
   private health: Health;
   private config: Config;
   private publish: Publish;
 
-  constructor(config) {
+  constructor(config: Config) {
     this.config = config;
     this.health = new Health();
     this.log = new Log();
@@ -78,7 +73,7 @@ export class App {
           await this.publish.evaluate({ message: healthResponse, id: node.id });
         }
 
-        await this.log.write({
+        this.log.write({
           message: JSON.stringify(healthResponse),
           level: status === HealthTypes.ErrorStatus.ERROR ? "error" : "info",
           logger,
@@ -89,6 +84,6 @@ export class App {
 }
 
 new App({
-  logger: process.env.MONITOR_LOGGER,
-  event: process.env.MONITOR_EVENT,
+  logger: process.env.MONITOR_LOGGER as LoggerOptions,
+  event: process.env.MONITOR_EVENT as EventOptions,
 }).main();
