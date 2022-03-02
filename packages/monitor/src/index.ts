@@ -50,7 +50,7 @@ export class App {
       .populate("chain")
       .exec();
 
-    console.log(`MONITORING ${nodes.length} NODES ....`);
+    console.log(`Monitor Running. 📺\nCurrently monitoring ${nodes.length} nodes...`);
 
     for await (const node of nodes) {
       node.id = node._id;
