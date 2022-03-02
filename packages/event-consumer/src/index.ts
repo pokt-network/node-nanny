@@ -1,6 +1,7 @@
 import Redis from "ioredis";
 import { Event } from "@pokt-foundation/node-monitoring-core/dist/services";
 import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
+
 const { Redis: Consumer } = Event;
 
 const consumer = new Consumer();
