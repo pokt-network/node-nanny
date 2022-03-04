@@ -14,7 +14,7 @@ const typeDefs = gql`
     name: String!
     ip: String!
     loadBalancer: Boolean!
-    location: String
+    location: String!
   }
 
   type Location {
@@ -38,7 +38,7 @@ const typeDefs = gql`
     port: Int!
     url: String!
     muted: Boolean!
-    loadBalancers: [ID]
+    loadBalancers: [ID!]
     backend: String
     server: String
     ssl: Boolean
@@ -55,7 +55,7 @@ const typeDefs = gql`
     id: ID!
     chain: String!
     url: String!
-    location: String
+    location: String!
   }
 
   # Inputs
