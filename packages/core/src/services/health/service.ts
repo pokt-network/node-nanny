@@ -657,7 +657,7 @@ export class Service {
       AVA: this.getAvaNodeHealth,
       EVM: this.getEVMNodeHealth,
       TMT: this.getTendermintNodeHealth,
-      HRM: this.getHarmonyNodeHealth,
+      HMY: this.getHarmonyNodeHealth,
       POKT: this.getPocketNodeHealth,
       SOL: this.getSolNodeHealth,
     }[chain.type](node);
