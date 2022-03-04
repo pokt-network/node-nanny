@@ -11,7 +11,7 @@ export class Service {
     this.client = new Client({
       intents: [Intents.FLAGS.GUILDS],
       rejectOnRateLimit: (error) => {
-        console.error(`Discord Rate Limited Error ${error}`);
+        console.error(`Discord Rate Limit Error: ${error}`);
         return true;
       },
     });
@@ -19,7 +19,7 @@ export class Service {
     this.serverId = process.env.DISCORD_SERVER_ID;
   }
 
-  private async initClient(): Promise<Server> {
+  private async initServer(): Promise<Server> {
     await this.client.login(this.token);
     return this.client.guilds.cache.get(this.serverId);
   }
@@ -27,26 +27,26 @@ export class Service {
   public async addWebhookForNode({ chain, host }: INode): Promise<void> {
     const { name } = chain;
     const { location } = host;
-    const catName = `NODE-NANNY-${location.name}`;
-    const chanName = `${name}-${location.name}`.toLowerCase();
+    const categoryName = `NODE-NANNY-${location.name}`;
+    const channelName = `${name}-${location.name}`.toLowerCase();
 
-    const server = await this.initClient();
+    const server = await this.initServer();
     const allChannels = await server.channels.fetch();
     const categories = allChannels.filter(({ type }) => type === "GUILD_CATEGORY");
     const channels = allChannels.filter(({ type }) => type === "GUILD_TEXT");
 
     const category =
-      categories?.find(({ name }) => name === catName) ||
-      (await server.channels.create(catName, { type: "GUILD_CATEGORY" }));
+      categories?.find(({ name }) => name === categoryName) ||
+      (await server.channels.create(categoryName, { type: "GUILD_CATEGORY" }));
 
-    const channelExists = channels?.some(({ name }) => name === chanName);
+    const channelExists = channels?.some(({ name }) => name === channelName);
     if (!channelExists) {
-      const channel = await server.channels.create(chanName, {
+      const channel = await server.channels.create(channelName, {
         type: "GUILD_TEXT",
         parent: category as CategoryChannel,
       });
 
-      const { url } = await channel.createWebhook(`${chanName}-webhook`);
+      const { url } = await channel.createWebhook(`${channelName}-webhook`);
       await WebhookModel.create({ chain: name, location: location.name, url });
     }
   }
