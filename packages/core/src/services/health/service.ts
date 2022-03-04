@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from "axios";
+import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import util from "util";
 import axiosRetry from "axios-retry";
 import { exec } from "child_process";
@@ -8,7 +8,9 @@ import {
   NCResponse,
   HealthResponse,
   SupportedBlockChainTypes,
-  ESupportedBlockChains,
+  IReferenceURL,
+  IRPCResponse,
+  IRPCSyncResponse,
 } from "./types";
 
 import { hexToDec } from "../../utils";
@@ -16,114 +18,45 @@ import { INode, NodesModel, OraclesModel } from "../../models";
 
 export class Service {
   private rpc: AxiosInstance;
+
   constructor() {
     this.rpc = this.initClient();
   }
 
   private initClient(): AxiosInstance {
-    const client = axios.create({
-      timeout: 10000,
-      headers: { "Content-Type": "application/json" },
-    });
+    const headers = { "Content-Type": "application/json" };
+    const client = axios.create({ timeout: 10000, headers });
     axiosRetry(client, { retries: 5 });
     return client;
   }
-  private async getBlockHeight(url, auth?: string, hmy?: boolean): Promise<any> {
-    let method = "eth_blockNumber";
-    if (hmy) {
-      method = "hmyv2_blockNumber";
-    }
 
-    let options;
+  private getAxiosRequestConfig(auth: string): AxiosRequestConfig {
     if (auth) {
-      options = {};
-      options.auth = {
-        username: auth.split(":")[0],
-        password: auth.split(":")[1],
-      };
-    }
-    try {
-      const { data } = await this.rpc.post(
-        url,
-        {
-          jsonrpc: "2.0",
-          id: 1,
-          method,
-          params: [],
-        },
-        options,
-      );
-      if (data.error) {
-        return data.error;
-      }
-      return data;
-    } catch (error) {
-      throw new Error(
-        `getBlockHeight could not contact blockchain node ${JSON.stringify(
-          error,
-        )} ${url}`,
-      );
+      const [username, password] = auth.split(":");
+      return { auth: { username, password } };
     }
   }
 
-  private async getEthSyncing(url, auth?: string, hmy?: boolean): Promise<any> {
-    let method = "eth_syncing";
-    if (hmy) {
-      method = "hmyv2_syncing";
-    }
-    let options;
+  /* ----- Health Check Methods ----- */
+  public async getNodeHealth(node: INode): Promise<HealthResponse> {
+    const { chain } = node;
 
-    if (auth) {
-      options = {};
-      options.auth = {
-        username: auth.split(":")[0],
-        password: auth.split(":")[1],
-      };
+    if (!Object.keys(SupportedBlockChainTypes).includes(chain.type)) {
+      throw new Error(`${chain.type} is not a supported chain type`);
     }
 
-    try {
-      const { data } = await this.rpc.post(
-        url,
-        {
-          jsonrpc: "2.0",
-          id: 1,
-          method,
-          params: [],
-        },
-        options,
-      );
-      return data;
-    } catch (error) {
-      throw new Error(`getEthSyncing could not contact blockchain node ${error} ${url}`);
-    }
+    return await {
+      ALG: this.getAlgorandNodeHealth,
+      AVA: this.getAvaNodeHealth,
+      EVM: this.getEVMNodeHealth,
+      HMY: this.getHarmonyNodeHealth,
+      POKT: this.getPocketNodeHealth,
+      SOL: this.getSolNodeHealth,
+      TMT: this.getTendermintNodeHealth,
+    }[chain.type](node);
   }
 
-  private async getPeers(url, auth?: string): Promise<any> {
-    let options;
-    if (auth) {
-      options = {};
-      options.auth = {
-        username: auth.split(":")[0],
-        password: auth.split(":")[1],
-      };
-    }
-    try {
-      const { data } = await this.rpc.post(
-        url,
-        {
-          jsonrpc: "2.0",
-          id: 1,
-          method: "net_peerCount",
-          params: [],
-        },
-        options,
-      );
-      return data;
-    } catch (error) {
-      throw new Error(`getPeers could not contact blockchain node ${error} ${url}`);
-    }
-  }
-
+  /* ----- Algorand ----- */
   private getAlgorandNodeHealth = async ({
     url,
     host,
@@ -131,17 +64,11 @@ export class Service {
     basicAuth,
   }): Promise<HealthResponse> => {
     const name = `${host.name}/${chain.name}`;
-    let options;
-    if (basicAuth) {
-      options = {};
-      options.auth = {
-        username: basicAuth.split(":")[0],
-        password: basicAuth.split(":")[1],
-      };
-    }
-
     try {
-      const { data, status } = await this.rpc.get(`${url}/health`, options);
+      const { data, status } = await this.rpc.get(
+        `${url}/health`,
+        this.getAxiosRequestConfig(basicAuth),
+      );
       if (status == 200) {
         return {
           name,
@@ -166,6 +93,7 @@ export class Service {
     }
   };
 
+  /* ----- Avalanche ----- */
   private getAvaNodeHealth = async ({
     url,
     host,
@@ -173,24 +101,11 @@ export class Service {
     basicAuth,
   }): Promise<HealthResponse> => {
     const name = `${host.name}/${chain.name}`;
-    let options;
-    if (basicAuth) {
-      options = {};
-      options.auth = {
-        username: basicAuth.split(":")[0],
-        password: basicAuth.split(":")[1],
-      };
-    }
-
     try {
       const { data } = await this.rpc.post(
         `${url}/ext/health`,
-        {
-          jsonrpc: "2.0",
-          id: 1,
-          method: "health.health",
-        },
-        options,
+        { jsonrpc: "2.0", id: 1, method: "health.health" },
+        this.getAxiosRequestConfig(basicAuth),
       );
 
       const { result } = data;
@@ -219,221 +134,13 @@ export class Service {
     }
   };
 
-  private getTendermintNodeHealth = async ({
-    url,
-    host,
-    chain,
-    basicAuth,
-  }): Promise<HealthResponse> => {
-    const name = `${host.name}/${chain.name}`;
-    let options;
-    if (basicAuth) {
-      options = {};
-      options.auth = {
-        username: basicAuth.split(":")[0],
-        password: basicAuth.split(":")[1],
-      };
-    }
-    try {
-      const { data } = await this.rpc.get(`${url}/status`, options);
-      const { catching_up } = data.result.sync_info;
-      if (!catching_up) {
-        return {
-          name,
-          conditions: ErrorConditions.HEALTHY,
-          status: ErrorStatus.OK,
-          health: data,
-        };
-      } else {
-        return {
-          name,
-          conditions: ErrorConditions.NOT_SYNCHRONIZED,
-          status: ErrorStatus.ERROR,
-          health: data,
-        };
-      }
-    } catch (error) {
-      return {
-        name,
-        conditions: ErrorConditions.NO_RESPONSE,
-        status: ErrorStatus.ERROR,
-        health: error,
-      };
-    }
-  };
-
-  private getSolNodeHealth = async ({
-    url,
-    host,
-    chain,
-    hostname,
-    basicAuth,
-  }): Promise<HealthResponse> => {
-    const name = `${host.name}/${chain.name}`;
-    const execute = util.promisify(exec);
-    if (hostname) {
-      url = `https://${hostname}`;
-    }
-    let command;
-    if (basicAuth) {
-      `curl -u ${basicAuth} -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`;
-    } else {
-      command = `curl -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`;
-    }
-    try {
-      const { stdout, stderr } = await execute(command);
-      if (stderr) {
-        return {
-          name,
-          conditions: ErrorConditions.NO_RESPONSE,
-          status: ErrorStatus.ERROR,
-          health: JSON.parse(stderr),
-        };
-      }
-
-      const health = JSON.parse(stdout);
-      const { result } = health;
-
-      if (result == "ok") {
-        return {
-          name,
-          conditions: ErrorConditions.HEALTHY,
-          status: ErrorStatus.OK,
-          health,
-        };
-      } else {
-        return {
-          name,
-          conditions: ErrorConditions.NOT_SYNCHRONIZED,
-          status: ErrorStatus.ERROR,
-          health,
-        };
-      }
-    } catch (error) {
-      return {
-        name,
-        conditions: ErrorConditions.NO_RESPONSE,
-        status: ErrorStatus.ERROR,
-        health: error,
-      };
-    }
-  };
-
-  private async getPocketHeight(url, auth?: string): Promise<any> {
-    //console.log(url);
-    let options;
-    if (auth) {
-      options = {};
-      options.auth = {
-        username: auth.split(":")[0],
-        password: auth.split(":")[1],
-      };
-    }
-    try {
-      const { data } = await this.rpc.post(`${url}/v1/query/height`, {}, options);
-      return data;
-    } catch (error) {
-      // //console.error(`could not contact pocket node ${error} ${url}`);
-      return { height: 0 };
-    }
-  }
-
-  private async isRpcResponding({ url }, auth?: string, hmy?: boolean): Promise<boolean> {
-    try {
-      await this.getBlockHeight(url, auth, hmy);
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  // private getBestBlockHeight({ readings, variance }) {
-  //   if (readings.length === 1) {
-  //     return readings[0];
-  //   }
-  //   const sorted = readings.sort();
-  //   const [last] = sorted.slice(-1);
-  //   const [secondLast] = sorted.slice(-2);
-  //   console.log(0x1506068)
-  //   if (last - secondLast < variance) {
-  //     return sorted.pop();
-  //   } else {
-  //     return sorted.pop();
-  //   }
-  // }
-
-  private async getReferenceBlockHeight(
-    { endpoints, variance },
-    hmy: boolean,
-  ): Promise<number> {
-    const resolved = [];
-    for (const { url, auth } of endpoints) {
-      try {
-        resolved.push(await this.getBlockHeight(url, auth, hmy));
-      } catch (error) {
-        ////console.error(`could not get reading ${error}`);
-      }
-    }
-
-    const readings = resolved
-      .filter((reading) => reading.result)
-      .map(({ result }) => hexToDec(result));
-    //const height = this.getBestBlockHeight({ readings, variance });
-
-    return readings.sort()[0];
-  }
-
-  private async nc({ host, port }): Promise<string> {
-    return new Promise((resolve, reject) => {
-      exec(`nc -vz -q 2 ${host} ${port}`, (error, stdout, stderr) => {
-        if (error) {
-          reject(`error: ${error.message}`);
-        }
-        if (stderr) {
-          resolve(stderr);
-        }
-        resolve(stdout);
-      });
-    });
-  }
-
-  private async isNodeListening({ host, port }) {
-    try {
-      const nc = await this.nc({ host, port });
-      let status = nc.split(" ");
-      return status[status.length - 1].includes(NCResponse.SUCCESS);
-    } catch (error) {
-      return false;
-    }
-  }
-
-  private async checkExternalUrls(urls) {
-    return Promise.all(
-      await urls
-        .filter(async (url) => {
-          try {
-            await this.getBlockHeight(url);
-            return true;
-          } catch (error) {
-            return false;
-          }
-        })
-        .map((url) => {
-          return { url };
-        }),
-    );
-  }
-
-  private getHarmonyNodeHealth = async (node) => {
-    return await this.getEVMNodeHealth(node, true);
-  };
-
+  /* ----- Ethereum Virtual Machine ----- */
   private getEVMNodeHealth = async (
-    node: INode,
+    { chain, url, variance, host, id, port, basicAuth, server }: INode,
     hmy?: boolean,
   ): Promise<HealthResponse> => {
-    const { chain, url, variance, host, id, port, basicAuth, server } = node;
     const name = `${host.name}/${chain.name}/${server}`;
+
     //Check if node is online and RPC up
     const isNodeListening = await this.isNodeListening({ host: host.ip, port });
     if (!isNodeListening) {
@@ -452,21 +159,15 @@ export class Service {
       };
     }
 
-    let peers: INode[] = await NodesModel.find({
-      chain,
-      _id: { $ne: id },
-    }).exec();
-
     let { urls: externalNodes } = await OraclesModel.findOne({
       chain: chain.name,
     }).exec();
 
     let referenceUrls = await this.checkExternalUrls(externalNodes);
-
+    let peers: INode[] = await NodesModel.find({ chain, _id: { $ne: id } }).exec();
     peers = peers.filter(
-      async (peer) => await this.isRpcResponding({ url: peer.url }, peer.basicAuth),
+      async ({ url, basicAuth }) => await this.isRpcResponding({ url }, basicAuth),
     );
-
     if (peers.length >= 1) {
       for (const { url, basicAuth } of peers) {
         referenceUrls.push({ url, auth: basicAuth });
@@ -476,23 +177,12 @@ export class Service {
     try {
       const [internalBh, externalBh, ethSyncing] = await Promise.all([
         this.getBlockHeight(url, basicAuth, hmy),
-        this.getReferenceBlockHeight({ endpoints: referenceUrls, variance }, hmy),
+        this.getReferenceBlockHeight(referenceUrls, variance, hmy),
         this.getEthSyncing(url, basicAuth),
       ]);
 
-      let peers;
-      let numPeers;
-
-      if (
-        !(
-          chain.name == ESupportedBlockChains.POL ||
-          chain.name == ESupportedBlockChains.POLTST
-        )
-      ) {
-        peers = await this.getPeers(url, basicAuth);
-        numPeers = hexToDec(peers.result);
-      }
-
+      const { result } = await this.getPeers(url, basicAuth);
+      const numPeers = hexToDec(result);
       const internalHeight = hexToDec(internalBh.result);
       const externalHeight = externalBh;
 
@@ -502,7 +192,7 @@ export class Service {
       let status = ErrorStatus.OK;
       let conditions = ErrorConditions.HEALTHY;
 
-      if (internalBh.code) {
+      if (internalBh.error?.code) {
         return {
           name,
           conditions: ErrorConditions.NOT_SYNCHRONIZED,
@@ -534,7 +224,6 @@ export class Service {
         },
       };
     } catch (error) {
-      //console.error(`could not get readings ${error}`);
       if (
         String(error).includes(
           `could not contact blockchain node Error: timeout of 1000ms exceeded`,
@@ -555,6 +244,134 @@ export class Service {
     };
   };
 
+  private async isNodeListening({ host, port }) {
+    try {
+      const nc = await this.nc({ host, port });
+      let status = nc.split(" ");
+      return status[status.length - 1].includes(NCResponse.SUCCESS);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  private async nc({ host, port }): Promise<string> {
+    return new Promise((resolve, reject) => {
+      exec(`nc -vz -q 2 ${host} ${port}`, (error, stdout, stderr) => {
+        if (error) {
+          reject(`error: ${error.message}`);
+        }
+        if (stderr) {
+          resolve(stderr);
+        }
+        resolve(stdout);
+      });
+    });
+  }
+
+  private async isRpcResponding({ url }, auth?: string, hmy?: boolean): Promise<boolean> {
+    try {
+      await this.getBlockHeight(url, auth, hmy);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  private async checkExternalUrls(urls: string[]): Promise<IReferenceURL[]> {
+    return Promise.all(
+      urls
+        .filter(async (url) => {
+          try {
+            await this.getBlockHeight(url);
+            return true;
+          } catch (error) {
+            return false;
+          }
+        })
+        .map((url) => ({ url } as IReferenceURL)),
+    );
+  }
+
+  private async getBlockHeight(
+    url: string,
+    auth?: string,
+    hmy?: boolean,
+  ): Promise<IRPCResponse> {
+    const method = hmy ? "hmyv2_blockNumber" : "eth_blockNumber";
+    try {
+      const { data } = await this.rpc.post<IRPCResponse>(
+        url,
+        { jsonrpc: "2.0", id: 1, method, params: [] },
+        this.getAxiosRequestConfig(auth),
+      );
+      return data;
+    } catch (error) {
+      const stringError = JSON.stringify(error);
+      throw new Error(
+        `getBlockHeight could not contact blockchain node ${stringError} ${url}`,
+      );
+    }
+  }
+
+  private async getReferenceBlockHeight(
+    endpoints: IReferenceURL[],
+    _variance: number,
+    hmy: boolean,
+  ): Promise<number> {
+    const resolved: IRPCResponse[] = [];
+    for (const { url, auth } of endpoints) {
+      try {
+        resolved.push(await this.getBlockHeight(url, auth, hmy));
+      } catch (error) {
+        ////console.error(`could not get reading ${error}`);
+      }
+    }
+
+    const readings = resolved
+      .filter((reading) => reading.result)
+      .map(({ result }) => hexToDec(result));
+    //const height = this.getBestBlockHeight({ readings, variance });
+
+    return readings.sort()[0];
+  }
+
+  private async getEthSyncing(
+    url: string,
+    auth?: string,
+    hmy?: boolean,
+  ): Promise<IRPCSyncResponse> {
+    const method = hmy ? "hmyv2_syncing" : "eth_syncing";
+    try {
+      const { data } = await this.rpc.post<IRPCSyncResponse>(
+        url,
+        { jsonrpc: "2.0", id: 1, method, params: [] },
+        this.getAxiosRequestConfig(auth),
+      );
+      return data;
+    } catch (error) {
+      throw new Error(`getEthSyncing could not contact blockchain node ${error} ${url}`);
+    }
+  }
+
+  private async getPeers(url, auth?: string): Promise<IRPCResponse> {
+    try {
+      const { data } = await this.rpc.post<IRPCResponse>(
+        url,
+        { jsonrpc: "2.0", id: 1, method: "net_peerCount", params: [] },
+        this.getAxiosRequestConfig(auth),
+      );
+      return data;
+    } catch (error) {
+      throw new Error(`getPeers could not contact blockchain node ${error} ${url}`);
+    }
+  }
+
+  /* ----- Harmony ----- */
+  private getHarmonyNodeHealth = async (node) => {
+    return await this.getEVMNodeHealth(node, true);
+  };
+
+  /* ----- Pocket ----- */
   private getPocketNodeHealth = async ({ hostname, port, variance, id }: INode) => {
     const { height: isRpcResponding } = await this.getPocketHeight(
       `https://${hostname}:${port}`,
@@ -569,10 +386,7 @@ export class Service {
 
     // get list of reference nodes
     const referenceNodes: INode[] = await NodesModel.find(
-      {
-        "chain.type": "POKT",
-        _id: { $ne: id },
-      },
+      { "chain.type": "POKT", _id: { $ne: id } },
       null,
       { limit: 20 },
     ).exec();
@@ -591,7 +405,7 @@ export class Service {
     );
 
     const pocketheight = await Promise.all(
-      await poktnodes.map(async (node) => this.getPocketHeight(node)),
+      poktnodes.map(async (node) => await this.getPocketHeight(node)),
     );
 
     const [highest] = pocketheight
@@ -645,21 +459,130 @@ export class Service {
     };
   };
 
-  async getNodeHealth(node: INode): Promise<HealthResponse> {
-    const { chain } = node;
+  // DEV NOTE --> Needs return & rpc.post type
+  private async getPocketHeight(url: string, auth?: string): Promise<any> {
+    try {
+      const { data } = await this.rpc.post(
+        `${url}/v1/query/height`,
+        {},
+        this.getAxiosRequestConfig(auth),
+      );
+      return data;
+    } catch (error) {
+      return { height: 0 };
+    }
+  }
 
-    if (!Object.keys(SupportedBlockChainTypes).includes(chain.type)) {
-      throw new Error(`${chain.type} is not a supported chain type`);
+  /* ----- Solana ----- */
+  private getSolNodeHealth = async ({
+    url,
+    host,
+    chain,
+    hostname,
+    basicAuth,
+  }): Promise<HealthResponse> => {
+    const name = `${host.name}/${chain.name}`;
+    const execute = util.promisify(exec);
+    if (hostname) {
+      url = `https://${hostname}`;
     }
 
-    return await {
-      ALG: this.getAlgorandNodeHealth,
-      AVA: this.getAvaNodeHealth,
-      EVM: this.getEVMNodeHealth,
-      TMT: this.getTendermintNodeHealth,
-      HMY: this.getHarmonyNodeHealth,
-      POKT: this.getPocketNodeHealth,
-      SOL: this.getSolNodeHealth,
-    }[chain.type](node);
-  }
+    let command: string;
+    if (basicAuth) {
+      `curl -u ${basicAuth} -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`;
+    } else {
+      command = `curl -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`;
+    }
+    try {
+      const { stdout, stderr } = await execute(command);
+      if (stderr) {
+        return {
+          name,
+          conditions: ErrorConditions.NO_RESPONSE,
+          status: ErrorStatus.ERROR,
+          health: JSON.parse(stderr),
+        };
+      }
+
+      const health = JSON.parse(stdout);
+      const { result } = health;
+
+      if (result == "ok") {
+        return {
+          name,
+          conditions: ErrorConditions.HEALTHY,
+          status: ErrorStatus.OK,
+          health,
+        };
+      } else {
+        return {
+          name,
+          conditions: ErrorConditions.NOT_SYNCHRONIZED,
+          status: ErrorStatus.ERROR,
+          health,
+        };
+      }
+    } catch (error) {
+      return {
+        name,
+        conditions: ErrorConditions.NO_RESPONSE,
+        status: ErrorStatus.ERROR,
+        health: error,
+      };
+    }
+  };
+
+  /* ----- Tendermint ----- */
+  private getTendermintNodeHealth = async ({
+    url,
+    host,
+    chain,
+    basicAuth,
+  }): Promise<HealthResponse> => {
+    const name = `${host.name}/${chain.name}`;
+    try {
+      const { data } = await this.rpc.get(
+        `${url}/status`,
+        this.getAxiosRequestConfig(basicAuth),
+      );
+      const { catching_up } = data.result.sync_info;
+      if (!catching_up) {
+        return {
+          name,
+          conditions: ErrorConditions.HEALTHY,
+          status: ErrorStatus.OK,
+          health: data,
+        };
+      } else {
+        return {
+          name,
+          conditions: ErrorConditions.NOT_SYNCHRONIZED,
+          status: ErrorStatus.ERROR,
+          health: data,
+        };
+      }
+    } catch (error) {
+      return {
+        name,
+        conditions: ErrorConditions.NO_RESPONSE,
+        status: ErrorStatus.ERROR,
+        health: error,
+      };
+    }
+  };
+
+  // private getBestBlockHeight({ readings, variance }) {
+  //   if (readings.length === 1) {
+  //     return readings[0];
+  //   }
+  //   const sorted = readings.sort();
+  //   const [last] = sorted.slice(-1);
+  //   const [secondLast] = sorted.slice(-2);
+  //   console.log(0x1506068)
+  //   if (last - secondLast < variance) {
+  //     return sorted.pop();
+  //   } else {
+  //     return sorted.pop();
+  //   }
+  // }
 }
