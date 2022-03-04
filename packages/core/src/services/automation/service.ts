@@ -4,6 +4,7 @@ import { exec } from "child_process";
 
 import { Alert, DataDog } from "..";
 import { NodesModel, INode, HostsModel } from "../../models";
+import { Service as DiscordService } from "../discord";
 import { HealthTypes, DataDogTypes, RebootTypes } from "../../types";
 
 export class Service {
@@ -28,9 +29,16 @@ export class Service {
   private async getNode(id: string): Promise<INode> {
     return await NodesModel.findById(id)
       .populate("chain")
-      .populate("host")
+      .populate({ path: "host", populate: "location" })
       .populate("loadBalancers")
       .exec();
+  }
+
+  public async createNode(nodeInput: INode): Promise<INode> {
+    const { _id } = await NodesModel.create(nodeInput);
+    const node = await this.getNode(_id);
+    await new DiscordService().addWebhookForNode(node);
+    return node;
   }
 
   async getHaProxyStatus(id: string) {
