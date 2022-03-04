@@ -11,7 +11,7 @@ import {
 
 import { useCreateChainMutation } from "types";
 
-const typeMenuItems = ["EVM", "AVA", "HEI", "POKT", "SOL", "ALG", "HRM"];
+const typeMenuItems = ["EVM", "AVA", "HEI", "POKT", "SOL", "ALG", "HMY"];
 
 export default function ChainsForm() {
   const [name, setName] = useState("");
