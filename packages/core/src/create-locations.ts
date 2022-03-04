@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 import { connect, disconnect } from "./db";
-import { LocationsModel, HostsModel } from "./models";
+import { NodesModel } from "./models";
 
 (async () => {
   await connect();
@@ -11,26 +11,29 @@ import { LocationsModel, HostsModel } from "./models";
   //   await LocationsModel.create({ name: location });
   // }
 
-  const hosts = await HostsModel.find({});
-  console.log("FOUND", hosts.length, "HOSTS");
+  const nodes = await NodesModel.find({}).populate("host").exec();
+  console.log("FOUND", nodes.length, "NODEs");
+  // console.log(nodes.filter(({ host }) => !host).map(({ _id }) => _id));
 
-  for await (const host of hosts) {
-    const hostLocation = host.internalHostName?.split(".")[1];
-    const hostLocationCode = {
-      "us-east-2": "USE2",
-      "ap-southeast-1": "APSE1",
-      "us-west-2": "USW2",
-    }[hostLocation];
-    if (hostLocationCode) {
-      const [{ _id }] = await LocationsModel.find({ name: hostLocationCode as any });
-      // console.log({ hostLocation, hostLocationCode, location });
+  // for await (const node of nodes) {
+  //   // const hostLocation = node.host.internalHostName?.split(".")[1];
+  //   // const hostLocationCode = {
+  //   //   "us-east-2": "USE2",
+  //   //   "ap-southeast-1": "APSE1",
+  //   //   "us-west-2": "USW2",
+  //   // }[hostLocation];
+  //   // if (hostLocationCode) {
+  //   //   const [{ _id }] = await LocationsModel.find({ name: hostLocationCode as any });
+  //   //   // console.log({ hostLocation, hostLocationCode, location });
 
-      await HostsModel.updateOne(
-        { _id: host.id },
-        { location: new Types.ObjectId(_id) as any },
-      );
-    }
-  }
+  //   if (!node.host) {
+  //     // console.log("NO HOST FOUND FOR", node);
+  //     const DELETED = await NodesModel.deleteOne({ _id: node.id });
+  //     console.log({ DELETED });
+  //   }
+
+  //   // }
+  // }
 
   await disconnect();
 })();

@@ -20,7 +20,7 @@ export const hostsSchema = new Schema<IHost>(
     name: { type: String, unique: true, required: true },
     ip: { type: String, unique: true, required: true },
     loadBalancer: { type: Boolean, required: true },
-    location: { type: Schema.Types.ObjectId, ref: "locations" },
+    location: { type: Schema.Types.ObjectId, ref: "locations", required: true },
 
     hostType: String,
 
