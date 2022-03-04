@@ -38,6 +38,7 @@ export class Service {
     const { _id } = await NodesModel.create(nodeInput);
     const node = await this.getNode(_id);
     await new DiscordService().addWebhookForNode(node);
+    await this.restartMonitor();
     return node;
   }
 
@@ -194,24 +195,23 @@ export class Service {
 
   async muteMonitor(id: string): Promise<INode> {
     await NodesModel.updateOne({ _id: id }, { muted: true }).exec();
-    await new Promise((resolve, reject) => {
-      exec("pm2 restart monitor", (error, stdout) => {
-        if (error) reject(`error: ${error.message}`);
-        resolve(stdout);
-      });
-    });
+    await this.restartMonitor();
     return await this.getNode(id);
   }
 
   async unmuteMonitor(id: string): Promise<INode> {
     await NodesModel.updateOne({ _id: id }, { muted: false });
-    await new Promise((resolve, reject) => {
+    await this.restartMonitor();
+    return await this.getNode(id);
+  }
+
+  private async restartMonitor(): Promise<boolean> {
+    return await new Promise((resolve, reject) => {
       exec("pm2 restart monitor", (error, stdout) => {
         if (error) reject(`error: ${error.message}`);
-        resolve(stdout);
+        resolve(!!stdout);
       });
     });
-    return await this.getNode(id);
   }
 
   async getInstanceDetails(awsInstanceId: string) {
