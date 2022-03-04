@@ -16,7 +16,7 @@
     "aws-sdk": "^2.950.0",
     "axios": "^0.21.2",
     "axios-retry": "^3.2.4",
-    "discord.js": "latest",
+    "discord.js": "^13.6.0",
     "dotenv": "^10.0.0",
     "mongoose": "^6.0.7",
     "winston": "^3.6.0",

@@ -26,7 +26,7 @@ export type IHost = {
   id: Scalars['ID'];
   ip: Scalars['String'];
   loadBalancer: Scalars['Boolean'];
-  location?: Maybe<Scalars['String']>;
+  location: Scalars['String'];
   name: Scalars['String'];
 };
 
@@ -179,7 +179,7 @@ export type INode = {
   haProxy: Scalars['Boolean'];
   host: IHost;
   id: Scalars['ID'];
-  loadBalancers?: Maybe<Array<Maybe<Scalars['ID']>>>;
+  loadBalancers?: Maybe<Array<Scalars['ID']>>;
   muted: Scalars['Boolean'];
   port: Scalars['Int'];
   server?: Maybe<Scalars['String']>;
@@ -247,7 +247,7 @@ export type IQueryNodeStatusArgs = {
 export type IWebhook = {
   chain: Scalars['String'];
   id: Scalars['ID'];
-  location?: Maybe<Scalars['String']>;
+  location: Scalars['String'];
   url: Scalars['String'];
 };
 
@@ -345,7 +345,7 @@ export type IChainsQuery = { chains: Array<{ id: string, name: string, type: str
 export type IHostsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IHostsQuery = { hosts: Array<{ id: string, name: string, ip: string, loadBalancer: boolean, location?: string | null }> };
+export type IHostsQuery = { hosts: Array<{ id: string, name: string, ip: string, loadBalancer: boolean, location: string }> };
 
 export type ILocationsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -357,12 +357,12 @@ export type INodeQueryVariables = Exact<{
 }>;
 
 
-export type INodeQuery = { node: { id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, loadBalancers?: Array<string | null> | null } };
+export type INodeQuery = { node: { id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, loadBalancers?: Array<string> | null } };
 
 export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, loadBalancers?: Array<string | null> | null }> };
+export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, loadBalancers?: Array<string> | null }> };
 
 export type IOraclesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -372,12 +372,12 @@ export type IOraclesQuery = { oracles: Array<{ id: string, chain: string, urls?:
 export type IWebhooksQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IWebhooksQuery = { webhooks: Array<{ id: string, location?: string | null, chain: string, url: string }> };
+export type IWebhooksQuery = { webhooks: Array<{ id: string, location: string, chain: string, url: string }> };
 
 export type IGetHostsChainsAndLoadBalancersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip: string }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string }> };
+export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip: string, location: string }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string }> };
 
 export type IGetNodeStatusQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -1014,6 +1014,7 @@ export const GetHostsChainsAndLoadBalancersDocument = gql`
     id
     name
     ip
+    location
   }
   chains {
     id
