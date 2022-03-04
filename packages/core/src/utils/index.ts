@@ -4,6 +4,6 @@ export const wait = async (ms: number): Promise<void> => {
   });
 };
 
-export const hexToDec = (hexString) => {
-  return parseInt(hexString, 16);
+export const hexToDec = (resultString: number | string): number => {
+  return typeof resultString === "number" ? resultString : parseInt(resultString, 16);
 };
