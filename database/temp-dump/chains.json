@@ -1,7 +1,7 @@
 {"_id":{"$oid":"614e1a463f59d7001130cec5"},"chain":"0009a","name":"HEI","type":"TMT","enabled":true}
 {"_id":{"$oid":"615e1fbbbb1a480012e76e22"},"chain":"0006","name":"SOL","type":"SOL","enabled":true}
 {"_id":{"$oid":"614e1a89d0add40011747f16"},"chain":"0001","name":"POKT","type":"POKT","enabled":true}
-{"_id":{"$oid":"6169e26e9e0a1900116d2eac"},"chain":" 0040","name":"HRM","type":"HRM","enabled":true}
+{"_id":{"$oid":"6169e26e9e0a1900116d2eac"},"chain":" 0040","name":"HMY","type":"HMY","enabled":true}
 {"_id":{"$oid":"614e187809b4930010747a70"},"chain":"0027","name":"XDAI","type":"EVM","enabled":true}
 {"_id":{"$oid":"614e0534c4c1300011be96e8"},"chain":"004","name":"AVATST","type":"AVA","enabled":true}
 {"_id":{"$oid":"614e04f84eaf3a00115ab268"},"chain":"0003","name":"AVA","type":"AVA","enabled":true}

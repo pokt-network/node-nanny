@@ -19,9 +19,15 @@ const resolvers = {
     logs: async ({ id }) => await LogsModel.find({ label: id }).exec(),
     locations: async () => await LocationsModel.find({}).exec(),
     node: async (_, { id }) =>
-      await NodesModel.find({ _id: id }).populate("chain").populate("host").exec(),
+      await NodesModel.find({ _id: id })
+        .populate("chain")
+        .populate({ path: "host", populate: "location" })
+        .exec(),
     nodes: async () =>
-      await NodesModel.find({}).populate("chain").populate("host").exec(),
+      await NodesModel.find({})
+        .populate("chain")
+        .populate({ path: "host", populate: "location" })
+        .exec(),
     oracles: async () => await OraclesModel.find({}).populate("chain").exec(),
     webhooks: async () => await WebhookModel.find({}).exec(),
 
@@ -53,7 +59,6 @@ const resolvers = {
     createWebhook: async (_, webhook) => {
       return await WebhookModel.create(webhook);
     },
-
     muteMonitor: async (_, { id }) => {
       return await new AutomationService().muteMonitor(id);
     },
