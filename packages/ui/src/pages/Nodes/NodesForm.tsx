@@ -108,9 +108,9 @@ export function NodesForm() {
               label="Host"
               onChange={handleHostChange}
             >
-              {data?.hosts.map(({ name, id }) => (
+              {data?.hosts.map(({ name, id, location }) => (
                 <MenuItem key={id} value={id}>
-                  {name}
+                  {`${name} - ${location}`}
                 </MenuItem>
               ))}
             </Select>
