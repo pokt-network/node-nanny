@@ -54,12 +54,31 @@ interface BlockHeight {
 
 export interface HealthResponse {
   name: string;
+  status: ErrorStatus;
   conditions?: ErrorConditions;
   ethSyncing?: any;
   height?: BlockHeight;
   peers?: number;
-  status: ErrorStatus;
   health?: any;
   details?: any;
   id?: string;
+}
+
+export interface IReferenceURL {
+  url: string;
+  auth?: string;
+}
+
+export interface IRPCResponse {
+  jsonrpc: string;
+  id: number;
+  result?: string | number;
+  error?: { code: number; message: string };
+}
+
+export interface IRPCSyncResponse {
+  jsonrpc: string;
+  id: number;
+  result: boolean;
+  error?: { code: number; message: string };
 }
