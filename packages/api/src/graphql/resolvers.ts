@@ -44,7 +44,7 @@ const resolvers = {
       return await HostsModel.create(host);
     },
     createNode: async (_, { input }) => {
-      return await NodesModel.create(input);
+      return await new AutomationService().createNode(input);
     },
     createOracle: async (_, { chain, url }) => {
       const doesExist = await OraclesModel.findOne({ chain }).exec();
