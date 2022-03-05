@@ -1,4 +1,5 @@
 import { ChangeEvent, useState } from "react";
+import { ApolloQueryResult } from "@apollo/client";
 import {
   Button,
   Checkbox,
@@ -16,12 +17,16 @@ import {
 } from "@mui/material";
 
 import {
-  INode,
+  INodesQuery,
   useCreateNodeMutation,
   useGetHostsChainsAndLoadBalancersQuery,
 } from "types";
 
-export function NodesForm() {
+interface HostsFormProps {
+  refetchNodes: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
+}
+
+export function NodesForm({ refetchNodes }: HostsFormProps) {
   const [chain, setChain] = useState("");
   const [host, setHost] = useState("");
   const [ip, setIp] = useState("");
@@ -33,7 +38,7 @@ export function NodesForm() {
 
   const { loading, error, data } = useGetHostsChainsAndLoadBalancersQuery();
   const [submit] = useCreateNodeMutation({
-    onCompleted: (data) => console.log({ data }),
+    onCompleted: () => refetchNodes(),
     onError: (error) => console.log({ error }),
   });
 

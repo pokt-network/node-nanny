@@ -1,10 +1,10 @@
-import { Schema, model, Model } from "mongoose";
+import { model, Model, PopulatedDoc, Schema, Types } from "mongoose";
 import { IChain } from "./chains";
 import { IHost } from "./hosts";
 
 export interface INode {
-  id: Schema.Types.ObjectId;
-  chain: IChain;
+  id: Types.ObjectId;
+  chain: PopulatedDoc<IChain>;
   host: IHost;
   haProxy: boolean;
   port: number;

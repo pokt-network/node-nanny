@@ -12,9 +12,10 @@ const typeDefs = gql`
   type Host {
     id: ID!
     name: String!
-    ip: String!
     loadBalancer: Boolean!
     location: String!
+    ip: String
+    fqdn: String
   }
 
   type Location {
@@ -89,7 +90,13 @@ const typeDefs = gql`
 
   type Mutation {
     createChain(name: String, type: String, variance: Int): Chain
-    createHost(name: String, ip: String, loadBalancer: Boolean, location: String): Host
+    createHost(
+      location: String!
+      name: String!
+      ip: String
+      fqdn: String
+      loadBalancer: Boolean!
+    ): Host
     createNode(input: NodeInput): Node
     createOracle(chain: String, url: String): Oracle
     createWebhook(location: String, chain: String, url: String): Webhook
