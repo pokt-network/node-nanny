@@ -21,7 +21,7 @@ export class Service extends BaseService {
     //
     //  ${this.getHAProxyMessage({ backend, loadBalancers })}
     //
-    //if (conditions === this.ErrorConditions.NOT_SYNCHRONIZED) {
+    //if (conditions === this.EErrorConditions.NOT_SYNCHRONIZED) {
     //   await this.sendInfo({
     //     title,
     //     message: `Attemping to remove from rotation \n ${this.getHAProxyMessage({
@@ -82,7 +82,7 @@ export class Service extends BaseService {
       } \n ${height ? JSON.stringify(height) : null}`,
       chain,
     });
-    // if (conditions === this.ErrorConditions.NOT_SYNCHRONIZED) {
+    // if (conditions === this.EErrorConditions.NOT_SYNCHRONIZED) {
     //   await this.sendInfo({ title, message: "Attemping to add to rotation", chain });
     //   try {
     //     await this.enableServer({ backend, server, loadBalancers });

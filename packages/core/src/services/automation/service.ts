@@ -35,11 +35,17 @@ export class Service {
   }
 
   public async createNode(nodeInput: INode): Promise<INode> {
-    const { _id } = await NodesModel.create(nodeInput);
-    const node = await this.getNode(_id);
-    await new DiscordService().addWebhookForNode(node);
-    await this.restartMonitor();
-    return node;
+    let id: string;
+    try {
+      id = (await NodesModel.create(nodeInput))._id;
+      const node = await this.getNode(id);
+      await new DiscordService().addWebhookForNode(node);
+      await this.restartMonitor();
+      return node;
+    } catch (error) {
+      await NodesModel.deleteOne({ _id: id });
+      throw error;
+    }
   }
 
   async getHaProxyStatus(id: string) {

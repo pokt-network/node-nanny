@@ -23,8 +23,9 @@ export type IChain = {
 };
 
 export type IHost = {
+  fqdn?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
-  ip: Scalars['String'];
+  ip?: Maybe<Scalars['String']>;
   loadBalancer: Scalars['Boolean'];
   location: Scalars['String'];
   name: Scalars['String'];
@@ -74,10 +75,11 @@ export type IMutationCreateChainArgs = {
 
 
 export type IMutationCreateHostArgs = {
+  fqdn?: InputMaybe<Scalars['String']>;
   ip?: InputMaybe<Scalars['String']>;
-  loadBalancer?: InputMaybe<Scalars['Boolean']>;
-  location?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
+  loadBalancer: Scalars['Boolean'];
+  location: Scalars['String'];
+  name: Scalars['String'];
 };
 
 
@@ -261,14 +263,15 @@ export type ICreateChainMutationVariables = Exact<{
 export type ICreateChainMutation = { createChain?: { name: string, type: string, variance?: number | null } | null };
 
 export type ICreateHostMutationVariables = Exact<{
-  name?: InputMaybe<Scalars['String']>;
+  location: Scalars['String'];
+  name: Scalars['String'];
   ip?: InputMaybe<Scalars['String']>;
-  loadBalancer?: InputMaybe<Scalars['Boolean']>;
-  location?: InputMaybe<Scalars['String']>;
+  fqdn?: InputMaybe<Scalars['String']>;
+  loadBalancer: Scalars['Boolean'];
 }>;
 
 
-export type ICreateHostMutation = { createHost?: { name: string, ip: string, loadBalancer: boolean } | null };
+export type ICreateHostMutation = { createHost?: { name: string, ip?: string | null, loadBalancer: boolean } | null };
 
 export type ICreateNodeMutationVariables = Exact<{
   backend?: InputMaybe<Scalars['String']>;
@@ -345,7 +348,7 @@ export type IChainsQuery = { chains: Array<{ id: string, name: string, type: str
 export type IHostsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IHostsQuery = { hosts: Array<{ id: string, name: string, ip: string, loadBalancer: boolean, location: string }> };
+export type IHostsQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, loadBalancer: boolean, location: string }> };
 
 export type ILocationsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -377,7 +380,7 @@ export type IWebhooksQuery = { webhooks: Array<{ id: string, location: string, c
 export type IGetHostsChainsAndLoadBalancersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip: string, location: string }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string }> };
+export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, location: string }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string }> };
 
 export type IGetNodeStatusQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -425,12 +428,13 @@ export type CreateChainMutationHookResult = ReturnType<typeof useCreateChainMuta
 export type CreateChainMutationResult = Apollo.MutationResult<ICreateChainMutation>;
 export type CreateChainMutationOptions = Apollo.BaseMutationOptions<ICreateChainMutation, ICreateChainMutationVariables>;
 export const CreateHostDocument = gql`
-    mutation CreateHost($name: String, $ip: String, $loadBalancer: Boolean, $location: String) {
+    mutation CreateHost($location: String!, $name: String!, $ip: String, $fqdn: String, $loadBalancer: Boolean!) {
   createHost(
+    location: $location
     name: $name
     ip: $ip
+    fqdn: $fqdn
     loadBalancer: $loadBalancer
-    location: $location
   ) {
     name
     ip
@@ -453,10 +457,11 @@ export type ICreateHostMutationFn = Apollo.MutationFunction<ICreateHostMutation,
  * @example
  * const [createHostMutation, { data, loading, error }] = useCreateHostMutation({
  *   variables: {
+ *      location: // value for 'location'
  *      name: // value for 'name'
  *      ip: // value for 'ip'
+ *      fqdn: // value for 'fqdn'
  *      loadBalancer: // value for 'loadBalancer'
- *      location: // value for 'location'
  *   },
  * });
  */
