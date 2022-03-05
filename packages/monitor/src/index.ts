@@ -45,10 +45,9 @@ export class App {
   async main() {
     await connect();
 
-    const nodes = await NodesModel.find({ muted: false })
-      .populate("host")
-      .populate("chain")
-      .exec();
+    const nodes = (
+      await NodesModel.find({ muted: false }).populate("host").populate("chain").exec()
+    ).filter(({ chain }) => chain.type === "POKT");
 
     console.log(`Monitor Running. 📺\nCurrently monitoring ${nodes.length} nodes...`);
 
@@ -59,14 +58,14 @@ export class App {
       setInterval(async () => {
         const healthResponse = await this.health.getNodeHealth(node);
 
-        let status: HealthTypes.ErrorStatus;
+        let status: HealthTypes.EErrorStatus;
         if (healthResponse) {
           status = healthResponse.status;
         }
-        if (healthResponse.status == HealthTypes.ErrorStatus.OK) {
+        if (healthResponse.status == HealthTypes.EErrorStatus.OK) {
           console.log("\x1b[32m%s\x1b[0m", JSON.stringify(healthResponse));
         }
-        if (healthResponse.status == HealthTypes.ErrorStatus.ERROR) {
+        if (healthResponse.status == HealthTypes.EErrorStatus.ERROR) {
           console.log("\x1b[31m%s\x1b[0m", JSON.stringify(healthResponse));
         }
 
@@ -76,7 +75,7 @@ export class App {
 
         this.log.write({
           message: JSON.stringify(healthResponse),
-          level: status === HealthTypes.ErrorStatus.ERROR ? "error" : "info",
+          level: status === HealthTypes.EErrorStatus.ERROR ? "error" : "info",
           logger,
         });
       }, interval);

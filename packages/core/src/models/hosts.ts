@@ -3,9 +3,10 @@ import { ILocation } from "./locations";
 
 export interface IHost {
   name: string;
-  ip: string;
   loadBalancer: boolean;
   location: ILocation;
+  ip?: string;
+  fqdn?: string;
 
   hostType: string;
 
@@ -18,9 +19,10 @@ export interface IHost {
 export const hostsSchema = new Schema<IHost>(
   {
     name: { type: String, unique: true, required: true },
-    ip: { type: String, unique: true, required: true },
     loadBalancer: { type: Boolean, required: true },
     location: { type: Schema.Types.ObjectId, ref: "locations", required: true },
+    ip: { type: String, unique: true },
+    fqdn: { type: String, unique: true },
 
     hostType: String,
 

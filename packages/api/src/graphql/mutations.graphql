@@ -7,12 +7,19 @@ mutation CreateChain($name: String!, $type: String!, $variance: Int) {
 }
 
 mutation CreateHost(
-  $name: String
+  $location: String!
+  $name: String!
   $ip: String
-  $loadBalancer: Boolean
-  $location: String
+  $fqdn: String
+  $loadBalancer: Boolean!
 ) {
-  createHost(name: $name, ip: $ip, loadBalancer: $loadBalancer, location: $location) {
+  createHost(
+    location: $location
+    name: $name
+    ip: $ip
+    fqdn: $fqdn
+    loadBalancer: $loadBalancer
+  ) {
     name
     ip
     loadBalancer
