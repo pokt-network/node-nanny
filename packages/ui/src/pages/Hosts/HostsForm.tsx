@@ -18,10 +18,11 @@ interface HostsFormProps {
 }
 
 export function HostsForm({ refetchHosts }: HostsFormProps) {
+  const [location, setLocation] = useState("NL");
   const [name, setName] = useState("");
   const [ip, setIP] = useState("");
-  const [loadBalancer, setLoadBalancer] = useState(true);
-  const [location, setLocation] = useState("NL");
+  const [fqdn, setFQDN] = useState("");
+  const [loadBalancer, setLoadBalancer] = useState(false);
 
   const { data, error, loading } = useLocationsQuery();
   const [submit] = useCreateHostMutation({ onCompleted: () => refetchHosts() });
@@ -36,6 +37,10 @@ export function HostsForm({ refetchHosts }: HostsFormProps) {
 
   const handleIPChange = (event: ChangeEvent<HTMLInputElement>) => {
     setIP(event.target.value);
+  };
+
+  const handleFQDNChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setFQDN(event.target.value);
   };
 
   const handleLBChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -69,6 +74,13 @@ export function HostsForm({ refetchHosts }: HostsFormProps) {
               label="Host IP"
               variant="outlined"
             />
+            <div style={{ marginTop: "10px" }} />
+            <TextField
+              value={fqdn}
+              onChange={handleFQDNChange}
+              label="Host FQDN"
+              variant="outlined"
+            />
             <div>
               Load Balancer
               <Switch checked={loadBalancer} onChange={handleLBChange} />
@@ -82,11 +94,12 @@ export function HostsForm({ refetchHosts }: HostsFormProps) {
               }}
               variant="outlined"
               onClick={() => {
-                submit({ variables: { name, ip, loadBalancer, location } });
+                submit({ variables: { location, name, ip, fqdn, loadBalancer } });
                 setLocation("");
                 setName("");
                 setIP("");
-                setLoadBalancer(true);
+                setFQDN("");
+                setLoadBalancer(false);
               }}
             >
               Submit

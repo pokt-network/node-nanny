@@ -1,20 +1,24 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import util from "util";
 import axiosRetry from "axios-retry";
+import { Types } from "mongoose";
 import { exec } from "child_process";
 import {
-  ErrorConditions,
-  ErrorStatus,
-  NCResponse,
-  HealthResponse,
-  SupportedBlockChainTypes,
+  EErrorConditions,
+  EErrorStatus,
+  ENCResponse,
+  ESupportedBlockChainTypes,
+  IHealthResponse,
+  IEVMHealthResponse,
+  IPocketBlockHeight,
+  IPocketHealthResponse,
   IReferenceURL,
   IRPCResponse,
   IRPCSyncResponse,
 } from "./types";
 
 import { hexToDec } from "../../utils";
-import { INode, NodesModel, OraclesModel } from "../../models";
+import { IChain, INode, NodesModel, OraclesModel } from "../../models";
 
 export class Service {
   private rpc: AxiosInstance;
@@ -30,7 +34,7 @@ export class Service {
     return client;
   }
 
-  private getAxiosRequestConfig(auth: string): AxiosRequestConfig {
+  private getAxiosRequestConfig(auth: string): AxiosRequestConfig | undefined {
     if (auth) {
       const [username, password] = auth.split(":");
       return { auth: { username, password } };
@@ -38,10 +42,11 @@ export class Service {
   }
 
   /* ----- Health Check Methods ----- */
-  public async getNodeHealth(node: INode): Promise<HealthResponse> {
-    const { chain } = node;
+  public async getNodeHealth(node: INode): Promise<IHealthResponse> {
+    let { chain } = node;
+    chain = <IChain>chain;
 
-    if (!Object.keys(SupportedBlockChainTypes).includes(chain.type)) {
+    if (!Object.keys(ESupportedBlockChainTypes).includes(chain.type)) {
       throw new Error(`${chain.type} is not a supported chain type`);
     }
 
@@ -62,7 +67,7 @@ export class Service {
     host,
     chain,
     basicAuth,
-  }): Promise<HealthResponse> => {
+  }): Promise<IHealthResponse> => {
     const name = `${host.name}/${chain.name}`;
     try {
       const { data, status } = await this.rpc.get(
@@ -72,22 +77,22 @@ export class Service {
       if (status == 200) {
         return {
           name,
-          conditions: ErrorConditions.HEALTHY,
-          status: ErrorStatus.OK,
+          conditions: EErrorConditions.HEALTHY,
+          status: EErrorStatus.OK,
         };
       } else {
         return {
           name,
-          conditions: ErrorConditions.NOT_SYNCHRONIZED,
-          status: ErrorStatus.ERROR,
+          conditions: EErrorConditions.NOT_SYNCHRONIZED,
+          status: EErrorStatus.ERROR,
           health: data ? data.result : [],
         };
       }
     } catch (error) {
       return {
         name,
-        conditions: ErrorConditions.NO_RESPONSE,
-        status: ErrorStatus.ERROR,
+        conditions: EErrorConditions.NO_RESPONSE,
+        status: EErrorStatus.ERROR,
         health: error,
       };
     }
@@ -99,7 +104,7 @@ export class Service {
     host,
     chain,
     basicAuth,
-  }): Promise<HealthResponse> => {
+  }): Promise<IHealthResponse> => {
     const name = `${host.name}/${chain.name}`;
     try {
       const { data } = await this.rpc.post(
@@ -112,23 +117,23 @@ export class Service {
       if (result.healthy) {
         return {
           name,
-          conditions: ErrorConditions.HEALTHY,
-          status: ErrorStatus.OK,
+          conditions: EErrorConditions.HEALTHY,
+          status: EErrorStatus.OK,
           health: result,
         };
       } else {
         return {
           name,
-          conditions: ErrorConditions.NOT_SYNCHRONIZED,
-          status: ErrorStatus.ERROR,
+          conditions: EErrorConditions.NOT_SYNCHRONIZED,
+          status: EErrorStatus.ERROR,
           health: result,
         };
       }
     } catch (error) {
       return {
         name,
-        conditions: ErrorConditions.NO_RESPONSE,
-        status: ErrorStatus.ERROR,
+        conditions: EErrorConditions.NO_RESPONSE,
+        status: EErrorStatus.ERROR,
         health: error,
       };
     }
@@ -138,29 +143,29 @@ export class Service {
   private getEVMNodeHealth = async (
     { chain, url, variance, host, id, port, basicAuth, server }: INode,
     hmy?: boolean,
-  ): Promise<HealthResponse> => {
-    const name = `${host.name}/${chain.name}/${server}`;
+  ): Promise<IEVMHealthResponse> => {
+    const name = `${host.name}/${(chain as IChain).name}/${server}`;
 
     //Check if node is online and RPC up
     const isNodeListening = await this.isNodeListening({ host: host.ip, port });
     if (!isNodeListening) {
       return {
         name,
-        status: ErrorStatus.ERROR,
-        conditions: ErrorConditions.OFFLINE,
+        status: EErrorStatus.ERROR,
+        conditions: EErrorConditions.OFFLINE,
       };
     }
     const isRpcResponding = await this.isRpcResponding({ url }, basicAuth, hmy);
     if (!isRpcResponding) {
       return {
         name,
-        status: ErrorStatus.ERROR,
-        conditions: ErrorConditions.NO_RESPONSE,
+        status: EErrorStatus.ERROR,
+        conditions: EErrorConditions.NO_RESPONSE,
       };
     }
 
     let { urls: externalNodes } = await OraclesModel.findOne({
-      chain: chain.name,
+      chain: (chain as IChain).name,
     }).exec();
 
     let referenceUrls = await this.checkExternalUrls(externalNodes);
@@ -189,26 +194,26 @@ export class Service {
       const ethSyncingResult = ethSyncing.result;
       const delta = externalHeight - internalHeight;
 
-      let status = ErrorStatus.OK;
-      let conditions = ErrorConditions.HEALTHY;
+      let status = EErrorStatus.OK;
+      let conditions = EErrorConditions.HEALTHY;
 
       if (internalBh.error?.code) {
         return {
           name,
-          conditions: ErrorConditions.NOT_SYNCHRONIZED,
-          status: ErrorStatus.ERROR,
+          conditions: EErrorConditions.NOT_SYNCHRONIZED,
+          status: EErrorStatus.ERROR,
           health: internalBh,
         };
       }
 
       if (delta > variance) {
-        status = ErrorStatus.ERROR;
-        conditions = ErrorConditions.NOT_SYNCHRONIZED;
+        status = EErrorStatus.ERROR;
+        conditions = EErrorConditions.NOT_SYNCHRONIZED;
       }
 
       if (Math.sign(delta + variance) === -1) {
-        status = ErrorStatus.ERROR;
-        conditions = ErrorConditions.PEER_NOT_SYNCHRONIZED;
+        status = EErrorStatus.ERROR;
+        conditions = EErrorConditions.PEER_NOT_SYNCHRONIZED;
       }
 
       return {
@@ -231,16 +236,16 @@ export class Service {
       ) {
         return {
           name,
-          status: ErrorStatus.ERROR,
-          conditions: ErrorConditions.NO_RESPONSE,
+          status: EErrorStatus.ERROR,
+          conditions: EErrorConditions.NO_RESPONSE,
         };
       }
     }
 
     return {
       name,
-      status: ErrorStatus.ERROR,
-      conditions: ErrorConditions.NO_RESPONSE,
+      status: EErrorStatus.ERROR,
+      conditions: EErrorConditions.NO_RESPONSE,
     };
   };
 
@@ -248,7 +253,7 @@ export class Service {
     try {
       const nc = await this.nc({ host, port });
       let status = nc.split(" ");
-      return status[status.length - 1].includes(NCResponse.SUCCESS);
+      return status[status.length - 1].includes(ENCResponse.SUCCESS);
     } catch (error) {
       return false;
     }
@@ -318,20 +323,12 @@ export class Service {
     _variance: number,
     hmy: boolean,
   ): Promise<number> {
-    const resolved: IRPCResponse[] = [];
-    for (const { url, auth } of endpoints) {
-      try {
-        resolved.push(await this.getBlockHeight(url, auth, hmy));
-      } catch (error) {
-        ////console.error(`could not get reading ${error}`);
-      }
-    }
-
+    const resolved = await Promise.all(
+      endpoints.map(({ url, auth }) => this.getBlockHeight(url, auth, hmy)),
+    );
     const readings = resolved
       .filter((reading) => reading.result)
       .map(({ result }) => hexToDec(result));
-    //const height = this.getBestBlockHeight({ readings, variance });
-
     return readings.sort()[0];
   }
 
@@ -353,7 +350,7 @@ export class Service {
     }
   }
 
-  private async getPeers(url, auth?: string): Promise<IRPCResponse> {
+  private async getPeers(url: string, auth?: string): Promise<IRPCResponse> {
     try {
       const { data } = await this.rpc.post<IRPCResponse>(
         url,
@@ -367,78 +364,85 @@ export class Service {
   }
 
   /* ----- Harmony ----- */
-  private getHarmonyNodeHealth = async (node) => {
+  private getHarmonyNodeHealth = async (node: INode): Promise<IHealthResponse> => {
     return await this.getEVMNodeHealth(node, true);
   };
 
   /* ----- Pocket ----- */
-  private getPocketNodeHealth = async ({ hostname, port, variance, id }: INode) => {
-    const { height: isRpcResponding } = await this.getPocketHeight(
-      `https://${hostname}:${port}`,
-    );
+  private getPocketNodeHealth = async ({
+    id,
+    host,
+    chain,
+    port,
+    variance,
+  }: INode): Promise<IPocketHealthResponse> => {
+    const { fqdn, ip, name } = host;
+    const url = `https://${fqdn || ip}:${port}`;
+    const { height: isRpcResponding } = await this.getPocketHeight(url);
     if (isRpcResponding === 0) {
       return {
-        name: hostname,
-        status: ErrorStatus.ERROR,
-        conditions: ErrorConditions.NO_RESPONSE,
+        name: host.name,
+        status: EErrorStatus.ERROR,
+        conditions: EErrorConditions.NO_RESPONSE,
       };
     }
 
-    // get list of reference nodes
-    const referenceNodes: INode[] = await NodesModel.find(
-      { "chain.type": "POKT", _id: { $ne: id } },
+    // Get list of reference nodes
+    const referenceNodes = await NodesModel.find(
+      { chain: (chain as IChain).id, _id: { $ne: id } },
       null,
       { limit: 20 },
-    ).exec();
+    )
+      .populate("host")
+      .exec();
+    console.log("REF NODES", { referenceNodes });
 
-    if (!referenceNodes || referenceNodes.length === 0) {
+    if (!referenceNodes?.length) {
       return {
-        name: hostname,
-        status: ErrorStatus.ERROR,
-        conditions: ErrorConditions.NO_PEERS,
+        name: host.name,
+        status: EErrorStatus.ERROR,
+        conditions: EErrorConditions.NO_PEERS,
       };
     }
 
-    //get highest block height from reference nodes
-    const poktnodes = referenceNodes.map(
-      ({ hostname, port }) => `https://${hostname}:${port}`,
+    // Get highest block height from reference nodes
+    const pocketNodes = referenceNodes.map(({ host, port }) => {
+      const { fqdn, ip } = host;
+      return `https://${fqdn || ip}:${port}`;
+    });
+    const pocketHeight = await Promise.all(
+      pocketNodes.map((node) => this.getPocketHeight(node)),
     );
-
-    const pocketheight = await Promise.all(
-      poktnodes.map(async (node) => await this.getPocketHeight(node)),
-    );
-
-    const [highest] = pocketheight
+    const [highest] = pocketHeight
       .map(({ height }) => height)
       .sort()
       .slice(-1);
-    const { height } = await this.getPocketHeight(`https://${hostname}:${port}`);
+    const { height } = await this.getPocketHeight(url);
     const notSynched = Number(highest) - Number(height) > variance;
+
     if (Math.sign(Number(highest) - Number(height) + variance) === -1) {
       return {
-        name: hostname,
-        status: ErrorStatus.ERROR,
-        conditions: ErrorConditions.PEER_NOT_SYNCHRONIZED,
+        name: host.name,
+        status: EErrorStatus.ERROR,
+        conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
         delta: Number(highest) - Number(height),
         referenceNodes: referenceNodes.map(({ hostname }) => `${hostname} \n`),
         highest,
         height,
       };
     }
-
     if (height === 0) {
       return {
-        name: hostname,
-        status: ErrorStatus.ERROR,
-        conditions: ErrorConditions.NO_RESPONSE,
+        name: host.name,
+        status: EErrorStatus.ERROR,
+        conditions: EErrorConditions.NO_RESPONSE,
       };
     }
-
     if (notSynched) {
       return {
-        name: hostname,
-        status: ErrorStatus.ERROR,
-        conditions: ErrorConditions.NOT_SYNCHRONIZED,
+        name: host.name,
+        status: EErrorStatus.ERROR,
+        conditions: EErrorConditions.NOT_SYNCHRONIZED,
         height: {
           internalHeight: height,
           externalHeight: highest,
@@ -446,11 +450,10 @@ export class Service {
         },
       };
     }
-
     return {
-      name: hostname,
-      status: ErrorStatus.OK,
-      conditions: ErrorConditions.HEALTHY,
+      name: host.name,
+      status: EErrorStatus.OK,
+      conditions: EErrorConditions.HEALTHY,
       height: {
         internalHeight: height,
         externalHeight: highest,
@@ -459,8 +462,7 @@ export class Service {
     };
   };
 
-  // DEV NOTE --> Needs return & rpc.post type
-  private async getPocketHeight(url: string, auth?: string): Promise<any> {
+  private async getPocketHeight(url: string, auth?: string): Promise<IPocketBlockHeight> {
     try {
       const { data } = await this.rpc.post(
         `${url}/v1/query/height`,
@@ -480,7 +482,7 @@ export class Service {
     chain,
     hostname,
     basicAuth,
-  }): Promise<HealthResponse> => {
+  }): Promise<IHealthResponse> => {
     const name = `${host.name}/${chain.name}`;
     const execute = util.promisify(exec);
     if (hostname) {
@@ -498,8 +500,8 @@ export class Service {
       if (stderr) {
         return {
           name,
-          conditions: ErrorConditions.NO_RESPONSE,
-          status: ErrorStatus.ERROR,
+          conditions: EErrorConditions.NO_RESPONSE,
+          status: EErrorStatus.ERROR,
           health: JSON.parse(stderr),
         };
       }
@@ -510,23 +512,23 @@ export class Service {
       if (result == "ok") {
         return {
           name,
-          conditions: ErrorConditions.HEALTHY,
-          status: ErrorStatus.OK,
+          conditions: EErrorConditions.HEALTHY,
+          status: EErrorStatus.OK,
           health,
         };
       } else {
         return {
           name,
-          conditions: ErrorConditions.NOT_SYNCHRONIZED,
-          status: ErrorStatus.ERROR,
+          conditions: EErrorConditions.NOT_SYNCHRONIZED,
+          status: EErrorStatus.ERROR,
           health,
         };
       }
     } catch (error) {
       return {
         name,
-        conditions: ErrorConditions.NO_RESPONSE,
-        status: ErrorStatus.ERROR,
+        conditions: EErrorConditions.NO_RESPONSE,
+        status: EErrorStatus.ERROR,
         health: error,
       };
     }
@@ -538,7 +540,7 @@ export class Service {
     host,
     chain,
     basicAuth,
-  }): Promise<HealthResponse> => {
+  }): Promise<IHealthResponse> => {
     const name = `${host.name}/${chain.name}`;
     try {
       const { data } = await this.rpc.get(
@@ -549,40 +551,25 @@ export class Service {
       if (!catching_up) {
         return {
           name,
-          conditions: ErrorConditions.HEALTHY,
-          status: ErrorStatus.OK,
+          conditions: EErrorConditions.HEALTHY,
+          status: EErrorStatus.OK,
           health: data,
         };
       } else {
         return {
           name,
-          conditions: ErrorConditions.NOT_SYNCHRONIZED,
-          status: ErrorStatus.ERROR,
+          conditions: EErrorConditions.NOT_SYNCHRONIZED,
+          status: EErrorStatus.ERROR,
           health: data,
         };
       }
     } catch (error) {
       return {
         name,
-        conditions: ErrorConditions.NO_RESPONSE,
-        status: ErrorStatus.ERROR,
+        conditions: EErrorConditions.NO_RESPONSE,
+        status: EErrorStatus.ERROR,
         health: error,
       };
     }
   };
-
-  // private getBestBlockHeight({ readings, variance }) {
-  //   if (readings.length === 1) {
-  //     return readings[0];
-  //   }
-  //   const sorted = readings.sort();
-  //   const [last] = sorted.slice(-1);
-  //   const [secondLast] = sorted.slice(-2);
-  //   console.log(0x1506068)
-  //   if (last - secondLast < variance) {
-  //     return sorted.pop();
-  //   } else {
-  //     return sorted.pop();
-  //   }
-  // }
 }

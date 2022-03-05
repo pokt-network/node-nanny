@@ -1,7 +1,7 @@
-import { Schema, model, Model } from "mongoose";
+import { model, Model, Schema, Types } from "mongoose";
 
 export interface IChain {
-  id: Schema.Types.ObjectId;
+  id: Types.ObjectId;
   chain: string;
   name: string;
   type: string;
