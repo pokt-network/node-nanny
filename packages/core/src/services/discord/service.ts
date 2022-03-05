@@ -20,8 +20,12 @@ export class Service {
   }
 
   private async initServer(): Promise<Server> {
-    await this.client.login(this.token);
-    return this.client.guilds.cache.get(this.serverId);
+    const loggedIn = await this.client.login(this.token);
+    const server = this.client.guilds.cache.get(this.serverId);
+    if (!loggedIn || !server) {
+      throw new Error("Unable to retrieve Discord server.");
+    }
+    return server;
   }
 
   public async addWebhookForNode({ chain, host }: INode): Promise<void> {
@@ -34,6 +38,8 @@ export class Service {
     const allChannels = await server.channels.fetch();
     const categories = allChannels.filter(({ type }) => type === "GUILD_CATEGORY");
     const channels = allChannels.filter(({ type }) => type === "GUILD_TEXT");
+
+    console.debug("FIRING HERE!!!", { categories, channels });
 
     const category =
       categories?.find(({ name }) => name === categoryName) ||

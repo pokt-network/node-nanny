@@ -14,7 +14,7 @@ export class Publish {
   }
 
   async evaluate({ message, id }) {
-    if (message.status === HealthTypes.ErrorStatus.ERROR) {
+    if (message.status === HealthTypes.EErrorStatus.ERROR) {
       const exists = this.map.has(id);
       if (!exists) {
         this.map.set(id, 1);
@@ -38,7 +38,7 @@ export class Publish {
       }
     }
 
-    if (message.status === HealthTypes.ErrorStatus.OK) {
+    if (message.status === HealthTypes.EErrorStatus.OK) {
       if (this.map.has(id)) {
         this.map.delete(id);
         await this.redis.publish(
