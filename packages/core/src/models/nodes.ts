@@ -1,16 +1,17 @@
-import { model, Model, PopulatedDoc, Schema, Types } from "mongoose";
+import { model, Model, Schema, Types } from "mongoose";
+
 import { IChain } from "./chains";
 import { IHost } from "./hosts";
 
-export interface INode {
+export interface INode<Populated = true> {
   id: Types.ObjectId;
-  chain: PopulatedDoc<IChain>;
-  host: IHost;
+  chain: Populated extends true ? IChain : Types.ObjectId;
+  host: Populated extends true ? IHost : Types.ObjectId;
   haProxy: boolean;
   port: number;
   url: string;
   muted: boolean;
-  loadBalancers?: IHost[];
+  loadBalancers?: (Populated extends true ? IHost : Types.ObjectId)[];
   backend?: string;
   server?: string;
   ssl?: boolean;
@@ -30,13 +31,11 @@ export interface INode {
   service: string;
   removeNoResponse: boolean;
   docker: boolean;
-  // temp
   basicAuth?: string;
 }
 
 const nodesSchema = new Schema<INode>(
   {
-    id: Schema.Types.ObjectId,
     chain: { type: Schema.Types.ObjectId, ref: "chains", required: true },
     host: { type: Schema.Types.ObjectId, ref: "hosts", required: true },
     haProxy: { type: Boolean, required: true },

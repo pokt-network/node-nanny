@@ -10,7 +10,6 @@ export interface IChain {
 
 export const chainSchema = new Schema<IChain>(
   {
-    id: Schema.Types.ObjectId,
     name: { type: String, unique: true, required: true },
     chain: { type: String, required: true },
     type: { type: String, required: true },
