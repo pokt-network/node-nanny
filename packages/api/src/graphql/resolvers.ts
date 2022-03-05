@@ -77,39 +77,39 @@ const resolvers = {
   },
 
   /* Return MongoDB ObjectId field `_id` for all types as `id` */
-  Chain: {
-    id(chain: any) {
-      return chain._id;
-    },
-  },
+  // Chain: {
+  //   id(chain: any) {
+  //     return chain._id;
+  //   },
+  // },
   Host: {
-    id(host: any) {
-      return host._id;
-    },
+    // id(host: any) {
+    //   return host._id;
+    // },
     location(host: any) {
       return host.location?.name;
     },
   },
-  Location: {
-    id(location: any) {
-      return location._id;
-    },
-  },
-  Node: {
-    id(node: any) {
-      return node._id;
-    },
-  },
-  Oracle: {
-    id(oracle: any) {
-      return oracle._id;
-    },
-  },
-  Webhook: {
-    id(webhook: any) {
-      return webhook._id;
-    },
-  },
+  // Location: {
+  //   id(location: any) {
+  //     return location._id;
+  //   },
+  // },
+  // Node: {
+  //   id(node: any) {
+  //     return node._id;
+  //   },
+  // },
+  // Oracle: {
+  //   id(oracle: any) {
+  //     return oracle._id;
+  //   },
+  // },
+  // Webhook: {
+  //   id(webhook: any) {
+  //     return webhook._id;
+  //   },
+  // },
 };
 
 export default resolvers;

@@ -1,6 +1,7 @@
-import { Schema, model, Model } from "mongoose";
+import { Schema, model, Model, Types } from "mongoose";
 
 export interface IWebhook {
+  id: Types.ObjectId;
   chain: string;
   url: string;
   location: string;
