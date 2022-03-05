@@ -8,7 +8,7 @@
     "start:graphql:log": "pnpm build && pm2 start ./dist/graphql/server.js --name \"graphql-api\" --attach",
     "start:rest": "pnpm build && node ./dist/rest/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc -b .",
+    "build": "tsc -b . && pnpm generate",
     "build:watch": "tsc -b -w .",
     "generate": "graphql-codegen --config codegen.yml"
   },

@@ -1,4 +1,4 @@
-export enum NCResponse {
+export enum ENCResponse {
   SUCCESS = "succeeded!",
 }
 
@@ -20,7 +20,7 @@ export enum ESupportedBlockChains {
   POKT = "POKT",
 }
 
-export enum SupportedBlockChainTypes {
+export enum ESupportedBlockChainTypes {
   EVM = "EVM",
   AVA = "AVA",
   TMT = "TMT",
@@ -30,7 +30,7 @@ export enum SupportedBlockChainTypes {
   HMY = "HMY",
 }
 
-export enum ErrorConditions {
+export enum EErrorConditions {
   HEALTHY = "HEALTHY",
   OFFLINE = "OFFLINE",
   NO_RESPONSE = "NO_RESPONSE",
@@ -39,29 +39,42 @@ export enum ErrorConditions {
   PEER_NOT_SYNCHRONIZED = "PEER_NOT_SYNCHRONIZED",
 }
 
-export enum ErrorStatus {
+export enum EErrorStatus {
   ERROR = "ERROR",
   OK = "OK",
   INFO = "INFO",
   WARNING = "WARNING",
 }
 
-interface BlockHeight {
+interface IBlockHeight {
   delta: number;
   externalHeight: number;
   internalHeight: number;
 }
 
-export interface HealthResponse {
+export interface IPocketBlockHeight {
+  height: number;
+}
+
+export interface IHealthResponse {
   name: string;
-  status: ErrorStatus;
-  conditions?: ErrorConditions;
-  ethSyncing?: any;
-  height?: BlockHeight;
+  status: EErrorStatus;
+  conditions?: EErrorConditions;
+  height?: IBlockHeight | number;
   peers?: number;
   health?: any;
   details?: any;
   id?: string;
+}
+
+export interface IEVMHealthResponse extends IHealthResponse {
+  ethSyncing?: boolean;
+}
+
+export interface IPocketHealthResponse extends IHealthResponse {
+  delta?: number;
+  referenceNodes?: string[];
+  highest?: any;
 }
 
 export interface IReferenceURL {
