@@ -4,14 +4,30 @@ import { Alert } from "../../..";
 import { LoadBalancerStatus, LoadBalancer } from "../../types";
 import { AlertTypes } from "../../../../types";
 import { HostsModel, NodesModel, INode } from "../../../../models";
-import { ErrorConditions } from "../../../health/types";
+import { EErrorConditions } from "../../../health/types";
 
 export default class Service {
-  sendError: ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
-  sendInfo: ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
-  sendWarn: ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
-  sendSucess: ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
-  ErrorConditions: typeof ErrorConditions;
+  sendError: ({
+    title,
+    message,
+    chain,
+  }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
+  sendInfo: ({
+    title,
+    message,
+    chain,
+  }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
+  sendWarn: ({
+    title,
+    message,
+    chain,
+  }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
+  sendSucess: ({
+    title,
+    message,
+    chain,
+  }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
+  EErrorConditions: typeof EErrorConditions;
 
   constructor() {
     this.sendError = new Alert().sendError;
@@ -19,7 +35,7 @@ export default class Service {
     this.sendWarn = new Alert().sendWarn;
     this.sendSucess = new Alert().sendSuccess;
     this.agent = this.initAgentClient();
-    this.ErrorConditions = ErrorConditions;
+    this.EErrorConditions = EErrorConditions;
   }
   private agent: AxiosInstance;
   private alert: Alert;
@@ -31,7 +47,10 @@ export default class Service {
   }
 
   async getNode(id): Promise<INode> {
-    return await NodesModel.findOne({ _id: id }).populate("host").populate("chain").exec();
+    return await NodesModel.findOne({ _id: id })
+      .populate("host")
+      .populate("chain")
+      .exec();
   }
   async getLoadBalancers(loadBalancers: string[]): Promise<LoadBalancer[]> {
     return await HostsModel.find({ _id: { $in: loadBalancers } }).exec();
@@ -39,7 +58,11 @@ export default class Service {
 
   async disableServer({ backend, server, loadBalancers }) {
     try {
-      const status = await this.getBackendServerStatus({ backend, server, loadBalancers });
+      const status = await this.getBackendServerStatus({
+        backend,
+        server,
+        loadBalancers,
+      });
       const count = await this.getBackendServerCount({ backend, loadBalancers });
       if (count <= 1) {
         return await this.alert.sendErrorChannel({

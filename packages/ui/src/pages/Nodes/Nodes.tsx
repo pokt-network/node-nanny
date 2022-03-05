@@ -7,7 +7,7 @@ import { NodeStatus } from "./NodeStatus";
 
 export function Nodes() {
   const [selectedNode, setSelectedNode] = useState<INode | undefined>(undefined);
-  const { data, error, loading } = useNodesQuery();
+  const { data, error, loading, refetch } = useNodesQuery();
 
   if (loading && !selectedNode) return <>Loading...</>;
   if (error) return <>Error! ${error.message}</>;
@@ -31,7 +31,7 @@ export function Nodes() {
             marginBottom: "16px",
           }}
         >
-          <NodesForm />
+          <NodesForm refetchNodes={refetch} />
           {selectedNode && (
             <NodeStatus selectedNode={selectedNode} setSelectedNode={setSelectedNode} />
           )}
