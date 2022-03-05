@@ -1,7 +1,7 @@
-import { Schema, model, Model } from "mongoose";
+import { Schema, model, Model, Types } from "mongoose";
 
 export interface ILog {
-  id: string;
+  id: Types.ObjectId;
   timestamp: string;
   level: string;
   message: string;
@@ -10,7 +10,6 @@ export interface ILog {
 
 const logSchema = new Schema<ILog>(
   {
-    id: Schema.Types.ObjectId,
     label: Schema.Types.ObjectId,
     timestamp: String,
     level: String,
