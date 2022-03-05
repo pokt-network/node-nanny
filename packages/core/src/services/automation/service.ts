@@ -37,7 +37,7 @@ export class Service {
   public async createNode(nodeInput: INode): Promise<INode> {
     let id: string;
     try {
-      id = (await NodesModel.create(nodeInput))._id;
+      ({ id } = await NodesModel.create(nodeInput));
       const node = await this.getNode(id);
       await new DiscordService().addWebhookForNode(node);
       await this.restartMonitor();
