@@ -1,8 +1,7 @@
-import { Schema, model, Model } from "mongoose";
-import { IChain } from "./chains";
+import { Schema, model, Model, Types } from "mongoose";
 
 export interface IOracle {
-  id: string;
+  id: Types.ObjectId;
   chain: string;
   urls: string[];
 }

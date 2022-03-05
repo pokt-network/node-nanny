@@ -1,15 +1,17 @@
-import { Schema, model, Model } from "mongoose";
+import { Schema, model, Model, Types } from "mongoose";
+
 import { ILocation } from "./locations";
 
-export interface IHost {
+export interface IHost<Populated = true> {
+  id: Types.ObjectId;
   name: string;
   loadBalancer: boolean;
-  location: ILocation;
+  location: Populated extends true ? ILocation : Types.ObjectId;
   ip?: string;
   fqdn?: string;
 
+  //Old Types
   hostType: string;
-
   internalIpaddress?: string;
   internalHostName?: string;
   externalHostName?: string;
@@ -24,8 +26,8 @@ export const hostsSchema = new Schema<IHost>(
     ip: { type: String, unique: true },
     fqdn: { type: String, unique: true },
 
+    //Old Types
     hostType: String,
-
     internalIpaddress: String,
     internalHostName: String,
     externalHostName: String,
