@@ -1,7 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import util from "util";
 import axiosRetry from "axios-retry";
-import { Types } from "mongoose";
 import { exec } from "child_process";
 import {
   EErrorConditions,
@@ -43,8 +42,7 @@ export class Service {
 
   /* ----- Health Check Methods ----- */
   public async getNodeHealth(node: INode): Promise<IHealthResponse> {
-    let { chain } = node;
-    chain = <IChain>chain;
+    const { chain } = node;
 
     if (!Object.keys(ESupportedBlockChainTypes).includes(chain.type)) {
       throw new Error(`${chain.type} is not a supported chain type`);
@@ -371,35 +369,28 @@ export class Service {
   /* ----- Pocket ----- */
   private getPocketNodeHealth = async ({
     id,
-    host,
-    chain,
+    host: { fqdn, ip, name },
+    chain: { id: chainId },
     port,
     variance,
   }: INode): Promise<IPocketHealthResponse> => {
-    const { fqdn, ip, name } = host;
     const url = `https://${fqdn || ip}:${port}`;
     const { height: isRpcResponding } = await this.getPocketHeight(url);
     if (isRpcResponding === 0) {
       return {
-        name: host.name,
+        name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.NO_RESPONSE,
       };
     }
 
-    // Get list of reference nodes
-    const referenceNodes = await NodesModel.find(
-      { chain: (chain as IChain).id, _id: { $ne: id } },
-      null,
-      { limit: 20 },
-    )
+    const query = { chain: chainId, _id: { $ne: id } };
+    const referenceNodes = await NodesModel.find(query, null, { limit: 20 })
       .populate("host")
       .exec();
-    console.log("REF NODES", { referenceNodes });
-
     if (!referenceNodes?.length) {
       return {
-        name: host.name,
+        name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.NO_PEERS,
       };
@@ -422,7 +413,7 @@ export class Service {
 
     if (Math.sign(Number(highest) - Number(height) + variance) === -1) {
       return {
-        name: host.name,
+        name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
         delta: Number(highest) - Number(height),
@@ -433,14 +424,14 @@ export class Service {
     }
     if (height === 0) {
       return {
-        name: host.name,
+        name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.NO_RESPONSE,
       };
     }
     if (notSynched) {
       return {
-        name: host.name,
+        name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.NOT_SYNCHRONIZED,
         height: {
@@ -451,7 +442,7 @@ export class Service {
       };
     }
     return {
-      name: host.name,
+      name,
       status: EErrorStatus.OK,
       conditions: EErrorConditions.HEALTHY,
       height: {
