@@ -14,7 +14,6 @@ export interface INode<Populated = true> {
   loadBalancers?: (Populated extends true ? IHost : Types.ObjectId)[];
   backend?: string;
   server?: string;
-  ssl?: boolean;
 
   // Old model
   container: string;
@@ -31,6 +30,7 @@ export interface INode<Populated = true> {
   service: string;
   removeNoResponse: boolean;
   docker: boolean;
+  ssl?: boolean;
   basicAuth?: string;
 }
 
@@ -45,7 +45,6 @@ const nodesSchema = new Schema<INode>(
     loadBalancers: [{ type: Schema.Types.ObjectId, ref: "hosts" }],
     backend: String,
     server: String,
-    ssl: Boolean,
 
     // Old model
     container: String,
@@ -62,6 +61,7 @@ const nodesSchema = new Schema<INode>(
     docker: Boolean,
     service: String,
     removeNoResponse: Boolean,
+    ssl: Boolean,
   },
   { collection: "nodes", timestamps: true },
 );
