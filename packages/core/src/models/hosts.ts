@@ -23,8 +23,8 @@ export const hostsSchema = new Schema<IHost>(
     name: { type: String, unique: true, required: true },
     loadBalancer: { type: Boolean, required: true },
     location: { type: Schema.Types.ObjectId, ref: "locations", required: true },
-    ip: { type: String, unique: true },
-    fqdn: { type: String, unique: true },
+    ip: { type: String, unique: true, sparse: true },
+    fqdn: { type: String, unique: true, sparse: true },
 
     //Old Types
     hostType: String,

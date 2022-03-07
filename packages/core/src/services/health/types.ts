@@ -95,3 +95,7 @@ export interface IRPCSyncResponse {
   result: boolean;
   error?: { code: number; message: string };
 }
+
+export interface IEVMHealthCheckOptions {
+  harmony?: boolean;
+}
