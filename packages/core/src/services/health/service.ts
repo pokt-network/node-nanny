@@ -8,6 +8,7 @@ import {
   ENCResponse,
   ESupportedBlockChainTypes,
   IHealthResponse,
+  IEVMHealthCheckOptions,
   IEVMHealthResponse,
   IPocketBlockHeight,
   IPocketHealthResponse,
@@ -65,7 +66,7 @@ export class Service {
     host,
     chain,
     basicAuth,
-  }): Promise<IHealthResponse> => {
+  }: INode): Promise<IHealthResponse> => {
     const name = `${host.name}/${chain.name}`;
     try {
       const { data, status } = await this.rpc.get(
@@ -102,7 +103,7 @@ export class Service {
     host,
     chain,
     basicAuth,
-  }): Promise<IHealthResponse> => {
+  }: INode): Promise<IHealthResponse> => {
     const name = `${host.name}/${chain.name}`;
     try {
       const { data } = await this.rpc.post(
@@ -140,7 +141,7 @@ export class Service {
   /* ----- Ethereum Virtual Machine ----- */
   private getEVMNodeHealth = async (
     { chain, url, variance, host, id, port, basicAuth, server }: INode,
-    hmy?: boolean,
+    { harmony = false }: IEVMHealthCheckOptions,
   ): Promise<IEVMHealthResponse> => {
     const name = `${host.name}/${(chain as IChain).name}/${server}`;
 
@@ -153,7 +154,7 @@ export class Service {
         conditions: EErrorConditions.OFFLINE,
       };
     }
-    const isRpcResponding = await this.isRpcResponding({ url }, basicAuth, hmy);
+    const isRpcResponding = await this.isRpcResponding({ url }, basicAuth, harmony);
     if (!isRpcResponding) {
       return {
         name,
@@ -179,8 +180,8 @@ export class Service {
 
     try {
       const [internalBh, externalBh, ethSyncing] = await Promise.all([
-        this.getBlockHeight(url, basicAuth, hmy),
-        this.getReferenceBlockHeight(referenceUrls, variance, hmy),
+        this.getBlockHeight(url, basicAuth, harmony),
+        this.getReferenceBlockHeight(referenceUrls, variance, harmony),
         this.getEthSyncing(url, basicAuth),
       ]);
 
@@ -271,9 +272,13 @@ export class Service {
     });
   }
 
-  private async isRpcResponding({ url }, auth?: string, hmy?: boolean): Promise<boolean> {
+  private async isRpcResponding(
+    { url },
+    auth?: string,
+    harmony?: boolean,
+  ): Promise<boolean> {
     try {
-      await this.getBlockHeight(url, auth, hmy);
+      await this.getBlockHeight(url, auth, harmony);
       return true;
     } catch (error) {
       return false;
@@ -298,9 +303,9 @@ export class Service {
   private async getBlockHeight(
     url: string,
     auth?: string,
-    hmy?: boolean,
+    harmony?: boolean,
   ): Promise<IRPCResponse> {
-    const method = hmy ? "hmyv2_blockNumber" : "eth_blockNumber";
+    const method = harmony ? "hmyv2_blockNumber" : "eth_blockNumber";
     try {
       const { data } = await this.rpc.post<IRPCResponse>(
         url,
@@ -319,10 +324,10 @@ export class Service {
   private async getReferenceBlockHeight(
     endpoints: IReferenceURL[],
     _variance: number,
-    hmy: boolean,
+    harmony: boolean,
   ): Promise<number> {
     const resolved = await Promise.all(
-      endpoints.map(({ url, auth }) => this.getBlockHeight(url, auth, hmy)),
+      endpoints.map(({ url, auth }) => this.getBlockHeight(url, auth, harmony)),
     );
     const readings = resolved
       .filter((reading) => reading.result)
@@ -333,9 +338,9 @@ export class Service {
   private async getEthSyncing(
     url: string,
     auth?: string,
-    hmy?: boolean,
+    harmony?: boolean,
   ): Promise<IRPCSyncResponse> {
-    const method = hmy ? "hmyv2_syncing" : "eth_syncing";
+    const method = harmony ? "hmyv2_syncing" : "eth_syncing";
     try {
       const { data } = await this.rpc.post<IRPCSyncResponse>(
         url,
@@ -363,7 +368,7 @@ export class Service {
 
   /* ----- Harmony ----- */
   private getHarmonyNodeHealth = async (node: INode): Promise<IHealthResponse> => {
-    return await this.getEVMNodeHealth(node, true);
+    return await this.getEVMNodeHealth(node, { harmony: true });
   };
 
   /* ----- Pocket ----- */
@@ -376,6 +381,7 @@ export class Service {
   }: INode): Promise<IPocketHealthResponse> => {
     const url = `https://${fqdn || ip}:${port}`;
     const { height: isRpcResponding } = await this.getPocketHeight(url);
+    console.debug({ name, url, isRpcResponding });
     if (isRpcResponding === 0) {
       return {
         name,
@@ -462,6 +468,7 @@ export class Service {
       );
       return data;
     } catch (error) {
+      console.debug(error.message);
       return { height: 0 };
     }
   }
@@ -473,7 +480,7 @@ export class Service {
     chain,
     hostname,
     basicAuth,
-  }): Promise<IHealthResponse> => {
+  }: INode): Promise<IHealthResponse> => {
     const name = `${host.name}/${chain.name}`;
     const execute = util.promisify(exec);
     if (hostname) {
@@ -531,7 +538,7 @@ export class Service {
     host,
     chain,
     basicAuth,
-  }): Promise<IHealthResponse> => {
+  }: INode): Promise<IHealthResponse> => {
     const name = `${host.name}/${chain.name}`;
     try {
       const { data } = await this.rpc.get(

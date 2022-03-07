@@ -39,8 +39,6 @@ export class Service {
     const categories = allChannels.filter(({ type }) => type === "GUILD_CATEGORY");
     const channels = allChannels.filter(({ type }) => type === "GUILD_TEXT");
 
-    console.debug("FIRING HERE!!!", { categories, channels });
-
     const category =
       categories?.find(({ name }) => name === categoryName) ||
       (await server.channels.create(categoryName, { type: "GUILD_CATEGORY" }));
