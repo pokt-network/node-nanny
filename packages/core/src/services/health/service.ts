@@ -141,7 +141,7 @@ export class Service {
   /* ----- Ethereum Virtual Machine ----- */
   private getEVMNodeHealth = async (
     { chain, url, variance, host, id, port, basicAuth, server }: INode,
-    { harmony = false }: IEVMHealthCheckOptions,
+    { harmony }: IEVMHealthCheckOptions = { harmony: false },
   ): Promise<IEVMHealthResponse> => {
     const name = `${host.name}/${(chain as IChain).name}/${server}`;
 
@@ -381,7 +381,6 @@ export class Service {
   }: INode): Promise<IPocketHealthResponse> => {
     const url = `https://${fqdn || ip}:${port}`;
     const { height: isRpcResponding } = await this.getPocketHeight(url);
-    console.debug({ name, url, isRpcResponding });
     if (isRpcResponding === 0) {
       return {
         name,
@@ -468,7 +467,6 @@ export class Service {
       );
       return data;
     } catch (error) {
-      console.debug(error.message);
       return { height: 0 };
     }
   }
