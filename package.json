@@ -20,6 +20,7 @@
     "stop:ui": "pm2 stop node-nanny.config.js --only ui",
     "restart:all": "pm2 restart node-nanny.config.js",
     "kill": "pm2 kill",
+    "monitor": "pm2 monit",
     "mongo": "mongosh local --authenticationDatabase admin -u root -p rootpassword"
   },
   "devDependencies": {
