@@ -45,9 +45,10 @@ export class App {
   async main() {
     await connect();
 
-    const nodes = (
-      await NodesModel.find({ muted: false }).populate("host").populate("chain").exec()
-    ).filter(({ chain }) => chain.type === "POKT");
+    const nodes = await NodesModel.find({ muted: false })
+      .populate("host")
+      .populate("chain")
+      .exec();
 
     console.log(`Monitor Running. 📺\nCurrently monitoring ${nodes.length} nodes...`);
 
