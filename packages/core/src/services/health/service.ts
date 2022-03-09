@@ -367,8 +367,42 @@ export class Service {
   }
 
   /* ----- Harmony ----- */
-  private getHarmonyNodeHealth = async (node: INode): Promise<IHealthResponse> => {
-    return await this.getEVMNodeHealth(node, { harmony: true });
+  private getHarmonyNodeHealth = async ({
+    chain: { name },
+    url,
+  }: INode): Promise<IHealthResponse> => {
+    try {
+      const { data } = await this.rpc.get(`${url}/node-sync`);
+      if (data === true) {
+        return {
+          name,
+          conditions: EErrorConditions.HEALTHY,
+          status: EErrorStatus.OK,
+        };
+      } else {
+        return {
+          name,
+          conditions: EErrorConditions.NOT_SYNCHRONIZED,
+          status: EErrorStatus.ERROR,
+        };
+      }
+    } catch (error) {
+      if (!error.response) {
+        return {
+          name,
+          conditions: EErrorConditions.NO_RESPONSE,
+          status: EErrorStatus.ERROR,
+          health: error,
+        };
+      }
+      if (error.response.data === false) {
+        return {
+          name,
+          conditions: EErrorConditions.NOT_SYNCHRONIZED,
+          status: EErrorStatus.ERROR,
+        };
+      }
+    }
   };
 
   /* ----- Pocket ----- */
@@ -379,7 +413,8 @@ export class Service {
     port,
     variance,
   }: INode): Promise<IPocketHealthResponse> => {
-    const url = `https://${fqdn || ip}:${port}`;
+    const url = fqdn ? `https://${fqdn}:${port}` : `http://${ip}:${port}`;
+
     const { height: isRpcResponding } = await this.getPocketHeight(url);
     if (isRpcResponding === 0) {
       return {
@@ -404,7 +439,7 @@ export class Service {
     // Get highest block height from reference nodes
     const pocketNodes = referenceNodes.map(({ host, port }) => {
       const { fqdn, ip } = host;
-      return `https://${fqdn || ip}:${port}`;
+      return fqdn ? `https://${fqdn}:${port}` : `http://${ip}:${port}`;
     });
     const pocketHeight = await Promise.all(
       pocketNodes.map((node) => this.getPocketHeight(node)),

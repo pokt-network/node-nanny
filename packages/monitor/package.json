@@ -20,5 +20,8 @@
     "dd-trace": "^1.1.0",
     "dotenv": "^10.0.0",
     "ioredis": "^4.28.1"
+  },
+  "devDependencies": {
+    "@types/ioredis": "^4.28.8"
   }
 }
