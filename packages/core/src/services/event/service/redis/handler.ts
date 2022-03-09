@@ -1,95 +1,120 @@
 import BaseService from "./base-service";
+import { INode } from "../../../../models";
+import { IRedisEvent, IRedisEventParams, IToggleServerParams } from "./types";
+import { EErrorConditions } from "../../../health/types";
 
 export class Service extends BaseService {
   constructor() {
     super();
   }
 
-  processTriggered = async (event) => {
-    const { id, name, ethSyncing, height, count, conditions } = JSON.parse(event);
-    const { server, loadBalancers, chain: _chain } = await this.getNode(id);
-    const title = `${name} is ${conditions}`;
-    const chain = _chain.name;
-    await this.sendError({
-      title,
-      message: `${name} is ${conditions} \n 
-      This event has occured ${count} times since first occurance \n 
-      ${ethSyncing ? JSON.stringify(ethSyncing) : ""} \n 
-      ${height ? JSON.stringify(height) : ""} \n`,
-      chain,
-    });
-    //
-    //  ${this.getHAProxyMessage({ backend, loadBalancers })}
-    //
-    //if (conditions === this.EErrorConditions.NOT_SYNCHRONIZED) {
-    //   await this.sendInfo({
-    //     title,
-    //     message: `Attemping to remove from rotation \n ${this.getHAProxyMessage({
-    //       backend,
-    //       loadBalancers,
-    //     })}`,
-    //     chain,
-    //   });
-    //   try {
-    //     await this.disableServer({ backend, server, loadBalancers });
-    //     return await this.sendInfo({
-    //       title,
-    //       message: `Sucecesfully removed from rotation \n ${this.getHAProxyMessage({
-    //         backend,
-    //         loadBalancers,
-    //       })}`,
-    //       chain,
-    //     });
-    //   } catch (error) {
-    //     await this.sendInfo({
-    //       title,
-    //       message: `Could not remove from rotation \n ${this.getHAProxyMessage({
-    //         backend,
-    //         loadBalancers,
-    //       })}`,
-    //       chain,
-    //     });
-    //   }
-    // }
-    // return;
+  /* ----- Trigger Methods ----- */
+  processTriggered = async (eventJson: string): Promise<void> => {
+    const { title, message, node, nodeNotSynced } = await this.getEventParams(eventJson);
+    await this.sendError({ title, message, chain: node.chain.name });
+
+    if (nodeNotSynced) {
+      await this.toggleServer({ node, title, enable: false });
+    }
   };
 
-  processReTriggered = async (event) => {
-    const { id, name, ethSyncing, height, count, conditions } = JSON.parse(event);
-    const { loadBalancers, chain: _chain } = await this.getNode(id);
-    const title = `${name} is ${conditions}`;
-    const chain = _chain.name;
-    await this.sendError({
-      title,
-      message: `${name} is ${conditions} \n 
-      This event has occured ${count} times since first occurance \n 
-      ${ethSyncing ? JSON.stringify(ethSyncing) : ""} \n 
-      ${height ? JSON.stringify(height) : ""} \n
-      `,
-      chain,
-    });
+  processRetriggered = async (eventJson: string): Promise<void> => {
+    const { title, message, node } = await this.getEventParams(eventJson);
+    await this.sendError({ title, message, chain: node.chain.name });
   };
 
-  processResolved = async (event) => {
-    const { id, name, ethSyncing, height, count, conditions } = JSON.parse(event);
-    const { server, loadBalancers, chain: _chain } = await this.getNode(id);
-    const title = `${name} is ${conditions}`;
-    const chain = _chain.name;
-    await this.sendSucess({
+  processResolved = async (eventJson: string): Promise<void> => {
+    const { title, message, node, nodeNotSynced } = await this.getEventParams(eventJson);
+    await this.sendSuccess({ title, message, chain: node.chain.name });
+
+    if (nodeNotSynced) {
+      await this.toggleServer({ node, title, enable: true });
+    }
+  };
+
+  /* ----- Private Methods ----- */
+  private async getEventParams(eventJson: string): Promise<IRedisEventParams> {
+    const event: IRedisEvent = JSON.parse(eventJson);
+    const { id, name, conditions } = event;
+
+    return {
+      title: `${name} is ${conditions}`,
+      message: this.getAlertMessage(event),
+      node: await this.getNode(id),
+      nodeNotSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
+    };
+  }
+
+  private async toggleServer({
+    node,
+    title,
+    enable,
+  }: IToggleServerParams): Promise<void> {
+    const {
+      backend,
+      chain: { name: chain },
+      loadBalancers,
+      server,
+    } = node;
+
+    await this.sendInfo({
       title,
-      message: `${name} is ${conditions} \n This event has occured ${count} times since first occurance \n ${
-        ethSyncing ? JSON.stringify(ethSyncing) : null
-      } \n ${height ? JSON.stringify(height) : null}`,
+      message: this.getRotationMessage(node, enable, "attempt"),
       chain,
     });
-    // if (conditions === this.EErrorConditions.NOT_SYNCHRONIZED) {
-    //   await this.sendInfo({ title, message: "Attemping to add to rotation", chain });
-    //   try {
-    //     await this.enableServer({ backend, server, loadBalancers });
-    //     await this.sendInfo({ title, message: "Sucecesfully add to rotation", chain });
-    //   } catch (error) {
-    //     await this.sendSucess({ title, message: "Could not add to rotation", chain });
-    //   }
-    // }
-  };
+    try {
+      /* Enable or Disable Server */
+      enable
+        ? await super.enableServer({ backend, server, loadBalancers })
+        : await super.disableServer({ backend, server, loadBalancers });
+
+      await this.sendInfo({
+        title,
+        message: this.getRotationMessage(node, enable, "success"),
+        chain,
+      });
+    } catch (error) {
+      await this.sendInfo({
+        title,
+        message: this.getRotationMessage(node, enable, "error", error),
+        chain,
+      });
+    }
+  }
+
+  /* ----- Message String Methods ----- */
+  private getAlertMessage({
+    count,
+    conditions,
+    name,
+    ethSyncing,
+    height,
+  }: IRedisEvent): string {
+    const ethSyncStr = ethSyncing ? `\nETH Syncing: ${JSON.stringify(ethSyncing)}` : "";
+    const heightStr = height ? `\nHeight: ${JSON.stringify(height)}` : "";
+    const s = count === 1 ? "" : "s";
+    return `${name} is ${conditions}.\nThis event has occurred ${count} time${s} since first occurrence.${ethSyncStr}${heightStr}`;
+  }
+
+  private getRotationMessage(
+    { backend, chain, host, loadBalancers }: INode,
+    enable: boolean,
+    mode: "attempt" | "success" | "error",
+    error?: any,
+  ): string {
+    const name = `${host.name}/${chain.name}`;
+    const haProxyMessage = this.getHAProxyMessage({ backend, loadBalancers });
+    const errorMessage = `\nError: ${error}`;
+    return enable
+      ? {
+          attempt: `Attempting to add ${name} to rotation.\n${haProxyMessage}`,
+          success: `Successfully added ${name} to rotation.\n${haProxyMessage}`,
+          error: `Could not add ${name} to rotation.\n${haProxyMessage}${errorMessage}`,
+        }[mode]
+      : {
+          attempt: `Attempting to remove ${name} from rotation.\n${haProxyMessage}`,
+          success: `Successfully removed ${name} from rotation.\n${haProxyMessage}`,
+          error: `Could not remove ${name} from rotation.\n${haProxyMessage}${errorMessage}`,
+        }[mode];
+  }
 }
