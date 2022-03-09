@@ -45,17 +45,39 @@ export class App {
   async main() {
     await connect();
 
-    const nodes = await NodesModel.find({ muted: false })
-      .populate("host")
-      .populate("chain")
-      .exec();
+    // /* Actual Call */
+    // const nodes = await NodesModel.find({ muted: false })
+    //   .populate("host")
+    //   .populate("chain")
+    //   .exec();
 
-    console.log(`Monitor Running. 📺\nCurrently monitoring ${nodes.length} nodes...`);
+    // /* TEST */
+    const chains = [
+      "TMT", // OK
+      "POKT",
+      "AVA",
+      "SOL",
+      "ALG",
+      "HMY",
+      "HEI",
+      "EVM",
+    ];
+    const nodesResponse = (
+      await NodesModel.find({ muted: false }).populate("host").populate("chain").exec()
+    ).filter(({ chain }) => chain.type === "TMT");
+    const nodes = nodesResponse;
+    // const nodes = [nodesResponse[0]];
+    // /* TEST */
+
+    console.log(`📺 Monitor Running.\nCurrently monitoring ${nodes.length} nodes...`);
 
     for await (const node of nodes) {
       node.id = node._id;
       const logger = this.log.init(node.id);
 
+      // /* TEST  */
+      let TESTALERT = 0;
+      // /* TEST  */
       setInterval(async () => {
         const healthResponse = await this.health.getNodeHealth(node);
 
@@ -71,6 +93,14 @@ export class App {
         }
 
         if (this.config.event === EventOptions.REDIS) {
+          // /* TEST  */
+          if (TESTALERT < 7) {
+            healthResponse.status = HealthTypes.EErrorStatus.ERROR;
+            healthResponse.conditions = HealthTypes.EErrorConditions.NOT_SYNCHRONIZED;
+            healthResponse.health.result = "JUST A TEST NOTHING TO WORRY ABOUT";
+            TESTALERT++;
+          }
+          // /* TEST  */
           await this.publish.evaluate({ message: healthResponse, id: node.id });
         }
 

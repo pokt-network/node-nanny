@@ -1,44 +1,29 @@
 import axios, { AxiosInstance } from "axios";
 
 import { Alert } from "../../..";
-import { LoadBalancerStatus, LoadBalancer } from "../../types";
 import { AlertTypes } from "../../../../types";
+import { LoadBalancerStatus, LoadBalancer } from "../../types";
+import { IRotationParams } from "./types";
 import { HostsModel, NodesModel, INode } from "../../../../models";
-import { EErrorConditions } from "../../../health/types";
 
 export default class Service {
-  sendError: ({
-    title,
-    message,
-    chain,
-  }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
-  sendInfo: ({
-    title,
-    message,
-    chain,
-  }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
-  sendWarn: ({
-    title,
-    message,
-    chain,
-  }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
-  sendSucess: ({
-    title,
-    message,
-    chain,
-  }: AlertTypes.IWebhookMessageParams) => Promise<boolean>;
-  EErrorConditions: typeof EErrorConditions;
+  private agent: AxiosInstance;
+  // DEV NOTE -> Do we need this?
+  sendErrorChannel: AlertTypes.ISendAlert;
+  sendError: AlertTypes.ISendAlert;
+  sendInfo: AlertTypes.ISendAlert;
+  sendWarn: AlertTypes.ISendAlert;
+  sendSuccess: AlertTypes.ISendAlert;
 
   constructor() {
+    this.agent = this.initAgentClient();
+    // DEV NOTE -> Do we need this?
+    this.sendErrorChannel = new Alert().sendErrorChannel;
     this.sendError = new Alert().sendError;
     this.sendInfo = new Alert().sendInfo;
     this.sendWarn = new Alert().sendWarn;
-    this.sendSucess = new Alert().sendSuccess;
-    this.agent = this.initAgentClient();
-    this.EErrorConditions = EErrorConditions;
+    this.sendSuccess = new Alert().sendSuccess;
   }
-  private agent: AxiosInstance;
-  private alert: Alert;
 
   private initAgentClient() {
     return axios.create({
@@ -46,42 +31,48 @@ export default class Service {
     });
   }
 
-  async getNode(id): Promise<INode> {
+  async getNode(id: string): Promise<INode> {
     return await NodesModel.findOne({ _id: id })
       .populate("host")
       .populate("chain")
+      .populate("loadBalancers")
       .exec();
   }
+
   async getLoadBalancers(loadBalancers: string[]): Promise<LoadBalancer[]> {
     return await HostsModel.find({ _id: { $in: loadBalancers } }).exec();
   }
 
-  async disableServer({ backend, server, loadBalancers }) {
+  async disableServer({
+    backend,
+    server,
+    loadBalancers,
+  }: IRotationParams): Promise<void> {
     try {
+      const count = await this.getBackendServerCount({ backend, loadBalancers });
+      if (count <= 1) {
+        await this.sendErrorChannel({
+          title: backend,
+          message: `Could not remove ${server} from load balancer, ${count} server online.\nManual intervention required.`,
+        });
+        return;
+      }
+
       const status = await this.getBackendServerStatus({
         backend,
         server,
         loadBalancers,
       });
-      const count = await this.getBackendServerCount({ backend, loadBalancers });
-      if (count <= 1) {
-        return await this.alert.sendErrorChannel({
-          title: backend,
-          message: `could not remove ${server} from load balancer, ${count} server online \n
-          manual intervention required`,
-        });
-      }
-
       if (status === LoadBalancerStatus.OFFLINE) {
-        return await this.alert.sendErrorChannel({
+        await this.sendErrorChannel({
           title: backend,
-          message: `could not remove from load balancer, server already offline`,
+          message: `Could not remove from load balancer, server already offline.`,
         });
+        return;
       }
 
-      const lbs = await this.getLoadBalancers(loadBalancers);
-      return await Promise.all(
-        lbs.map(async ({ ip }) =>
+      await Promise.all(
+        loadBalancers.map(async ({ ip }) =>
           this.agent.post(`http://${ip}:3001/webhook/lb/disable`, {
             backend,
             server,
@@ -89,36 +80,32 @@ export default class Service {
         ),
       );
     } catch (error) {
-      this.alert.sendErrorChannel({
+      await this.sendErrorChannel({
         title: backend,
-        message: `could not remove from load balancer, ${error}`,
+        message: `Could not remove from load balancer. ${error}`,
       });
     }
   }
 
-  async enableServer({ backend, server, loadBalancers }) {
+  async enableServer({ backend, server, loadBalancers }: IRotationParams): Promise<void> {
     try {
-      const lbs = await this.getLoadBalancers(loadBalancers);
-      return await Promise.all(
-        lbs.map(({ ip }) =>
-          this.agent.post(`http://${ip}:3001/webhook/lb/enable`, {
-            backend,
-            server,
-          }),
+      await Promise.all(
+        loadBalancers.map(({ ip }) =>
+          this.agent.post(`http://${ip}:3001/webhook/lb/enable`, { backend, server }),
         ),
       );
     } catch (error) {
-      return this.alert.sendErrorChannel({
+      await this.sendErrorChannel({
         title: backend,
-        message: `could not contact agent to enable , ${error}`,
+        message: `Could not contact agent to enable server. ${error}`,
       });
     }
   }
 
-  async getBackendServerStatus({ backend, server, loadBalancers }) {
-    const lbs = await this.getLoadBalancers(loadBalancers);
+  async getBackendServerStatus({ backend, server, loadBalancers }: IRotationParams) {
     const results = [];
-    for (const { ip } of lbs) {
+
+    for (const { ip } of loadBalancers) {
       try {
         const { data } = await this.agent.post(`http://${ip}:3001/webhook/lb/status`, {
           backend,
@@ -126,7 +113,7 @@ export default class Service {
         });
         results.push(data);
       } catch (error) {
-        throw new Error(`could not get backend status, ${ip} ${backend} ${error}`);
+        throw new Error(`Could not get backend status, ${ip} ${backend} ${error}`);
       }
     }
 
@@ -141,21 +128,23 @@ export default class Service {
     return LoadBalancerStatus.ERROR;
   }
 
-  async getBackendServerCount({ backend, loadBalancers }) {
-    const lbs = await this.getLoadBalancers(loadBalancers);
-    let results = [];
-    for (const { ip } of lbs) {
+  async getBackendServerCount({
+    backend,
+    loadBalancers,
+  }: IRotationParams): Promise<number> {
+    const results: number[] = [];
+
+    for await (const { ip } of loadBalancers) {
       try {
-        const { data } = await this.agent.post(`http://${ip}:3001/webhook/lb/count`, {
-          backend,
-        });
-        results.push(data);
+        const { data } = await this.agent.post<{ status: number }>(
+          `http://${ip}:3001/webhook/lb/count`,
+          { backend },
+        );
+        results.push(data.status);
       } catch (error) {
-        throw new Error(`could not get backend status, ${ip} ${backend} ${error}`);
+        throw new Error(`Could not get backend status: ${ip} ${backend} ${error}`);
       }
     }
-
-    results = results.map(({ status }) => status);
 
     if (results.every((count) => count === results[0])) {
       return results[0];
@@ -163,13 +152,10 @@ export default class Service {
     return -1;
   }
 
-  async getHAProxyMessage({ backend, loadBalancers }) {
-    const hosts = await this.getLoadBalancers(loadBalancers);
-    const urls = hosts
-      .map((host) => {
-        return `http://${host.ip}:8050/stats/;up?scope=${backend} \n`;
-      })
+  getHAProxyMessage({ backend, loadBalancers }: IRotationParams): string {
+    const urls = loadBalancers
+      .map(({ ip }) => `http://${ip}:8050/stats/;up?scope=${backend}\n`)
       .join("");
-    return `HAProxy status\n${urls}`;
+    return `HAProxy Status\n${urls}`;
   }
 }

@@ -19,9 +19,7 @@ export class Service {
   }
 
   private initDsClient() {
-    return axios.create({
-      headers: { "Content-Type": "application/json" },
-    });
+    return axios.create({ headers: { "Content-Type": "application/json" } });
   }
 
   async getWebhookUrl(chain: string): Promise<string> {
@@ -45,11 +43,11 @@ export class Service {
       const { status } = await this.dsClient.post(channel, { embeds });
       return status === 204;
     } catch (error) {
-      throw new Error(`could not send alert to Discord ${JSON.stringify({ error })}`);
+      throw new Error(`Could not send alert to Discord ${JSON.stringify({ error })}`);
     }
   }
 
-  async sendErrorChannel({ title, message }) {
+  async sendErrorChannel({ title, message }: AlertTypes.IWebhookMessageParams) {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.ERROR,
@@ -57,16 +55,11 @@ export class Service {
         process.env.MONITOR_TEST === "1"
           ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST
           : AlertTypes.Webhooks.WEBHOOK_ERRORS,
-      fields: [
-        {
-          name: "error",
-          value: message,
-        },
-      ],
+      fields: [{ name: "error", value: message }],
     });
   }
 
-  sendError = async ({ title, message, chain }) => {
+  sendError = async ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => {
     try {
       return await this.sendDiscordMessage({
         title,
@@ -88,7 +81,7 @@ export class Service {
     });
   };
 
-  sendWarn = async ({ title, message, chain }) => {
+  sendWarn = async ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.WARNING,
@@ -97,7 +90,7 @@ export class Service {
     });
   };
 
-  sendSuccess = async ({ title, message, chain }) => {
+  sendSuccess = async ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => {
     return await this.sendDiscordMessage({
       title,
       color: AlertColor.SUCCESS,
@@ -116,26 +109,18 @@ export class Service {
       const { data } = await this.pdClient.post("/incidents", {
         data: {
           incident: {
-            type: PagerDutyDetails.TYPE,
             title,
-            service: {
-              id: service,
-              type: PagerDutyDetails.SERVICE_TYPE,
-            },
             urgency,
-            body: {
-              type: PagerDutyDetails.BODY_TYPE,
-              details,
-            },
+            type: PagerDutyDetails.TYPE,
+            service: { id: service, type: PagerDutyDetails.SERVICE_TYPE },
+            body: { type: PagerDutyDetails.BODY_TYPE, details },
           },
         },
-        headers: {
-          From: PagerDutyDetails.FROM,
-        },
+        headers: { From: PagerDutyDetails.FROM },
       });
       return data;
     } catch (error) {
-      throw new Error(`could not create pd incident ${error}`);
+      throw new Error(`Could not create PD incident. ${error}`);
     }
   }
 }
