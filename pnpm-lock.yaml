@@ -98,14 +98,18 @@ importers:
   packages/event-consumer:
     specifiers:
       '@pokt-foundation/node-monitoring-core': workspace:^0.1.0
+      '@types/ioredis': ^4.28.8
       ioredis: ^4.28.1
     dependencies:
       '@pokt-foundation/node-monitoring-core': link:../core
       ioredis: 4.28.2
+    devDependencies:
+      '@types/ioredis': 4.28.8
 
   packages/monitor:
     specifiers:
       '@pokt-foundation/node-monitoring-core': workspace:^0.1.0
+      '@types/ioredis': ^4.28.8
       dd-trace: ^1.1.0
       dotenv: ^10.0.0
       ioredis: ^4.28.1
@@ -114,6 +118,8 @@ importers:
       dd-trace: 1.5.1
       dotenv: 10.0.0
       ioredis: 4.28.2
+    devDependencies:
+      '@types/ioredis': 4.28.8
 
   packages/ui:
     specifiers:
@@ -4452,6 +4458,12 @@ packages:
   /@types/html-minifier-terser/5.1.2:
     resolution: {integrity: sha512-h4lTMgMJctJybDp8CQrxTUiiYmedihHWkjnF/8Pxseu2S6Nlfcy8kwboQ8yejh456rP2yWoEVm1sS/FVsfM48w==}
     dev: false
+
+  /@types/ioredis/4.28.8:
+    resolution: {integrity: sha512-mULOyO2smtvkE1zmzRRA4P0+1UjEqusi014kXOL1q3CY0RgqkR5/wKvv+vAJbPw2Q66wPyylKeevUy+m/FaRMg==}
+    dependencies:
+      '@types/node': 16.11.11
+    dev: true
 
   /@types/istanbul-lib-coverage/2.0.3:
     resolution: {integrity: sha512-sz7iLqvVUg1gIedBOvlkxPlc8/uVzyS5OwGz1cKjXzkl3FpL3al0crU8YGU1WoHkxn0Wxbw5tyi6hvzJKNzFsw==}
