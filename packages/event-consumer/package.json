@@ -14,5 +14,8 @@
   "dependencies": {
     "@pokt-foundation/node-monitoring-core": "workspace:^0.1.0",
     "ioredis": "^4.28.1"
+  },
+  "devDependencies": {
+    "@types/ioredis": "^4.28.8"
   }
 }
