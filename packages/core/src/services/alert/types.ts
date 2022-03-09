@@ -47,8 +47,14 @@ export enum AlertColor {
   INFO = 3447003,
 }
 
+export type ISendAlert = ({
+  title,
+  message,
+  chain,
+}: IWebhookMessageParams) => Promise<boolean>;
+
 export interface IWebhookMessageParams {
   title: string;
   message: string;
-  chain: string;
+  chain?: string;
 }
