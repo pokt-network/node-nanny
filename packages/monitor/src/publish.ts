@@ -21,11 +21,13 @@ export class Publish {
 
   async evaluate({ message, id }: IMonitorEvent) {
     if (message.status === HealthTypes.EErrorStatus.ERROR) {
-      // Save number of times this node has errored
+      /* Save number of times this node has errored */
       this.map.has(id)
         ? this.map.set(id, Number(this.map.get(id) + 1))
         : this.map.set(id, 1);
       const count = this.map.get(id);
+
+      console.debug("INSIDE PUBLISH ERROR", { count });
 
       if (count >= this.threshold && count < this.retriggerThreshold) {
         await this.redis.publish(
@@ -43,9 +45,10 @@ export class Publish {
     }
 
     if (message.status === HealthTypes.EErrorStatus.OK) {
-      // If Node is healthy, check if recovered from previous errors
+      /* If Node is healthy, check if it has recovered from previous errors */
       if (this.map.has(id)) {
         const count = this.map.get(id);
+        console.debug("INSIDE PUBLISH OK", { count });
         this.map.delete(id);
 
         await this.redis.publish(
