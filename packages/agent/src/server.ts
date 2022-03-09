@@ -6,7 +6,7 @@ import { Reboot, HAProxy } from "@pokt-foundation/node-monitoring-core/dist/serv
 config();
 
 const reboot = new Reboot();
-const lb = new HAProxy();
+const loadBalancer = new HAProxy();
 const app = express();
 const port = 3001;
 
@@ -46,7 +46,7 @@ app.post("/webhook/service/restart", async ({ body }, res) => {
 app.post("/webhook/lb/disable", async ({ body }, res) => {
   const { backend, server } = body;
   try {
-    const status = await lb.disableServer({ backend, server });
+    const status = await loadBalancer.disableServer({ backend, server });
     return res.json({ status });
   } catch (error) {
     return res.status(500).send(error);
@@ -56,8 +56,7 @@ app.post("/webhook/lb/disable", async ({ body }, res) => {
 app.post("/webhook/lb/enable", async ({ body }, res) => {
   const { backend, server } = body;
   try {
-    const status = await lb.enableServer({ backend, server });
-
+    const status = await loadBalancer.enableServer({ backend, server });
     return res.json({ status });
   } catch (error) {
     return res.status(500).send(error);
@@ -67,7 +66,7 @@ app.post("/webhook/lb/enable", async ({ body }, res) => {
 app.post("/webhook/lb/status", async ({ body }, res) => {
   const { backend, server } = body;
   try {
-    const status = await lb.getServerStatus({ backend, server });
+    const status = await loadBalancer.getServerStatus({ backend, server });
     return res.json({ status });
   } catch (error) {
     return res.status(500).send(error);
@@ -77,7 +76,7 @@ app.post("/webhook/lb/status", async ({ body }, res) => {
 app.post("/webhook/lb/count", async ({ body }, res) => {
   const { backend } = body;
   try {
-    const status = await lb.getServerCount(backend);
+    const status = await loadBalancer.getServerCount(backend);
     return res.json({ status });
   } catch (error) {
     return res.status(500).send(error);

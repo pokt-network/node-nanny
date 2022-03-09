@@ -5,6 +5,8 @@ import { HealthTypes } from "@pokt-foundation/node-monitoring-core/dist/types";
 import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
 import { Publish } from "./publish";
 
+import { wait } from "@pokt-foundation/node-monitoring-core/dist/utils";
+
 config();
 
 type Config = {
@@ -23,7 +25,7 @@ enum EventOptions {
 }
 
 // const interval = 30000;
-const interval = 10000;
+const interval = 5000;
 
 export class App {
   private log: Log;
@@ -65,8 +67,8 @@ export class App {
     const nodesResponse = (
       await NodesModel.find({ muted: false }).populate("host").populate("chain").exec()
     ).filter(({ chain }) => chain.type === "TMT");
-    const nodes = nodesResponse;
-    // const nodes = [nodesResponse[0]];
+    // const nodes = nodesResponse;
+    const nodes = [nodesResponse[0]];
     // /* TEST */
 
     console.log(`📺 Monitor Running.\nCurrently monitoring ${nodes.length} nodes...`);
@@ -76,7 +78,7 @@ export class App {
       const logger = this.log.init(node.id);
 
       // /* TEST  */
-      let TESTALERT = 0;
+      let TESTALERT = 1;
       // /* TEST  */
       setInterval(async () => {
         const healthResponse = await this.health.getNodeHealth(node);
@@ -98,6 +100,9 @@ export class App {
             healthResponse.status = HealthTypes.EErrorStatus.ERROR;
             healthResponse.conditions = HealthTypes.EErrorConditions.NOT_SYNCHRONIZED;
             healthResponse.health.result = "JUST A TEST NOTHING TO WORRY ABOUT";
+            TESTALERT++;
+          } else if (TESTALERT === 7) {
+            healthResponse.conditions = HealthTypes.EErrorConditions.NOT_SYNCHRONIZED;
             TESTALERT++;
           }
           // /* TEST  */

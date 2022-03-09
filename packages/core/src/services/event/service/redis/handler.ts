@@ -11,7 +11,7 @@ export class Service extends BaseService {
   /* ----- Trigger Methods ----- */
   processTriggered = async (eventJson: string): Promise<void> => {
     const { title, message, node, nodeNotSynced } = await this.getEventParams(eventJson);
-    await this.sendError({ title, message, chain: node.chain.name });
+    await this.alert.sendError({ title, message, chain: node.chain.name });
 
     if (nodeNotSynced) {
       await this.toggleServer({ node, title, enable: false });
@@ -20,12 +20,12 @@ export class Service extends BaseService {
 
   processRetriggered = async (eventJson: string): Promise<void> => {
     const { title, message, node } = await this.getEventParams(eventJson);
-    await this.sendError({ title, message, chain: node.chain.name });
+    await this.alert.sendError({ title, message, chain: node.chain.name });
   };
 
   processResolved = async (eventJson: string): Promise<void> => {
     const { title, message, node, nodeNotSynced } = await this.getEventParams(eventJson);
-    await this.sendSuccess({ title, message, chain: node.chain.name });
+    await this.alert.sendSuccess({ title, message, chain: node.chain.name });
 
     if (nodeNotSynced) {
       await this.toggleServer({ node, title, enable: true });
@@ -35,7 +35,7 @@ export class Service extends BaseService {
   /* ----- Private Methods ----- */
   private async getEventParams(eventJson: string): Promise<IRedisEventParams> {
     const event: IRedisEvent = JSON.parse(eventJson);
-    const { id, name, conditions } = event;
+    const { conditions, id, name } = event;
 
     return {
       title: `${name} is ${conditions}`,
@@ -57,28 +57,21 @@ export class Service extends BaseService {
       server,
     } = node;
 
-    await this.sendInfo({
-      title,
-      message: this.getRotationMessage(node, enable, "attempt"),
-      chain,
-    });
-    try {
-      /* Enable or Disable Server */
-      enable
-        ? await super.enableServer({ backend, server, loadBalancers })
-        : await super.disableServer({ backend, server, loadBalancers });
+    const message = this.getRotationMessage(node, enable, "attempt");
+    await this.alert.sendInfo({ title, message, chain });
 
-      await this.sendInfo({
-        title,
-        message: this.getRotationMessage(node, enable, "success"),
-        chain,
-      });
+    try {
+      const success = enable /* Enable or Disable Server */
+        ? await this.enableServer({ backend, server, loadBalancers })
+        : await this.disableServer({ backend, server, loadBalancers });
+
+      if (success) {
+        const message = this.getRotationMessage(node, enable, "success");
+        await this.alert.sendSuccess({ title, message, chain });
+      }
     } catch (error) {
-      await this.sendInfo({
-        title,
-        message: this.getRotationMessage(node, enable, "error", error),
-        chain,
-      });
+      const message = this.getRotationMessage(node, enable, "error", error);
+      await this.alert.sendError({ title, message, chain });
     }
   }
 
@@ -104,7 +97,7 @@ export class Service extends BaseService {
   ): string {
     const name = `${host.name}/${chain.name}`;
     const haProxyMessage = this.getHAProxyMessage({ backend, loadBalancers });
-    const errorMessage = `\nError: ${error}`;
+    const errorMessage = `\n${error}`;
     return enable
       ? {
           attempt: `Attempting to add ${name} to rotation.\n${haProxyMessage}`,
