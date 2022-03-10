@@ -65,6 +65,8 @@ export class Service extends BaseService {
         ? await this.enableServer({ backend, server, loadBalancers })
         : await this.disableServer({ backend, server, loadBalancers });
 
+      console.debug(`FIRED ${enable ? "ENABLE" : "DISABLE"}`, { success });
+
       if (success) {
         const message = this.getRotationMessage(node, enable, "success");
         await this.alert.sendSuccess({ title, message, chain });
