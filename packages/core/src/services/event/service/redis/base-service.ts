@@ -81,6 +81,29 @@ export default class Service {
   }
 
   /* ----- Server Check Methods ----- */
+  private async getServerCount({
+    backend,
+    loadBalancers,
+  }: IRotationParams): Promise<number> {
+    const results: number[] = [];
+    for await (const { ip } of loadBalancers) {
+      try {
+        const { data } = await this.agent.post<{ status: number }>(
+          `http://${ip}:3001/webhook/lb/count`,
+          { backend },
+        );
+        results.push(data.status);
+      } catch (error) {
+        throw `Could not get backend status.\nIP: ${ip} Backend: ${backend} ${error}`;
+      }
+    }
+
+    if (results.every((count) => count === results[0])) {
+      return results[0];
+    }
+    return -1;
+  }
+
   private async getServerStatus({
     backend,
     server,
@@ -108,29 +131,6 @@ export default class Service {
       return LoadBalancerStatus.OFFLINE;
     }
     return LoadBalancerStatus.ERROR;
-  }
-
-  private async getServerCount({
-    backend,
-    loadBalancers,
-  }: IRotationParams): Promise<number> {
-    const results: number[] = [];
-    for await (const { ip } of loadBalancers) {
-      try {
-        const { data } = await this.agent.post<{ status: number }>(
-          `http://${ip}:3001/webhook/lb/count`,
-          { backend },
-        );
-        results.push(data.status);
-      } catch (error) {
-        throw `Could not get backend status.\nIP: ${ip} Backend: ${backend} ${error}`;
-      }
-    }
-
-    if (results.every((count) => count === results[0])) {
-      return results[0];
-    }
-    return -1;
   }
 
   /* ----- Message String Methods ----- */

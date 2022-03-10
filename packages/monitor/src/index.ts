@@ -24,20 +24,19 @@ enum EventOptions {
   DATADOG = "datadog",
 }
 
-// const interval = 30000;
-const interval = 5000;
-
 export class App {
   private log: Log;
   private health: Health;
   private config: Config;
   private publish: Publish;
+  private interval: number;
 
   constructor(config: Config) {
     this.config = config;
     this.health = new Health();
     this.log = new Log();
     this.publish = this.initPublish();
+    this.interval = Number(process.env.MONITOR_INTERVAL) || 30000;
   }
 
   initPublish() {
@@ -55,20 +54,20 @@ export class App {
 
     // /* TEST */
     const chains = [
+      "ALG", // NO_RESPONSE ERROR
+      "AVA", // OK
+      "EVM", // HALF OFFLINE, HALF NO_RESPONSE
+      "HMY", // NO_RESPONSE (TIMEOUT)
+      "POKT", // NO_RESPONSE (ALL BUT 3)
+      "SOL", // NO NODES
       "TMT", // OK
-      "POKT",
-      "AVA",
-      "SOL",
-      "ALG",
-      "HMY",
-      "HEI",
-      "EVM",
     ];
     const nodesResponse = (
       await NodesModel.find({ muted: false }).populate("host").populate("chain").exec()
-    ).filter(({ chain }) => chain.type === "TMT");
-    // const nodes = nodesResponse;
-    const nodes = [nodesResponse[0]];
+    ).filter(({ chain }) => chain.type === "EVM");
+    const nodes = nodesResponse;
+    // const nodes = [nodesResponse[0]];
+    console.log({ nodes });
     // /* TEST */
 
     console.log(`📺 Monitor Running.\nCurrently monitoring ${nodes.length} nodes...`);
@@ -78,7 +77,7 @@ export class App {
       const logger = this.log.init(node.id);
 
       // /* TEST  */
-      let TESTALERT = 1;
+      // let TESTALERT = 1;
       // /* TEST  */
       setInterval(async () => {
         const healthResponse = await this.health.getNodeHealth(node);
@@ -95,17 +94,17 @@ export class App {
         }
 
         if (this.config.event === EventOptions.REDIS) {
-          // /* TEST  */
-          if (TESTALERT < 7) {
-            healthResponse.status = HealthTypes.EErrorStatus.ERROR;
-            healthResponse.conditions = HealthTypes.EErrorConditions.NOT_SYNCHRONIZED;
-            healthResponse.health.result = "JUST A TEST NOTHING TO WORRY ABOUT";
-            TESTALERT++;
-          } else if (TESTALERT === 7) {
-            healthResponse.conditions = HealthTypes.EErrorConditions.NOT_SYNCHRONIZED;
-            TESTALERT++;
-          }
-          // /* TEST  */
+          // /* TEST */
+          // if (TESTALERT < 7) {
+          //   healthResponse.status = HealthTypes.EErrorStatus.ERROR;
+          //   healthResponse.conditions = HealthTypes.EErrorConditions.NOT_SYNCHRONIZED;
+          //   TESTALERT++;
+          // } else if (TESTALERT === 7) {
+          //   healthResponse.conditions = HealthTypes.EErrorConditions.NOT_SYNCHRONIZED;
+          //   TESTALERT++;
+          // }
+          // console.debug({ TESTALERT });
+          // /* TEST */
           await this.publish.evaluate({ message: healthResponse, id: node.id });
         }
 
@@ -114,7 +113,7 @@ export class App {
           level: status === HealthTypes.EErrorStatus.ERROR ? "error" : "info",
           logger,
         });
-      }, interval);
+      }, this.interval);
     }
   }
 }
