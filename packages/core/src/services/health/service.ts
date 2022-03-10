@@ -68,11 +68,13 @@ export class Service {
     basicAuth,
   }: INode): Promise<IHealthResponse> => {
     const name = `${host.name}/${chain.name}`;
+
     try {
       const { data, status } = await this.rpc.get(
         `${url}/health`,
         this.getAxiosRequestConfig(basicAuth),
       );
+      console.debug("ALGORAND TEST", { url, data, status });
       if (status == 200) {
         return {
           name,
@@ -88,6 +90,7 @@ export class Service {
         };
       }
     } catch (error) {
+      console.debug("ALGORAND TEST ERROR", { url, error: error.message });
       return {
         name,
         conditions: EErrorConditions.NO_RESPONSE,
@@ -111,6 +114,7 @@ export class Service {
         { jsonrpc: "2.0", id: 1, method: "health.health" },
         this.getAxiosRequestConfig(basicAuth),
       );
+      console.debug("AVALANCHE TEST", { url, data });
 
       const { result } = data;
       if (result.healthy) {
@@ -129,6 +133,7 @@ export class Service {
         };
       }
     } catch (error) {
+      console.debug("AVALANCHE TEST ERROR", { url, error });
       return {
         name,
         conditions: EErrorConditions.NO_RESPONSE,
@@ -228,11 +233,10 @@ export class Service {
         },
       };
     } catch (error) {
-      if (
-        String(error).includes(
-          `could not contact blockchain node Error: timeout of 1000ms exceeded`,
-        )
-      ) {
+      const isTimeout = String(error).includes(
+        `could not contact blockchain node Error: timeout of 1000ms exceeded`,
+      );
+      if (isTimeout) {
         return {
           name,
           status: EErrorStatus.ERROR,
@@ -241,6 +245,7 @@ export class Service {
       }
     }
 
+    console.debug("EVM ->", { chain: chain.name, url, server, port, hostIp: host.ip });
     return {
       name,
       status: EErrorStatus.ERROR,
