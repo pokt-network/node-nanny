@@ -26,7 +26,6 @@ export class Publish {
         ? this.map.set(id, Number(this.map.get(id) + 1))
         : this.map.set(id, 1);
       const count = this.map.get(id);
-
       console.debug("INSIDE PUBLISH ERROR", { count });
 
       if (count >= this.threshold && count < this.retriggerThreshold) {
