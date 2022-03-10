@@ -16,3 +16,5 @@ export const getTimestamp = (): string => {
     d.getHours(),
   )}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 };
+
+export const s = (count: number): string => (count === 1 ? "" : "s");

@@ -50,7 +50,7 @@ export class Service {
         parent: category as CategoryChannel,
       });
 
-      const { url } = await channel.createWebhook(`${channelName}-webhook`);
+      const { url } = await channel.createWebhook(`${channelName}-alert`);
       await WebhookModel.create({ chain: name, location: location.name, url });
     }
   }
