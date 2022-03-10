@@ -8,3 +8,5 @@ export const formatHeaderCell = (field: string): string => {
     .map((w) => (abbreviations.includes(w.toLowerCase()) ? w.toUpperCase() : w))
     .join(" ");
 };
+
+export const s = (count: number): string => (count === 1 ? "" : "s");
