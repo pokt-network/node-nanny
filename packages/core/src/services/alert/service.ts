@@ -23,7 +23,7 @@ export class Service {
   }
 
   /* ----- Discord Alerts ----- */
-  sendErrorChannel = async ({ title, message }: AlertTypes.IWebhookMessageParams) => {
+  sendErrorChannel = async ({ title, message }: AlertTypes.IAlertParams) => {
     try {
       return await this.sendDiscordMessage({
         title,
@@ -39,7 +39,7 @@ export class Service {
     }
   };
 
-  sendError = async ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => {
+  sendError = async ({ title, message, chain }: AlertTypes.IAlertParams) => {
     try {
       return await this.sendDiscordMessage({
         title,
@@ -52,7 +52,7 @@ export class Service {
     }
   };
 
-  sendInfo = async ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => {
+  sendInfo = async ({ title, message, chain }: AlertTypes.IAlertParams) => {
     try {
       return await this.sendDiscordMessage({
         title,
@@ -65,7 +65,7 @@ export class Service {
     }
   };
 
-  sendWarn = async ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => {
+  sendWarn = async ({ title, message, chain }: AlertTypes.IAlertParams) => {
     try {
       return await this.sendDiscordMessage({
         title,
@@ -78,7 +78,7 @@ export class Service {
     }
   };
 
-  sendSuccess = async ({ title, message, chain }: AlertTypes.IWebhookMessageParams) => {
+  sendSuccess = async ({ title, message, chain }: AlertTypes.IAlertParams) => {
     try {
       return await this.sendDiscordMessage({
         title,
