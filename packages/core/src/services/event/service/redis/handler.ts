@@ -1,7 +1,9 @@
 import BaseService from "./base-service";
 import { INode } from "../../../../models";
+import { s } from "../../../../utils";
 import { IRedisEvent, IRedisEventParams, IToggleServerParams } from "./types";
-import { EErrorConditions } from "../../../health/types";
+import { EErrorConditions, EErrorStatus } from "../../../health/types";
+import { AlertTypes } from "../../../../types";
 
 export class Service extends BaseService {
   constructor() {
@@ -10,39 +12,51 @@ export class Service extends BaseService {
 
   /* ----- Trigger Methods ----- */
   processTriggered = async (eventJson: string): Promise<void> => {
-    const { title, message, node, nodeNotSynced } = await this.getEventParams(eventJson);
-    await this.alert.sendError({ title, message, chain: node.chain.name });
+    const { title, message, node, notSynced, status } = await this.parseEvent(eventJson);
+    await this.sendMessage({ title, message, chain: node.chain.name }, status);
 
-    if (nodeNotSynced) {
+    if (notSynced) {
       await this.toggleServer({ node, title, enable: false });
     }
   };
 
   processRetriggered = async (eventJson: string): Promise<void> => {
-    const { title, message, node } = await this.getEventParams(eventJson);
-    await this.alert.sendError({ title, message, chain: node.chain.name });
+    const { title, message, node, status } = await this.parseEvent(eventJson);
+    await this.sendMessage({ title, message, chain: node.chain.name }, status);
   };
 
   processResolved = async (eventJson: string): Promise<void> => {
-    const { title, message, node, nodeNotSynced } = await this.getEventParams(eventJson);
-    await this.alert.sendSuccess({ title, message, chain: node.chain.name });
+    const { title, message, node, notSynced, status } = await this.parseEvent(eventJson);
+    await this.sendMessage({ title, message, chain: node.chain.name }, status);
 
-    if (nodeNotSynced) {
+    if (notSynced) {
       await this.toggleServer({ node, title, enable: true });
     }
   };
 
   /* ----- Private Methods ----- */
-  private async getEventParams(eventJson: string): Promise<IRedisEventParams> {
+  private async parseEvent(eventJson: string): Promise<IRedisEventParams> {
     const event: IRedisEvent = JSON.parse(eventJson);
-    const { conditions, id, name } = event;
+    const { conditions, id, name, status } = event;
 
     return {
       title: `${name} is ${conditions}`,
       message: this.getAlertMessage(event),
       node: await this.getNode(id),
-      nodeNotSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
+      notSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
+      status,
     };
+  }
+
+  private async sendMessage(
+    params: AlertTypes.IAlertParams,
+    status: EErrorStatus,
+  ): Promise<void> {
+    await {
+      [EErrorStatus.OK]: () => this.alert.sendSuccess(params),
+      [EErrorStatus.WARNING]: () => this.alert.sendWarn(params),
+      [EErrorStatus.ERROR]: () => this.alert.sendError(params),
+    }[status]();
   }
 
   private async toggleServer({
@@ -65,8 +79,6 @@ export class Service extends BaseService {
         ? await this.enableServer({ backend, server, loadBalancers })
         : await this.disableServer({ backend, server, loadBalancers });
 
-      console.debug(`FIRED ${enable ? "ENABLE" : "DISABLE"}`, { success });
-
       if (success) {
         const message = this.getRotationMessage(node, enable, "success");
         await this.alert.sendSuccess({ title, message, chain });
@@ -84,11 +96,22 @@ export class Service extends BaseService {
     name,
     ethSyncing,
     height,
+    details,
   }: IRedisEvent): string {
-    const ethSyncStr = ethSyncing ? `\nETH Syncing: ${JSON.stringify(ethSyncing)}` : "";
-    const heightStr = height ? `\nHeight: ${JSON.stringify(height)}` : "";
-    const s = count === 1 ? "" : "s";
-    return `${name} is ${conditions}.\nThis event has occurred ${count} time${s} since first occurrence.${ethSyncStr}${heightStr}`;
+    const bOracle = details?.badOracles;
+    const bOracleStr = bOracle ? `Bad Oracle${s(bOracle.length)}: ${bOracle}` : "";
+    const ethSyncStr = ethSyncing ? `ETH Syncing: ${JSON.stringify(ethSyncing)}` : "";
+    const heightStr = height ? `Height: ${JSON.stringify(height)}` : "";
+
+    return [
+      `${name} is ${conditions}.`,
+      `This event has occurred ${count} time${s(count)} since first occurrence.`,
+      bOracleStr,
+      ethSyncStr,
+      heightStr,
+    ]
+      .filter(Boolean)
+      .join("\n");
   }
 
   private getRotationMessage(
