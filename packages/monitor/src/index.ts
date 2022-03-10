@@ -5,8 +5,6 @@ import { HealthTypes } from "@pokt-foundation/node-monitoring-core/dist/types";
 import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
 import { Publish } from "./publish";
 
-import { wait } from "@pokt-foundation/node-monitoring-core/dist/utils";
-
 config();
 
 type Config = {
@@ -36,7 +34,8 @@ export class App {
     this.health = new Health();
     this.log = new Log();
     this.publish = this.initPublish();
-    this.interval = Number(process.env.MONITOR_INTERVAL) || 30000;
+    // this.interval = Number(process.env.MONITOR_INTERVAL) || 30000;
+    this.interval = 5000;
   }
 
   initPublish() {
@@ -56,7 +55,7 @@ export class App {
     const chains = [
       "ALG", // NO_RESPONSE ERROR
       "AVA", // OK
-      "EVM", // HALF OFFLINE, HALF NO_RESPONSE
+      "EVM", // HALF OFFLINE, HALF FIXED
       "HMY", // NO_RESPONSE (TIMEOUT)
       "POKT", // NO_RESPONSE (ALL BUT 3)
       "SOL", // NO NODES
@@ -64,10 +63,15 @@ export class App {
     ];
     const nodesResponse = (
       await NodesModel.find({ muted: false }).populate("host").populate("chain").exec()
-    ).filter(({ chain }) => chain.type === "EVM");
+    ).filter(
+      ({ chain, url }) =>
+        // ({ chain, url }) => url === "http://10.0.2.15:8546",
+        chain.type === "EVM" && chain.name === "ETH",
+    );
     const nodes = nodesResponse;
     // const nodes = [nodesResponse[0]];
     console.log({ nodes });
+    console.log(JSON.stringify(nodes));
     // /* TEST */
 
     console.log(`📺 Monitor Running.\nCurrently monitoring ${nodes.length} nodes...`);

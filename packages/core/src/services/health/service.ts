@@ -2,23 +2,24 @@ import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import util from "util";
 import axiosRetry from "axios-retry";
 import { exec } from "child_process";
+import { Types } from "mongoose";
+
+import { IChain, INode, NodesModel, OraclesModel } from "../../models";
 import {
   EErrorConditions,
   EErrorStatus,
   ENCResponse,
   ESupportedBlockChainTypes,
   IHealthResponse,
+  IHealthResponseDetails,
   IEVMHealthCheckOptions,
-  IEVMHealthResponse,
+  IOraclesAndPeers,
   IPocketBlockHeight,
-  IPocketHealthResponse,
   IReferenceURL,
   IRPCResponse,
   IRPCSyncResponse,
 } from "./types";
-
 import { hexToDec } from "../../utils";
-import { IChain, INode, NodesModel, OraclesModel } from "../../models";
 
 export class Service {
   private rpc: AxiosInstance;
@@ -147,8 +148,11 @@ export class Service {
   private getEVMNodeHealth = async (
     { chain, url, variance, host, id, port, basicAuth, server }: INode,
     { harmony }: IEVMHealthCheckOptions = { harmony: false },
-  ): Promise<IEVMHealthResponse> => {
-    const name = `${host.name}/${(chain as IChain).name}/${server}`;
+  ): Promise<IHealthResponse> => {
+    const name = `${host.name}/${chain.name}/${server}`;
+    let status = EErrorStatus.OK;
+    let conditions = EErrorConditions.HEALTHY;
+    let details: IHealthResponseDetails = null;
 
     //Check if node is online and RPC up
     const isNodeListening = await this.isNodeListening({ host: host.ip, port });
@@ -168,21 +172,28 @@ export class Service {
       };
     }
 
-    let { urls: externalNodes } = await OraclesModel.findOne({
-      chain: (chain as IChain).name,
-    }).exec();
-
-    let referenceUrls = await this.checkExternalUrls(externalNodes);
-    let peers: INode[] = await NodesModel.find({ chain, _id: { $ne: id } }).exec();
-    peers = peers.filter(
-      async ({ url, basicAuth }) => await this.isRpcResponding({ url }, basicAuth),
+    const { healthyOracles, healthyPeers, badOracles } = await this.getOraclesAndPeers(
+      chain,
+      id,
     );
-    if (peers.length >= 1) {
-      for (const { url, basicAuth } of peers) {
-        referenceUrls.push({ url, auth: basicAuth });
-      }
+    console.debug({ badOracles });
+
+    if (!healthyOracles.length && healthyPeers.length < 2) {
+      return {
+        name,
+        status: EErrorStatus.ERROR,
+        conditions: EErrorConditions.NO_PEERS,
+      };
+    } else if (!healthyOracles.length && healthyPeers.length >= 2) {
+      status = EErrorStatus.WARNING;
+      conditions = EErrorConditions.NO_ORACLE;
+    } else if (badOracles.length) {
+      status = EErrorStatus.WARNING;
+      conditions = EErrorConditions.BAD_ORACLE;
+      details = { badOracles: badOracles.map(({ url }) => url) };
     }
 
+    const referenceUrls = [...healthyOracles, ...healthyPeers];
     try {
       const [internalBh, externalBh, ethSyncing] = await Promise.all([
         this.getBlockHeight(url, basicAuth, harmony),
@@ -197,9 +208,6 @@ export class Service {
 
       const ethSyncingResult = ethSyncing.result;
       const delta = externalHeight - internalHeight;
-
-      let status = EErrorStatus.OK;
-      let conditions = EErrorConditions.HEALTHY;
 
       if (internalBh.error?.code) {
         return {
@@ -220,22 +228,19 @@ export class Service {
         conditions = EErrorConditions.PEER_NOT_SYNCHRONIZED;
       }
 
-      return {
+      const okResponse: IHealthResponse = {
         name,
         status,
         conditions,
         ethSyncing: ethSyncingResult,
         peers: numPeers,
-        height: {
-          internalHeight,
-          externalHeight,
-          delta,
-        },
+        height: { internalHeight, externalHeight, delta },
       };
+      if (details) okResponse.details = details;
+      console.debug({ okResponse });
+      return okResponse;
     } catch (error) {
-      const isTimeout = String(error).includes(
-        `could not contact blockchain node Error: timeout of 1000ms exceeded`,
-      );
+      const isTimeout = String(error).includes(`Error: timeout of 1000ms exceeded`);
       if (isTimeout) {
         return {
           name,
@@ -245,7 +250,6 @@ export class Service {
       }
     }
 
-    console.debug("EVM ->", { chain: chain.name, url, server, port, hostIp: host.ip });
     return {
       name,
       status: EErrorStatus.ERROR,
@@ -290,19 +294,43 @@ export class Service {
     }
   }
 
-  private async checkExternalUrls(urls: string[]): Promise<IReferenceURL[]> {
-    return Promise.all(
-      urls
-        .filter(async (url) => {
-          try {
-            await this.getBlockHeight(url);
-            return true;
-          } catch (error) {
-            return false;
-          }
-        })
-        .map((url) => ({ url } as IReferenceURL)),
+  private async getOraclesAndPeers(
+    { id: chainId, name: chain }: IChain,
+    nodeId: Types.ObjectId,
+  ): Promise<IOraclesAndPeers> {
+    const { urls } = await OraclesModel.findOne({ chain });
+    const {
+      healthyUrls: healthyOracles,
+      badUrls: badOracles,
+    } = await this.checkRefUrlHealth(urls.map((url) => ({ url })));
+    // const oracleDown =
+
+    const peers = await NodesModel.find({ chain: chainId, _id: { $ne: nodeId } });
+    const { healthyUrls: healthyPeers } = await this.checkRefUrlHealth(
+      peers.map(({ url, basicAuth: auth }) => ({ url, auth })),
     );
+
+    console.debug({
+      oracles: urls.length,
+      healthyOracles: healthyOracles.length,
+      peers: peers.length,
+      healthyPeers: healthyPeers.length,
+    });
+
+    return { healthyOracles, healthyPeers, badOracles };
+  }
+
+  private async checkRefUrlHealth(
+    urls: IReferenceURL[],
+  ): Promise<{ healthyUrls: IReferenceURL[]; badUrls: IReferenceURL[] }> {
+    const healthyUrls: IReferenceURL[] = [];
+    const badUrls: IReferenceURL[] = [];
+    for await (const { url, auth } of urls) {
+      (await this.isRpcResponding({ url }, auth))
+        ? healthyUrls.push({ url, auth })
+        : badUrls.push({ url, auth });
+    }
+    return { healthyUrls, badUrls };
   }
 
   private async getBlockHeight(
@@ -319,6 +347,7 @@ export class Service {
       );
       return data;
     } catch (error) {
+      console.debug("ERROR IS FOR", { url });
       const stringError = JSON.stringify(error);
       throw new Error(
         `getBlockHeight could not contact blockchain node ${stringError} ${url}`,
@@ -417,7 +446,7 @@ export class Service {
     chain: { id: chainId },
     port,
     variance,
-  }: INode): Promise<IPocketHealthResponse> => {
+  }: INode): Promise<IHealthResponse> => {
     const url = fqdn ? `https://${fqdn}:${port}` : `http://${ip}:${port}`;
 
     const { height: isRpcResponding } = await this.getPocketHeight(url);

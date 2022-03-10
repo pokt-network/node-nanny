@@ -33,6 +33,8 @@ export enum ESupportedBlockChainTypes {
 export enum EErrorConditions {
   HEALTHY = "HEALTHY",
   OFFLINE = "OFFLINE",
+  NO_ORACLE = "NO_ORACLE",
+  BAD_ORACLE = "BAD_ORACLE",
   NO_RESPONSE = "NO_RESPONSE",
   NOT_SYNCHRONIZED = "NOT_SYNCHRONIZED",
   NO_PEERS = "NO_PEERS",
@@ -62,19 +64,17 @@ export interface IHealthResponse {
   conditions?: EErrorConditions;
   height?: IBlockHeight | number;
   peers?: number;
+  details?: IHealthResponseDetails;
   health?: any;
-  details?: any;
   id?: string;
-}
-
-export interface IEVMHealthResponse extends IHealthResponse {
   ethSyncing?: boolean;
-}
-
-export interface IPocketHealthResponse extends IHealthResponse {
   delta?: number;
   referenceNodes?: string[];
   highest?: any;
+}
+
+export interface IHealthResponseDetails {
+  badOracles?: string[];
 }
 
 export interface IReferenceURL {
@@ -98,4 +98,10 @@ export interface IRPCSyncResponse {
 
 export interface IEVMHealthCheckOptions {
   harmony?: boolean;
+}
+
+export interface IOraclesAndPeers {
+  healthyOracles: IReferenceURL[];
+  badOracles: IReferenceURL[];
+  healthyPeers: IReferenceURL[];
 }
