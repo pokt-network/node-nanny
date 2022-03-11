@@ -75,7 +75,6 @@ export class Service {
         `${url}/health`,
         this.getAxiosRequestConfig(basicAuth),
       );
-      console.debug("ALGORAND TEST", { url, data, status });
       if (status == 200) {
         return {
           name,
@@ -91,7 +90,6 @@ export class Service {
         };
       }
     } catch (error) {
-      console.debug("ALGORAND TEST ERROR", { url, error: error.message });
       return {
         name,
         conditions: EErrorConditions.NO_RESPONSE,
@@ -115,7 +113,6 @@ export class Service {
         { jsonrpc: "2.0", id: 1, method: "health.health" },
         this.getAxiosRequestConfig(basicAuth),
       );
-      console.debug("AVALANCHE TEST", { url, data });
 
       const { result } = data;
       if (result.healthy) {
@@ -134,7 +131,6 @@ export class Service {
         };
       }
     } catch (error) {
-      console.debug("AVALANCHE TEST ERROR", { url, error });
       return {
         name,
         conditions: EErrorConditions.NO_RESPONSE,
@@ -157,6 +153,7 @@ export class Service {
     //Check if node is online and RPC up
     const isNodeListening = await this.isNodeListening({ host: host.ip, port });
     if (!isNodeListening) {
+      console.debug("OFFLINE ERROR", { nodeId: id, host });
       return {
         name,
         status: EErrorStatus.ERROR,
@@ -176,7 +173,6 @@ export class Service {
       chain,
       id,
     );
-    console.debug({ badOracles });
 
     if (!healthyOracles.length && healthyPeers.length < 2) {
       return {
@@ -237,7 +233,6 @@ export class Service {
         height: { internalHeight, externalHeight, delta },
       };
       if (details) okResponse.details = details;
-      console.debug({ okResponse });
       return okResponse;
     } catch (error) {
       const isTimeout = String(error).includes(`Error: timeout of 1000ms exceeded`);
@@ -303,19 +298,11 @@ export class Service {
       healthyUrls: healthyOracles,
       badUrls: badOracles,
     } = await this.checkRefUrlHealth(urls.map((url) => ({ url })));
-    // const oracleDown =
 
     const peers = await NodesModel.find({ chain: chainId, _id: { $ne: nodeId } });
     const { healthyUrls: healthyPeers } = await this.checkRefUrlHealth(
       peers.map(({ url, basicAuth: auth }) => ({ url, auth })),
     );
-
-    console.debug({
-      oracles: urls.length,
-      healthyOracles: healthyOracles.length,
-      peers: peers.length,
-      healthyPeers: healthyPeers.length,
-    });
 
     return { healthyOracles, healthyPeers, badOracles };
   }
@@ -347,7 +334,6 @@ export class Service {
       );
       return data;
     } catch (error) {
-      console.debug("ERROR IS FOR", { url });
       const stringError = JSON.stringify(error);
       throw new Error(
         `getBlockHeight could not contact blockchain node ${stringError} ${url}`,
