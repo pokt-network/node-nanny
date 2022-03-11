@@ -55,7 +55,7 @@ export class App {
     const chains = [
       "ALG", // NO_RESPONSE ERROR
       "AVA", // OK
-      "EVM", // HALF OFFLINE, HALF FIXED
+      "EVM", // OK
       "HMY", // NO_RESPONSE (TIMEOUT)
       "POKT", // NO_RESPONSE (ALL BUT 3)
       "SOL", // NO NODES
@@ -66,7 +66,7 @@ export class App {
     ).filter(
       ({ chain, url }) =>
         // ({ chain, url }) => url === "http://10.0.2.15:8546",
-        chain.type === "EVM" && chain.name === "ETH",
+        chain.type === "EVM",
     );
     const nodes = nodesResponse;
     // const nodes = [nodesResponse[0]];
