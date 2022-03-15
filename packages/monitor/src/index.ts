@@ -53,7 +53,7 @@ export class App {
 
     /* TEST */
     const chains = [
-      "ALG", // NO_RESPONSE ERROR
+      "ALG", // OK
       "AVA", // OK
       "EVM", // OK
       "HMY", // OK
@@ -66,7 +66,7 @@ export class App {
     ).filter(
       ({ chain, url }) =>
         // ({ chain, url }) => url === "http://10.0.2.15:8546",
-        chain.type === "SOL",
+        chain.type === "ALG",
     );
     const nodes = nodesResponse;
     // const nodes = [nodesResponse[0]];
