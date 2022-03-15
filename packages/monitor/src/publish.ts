@@ -23,10 +23,7 @@ export class Publish {
   }
 
   async evaluate({ message, id }: IMonitorEvent) {
-    if (
-      message.status === HealthTypes.EErrorStatus.ERROR ||
-      message.status === HealthTypes.EErrorStatus.WARNING
-    ) {
+    if (message.status === HealthTypes.EErrorStatus.ERROR) {
       /* Save number of times this node has errored */
       this.map.has(id)
         ? this.map.set(id, Number(this.map.get(id) + 1))
