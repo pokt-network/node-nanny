@@ -22,12 +22,27 @@ export class Service extends BaseService {
 
   processRetriggered = async (eventJson: string): Promise<void> => {
     const { title, message, node, status } = await this.parseEvent(eventJson);
+
     await this.sendMessage({ title, message, chain: node.chain.name }, status);
   };
 
   processResolved = async (eventJson: string): Promise<void> => {
-    const { title, message, node, notSynced, status } = await this.parseEvent(eventJson);
+    const {
+      title,
+      message,
+      node,
+      notSynced,
+      status,
+      warningMessage,
+    } = await this.parseEvent(eventJson);
+
     await this.sendMessage({ title, message, chain: node.chain.name }, status);
+    if (warningMessage) {
+      await this.sendMessage(
+        { title, message: warningMessage, chain: node.chain.name },
+        EErrorStatus.WARNING,
+      );
+    }
 
     if (notSynced) {
       await this.toggleServer({ node, title, enable: true });
@@ -37,15 +52,18 @@ export class Service extends BaseService {
   /* ----- Private Methods ----- */
   private async parseEvent(eventJson: string): Promise<IRedisEventParams> {
     const event: IRedisEvent = JSON.parse(eventJson);
-    const { conditions, id, name, status } = event;
+    const { conditions, id, name, status, sendWarning } = event;
 
-    return {
+    const parsedEvent = {
       title: `${name} is ${conditions}`,
       message: this.getAlertMessage(event),
       node: await this.getNode(id),
       notSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
       status,
+      warningMessage: sendWarning ? this.getWarningMessage(event) : null,
     };
+    if (sendWarning) parsedEvent.warningMessage = this.getWarningMessage(event);
+    return parsedEvent;
   }
 
   private async sendMessage(
@@ -75,14 +93,12 @@ export class Service extends BaseService {
     await this.alert.sendInfo({ title, message, chain });
 
     try {
-      const success = enable /* Enable or Disable Server */
+      enable /* Enable or Disable Server */
         ? await this.enableServer({ backend, server, loadBalancers })
         : await this.disableServer({ backend, server, loadBalancers });
 
-      if (success) {
-        const message = this.getRotationMessage(node, enable, "success");
-        await this.alert.sendSuccess({ title, message, chain });
-      }
+      const message = this.getRotationMessage(node, enable, "success");
+      await this.alert.sendSuccess({ title, message, chain });
     } catch (error) {
       const message = this.getRotationMessage(node, enable, "error", error);
       await this.alert.sendError({ title, message, chain });
@@ -96,22 +112,25 @@ export class Service extends BaseService {
     name,
     ethSyncing,
     height,
-    details,
   }: IRedisEvent): string {
-    const bOracle = details?.badOracles;
-    const bOracleStr = bOracle ? `Bad Oracle${s(bOracle.length)}: ${bOracle}` : "";
     const ethSyncStr = ethSyncing ? `ETH Syncing: ${JSON.stringify(ethSyncing)}` : "";
     const heightStr = height ? `Height: ${JSON.stringify(height)}` : "";
 
     return [
       `${name} is ${conditions}.`,
       `This event has occurred ${count} time${s(count)} since first occurrence.`,
-      bOracleStr,
       ethSyncStr,
       heightStr,
     ]
       .filter(Boolean)
       .join("\n");
+  }
+
+  private getWarningMessage({ conditions, name, details }: IRedisEvent): string {
+    const bOracle = details?.badOracles;
+    const bOracleStr = bOracle ? `Bad Oracle${s(bOracle.length)}: ${bOracle}` : "";
+
+    return [`WARNING: ${name} is ${conditions}.`, bOracleStr].filter(Boolean).join("\n");
   }
 
   private getRotationMessage(

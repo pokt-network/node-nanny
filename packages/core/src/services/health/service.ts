@@ -145,16 +145,17 @@ export class Service {
     { chain, url, variance, host, id, port, basicAuth, server }: INode,
     { harmony }: IEVMHealthCheckOptions = { harmony: false },
   ): Promise<IHealthResponse> => {
-    const name = `${host.name}/${chain.name}/${server}`;
-    let status = EErrorStatus.OK;
-    let conditions = EErrorConditions.HEALTHY;
-    let details: IHealthResponseDetails = null;
+    const healthResponse: IHealthResponse = {
+      name: `${host.name}/${chain.name}/${server}`,
+      status: EErrorStatus.OK,
+      conditions: EErrorConditions.HEALTHY,
+    };
 
-    //Check if node is online and RPC up
+    /* Check if node is online and RPC up */
     const isNodeListening = await this.isNodeListening({ host: host.ip, port });
     if (!isNodeListening) {
       return {
-        name,
+        ...healthResponse,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.OFFLINE,
       };
@@ -162,30 +163,30 @@ export class Service {
     const isRpcResponding = await this.isRpcResponding({ url }, basicAuth, harmony);
     if (!isRpcResponding) {
       return {
-        name,
+        ...healthResponse,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.NO_RESPONSE,
       };
     }
 
+    /* Check for required number of Oracles and/or Peers */
     const { healthyOracles, healthyPeers, badOracles } = await this.getOraclesAndPeers(
       chain,
       id,
     );
-
     if (!healthyOracles.length && healthyPeers.length < 2) {
       return {
-        name,
+        ...healthResponse,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.NO_PEERS,
       };
     } else if (!healthyOracles.length && healthyPeers.length >= 2) {
-      status = EErrorStatus.WARNING;
-      conditions = EErrorConditions.NO_ORACLE;
+      healthResponse.sendWarning = true;
+      healthResponse.conditions = EErrorConditions.NO_ORACLE;
     } else if (badOracles.length) {
-      status = EErrorStatus.WARNING;
-      conditions = EErrorConditions.BAD_ORACLE;
-      details = { badOracles: badOracles.map(({ url }) => url) };
+      healthResponse.sendWarning = true;
+      healthResponse.conditions = EErrorConditions.BAD_ORACLE;
+      healthResponse.details = { badOracles: badOracles.map(({ url }) => url) };
     }
 
     const referenceUrls = [...healthyOracles, ...healthyPeers];
@@ -206,7 +207,7 @@ export class Service {
 
       if (internalBh.error?.code) {
         return {
-          name,
+          ...healthResponse,
           conditions: EErrorConditions.NOT_SYNCHRONIZED,
           status: EErrorStatus.ERROR,
           health: internalBh,
@@ -214,30 +215,26 @@ export class Service {
       }
 
       if (delta > variance) {
-        status = EErrorStatus.ERROR;
-        conditions = EErrorConditions.NOT_SYNCHRONIZED;
+        healthResponse.status = EErrorStatus.ERROR;
+        healthResponse.conditions = EErrorConditions.NOT_SYNCHRONIZED;
       }
 
       if (Math.sign(delta + variance) === -1) {
-        status = EErrorStatus.ERROR;
-        conditions = EErrorConditions.PEER_NOT_SYNCHRONIZED;
+        healthResponse.status = EErrorStatus.ERROR;
+        healthResponse.conditions = EErrorConditions.PEER_NOT_SYNCHRONIZED;
       }
 
-      const okResponse: IHealthResponse = {
-        name,
-        status,
-        conditions,
+      return {
+        ...healthResponse,
         ethSyncing: ethSyncingResult,
         peers: numPeers,
         height: { internalHeight, externalHeight, delta },
       };
-      if (details) okResponse.details = details;
-      return okResponse;
     } catch (error) {
       const isTimeout = String(error).includes(`Error: timeout of 1000ms exceeded`);
       if (isTimeout) {
         return {
-          name,
+          ...healthResponse,
           status: EErrorStatus.ERROR,
           conditions: EErrorConditions.NO_RESPONSE,
         };
@@ -245,7 +242,7 @@ export class Service {
     }
 
     return {
-      name,
+      ...healthResponse,
       status: EErrorStatus.ERROR,
       conditions: EErrorConditions.NO_RESPONSE,
     };
