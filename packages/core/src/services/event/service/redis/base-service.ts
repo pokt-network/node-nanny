@@ -23,32 +23,42 @@ export default class Service {
   }
 
   /* ----- Toggle Server Methods ----- */
-  async enableServer({ backend, server, loadBalancers }: IRotationParams) {
+  async enableServer({
+    backend,
+    server,
+    loadBalancers,
+  }: IRotationParams): Promise<boolean> {
+    console.debug("ATTEMPTING TO ADD", { backend, server });
     try {
-      const status = await this.getServerStatus({ backend, server, loadBalancers });
-      if (status === LoadBalancerStatus.ONLINE) {
-        const message = this.getErrorMessage(server, "online");
-        await this.alert.sendErrorChannel({ title: backend, message });
-        throw message;
-      }
+      // const status = await this.getServerStatus({ backend, server, loadBalancers });
+      // console.debug("ATTEMPTING TO ADD STATUS", { status });
+      // if (status === LoadBalancerStatus.ONLINE) {
+      //   const message = this.getErrorMessage(server, "online");
+      //   await this.alert.sendErrorChannel({ title: backend, message });
+      //   throw message;
+      // }
 
-      return (
-        await Promise.all(
-          loadBalancers.map(({ ip }) =>
-            this.agent.post<{ status: string }>(
-              `http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/enable`,
-              { backend, server },
-            ),
+      const loadBalancerResponse = await Promise.all(
+        loadBalancers.map(({ ip }) =>
+          this.agent.post<{ status: string }>(
+            `http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/enable`,
+            { backend, server },
           ),
-        )
-      ).every(({ data }) => Boolean(data?.status));
+        ),
+      );
+      return loadBalancerResponse.every(({ status }) => Boolean(status));
     } catch (error) {
+      console.debug("STATUS ERROR", { error });
       const message = `Could not contact agent to enable server. ${error}`;
       await this.alert.sendErrorChannel({ title: backend, message });
     }
   }
 
-  async disableServer({ backend, server, loadBalancers }: IRotationParams) {
+  async disableServer({
+    backend,
+    server,
+    loadBalancers,
+  }: IRotationParams): Promise<boolean> {
     try {
       const count = await this.getServerCount({ backend, loadBalancers });
       if (count <= 1) {
@@ -64,16 +74,15 @@ export default class Service {
         throw message;
       }
 
-      return (
-        await Promise.all(
-          loadBalancers.map(({ ip }) =>
-            this.agent.post<{ status: string }>(
-              `http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/disable`,
-              { backend, server },
-            ),
+      const loadBalancerResponse = await Promise.all(
+        loadBalancers.map(({ ip }) =>
+          this.agent.post<{ status: string }>(
+            `http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/disable`,
+            { backend, server },
           ),
-        )
-      ).every(({ data }) => Boolean(data?.status));
+        ),
+      );
+      return loadBalancerResponse.every(({ status }) => Boolean(status));
     } catch (error) {
       await this.alert.sendErrorChannel({ title: backend, message: error });
       throw new Error(error);
@@ -94,7 +103,7 @@ export default class Service {
     for await (const { ip } of loadBalancers) {
       try {
         const { data } = await this.agent.post<{ status: number }>(
-          `http://${ip}:3001/webhook/lb/count`,
+          `http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/count`,
           { backend },
         );
         results.push(data.status);
@@ -118,7 +127,7 @@ export default class Service {
     for (const { ip } of loadBalancers) {
       try {
         const { data } = await this.agent.post<{ status: boolean }>(
-          `http://${ip}:3001/webhook/lb/status`,
+          `http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/status`,
           { backend, server },
         );
         results.push(data.status);
@@ -141,7 +150,10 @@ export default class Service {
   /* ----- Message String Methods ----- */
   getHAProxyMessage({ backend, loadBalancers }: IRotationParams): string {
     const urls = loadBalancers
-      .map(({ ip }) => `http://${ip}:8050/stats/;up?scope=${backend}\n`)
+      .map(
+        ({ ip }) =>
+          `http://${this.getLoadBalancerIP(ip)}:8050/stats/;up?scope=${backend}\n`,
+      )
       .join("");
     return `HAProxy Status\n${urls}`;
   }
