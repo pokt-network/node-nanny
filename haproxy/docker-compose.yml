@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    cpus: "8"
+    cpus: 8
     mem_limit: "16G"
     restart: unless-stopped
     ports:
