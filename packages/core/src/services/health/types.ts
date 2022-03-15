@@ -71,6 +71,7 @@ export interface IHealthResponse {
   delta?: number;
   referenceNodes?: string[];
   highest?: any;
+  sendWarning?: boolean;
 }
 
 export interface IHealthResponseDetails {

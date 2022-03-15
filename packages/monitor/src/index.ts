@@ -1,8 +1,9 @@
-import { config } from "dotenv";
 import { Health, Log } from "@pokt-foundation/node-monitoring-core/dist/services";
 import { NodesModel } from "@pokt-foundation/node-monitoring-core/dist/models";
 import { HealthTypes } from "@pokt-foundation/node-monitoring-core/dist/types";
 import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
+import { config } from "dotenv";
+
 import { Publish } from "./publish";
 
 config();
@@ -53,9 +54,9 @@ export class App {
 
     /* TEST */
     const chains = [
-      "ALG", // OK
-      "AVA", // OK
-      "EVM", // OK
+      "ALG", // OK -- CHECK
+      "AVA", // OK -- CHECK
+      "EVM", // OK -- CHECK
       "HMY", // OK
       "POKT", // NO_RESPONSE (ALL BUT 3)
       "SOL", // NO_RESPONSE
@@ -63,14 +64,10 @@ export class App {
     ];
     const nodesResponse = (
       await NodesModel.find({ muted: false }).populate("host").populate("chain").exec()
-    ).filter(
-      ({ chain, url }) =>
-        // ({ chain, url }) => url === "http://10.0.2.15:8546",
-        chain.type === "ALG",
-    );
+    ).filter(({ chain }) => chain.type === "EVM");
     const nodes = nodesResponse;
     // const nodes = [nodesResponse[0]];
-    console.debug(`MONITOR TEST IS ${process.env.MONITOR_TEST === "1"}`);
+    console.debug(`NODE IS ${nodes[0].id}`);
     console.debug(`MONITOR TEST IS ${process.env.MONITOR_TEST === "1"}`);
     /* TEST */
 
@@ -80,35 +77,34 @@ export class App {
       node.id = node._id;
       const logger = this.log.init(node.id);
 
-      // /* TEST  */
-      // let TESTALERT = 1;
-      // /* TEST  */
+      /* TEST  */
+      let TESTALERT = 1;
+      /* TEST  */
       setInterval(async () => {
         const healthResponse = await this.health.getNodeHealth(node);
+        const status: HealthTypes.EErrorStatus = healthResponse?.status;
 
-        let status: HealthTypes.EErrorStatus;
-        if (healthResponse) {
-          status = healthResponse.status;
-        }
-        if (healthResponse.status == HealthTypes.EErrorStatus.OK) {
+        if (status === HealthTypes.EErrorStatus.OK) {
           console.log("\x1b[32m%s\x1b[0m", JSON.stringify(healthResponse));
         }
-        if (healthResponse.status == HealthTypes.EErrorStatus.ERROR) {
+        if (status === HealthTypes.EErrorStatus.ERROR) {
           console.log("\x1b[31m%s\x1b[0m", JSON.stringify(healthResponse));
         }
 
         if (this.config.event === EventOptions.REDIS) {
           // /* TEST */
           // if (TESTALERT < 7) {
-          //   healthResponse.status = HealthTypes.EErrorStatus.ERROR;
+          //   status = HealthTypes.EErrorStatus.ERROR;
           //   healthResponse.conditions = HealthTypes.EErrorConditions.NOT_SYNCHRONIZED;
           //   TESTALERT++;
           // } else if (TESTALERT === 7) {
+          //   status = HealthTypes.EErrorStatus.OK;
           //   healthResponse.conditions = HealthTypes.EErrorConditions.NOT_SYNCHRONIZED;
           //   TESTALERT++;
           // }
           // console.debug({ TESTALERT });
           // /* TEST */
+          // console.debug({ NODE_ID: node.id });
           await this.publish.evaluate({ message: healthResponse, id: node.id });
         }
 
