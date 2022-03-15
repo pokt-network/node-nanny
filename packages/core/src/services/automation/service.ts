@@ -39,8 +39,15 @@ export class Service {
     try {
       ({ id } = await NodesModel.create(nodeInput));
       const node = await this.getNode(id);
+
       await new DiscordService().addWebhookForNode(node);
-      await this.restartMonitor();
+
+      try {
+        await this.restartMonitor();
+      } catch {
+        console.log(`Cannot restart monitor, monitor not running.`);
+      }
+
       return node;
     } catch (error) {
       await NodesModel.deleteOne({ _id: id });
@@ -149,10 +156,10 @@ export class Service {
     try {
       await Promise.all(
         loadBalancers.map(({ ip }) =>
-          this.agent.post(`http://${ip}:3001/webhook/lb/disable`, {
-            backend,
-            server,
-          }),
+          this.agent.post(
+            `http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/disable`,
+            { backend, server },
+          ),
         ),
       );
     } catch (error) {
@@ -178,7 +185,7 @@ export class Service {
     try {
       await Promise.all(
         loadBalancers.map(({ ip }) =>
-          this.agent.post(`http://${ip}:3001/webhook/lb/enable`, {
+          this.agent.post(`http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/enable`, {
             backend,
             server,
           }),
@@ -197,6 +204,11 @@ export class Service {
     } catch (error) {
       throw new Error(`Could not send webhook alert. ${error}`);
     }
+  }
+
+  private getLoadBalancerIP(ip: string): string {
+    if (process.env.MONITOR_TEST === "1") return "localhost";
+    return ip;
   }
 
   async muteMonitor(id: string): Promise<INode> {

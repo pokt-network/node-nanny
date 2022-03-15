@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "build": "turbo run build",
-    "start:all": "pnpm i && pnpm build && pm2 start node-nanny.config.js",
+    "start:all": "export MONITOR_TEST=1 && pnpm i && pnpm build && pm2 start node-nanny.config.js",
     "start:agent": "pnpm i && pnpm build && pm2 start node-nanny.config.js --only agent",
     "start:api": "pnpm i && pnpm build && pm2 start node-nanny.config.js --only graphql-api",
     "start:event": "pnpm i && pnpm build && pm2 start node-nanny.config.js --only event-consumer",
