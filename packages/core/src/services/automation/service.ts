@@ -34,6 +34,7 @@ export class Service {
       .exec();
   }
 
+  /* ----- CRUD Methods ----- */
   public async createNode(nodeInput: INode): Promise<INode> {
     let id: string;
     try {
@@ -55,97 +56,37 @@ export class Service {
     }
   }
 
-  async getHaProxyStatus(id: string) {
-    const { backend, haProxy, server, loadBalancers } = await this.getNode(id);
-    if (haProxy === false) {
-      return -1;
+  /* ---- Rotation Methods ----- */
+  async addToRotation(id: string): Promise<boolean> {
+    console.debug("ATTEMPTING TO ADD", { id });
+    const { backend, server, host, chain, container, loadBalancers } = await this.getNode(
+      id,
+    );
+
+    try {
+      await Promise.all(
+        loadBalancers.map(({ ip }) =>
+          this.agent.post(`http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/enable`, {
+            backend,
+            server,
+          }),
+        ),
+      );
+      console.debug("SUCCESSFULLY ADDED", { id });
+    } catch (error) {
+      console.debug("ERROR ADDING", { id, error });
+      throw new Error(`Could not add ${backend} ${server} to rotation. ${error}`);
     }
 
-    const results: (boolean | -1)[] = [];
-    for (const { ip } of loadBalancers) {
-      try {
-        const { data } = await this.agent.post<{ status: boolean | -1 }>(
-          `http://${ip}:3001/webhook/lb/status`,
-          { backend, server },
-        );
-        results.push(data.status);
-      } catch (error) {
-        throw new Error(
-          `Could not get backend status, ${ip} ${server} ${backend} ${error}`,
-        );
-      }
-    }
-
-    if (results.every((status) => status === true)) {
-      return 0;
-    }
-    return 1;
-  }
-
-  async getMonitorStatus(id: string) {
-    const { monitorId } = await this.getNode(id);
-    const status = await this.dd.getMonitorStatus(monitorId);
-    return !(status === DataDogTypes.Status.ALERT);
-  }
-
-  async rebootServer(id: string): Promise<string> {
-    const {
-      host,
-      chain,
-      hostname,
-      container,
-      compose,
-      nginx,
-      poktType,
-      monitorId,
-    } = await this.getNode(id);
-
-    const Host = await HostsModel.findOne({ name: host.name }).exec();
-
-    if (Host) {
-      let { ip } = Host;
-
-      if (process.env.MONITOR_TEST === "1") {
-        ip = "localhost";
-      }
-
-      let reboot: string;
-
-      if (chain.type === HealthTypes.ESupportedBlockChains.POKT) {
-        const { data } = await this.agent.post<{ reboot: string }>(
-          `http://${ip}:3001/webhook/docker/reboot`,
-          {
-            name: container,
-            type: RebootTypes.ENodeTypes.POKT,
-            nginx,
-            poktType,
-          },
-        );
-        reboot = data.reboot;
-      } else {
-        const { data } = await this.agent.post<{ reboot: string }>(
-          `http://${ip}:3001/webhook/docker/reboot`,
-          {
-            name: container,
-            type: RebootTypes.ENodeTypes.DATA,
-            compose,
-          },
-        );
-        reboot = data.reboot;
-      }
-      await this.dd.muteMonitor({ id: monitorId, minutes: 5 });
-      await this.alert.sendInfo({
-        title: "Manual Reboot",
-        message: `${
-          hostname ? hostname : `${host.name}/${chain.name.toLowerCase()}/${container}`
-        } rebooted \n ${reboot}`,
+    try {
+      return await this.alert.sendInfo({
+        title: "Added to rotation",
+        message: `${host.name}/${chain.name}/${container} to ${backend}`,
         chain: chain.name,
       });
-
-      return reboot;
+    } catch (error) {
+      throw new Error(`Could not send webhook alert. ${error}`);
     }
-
-    return;
   }
 
   async removeFromRotation(id: string): Promise<boolean> {
@@ -177,38 +118,99 @@ export class Service {
     }
   }
 
-  async addToRotation(id: string): Promise<boolean> {
-    const { backend, server, host, chain, container, loadBalancers } = await this.getNode(
-      id,
-    );
-
-    try {
-      await Promise.all(
-        loadBalancers.map(({ ip }) =>
-          this.agent.post(`http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/enable`, {
-            backend,
-            server,
-          }),
-        ),
-      );
-    } catch (error) {
-      throw new Error(`Could not add ${backend} ${server} to rotation. ${error}`);
+  /* ----- Status Check Methods ----- */
+  async getHaProxyStatus(id: string) {
+    const { backend, haProxy, server, loadBalancers } = await this.getNode(id);
+    if (haProxy === false) {
+      return -1;
     }
 
-    try {
-      return await this.alert.sendInfo({
-        title: "Added to rotation",
-        message: `${host.name}/${chain.name}/${container} to ${backend}`,
-        chain: chain.name,
-      });
-    } catch (error) {
-      throw new Error(`Could not send webhook alert. ${error}`);
+    const results: (boolean | -1)[] = [];
+    for (const { ip } of loadBalancers) {
+      try {
+        const { data } = await this.agent.post<{ status: boolean | -1 }>(
+          `http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/status`,
+          { backend, server },
+        );
+        results.push(data.status);
+      } catch (error) {
+        throw new Error(
+          `Could not get backend status, ${ip} ${server} ${backend} ${error}`,
+        );
+      }
     }
+
+    if (results.every((status) => status === true)) {
+      return 0;
+    }
+    return 1;
   }
 
-  private getLoadBalancerIP(ip: string): string {
-    if (process.env.MONITOR_TEST === "1") return "localhost";
-    return ip;
+  async getMonitorStatus(id: string) {
+    const { monitorId } = await this.getNode(id);
+    const status = await this.dd.getMonitorStatus(monitorId);
+    return !(status === DataDogTypes.Status.ALERT);
+  }
+
+  /* ----- Reboot Methods ----- */
+  async rebootServer(id: string): Promise<string> {
+    const {
+      host,
+      chain,
+      hostname,
+      container,
+      compose,
+      nginx,
+      poktType,
+      monitorId,
+    } = await this.getNode(id);
+
+    const Host = await HostsModel.findOne({ name: host.name }).exec();
+
+    if (Host) {
+      let { ip } = Host;
+
+      if (process.env.MONITOR_TEST === "1") {
+        ip = "localhost";
+      }
+
+      let reboot: string;
+
+      if (chain.type === HealthTypes.ESupportedBlockChains.POKT) {
+        const { data } = await this.agent.post<{ reboot: string }>(
+          `http://${this.getLoadBalancerIP(ip)}:3001/webhook/docker/reboot`,
+          {
+            name: container,
+            type: RebootTypes.ENodeTypes.POKT,
+            nginx,
+            poktType,
+          },
+        );
+        reboot = data.reboot;
+      } else {
+        const { data } = await this.agent.post<{ reboot: string }>(
+          `http://${this.getLoadBalancerIP(ip)}:3001/webhook/docker/reboot`,
+          {
+            name: container,
+            type: RebootTypes.ENodeTypes.DATA,
+            compose,
+          },
+        );
+        reboot = data.reboot;
+      }
+      await this.dd.muteMonitor({ id: monitorId, minutes: 5 });
+      await this.alert.sendInfo({
+        title: "Manual Reboot",
+        message: `${
+          hostname ? hostname : `${host.name}/${chain.name.toLowerCase()}/${container}`
+        } rebooted \n ${reboot}`,
+        chain: chain.name,
+      });
+
+      return reboot;
+    }
+
+    return;
   }
 
   async muteMonitor(id: string): Promise<INode> {
@@ -276,5 +278,11 @@ export class Service {
     }
 
     throw new Error(`could not create host ${awsInstanceId}`);
+  }
+
+  /* ---- Private Methods ----- */
+  private getLoadBalancerIP(ip: string): string {
+    if (process.env.MONITOR_TEST === "1") return "localhost";
+    return ip;
   }
 }
