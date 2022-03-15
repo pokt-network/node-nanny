@@ -35,10 +35,10 @@ export default class Service {
       return (
         await Promise.all(
           loadBalancers.map(({ ip }) =>
-            this.agent.post<{ status: string }>(`http://${ip}:3001/webhook/lb/enable`, {
-              backend,
-              server,
-            }),
+            this.agent.post<{ status: string }>(
+              `http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/enable`,
+              { backend, server },
+            ),
           ),
         )
       ).every(({ data }) => Boolean(data?.status));
@@ -67,10 +67,10 @@ export default class Service {
       return (
         await Promise.all(
           loadBalancers.map(({ ip }) =>
-            this.agent.post<{ status: string }>(`http://${ip}:3001/webhook/lb/disable`, {
-              backend,
-              server,
-            }),
+            this.agent.post<{ status: string }>(
+              `http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/disable`,
+              { backend, server },
+            ),
           ),
         )
       ).every(({ data }) => Boolean(data?.status));
@@ -78,6 +78,11 @@ export default class Service {
       await this.alert.sendErrorChannel({ title: backend, message: error });
       throw new Error(error);
     }
+  }
+
+  private getLoadBalancerIP(ip: string): string {
+    if (process.env.MONITOR_TEST === "1") return "localhost";
+    return ip;
   }
 
   /* ----- Server Check Methods ----- */

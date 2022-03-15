@@ -35,7 +35,7 @@ export class App {
     this.log = new Log();
     this.publish = this.initPublish();
     // this.interval = Number(process.env.MONITOR_INTERVAL) || 30000;
-    this.interval = 5000;
+    this.interval = 10000;
   }
 
   initPublish() {
@@ -51,14 +51,14 @@ export class App {
     //   .populate("chain")
     //   .exec();
 
-    // /* TEST */
+    /* TEST */
     const chains = [
       "ALG", // NO_RESPONSE ERROR
       "AVA", // OK
       "EVM", // OK
-      "HMY", // NO_RESPONSE (TIMEOUT)
+      "HMY", // OK
       "POKT", // NO_RESPONSE (ALL BUT 3)
-      "SOL", // NO NODES
+      "SOL", // NO_RESPONSE
       "TMT", // OK
     ];
     const nodesResponse = (
@@ -66,13 +66,13 @@ export class App {
     ).filter(
       ({ chain, url }) =>
         // ({ chain, url }) => url === "http://10.0.2.15:8546",
-        chain.type === "EVM",
+        chain.type === "SOL",
     );
     const nodes = nodesResponse;
     // const nodes = [nodesResponse[0]];
-    console.log({ nodes });
-    console.log(JSON.stringify(nodes));
-    // /* TEST */
+    console.debug(`MONITOR TEST IS ${process.env.MONITOR_TEST === "1"}`);
+    console.debug(`MONITOR TEST IS ${process.env.MONITOR_TEST === "1"}`);
+    /* TEST */
 
     console.log(`📺 Monitor Running.\nCurrently monitoring ${nodes.length} nodes...`);
 
