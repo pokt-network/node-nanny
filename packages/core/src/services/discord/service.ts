@@ -54,4 +54,12 @@ export class Service {
       await WebhookModel.create({ chain: name, location: location.name, url });
     }
   }
+
+  public async clearChannels() {
+    const server = await this.initServer();
+    const allChannels = await server.channels.fetch();
+    for await (const [, channel] of allChannels) {
+      await channel.delete();
+    }
+  }
 }
