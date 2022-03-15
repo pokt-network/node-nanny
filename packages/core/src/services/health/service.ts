@@ -70,7 +70,6 @@ export class Service {
   }: INode): Promise<IHealthResponse> => {
     const name = `${host.name}/${chain.name}`;
 
-    console.debug({ chain, url });
     try {
       const { data, status } = await this.rpc.get(
         `${url}/health`,
