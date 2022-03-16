@@ -45,11 +45,9 @@ export type ILog = {
 };
 
 export type IMutation = {
-  createChain?: Maybe<IChain>;
   createHost?: Maybe<IHost>;
   createNode?: Maybe<INode>;
-  createOracle?: Maybe<IOracle>;
-  createWebhook?: Maybe<IWebhook>;
+  createNodesCSV: Array<Maybe<INode>>;
   deleteChain?: Maybe<IChain>;
   deleteHost?: Maybe<IHost>;
   deleteNode?: Maybe<INode>;
@@ -67,13 +65,6 @@ export type IMutation = {
 };
 
 
-export type IMutationCreateChainArgs = {
-  name?: InputMaybe<Scalars['String']>;
-  type?: InputMaybe<Scalars['String']>;
-  variance?: InputMaybe<Scalars['Int']>;
-};
-
-
 export type IMutationCreateHostArgs = {
   fqdn?: InputMaybe<Scalars['String']>;
   ip?: InputMaybe<Scalars['String']>;
@@ -88,16 +79,8 @@ export type IMutationCreateNodeArgs = {
 };
 
 
-export type IMutationCreateOracleArgs = {
-  chain?: InputMaybe<Scalars['String']>;
-  url?: InputMaybe<Scalars['String']>;
-};
-
-
-export type IMutationCreateWebhookArgs = {
-  chain?: InputMaybe<Scalars['String']>;
-  location?: InputMaybe<Scalars['String']>;
-  url?: InputMaybe<Scalars['String']>;
+export type IMutationCreateNodesCsvArgs = {
+  nodes: Array<INodeCsvInput>;
 };
 
 
@@ -194,23 +177,21 @@ export type INodeCsvInput = {
   chain: Scalars['String'];
   haProxy: Scalars['Boolean'];
   host: Scalars['String'];
-  loadBalancers: Array<InputMaybe<Scalars['String']>>;
-  port: Scalars['String'];
+  loadBalancers: Array<Scalars['String']>;
+  port: Scalars['Int'];
   server?: InputMaybe<Scalars['String']>;
   url: Scalars['String'];
 };
 
 export type INodeInput = {
   backend?: InputMaybe<Scalars['String']>;
-  chain?: InputMaybe<Scalars['ID']>;
-  haProxy?: InputMaybe<Scalars['Boolean']>;
-  host?: InputMaybe<Scalars['ID']>;
-  loadBalancers?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
-  port?: InputMaybe<Scalars['Int']>;
+  chain: Scalars['ID'];
+  haProxy: Scalars['Boolean'];
+  host: Scalars['ID'];
+  loadBalancers: Array<Scalars['ID']>;
+  port: Scalars['Int'];
   server?: InputMaybe<Scalars['String']>;
-  ssl?: InputMaybe<Scalars['Boolean']>;
-  url?: InputMaybe<Scalars['String']>;
-  variance?: InputMaybe<Scalars['Int']>;
+  url: Scalars['String'];
 };
 
 export type IOracle = {
@@ -264,57 +245,37 @@ export type IWebhook = {
   url: Scalars['String'];
 };
 
-export type ICreateChainMutationVariables = Exact<{
-  name: Scalars['String'];
-  type: Scalars['String'];
-  variance?: InputMaybe<Scalars['Int']>;
-}>;
-
-
-export type ICreateChainMutation = { createChain?: { name: string, type: string, variance?: number | null } | null };
-
 export type ICreateHostMutationVariables = Exact<{
   location: Scalars['String'];
   name: Scalars['String'];
+  loadBalancer: Scalars['Boolean'];
   ip?: InputMaybe<Scalars['String']>;
   fqdn?: InputMaybe<Scalars['String']>;
-  loadBalancer: Scalars['Boolean'];
 }>;
 
 
 export type ICreateHostMutation = { createHost?: { name: string, ip?: string | null, loadBalancer: boolean } | null };
 
 export type ICreateNodeMutationVariables = Exact<{
+  chain: Scalars['ID'];
+  host: Scalars['ID'];
+  port: Scalars['Int'];
+  url: Scalars['String'];
+  loadBalancers: Array<Scalars['ID']> | Scalars['ID'];
+  haProxy: Scalars['Boolean'];
   backend?: InputMaybe<Scalars['String']>;
-  chain?: InputMaybe<Scalars['ID']>;
-  haProxy?: InputMaybe<Scalars['Boolean']>;
-  host?: InputMaybe<Scalars['ID']>;
-  port?: InputMaybe<Scalars['Int']>;
   server?: InputMaybe<Scalars['String']>;
-  ssl?: InputMaybe<Scalars['Boolean']>;
-  url?: InputMaybe<Scalars['String']>;
-  loadBalancers?: InputMaybe<Array<InputMaybe<Scalars['ID']>> | InputMaybe<Scalars['ID']>>;
 }>;
 
 
 export type ICreateNodeMutation = { createNode?: { id: string, url: string } | null };
 
-export type ICreateOracleMutationVariables = Exact<{
-  chain?: InputMaybe<Scalars['String']>;
-  url?: InputMaybe<Scalars['String']>;
+export type ICreateNodesCsvMutationVariables = Exact<{
+  nodes: Array<INodeCsvInput> | INodeCsvInput;
 }>;
 
 
-export type ICreateOracleMutation = { createOracle?: { id: string, urls?: Array<string | null> | null } | null };
-
-export type ICreateWebhookMutationVariables = Exact<{
-  chain?: InputMaybe<Scalars['String']>;
-  url?: InputMaybe<Scalars['String']>;
-  location?: InputMaybe<Scalars['String']>;
-}>;
-
-
-export type ICreateWebhookMutation = { createWebhook?: { url: string } | null };
+export type ICreateNodesCsvMutation = { createNodesCSV: Array<{ id: string } | null> };
 
 export type IRebootServerMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -401,45 +362,8 @@ export type IGetNodeStatusQueryVariables = Exact<{
 export type IGetNodeStatusQuery = { haProxyStatus: number };
 
 
-export const CreateChainDocument = gql`
-    mutation CreateChain($name: String!, $type: String!, $variance: Int) {
-  createChain(name: $name, type: $type, variance: $variance) {
-    name
-    type
-    variance
-  }
-}
-    `;
-export type ICreateChainMutationFn = Apollo.MutationFunction<ICreateChainMutation, ICreateChainMutationVariables>;
-
-/**
- * __useCreateChainMutation__
- *
- * To run a mutation, you first call `useCreateChainMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateChainMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createChainMutation, { data, loading, error }] = useCreateChainMutation({
- *   variables: {
- *      name: // value for 'name'
- *      type: // value for 'type'
- *      variance: // value for 'variance'
- *   },
- * });
- */
-export function useCreateChainMutation(baseOptions?: Apollo.MutationHookOptions<ICreateChainMutation, ICreateChainMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ICreateChainMutation, ICreateChainMutationVariables>(CreateChainDocument, options);
-      }
-export type CreateChainMutationHookResult = ReturnType<typeof useCreateChainMutation>;
-export type CreateChainMutationResult = Apollo.MutationResult<ICreateChainMutation>;
-export type CreateChainMutationOptions = Apollo.BaseMutationOptions<ICreateChainMutation, ICreateChainMutationVariables>;
 export const CreateHostDocument = gql`
-    mutation CreateHost($location: String!, $name: String!, $ip: String, $fqdn: String, $loadBalancer: Boolean!) {
+    mutation CreateHost($location: String!, $name: String!, $loadBalancer: Boolean!, $ip: String, $fqdn: String) {
   createHost(
     location: $location
     name: $name
@@ -470,9 +394,9 @@ export type ICreateHostMutationFn = Apollo.MutationFunction<ICreateHostMutation,
  *   variables: {
  *      location: // value for 'location'
  *      name: // value for 'name'
+ *      loadBalancer: // value for 'loadBalancer'
  *      ip: // value for 'ip'
  *      fqdn: // value for 'fqdn'
- *      loadBalancer: // value for 'loadBalancer'
  *   },
  * });
  */
@@ -484,9 +408,9 @@ export type CreateHostMutationHookResult = ReturnType<typeof useCreateHostMutati
 export type CreateHostMutationResult = Apollo.MutationResult<ICreateHostMutation>;
 export type CreateHostMutationOptions = Apollo.BaseMutationOptions<ICreateHostMutation, ICreateHostMutationVariables>;
 export const CreateNodeDocument = gql`
-    mutation CreateNode($backend: String, $chain: ID, $haProxy: Boolean, $host: ID, $port: Int, $server: String, $ssl: Boolean, $url: String, $loadBalancers: [ID]) {
+    mutation CreateNode($chain: ID!, $host: ID!, $port: Int!, $url: String!, $loadBalancers: [ID!]!, $haProxy: Boolean!, $backend: String, $server: String) {
   createNode(
-    input: {backend: $backend, chain: $chain, haProxy: $haProxy, host: $host, port: $port, server: $server, ssl: $ssl, url: $url, loadBalancers: $loadBalancers}
+    input: {chain: $chain, host: $host, port: $port, url: $url, loadBalancers: $loadBalancers, haProxy: $haProxy, backend: $backend, server: $server}
   ) {
     id
     url
@@ -508,15 +432,14 @@ export type ICreateNodeMutationFn = Apollo.MutationFunction<ICreateNodeMutation,
  * @example
  * const [createNodeMutation, { data, loading, error }] = useCreateNodeMutation({
  *   variables: {
- *      backend: // value for 'backend'
  *      chain: // value for 'chain'
- *      haProxy: // value for 'haProxy'
  *      host: // value for 'host'
  *      port: // value for 'port'
- *      server: // value for 'server'
- *      ssl: // value for 'ssl'
  *      url: // value for 'url'
  *      loadBalancers: // value for 'loadBalancers'
+ *      haProxy: // value for 'haProxy'
+ *      backend: // value for 'backend'
+ *      server: // value for 'server'
  *   },
  * });
  */
@@ -527,76 +450,39 @@ export function useCreateNodeMutation(baseOptions?: Apollo.MutationHookOptions<I
 export type CreateNodeMutationHookResult = ReturnType<typeof useCreateNodeMutation>;
 export type CreateNodeMutationResult = Apollo.MutationResult<ICreateNodeMutation>;
 export type CreateNodeMutationOptions = Apollo.BaseMutationOptions<ICreateNodeMutation, ICreateNodeMutationVariables>;
-export const CreateOracleDocument = gql`
-    mutation CreateOracle($chain: String, $url: String) {
-  createOracle(chain: $chain, url: $url) {
+export const CreateNodesCsvDocument = gql`
+    mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
+  createNodesCSV(nodes: $nodes) {
     id
-    urls
   }
 }
     `;
-export type ICreateOracleMutationFn = Apollo.MutationFunction<ICreateOracleMutation, ICreateOracleMutationVariables>;
+export type ICreateNodesCsvMutationFn = Apollo.MutationFunction<ICreateNodesCsvMutation, ICreateNodesCsvMutationVariables>;
 
 /**
- * __useCreateOracleMutation__
+ * __useCreateNodesCsvMutation__
  *
- * To run a mutation, you first call `useCreateOracleMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateOracleMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useCreateNodesCsvMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateNodesCsvMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [createOracleMutation, { data, loading, error }] = useCreateOracleMutation({
+ * const [createNodesCsvMutation, { data, loading, error }] = useCreateNodesCsvMutation({
  *   variables: {
- *      chain: // value for 'chain'
- *      url: // value for 'url'
+ *      nodes: // value for 'nodes'
  *   },
  * });
  */
-export function useCreateOracleMutation(baseOptions?: Apollo.MutationHookOptions<ICreateOracleMutation, ICreateOracleMutationVariables>) {
+export function useCreateNodesCsvMutation(baseOptions?: Apollo.MutationHookOptions<ICreateNodesCsvMutation, ICreateNodesCsvMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ICreateOracleMutation, ICreateOracleMutationVariables>(CreateOracleDocument, options);
+        return Apollo.useMutation<ICreateNodesCsvMutation, ICreateNodesCsvMutationVariables>(CreateNodesCsvDocument, options);
       }
-export type CreateOracleMutationHookResult = ReturnType<typeof useCreateOracleMutation>;
-export type CreateOracleMutationResult = Apollo.MutationResult<ICreateOracleMutation>;
-export type CreateOracleMutationOptions = Apollo.BaseMutationOptions<ICreateOracleMutation, ICreateOracleMutationVariables>;
-export const CreateWebhookDocument = gql`
-    mutation CreateWebhook($chain: String, $url: String, $location: String) {
-  createWebhook(chain: $chain, url: $url, location: $location) {
-    url
-  }
-}
-    `;
-export type ICreateWebhookMutationFn = Apollo.MutationFunction<ICreateWebhookMutation, ICreateWebhookMutationVariables>;
-
-/**
- * __useCreateWebhookMutation__
- *
- * To run a mutation, you first call `useCreateWebhookMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateWebhookMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createWebhookMutation, { data, loading, error }] = useCreateWebhookMutation({
- *   variables: {
- *      chain: // value for 'chain'
- *      url: // value for 'url'
- *      location: // value for 'location'
- *   },
- * });
- */
-export function useCreateWebhookMutation(baseOptions?: Apollo.MutationHookOptions<ICreateWebhookMutation, ICreateWebhookMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ICreateWebhookMutation, ICreateWebhookMutationVariables>(CreateWebhookDocument, options);
-      }
-export type CreateWebhookMutationHookResult = ReturnType<typeof useCreateWebhookMutation>;
-export type CreateWebhookMutationResult = Apollo.MutationResult<ICreateWebhookMutation>;
-export type CreateWebhookMutationOptions = Apollo.BaseMutationOptions<ICreateWebhookMutation, ICreateWebhookMutationVariables>;
+export type CreateNodesCsvMutationHookResult = ReturnType<typeof useCreateNodesCsvMutation>;
+export type CreateNodesCsvMutationResult = Apollo.MutationResult<ICreateNodesCsvMutation>;
+export type CreateNodesCsvMutationOptions = Apollo.BaseMutationOptions<ICreateNodesCsvMutation, ICreateNodesCsvMutationVariables>;
 export const RebootServerDocument = gql`
     mutation RebootServer($id: ID!) {
   rebootServer(id: $id)

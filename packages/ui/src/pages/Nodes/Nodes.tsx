@@ -42,7 +42,7 @@ export function Nodes() {
           {selectedNode && (
             <NodeStatus selectedNode={selectedNode} setSelectedNode={setSelectedNode} />
           )}
-          <NodesCSV formData={formData} />
+          <NodesCSV formData={formData} refetchNodes={refetch} />
         </div>
         <Table
           type="Nodes"
