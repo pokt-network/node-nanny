@@ -49,7 +49,8 @@ export class App {
         /* Log to process output */
         if (status === HealthTypes.EErrorStatus.OK) {
           console.log("\x1b[32m%s\x1b[0m", JSON.stringify(healthResponse));
-        } else if (status === HealthTypes.EErrorStatus.ERROR) {
+        }
+        if (status === HealthTypes.EErrorStatus.ERROR) {
           console.log("\x1b[31m%s\x1b[0m", JSON.stringify(healthResponse));
         }
 
