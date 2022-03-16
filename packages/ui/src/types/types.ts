@@ -189,6 +189,17 @@ export type INode = {
   url: Scalars['String'];
 };
 
+export type INodeCsvInput = {
+  backend?: InputMaybe<Scalars['String']>;
+  chain: Scalars['String'];
+  haProxy: Scalars['Boolean'];
+  host: Scalars['String'];
+  loadBalancers: Array<InputMaybe<Scalars['String']>>;
+  port: Scalars['String'];
+  server?: InputMaybe<Scalars['String']>;
+  url: Scalars['String'];
+};
+
 export type INodeInput = {
   backend?: InputMaybe<Scalars['String']>;
   chain?: InputMaybe<Scalars['ID']>;

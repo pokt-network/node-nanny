@@ -18,15 +18,17 @@ import {
 
 import {
   INodesQuery,
+  IGetHostsChainsAndLoadBalancersQuery,
   useCreateNodeMutation,
   useGetHostsChainsAndLoadBalancersQuery,
 } from "types";
 
 interface HostsFormProps {
+  formData: IGetHostsChainsAndLoadBalancersQuery;
   refetchNodes: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
 }
 
-export function NodesForm({ refetchNodes }: HostsFormProps) {
+export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
   const [chain, setChain] = useState("");
   const [host, setHost] = useState("");
   const [ip, setIp] = useState("");
@@ -36,7 +38,6 @@ export function NodesForm({ refetchNodes }: HostsFormProps) {
   const [server, setServer] = useState("");
   const [haProxy, setHaproxy] = useState(true);
 
-  const { loading, error, data } = useGetHostsChainsAndLoadBalancersQuery();
   const [submit] = useCreateNodeMutation({
     onCompleted: () => refetchNodes(),
     onError: (error) => console.log({ error }),
@@ -47,8 +48,8 @@ export function NodesForm({ refetchNodes }: HostsFormProps) {
   };
 
   const handleHostChange = (event: SelectChangeEvent<typeof host>) => {
-    if (data?.hosts) {
-      const { ip } = data.hosts.find(({ id }) => id === event.target.value)!;
+    if (formData?.hosts) {
+      const { ip } = formData.hosts.find(({ id }) => id === event.target.value)!;
       setIp(ip!);
       console.log({ ip });
     }
@@ -79,9 +80,6 @@ export function NodesForm({ refetchNodes }: HostsFormProps) {
     setHaproxy(event.target.checked);
   };
 
-  if (loading) return <>Loading...</>;
-  if (error) return <> Error! ${error.message}</>;
-
   return (
     <>
       <div style={{ display: "flex", flexDirection: "column" }}>
@@ -97,7 +95,7 @@ export function NodesForm({ refetchNodes }: HostsFormProps) {
               label="Chain"
               onChange={handleChainChange}
             >
-              {data?.chains.map(({ name, id }) => (
+              {formData?.chains.map(({ name, id }) => (
                 <MenuItem key={id} value={id}>
                   {name}
                 </MenuItem>
@@ -113,7 +111,7 @@ export function NodesForm({ refetchNodes }: HostsFormProps) {
               label="Host"
               onChange={handleHostChange}
             >
-              {data?.hosts.map(({ name, id, location }) => (
+              {formData?.hosts.map(({ name, id, location }) => (
                 <MenuItem key={id} value={id}>
                   {`${name} - ${location}`}
                 </MenuItem>
@@ -131,11 +129,14 @@ export function NodesForm({ refetchNodes }: HostsFormProps) {
               input={<OutlinedInput label="Load Balancers" />}
               renderValue={(selected) => {
                 return selected
-                  .map((id) => data?.loadBalancers!.find(({ id: lb }) => lb === id)!.name)
+                  .map(
+                    (id) =>
+                      formData?.loadBalancers!.find(({ id: lb }) => lb === id)!.name,
+                  )
                   .join(", ");
               }}
             >
-              {data?.loadBalancers.map(({ name, id }) => (
+              {formData?.loadBalancers.map(({ name, id }) => (
                 <MenuItem key={id} value={id}>
                   <Checkbox checked={loadBalancers.indexOf(id!) > -1} />
                   <ListItemText primary={name} />

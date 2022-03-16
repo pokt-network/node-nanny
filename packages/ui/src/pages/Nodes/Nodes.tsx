@@ -1,18 +1,25 @@
 import { useState } from "react";
 
 import { Table } from "components";
-import { INode, useNodesQuery } from "types";
+import { INode, useGetHostsChainsAndLoadBalancersQuery, useNodesQuery } from "types";
+
+import { NodesCSV } from "./NodesCSV";
 import { NodesForm } from "./NodesForm";
 import { NodeStatus } from "./NodeStatus";
 
 export function Nodes() {
   const [selectedNode, setSelectedNode] = useState<INode | undefined>(undefined);
   const { data, error, loading, refetch } = useNodesQuery();
+  const {
+    data: formData,
+    error: formError,
+    loading: formLoading,
+  } = useGetHostsChainsAndLoadBalancersQuery();
 
-  if (loading && !selectedNode) return <>Loading...</>;
-  if (error) return <>Error! ${error.message}</>;
+  if ((loading || formLoading) && !selectedNode) return <>Loading...</>;
+  if (error || formError) return <>Error! ${(error || formError)?.message}</>;
 
-  if (data) {
+  if (data && formData) {
     return (
       <div
         style={{
@@ -31,10 +38,11 @@ export function Nodes() {
             marginBottom: "16px",
           }}
         >
-          <NodesForm refetchNodes={refetch} />
+          <NodesForm formData={formData} refetchNodes={refetch} />
           {selectedNode && (
             <NodeStatus selectedNode={selectedNode} setSelectedNode={setSelectedNode} />
           )}
+          <NodesCSV formData={formData} />
         </div>
         <Table
           type="Nodes"

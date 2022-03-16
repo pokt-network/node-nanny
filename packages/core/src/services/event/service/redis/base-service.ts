@@ -79,6 +79,8 @@ export default class Service {
     }
   }
 
+  /** Ensures that the Load Balancer's IP is replaced with locahost when running in test mode.
+   * This prevents the automation from takings production nodes out of protation. */
   private getLoadBalancerIP(ip: string): string {
     if (process.env.MONITOR_TEST === "1") return "localhost";
     return ip;

@@ -2,22 +2,20 @@ import { EC2 } from "aws-sdk";
 import axios, { AxiosInstance } from "axios";
 import { exec } from "child_process";
 
-import { Alert, DataDog } from "..";
-import { NodesModel, INode, HostsModel } from "../../models";
 import { Service as DiscordService } from "../discord";
-import { HealthTypes, DataDogTypes, RebootTypes } from "../../types";
+import { NodesModel, INode, HostsModel } from "../../models";
+import { HealthTypes, RebootTypes } from "../../types";
+import { Alert } from "..";
 
 export class Service {
   private agent: AxiosInstance;
   private alert: Alert;
-  private dd: DataDog;
   private ec2: EC2;
 
   constructor() {
     this.agent = this.initAgentClient();
     this.ec2 = new EC2({ region: "us-east-2" });
     this.alert = new Alert();
-    this.dd = new DataDog();
   }
 
   private initAgentClient() {
@@ -58,7 +56,6 @@ export class Service {
 
   /* ---- Rotation Methods ----- */
   async addToRotation(id: string): Promise<boolean> {
-    console.debug("ATTEMPTING TO ADD", { id });
     const { backend, server, host, chain, container, loadBalancers } = await this.getNode(
       id,
     );
@@ -72,9 +69,7 @@ export class Service {
           }),
         ),
       );
-      console.debug("SUCCESSFULLY ADDED", { id });
     } catch (error) {
-      console.debug("ERROR ADDING", { id, error });
       throw new Error(`Could not add ${backend} ${server} to rotation. ${error}`);
     }
 
@@ -146,11 +141,11 @@ export class Service {
     return 1;
   }
 
-  async getMonitorStatus(id: string) {
-    const { monitorId } = await this.getNode(id);
-    const status = await this.dd.getMonitorStatus(monitorId);
-    return !(status === DataDogTypes.Status.ALERT);
-  }
+  // async getMonitorStatus(id: string) {
+  //   const { monitorId } = await this.getNode(id);
+  //   const status = await this.dd.getMonitorStatus(monitorId);
+  //   return !(status === DataDogTypes.Status.ALERT);
+  // }
 
   /* ----- Reboot Methods ----- */
   async rebootServer(id: string): Promise<string> {
@@ -162,55 +157,35 @@ export class Service {
       compose,
       nginx,
       poktType,
-      monitorId,
     } = await this.getNode(id);
+    const { ip } = await HostsModel.findOne({ name: host.name });
 
-    const Host = await HostsModel.findOne({ name: host.name }).exec();
-
-    if (Host) {
-      let { ip } = Host;
-
-      if (process.env.MONITOR_TEST === "1") {
-        ip = "localhost";
-      }
-
-      let reboot: string;
-
-      if (chain.type === HealthTypes.ESupportedBlockChains.POKT) {
-        const { data } = await this.agent.post<{ reboot: string }>(
-          `http://${this.getLoadBalancerIP(ip)}:3001/webhook/docker/reboot`,
-          {
+    const requestData =
+      chain.type === HealthTypes.ESupportedBlockChains.POKT
+        ? {
             name: container,
             type: RebootTypes.ENodeTypes.POKT,
             nginx,
             poktType,
-          },
-        );
-        reboot = data.reboot;
-      } else {
-        const { data } = await this.agent.post<{ reboot: string }>(
-          `http://${this.getLoadBalancerIP(ip)}:3001/webhook/docker/reboot`,
-          {
+          }
+        : {
             name: container,
             type: RebootTypes.ENodeTypes.DATA,
             compose,
-          },
-        );
-        reboot = data.reboot;
-      }
-      await this.dd.muteMonitor({ id: monitorId, minutes: 5 });
-      await this.alert.sendInfo({
-        title: "Manual Reboot",
-        message: `${
-          hostname ? hostname : `${host.name}/${chain.name.toLowerCase()}/${container}`
-        } rebooted \n ${reboot}`,
-        chain: chain.name,
-      });
+          };
 
-      return reboot;
-    }
+    const { data } = await this.agent.post<{ reboot: string }>(
+      `http://${this.getLoadBalancerIP(ip)}:3001/webhook/docker/reboot`,
+      requestData,
+    );
+    const { reboot } = data;
 
-    return;
+    const hostString =
+      hostname || `${host.name}/${chain.name.toLowerCase()}/${container}`;
+    const message = `${hostString} rebooted.\n${reboot}`;
+    await this.alert.sendInfo({ title: "Manual Reboot", message, chain: chain.name });
+
+    return reboot;
   }
 
   async muteMonitor(id: string): Promise<INode> {
@@ -281,6 +256,8 @@ export class Service {
   }
 
   /* ---- Private Methods ----- */
+  /** Ensures that the Load Balancer's IP is replaced with locahost when running in test mode.
+   * This prevents the automation from takings production nodes out of protation. */
   private getLoadBalancerIP(ip: string): string {
     if (process.env.MONITOR_TEST === "1") return "localhost";
     return ip;
