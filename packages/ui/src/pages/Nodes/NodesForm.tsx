@@ -20,7 +20,6 @@ import {
   INodesQuery,
   IGetHostsChainsAndLoadBalancersQuery,
   useCreateNodeMutation,
-  useGetHostsChainsAndLoadBalancersQuery,
 } from "types";
 
 interface HostsFormProps {
