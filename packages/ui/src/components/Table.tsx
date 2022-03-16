@@ -185,7 +185,7 @@ export function Table({
                         .map(([_, value], i) => {
                           return (
                             <TableCell
-                              key={value as any}
+                              key={`${value as any}-${i}`}
                               align={!i ? "left" : "right"}
                               onClick={() => onSelectRow?.(row)}
                             >

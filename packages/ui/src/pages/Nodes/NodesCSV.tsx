@@ -1,9 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { ApolloQueryResult } from "@apollo/client";
 import CSVReader from "react-csv-reader";
-import { Alert, AlertTitle, Box, Button, Modal, Typography } from "@mui/material";
+import {
+  Alert,
+  AlertTitle,
+  Box,
+  Button,
+  CircularProgress,
+  Modal,
+  Typography,
+} from "@mui/material";
 
 import { Table } from "components";
-import { INodeCsvInput, IGetHostsChainsAndLoadBalancersQuery } from "types";
+import {
+  IGetHostsChainsAndLoadBalancersQuery,
+  INodeCsvInput,
+  INodesQuery,
+  useCreateNodesCsvMutation,
+} from "types";
+import { parseBackendError } from "utils";
 
 const style = {
   position: "absolute" as "absolute",
@@ -27,23 +42,42 @@ interface ICSVNode {
   backend?: string;
   server?: string;
 }
-interface ICSVFileInfo {
-  name: string;
-  size: number;
-  type: string;
-}
 
 interface NodesCSVProps {
   formData: IGetHostsChainsAndLoadBalancersQuery;
+  refetchNodes: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
 }
 
-export function NodesCSV({ formData: { chains, hosts, loadBalancers } }: NodesCSVProps) {
+export function NodesCSV({
+  formData: { chains, hosts, loadBalancers },
+  refetchNodes,
+}: NodesCSVProps) {
   const [open, setOpen] = useState(false);
   const [nodes, setNodes] = useState<INodeCsvInput[] | undefined>(undefined);
-  const [error, setError] = useState<string>("");
+  const [nodesError, setNodesError] = useState<string>("");
+  const [backendError, setBackendError] = useState<string>("");
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+
+  const [submit, { error, loading }] = useCreateNodesCsvMutation({
+    onCompleted: () => {
+      refetchNodes();
+      handleClose();
+    },
+  });
+
+  useEffect(() => {
+    if (error) {
+      setBackendError(parseBackendError(error));
+    }
+  }, [error]);
+
+  const submitCSV = () => {
+    if (nodes) {
+      submit({ variables: { nodes } });
+    }
+  };
 
   const validChains = chains.map(({ name }) => name);
   const validHosts = hosts.map(({ name }) => name);
@@ -63,14 +97,14 @@ export function NodesCSV({ formData: { chains, hosts, loadBalancers } }: NodesCS
         value,
       ),
     url: (value: string) =>
-      /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/.test(
+      /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/.test(
         value,
       ),
   };
   const validate = (object: any, schema: { [key: string]: (value: string) => boolean }) =>
     Object.keys(schema).filter((key) => !schema[key](object[key]));
 
-  const parseNodesCSV = (nodesData: ICSVNode[], fileInfo: ICSVFileInfo) => {
+  const parseNodesCSV = (nodesData: ICSVNode[]) => {
     const nodesWithRequiredFields = nodesData.filter((node) =>
       Object.keys(schema).every((key) => Object.keys(node).includes(key)),
     );
@@ -85,21 +119,24 @@ export function NodesCSV({ formData: { chains, hosts, loadBalancers } }: NodesCS
         ...node,
         chain: node.chain.toUpperCase(),
         host: node.host.toLowerCase(),
+        port: Number(node.port),
         loadBalancers: node.loadBalancers?.toLowerCase().split(","),
         haProxy: Boolean(node.haProxy),
       };
     });
 
     if (invalidNodes.length) {
-      setError(invalidNodes.join("\n"));
+      setNodesError(invalidNodes.join("\n"));
     } else {
       setNodes(parsedNodes);
     }
   };
 
   return (
-    <div style={{ cursor: "pointer" }}>
-      <Button onClick={handleOpen}>Open modal</Button>
+    <div>
+      <Button onClick={handleOpen} variant="outlined">
+        Upload CSV
+      </Button>
       <Modal
         open={open}
         onClose={handleClose}
@@ -111,20 +148,34 @@ export function NodesCSV({ formData: { chains, hosts, loadBalancers } }: NodesCS
             Upload Nodes CSV
           </Typography>
           <CSVReader onFileLoaded={parseNodesCSV} parserOptions={{ header: true }} />
-          {error && (
+          {nodesError && (
             <Alert severity="error">
               <AlertTitle>
                 Warning: Invalid fields detected. Please correct the following fields
                 before attempting to upload Nodes CSV.
               </AlertTitle>
-              {error}
+              {nodesError}
+            </Alert>
+          )}
+          {backendError && (
+            <Alert severity="error">
+              <AlertTitle>Backend error: {backendError}</AlertTitle>
             </Alert>
           )}
           {nodes && (
-            <Table
-              type={`Add ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`}
-              rows={nodes}
-            />
+            <>
+              <Table
+                type={`Adding ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`}
+                rows={nodes}
+              />
+              <Button style={{ marginTop: 8 }} onClick={submitCSV} variant="outlined">
+                {loading ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  `Add ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`
+                )}
+              </Button>
+            </>
           )}
         </Box>
       </Modal>
