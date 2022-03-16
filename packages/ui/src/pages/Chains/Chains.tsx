@@ -1,6 +1,5 @@
 import { Table } from "components";
 import { useChainsQuery } from "types";
-import ChainsForm from "./ChainsForm";
 
 export function Chains() {
   const { data, error, loading } = useChainsQuery();
@@ -18,9 +17,6 @@ export function Chains() {
         margin: "16px",
       }}
     >
-      <div style={{ marginBottom: "16px" }}>
-        <ChainsForm />
-      </div>
       {data && <Table type="Chains" searchable paginate rows={data.chains} />}
     </div>
   );

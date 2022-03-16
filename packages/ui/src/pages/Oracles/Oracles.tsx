@@ -1,6 +1,5 @@
 import { Table } from "components";
 import { useOraclesQuery } from "types";
-import { OraclesForm } from "./OraclesForm";
 
 export function Oracles() {
   const { data, error, loading } = useOraclesQuery();
@@ -18,9 +17,6 @@ export function Oracles() {
         margin: "16px",
       }}
     >
-      <div style={{ marginBottom: "16px" }}>
-        <OraclesForm />
-      </div>
       {data && <Table type="Oracles" searchable rows={data.oracles} />}
     </div>
   );
