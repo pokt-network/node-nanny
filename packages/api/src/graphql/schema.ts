@@ -73,6 +73,17 @@ const typeDefs = gql`
     loadBalancers: [ID]
   }
 
+  input NodeCSVInput {
+    chain: String!
+    haProxy: Boolean!
+    host: String!
+    port: String!
+    url: String!
+    loadBalancers: [String]!
+    backend: String
+    server: String
+  }
+
   # Resolvers
   type Query {
     chains: [Chain!]!
