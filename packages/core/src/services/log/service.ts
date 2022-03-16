@@ -1,6 +1,5 @@
 import { createLogger, format, transports, Logger } from "winston";
 import "winston-mongodb";
-import { ILogWriteParams } from "./types";
 
 export class Service {
   public init(id: string): Logger {
@@ -19,8 +18,4 @@ export class Service {
       transports: [transport],
     });
   }
-
-  public write = ({ message, level, logger }: ILogWriteParams): void => {
-    logger.log(level, message);
-  };
 }
