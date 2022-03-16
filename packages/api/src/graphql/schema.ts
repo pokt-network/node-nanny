@@ -61,25 +61,23 @@ const typeDefs = gql`
 
   # Inputs
   input NodeInput {
+    chain: ID!
+    host: ID!
+    port: Int!
+    url: String!
+    loadBalancers: [ID!]!
+    haProxy: Boolean!
     backend: String
-    chain: ID
-    host: ID
-    haProxy: Boolean
-    port: Int
     server: String
-    url: String
-    variance: Int
-    ssl: Boolean
-    loadBalancers: [ID]
   }
 
   input NodeCSVInput {
     chain: String!
-    haProxy: Boolean!
     host: String!
-    port: String!
     url: String!
-    loadBalancers: [String]!
+    loadBalancers: [String!]!
+    port: Int!
+    haProxy: Boolean!
     backend: String
     server: String
   }
@@ -100,7 +98,6 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    createChain(name: String, type: String, variance: Int): Chain
     createHost(
       location: String!
       name: String!
@@ -109,8 +106,7 @@ const typeDefs = gql`
       loadBalancer: Boolean!
     ): Host
     createNode(input: NodeInput): Node
-    createOracle(chain: String, url: String): Oracle
-    createWebhook(location: String, chain: String, url: String): Webhook
+    createNodesCSV(nodes: [NodeCSVInput!]!): [Node]!
 
     updateNode(input: NodeInput): Node
     updateHost(name: String, ip: String): Host
