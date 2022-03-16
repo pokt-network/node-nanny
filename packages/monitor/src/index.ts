@@ -8,117 +8,60 @@ import { Publish } from "./publish";
 
 config();
 
-type Config = {
-  logger: LoggerOptions;
-  event: EventOptions;
-};
-
-enum LoggerOptions {
-  MONGODB = "mongodb",
-  DATADOG = "datadog",
-}
-
-enum EventOptions {
-  REDIS = "redis",
-  DATADOG = "datadog",
-}
+const mode = process.env.MONITOR_TEST === "1" ? "TEST" : "PRODUCTION";
 
 export class App {
   private log: Log;
   private health: Health;
-  private config: Config;
   private publish: Publish;
   private interval: number;
 
-  constructor(config: Config) {
-    this.config = config;
+  constructor() {
     this.health = new Health();
     this.log = new Log();
-    this.publish = this.initPublish();
-    // this.interval = Number(process.env.MONITOR_INTERVAL) || 30000;
-    this.interval = 10000;
+    this.publish = new Publish();
+    this.interval = Number(process.env.MONITOR_INTERVAL || 30000);
   }
 
-  initPublish() {
-    return this.config.event === "redis" ? new Publish() : null;
-  }
-
+  /** Runs a health check on all non-muted nodes in the inventory DB at a set interval.
+   * Events are published to REDIS and logs written to MongoDB.
+   */
   async main() {
     await connect();
 
-    // /* Actual Call */
-    // const nodes = await NodesModel.find({ muted: false })
-    //   .populate("host")
-    //   .populate("chain")
-    //   .exec();
+    const nodes = await NodesModel.find({ muted: false })
+      .populate("host")
+      .populate("chain")
+      .exec();
 
-    /* TEST */
-    const chains = [
-      "ALG", // OK -- CHECK
-      "AVA", // OK -- CHECK
-      "EVM", // OK -- CHECK
-      "HMY", // OK
-      "POKT", // NO_RESPONSE (ALL BUT 3)
-      "SOL", // NO_RESPONSE
-      "TMT", // OK
-    ];
-    const nodesResponse = (
-      await NodesModel.find({ muted: false }).populate("host").populate("chain").exec()
-    ).filter(({ chain }) => chain.type === "EVM");
-    const nodes = nodesResponse;
-    // const nodes = [nodesResponse[0]];
-    console.debug(`NODE IS ${nodes[0].id}`);
-    console.debug(`MONITOR TEST IS ${process.env.MONITOR_TEST === "1"}`);
-    /* TEST */
-
-    console.log(`📺 Monitor Running.\nCurrently monitoring ${nodes.length} nodes...`);
+    console.log(
+      `📺 Monitor Running in ${mode} mode.\nCurrently monitoring ${nodes.length} nodes...`,
+    );
 
     for await (const node of nodes) {
-      node.id = node._id;
       const logger = this.log.init(node.id);
 
-      /* TEST  */
-      let TESTALERT = 1;
-      /* TEST  */
       setInterval(async () => {
+        /* Get Node health */
         const healthResponse = await this.health.getNodeHealth(node);
         const status: HealthTypes.EErrorStatus = healthResponse?.status;
 
+        /* Log to process output */
         if (status === HealthTypes.EErrorStatus.OK) {
           console.log("\x1b[32m%s\x1b[0m", JSON.stringify(healthResponse));
-        }
-        if (status === HealthTypes.EErrorStatus.ERROR) {
+        } else if (status === HealthTypes.EErrorStatus.ERROR) {
           console.log("\x1b[31m%s\x1b[0m", JSON.stringify(healthResponse));
         }
 
-        if (this.config.event === EventOptions.REDIS) {
-          // /* TEST */
-          // if (TESTALERT < 7) {
-          //   status = HealthTypes.EErrorStatus.ERROR;
-          //   healthResponse.conditions = HealthTypes.EErrorConditions.NOT_SYNCHRONIZED;
-          //   TESTALERT++;
-          // } else if (TESTALERT === 7) {
-          //   status = HealthTypes.EErrorStatus.OK;
-          //   healthResponse.conditions = HealthTypes.EErrorConditions.NOT_SYNCHRONIZED;
-          //   TESTALERT++;
-          // }
-          // console.debug({ TESTALERT });
-          // /* TEST */
-          // console.debug({ NODE_ID: node.id });
-          await this.publish.evaluate({ message: healthResponse, id: node.id });
-        }
+        /* Publish event to REDIS */
+        await this.publish.evaluate({ message: healthResponse, id: node.id });
 
-        this.log.write({
-          message: JSON.stringify(healthResponse),
-          level: status === HealthTypes.EErrorStatus.ERROR ? "error" : "info",
-          logger,
-        });
+        /* Log to MongoDB logs collection */
+        const level = status === HealthTypes.EErrorStatus.ERROR ? "error" : "info";
+        this.log.write({ logger, level, message: JSON.stringify(healthResponse) });
       }, this.interval);
     }
   }
 }
 
-new App({
-  logger: process.env.MONITOR_LOGGER as LoggerOptions,
-  event: process.env.MONITOR_EVENT as EventOptions,
-}).main();
+new App().main();
