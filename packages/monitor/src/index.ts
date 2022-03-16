@@ -58,7 +58,7 @@ export class App {
 
         /* Log to MongoDB logs collection */
         const level = status === HealthTypes.EErrorStatus.ERROR ? "error" : "info";
-        this.log.write({ logger, level, message: JSON.stringify(healthResponse) });
+        logger.log({ level, message: JSON.stringify(healthResponse) });
       }, this.interval);
     }
   }
