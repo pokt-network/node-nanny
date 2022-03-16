@@ -3,8 +3,9 @@ import axios, { AxiosInstance } from "axios";
 import { exec } from "child_process";
 
 import { Service as DiscordService } from "../discord";
-import { NodesModel, INode, HostsModel } from "../../models";
+import { NodesModel, INode, HostsModel, ChainsModel } from "../../models";
 import { HealthTypes, RebootTypes } from "../../types";
+import { INodeInput, INodeCsvInput } from "./types";
 import { Alert } from "..";
 
 export class Service {
@@ -33,7 +34,7 @@ export class Service {
   }
 
   /* ----- CRUD Methods ----- */
-  public async createNode(nodeInput: INode): Promise<INode> {
+  public async createNode(nodeInput: INodeInput, restart = true): Promise<INode> {
     let id: string;
     try {
       ({ id } = await NodesModel.create(nodeInput));
@@ -41,16 +42,37 @@ export class Service {
 
       await new DiscordService().addWebhookForNode(node);
 
-      try {
-        await this.restartMonitor();
-      } catch {
-        console.log(`Cannot restart monitor, monitor not running.`);
-      }
+      if (restart) await this.restartMonitor();
 
       return node;
     } catch (error) {
       await NodesModel.deleteOne({ _id: id });
       throw error;
+    }
+  }
+
+  public async createNodesCSV(nodes: INodeCsvInput[]): Promise<INode[]> {
+    try {
+      const createdNodes: INode[] = [];
+      for await (const nodeInput of nodes) {
+        const nodeInputWithIds: INodeInput = {
+          ...nodeInput,
+          chain: await ChainsModel.findOne({ name: nodeInput.chain }),
+          host: await HostsModel.findOne({ name: nodeInput.host }),
+          loadBalancers: (
+            await HostsModel.find({ name: { $in: nodeInput.loadBalancers } })
+          ).map(({ _id }) => _id),
+        };
+
+        const node = await this.createNode(nodeInputWithIds, false);
+        createdNodes.push(node);
+      }
+
+      await this.restartMonitor();
+
+      return createdNodes;
+    } catch (error) {
+      throw new Error(`Node CSV creation error: ${error}`);
     }
   }
 
@@ -201,12 +223,16 @@ export class Service {
   }
 
   private async restartMonitor(): Promise<boolean> {
-    return await new Promise((resolve, reject) => {
-      exec("pm2 restart monitor", (error, stdout) => {
-        if (error) reject(`error: ${error.message}`);
-        resolve(!!stdout);
+    try {
+      return await new Promise((resolve, reject) => {
+        exec("pm2 restart monitor", (error, stdout) => {
+          if (error) reject(`error: ${error.message}`);
+          resolve(!!stdout);
+        });
       });
-    });
+    } catch (error) {
+      console.log("Cannot restart monitor, monitor not running.");
+    }
   }
 
   async getInstanceDetails(awsInstanceId: string) {

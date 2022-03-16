@@ -37,28 +37,16 @@ const resolvers = {
   },
 
   Mutation: {
-    createChain: async (_, chain) => {
-      return await ChainsModel.create(chain);
-    },
     createHost: async (_, host) => {
       return await HostsModel.create(host);
     },
     createNode: async (_, { input }) => {
       return await new AutomationService().createNode(input);
     },
-    createOracle: async (_, { chain, url }) => {
-      const doesExist = await OraclesModel.findOne({ chain }).exec();
-      if (!doesExist) {
-        return await OraclesModel.create({ chain, urls: [url] });
-      }
-      return await OraclesModel.findOneAndUpdate(
-        { chain },
-        { $push: { urls: url } },
-      ).exec();
+    createNodesCSV: async (_, { nodes }) => {
+      return await new AutomationService().createNodesCSV(nodes);
     },
-    createWebhook: async (_, webhook) => {
-      return await WebhookModel.create(webhook);
-    },
+
     muteMonitor: async (_, { id }) => {
       return await new AutomationService().muteMonitor(id);
     },
@@ -76,40 +64,11 @@ const resolvers = {
     },
   },
 
-  /* Return MongoDB ObjectId field `_id` for all types as `id` */
-  // Chain: {
-  //   id(chain: any) {
-  //     return chain._id;
-  //   },
-  // },
   Host: {
-    // id(host: any) {
-    //   return host._id;
-    // },
     location(host: any) {
       return host.location?.name;
     },
   },
-  // Location: {
-  //   id(location: any) {
-  //     return location._id;
-  //   },
-  // },
-  // Node: {
-  //   id(node: any) {
-  //     return node._id;
-  //   },
-  // },
-  // Oracle: {
-  //   id(oracle: any) {
-  //     return oracle._id;
-  //   },
-  // },
-  // Webhook: {
-  //   id(webhook: any) {
-  //     return webhook._id;
-  //   },
-  // },
 };
 
 export default resolvers;
