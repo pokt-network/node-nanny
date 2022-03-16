@@ -28,16 +28,7 @@ export default class Service {
     server,
     loadBalancers,
   }: IRotationParams): Promise<boolean> {
-    console.debug("ATTEMPTING TO ADD", { backend, server });
     try {
-      // const status = await this.getServerStatus({ backend, server, loadBalancers });
-      // console.debug("ATTEMPTING TO ADD STATUS", { status });
-      // if (status === LoadBalancerStatus.ONLINE) {
-      //   const message = this.getErrorMessage(server, "online");
-      //   await this.alert.sendErrorChannel({ title: backend, message });
-      //   throw message;
-      // }
-
       const loadBalancerResponse = await Promise.all(
         loadBalancers.map(({ ip }) =>
           this.agent.post<{ status: string }>(
@@ -48,7 +39,6 @@ export default class Service {
       );
       return loadBalancerResponse.every(({ status }) => Boolean(status));
     } catch (error) {
-      console.debug("STATUS ERROR", { error });
       const message = `Could not contact agent to enable server. ${error}`;
       await this.alert.sendErrorChannel({ title: backend, message });
     }
@@ -135,8 +125,6 @@ export default class Service {
         throw `Could not get backend status.\nIP: ${ip} Backend: ${backend} ${error}`;
       }
     }
-
-    console.debug("INSIDE BACKEND STATUS CHECK", { results });
 
     if (results.every((status) => status === true)) {
       return LoadBalancerStatus.ONLINE;
