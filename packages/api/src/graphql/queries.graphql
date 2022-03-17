@@ -50,6 +50,14 @@ query Nodes {
   }
 }
 
+query Logs($nodeId: ID!, $startDate: String, $endDate: String) {
+  logs(nodeId: $nodeId, startDate: $startDate, endDate: $endDate) {
+    message
+    level
+    timestamp
+  }
+}
+
 query Oracles {
   oracles {
     id
