@@ -21,3 +21,9 @@ export interface INodeCsvInput {
   backend?: string;
   server?: string;
 }
+
+export interface INodeLogParams {
+  nodeId: string;
+  startDate?: string;
+  endDate?: string;
+}

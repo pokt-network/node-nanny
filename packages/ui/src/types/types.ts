@@ -225,7 +225,9 @@ export type IQueryHostsArgs = {
 
 
 export type IQueryLogsArgs = {
-  id?: InputMaybe<Scalars['String']>;
+  endDate?: InputMaybe<Scalars['String']>;
+  nodeId: Scalars['ID'];
+  startDate?: InputMaybe<Scalars['String']>;
 };
 
 

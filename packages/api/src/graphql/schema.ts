@@ -87,11 +87,12 @@ const typeDefs = gql`
     chains: [Chain!]!
     hosts(loadBalancer: Boolean): [Host!]!
     locations: [Location!]!
-    logs(id: String): [Log!]!
     node(id: ID!): Node!
     nodes: [Node!]!
     oracles: [Oracle!]!
     webhooks: [Webhook!]!
+
+    logs(nodeId: ID!, startDate: String, endDate: String): [Log!]!
 
     getHaProxyStatus(id: ID!): Int!
     nodeStatus(id: String): String!

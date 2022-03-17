@@ -1,11 +1,19 @@
 import { EC2 } from "aws-sdk";
 import axios, { AxiosInstance } from "axios";
 import { exec } from "child_process";
+import { FilterQuery, Types } from "mongoose";
 
 import { Service as DiscordService } from "../discord";
-import { NodesModel, INode, HostsModel, ChainsModel } from "../../models";
+import {
+  LogsModel,
+  NodesModel,
+  ILog,
+  INode,
+  HostsModel,
+  ChainsModel,
+} from "../../models";
 import { HealthTypes, RebootTypes } from "../../types";
-import { INodeInput, INodeCsvInput } from "./types";
+import { INodeInput, INodeCsvInput, INodeLogParams } from "./types";
 import { Alert } from "..";
 
 export class Service {
@@ -74,6 +82,18 @@ export class Service {
     } catch (error) {
       throw new Error(`Node CSV creation error: ${error}`);
     }
+  }
+
+  public async getLogsForNode({
+    nodeId,
+    startDate,
+    endDate,
+  }: INodeLogParams): Promise<ILog[]> {
+    const query: FilterQuery<ILog> = { $and: [{ label: nodeId }] };
+    if (startDate) query.$and.push({ timestamp: { $gte: new Date(startDate) } });
+    if (endDate) query.$and.push({ timestamp: { $lte: new Date(endDate) } });
+
+    return await LogsModel.find(query);
   }
 
   /* ---- Rotation Methods ----- */
