@@ -4,7 +4,6 @@ import {
   ChainsModel,
   OraclesModel,
   LocationsModel,
-  LogsModel,
   WebhookModel,
 } from "@pokt-foundation/node-monitoring-core/dist/models";
 import { Automation as AutomationService } from "@pokt-foundation/node-monitoring-core/dist/services";
@@ -16,7 +15,6 @@ const resolvers = {
       const query = loadBalancer ? { loadBalancer } : {};
       return await HostsModel.find(query).populate("location").sort({ name: 1 }).exec();
     },
-    logs: async ({ id }) => await LogsModel.find({ label: id }).exec(),
     locations: async () => await LocationsModel.find({}).exec(),
     node: async (_, { id }) =>
       await NodesModel.find({ _id: id })
@@ -30,6 +28,9 @@ const resolvers = {
         .exec(),
     oracles: async () => await OraclesModel.find({}).populate("chain").exec(),
     webhooks: async () => await WebhookModel.find({}).exec(),
+
+    logs: async (_, { nodeId, startDate, endDate }) =>
+      await new AutomationService().getLogsForNode({ nodeId, startDate, endDate }),
 
     getHaProxyStatus: async (_, { id }) => {
       return await new AutomationService().getHaProxyStatus(id);
