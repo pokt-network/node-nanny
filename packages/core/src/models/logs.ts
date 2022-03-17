@@ -2,16 +2,16 @@ import { Schema, model, Model, Types } from "mongoose";
 
 export interface ILog {
   id: Types.ObjectId;
-  timestamp: string;
+  timestamp: Date;
+  label: string;
   level: string;
   message: string;
-  label: string;
 }
 
 const logSchema = new Schema<ILog>(
   {
-    label: Schema.Types.ObjectId,
-    timestamp: String,
+    timestamp: Schema.Types.Date,
+    label: String,
     level: String,
     message: String,
   },
