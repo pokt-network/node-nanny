@@ -142,9 +142,10 @@ export class Service {
 
   /* ----- Ethereum Virtual Machine ----- */
   private getEVMNodeHealth = async (
-    { chain, url, variance, host, id, port, basicAuth, server }: INode,
+    { chain, url, host, id, port, basicAuth, server }: INode,
     { harmony }: IEVMHealthCheckOptions = { harmony: false },
   ): Promise<IHealthResponse> => {
+    const { variance } = chain;
     const healthResponse: IHealthResponse = {
       name: `${host.name}/${chain.name}/${server}`,
       status: EErrorStatus.OK,
@@ -203,7 +204,7 @@ export class Service {
       const externalHeight = externalBh;
 
       const ethSyncingResult = ethSyncing.result;
-      const delta = externalHeight - internalHeight;
+      const delta = Math.abs(externalHeight - internalHeight);
 
       if (internalBh.error?.code) {
         return {
@@ -308,11 +309,13 @@ export class Service {
   ): Promise<{ healthyUrls: IReferenceURL[]; badUrls: IReferenceURL[] }> {
     const healthyUrls: IReferenceURL[] = [];
     const badUrls: IReferenceURL[] = [];
+
     for await (const { url, auth } of urls) {
       (await this.isRpcResponding({ url }, auth))
         ? healthyUrls.push({ url, auth })
         : badUrls.push({ url, auth });
     }
+
     return { healthyUrls, badUrls };
   }
 
@@ -322,6 +325,7 @@ export class Service {
     harmony?: boolean,
   ): Promise<IRPCResponse> {
     const method = harmony ? "hmyv2_blockNumber" : "eth_blockNumber";
+
     try {
       const { data } = await this.rpc.post<IRPCResponse>(
         url,
@@ -345,6 +349,7 @@ export class Service {
     const resolved = await Promise.all(
       endpoints.map(({ url, auth }) => this.getBlockHeight(url, auth, harmony)),
     );
+
     const readings = resolved
       .filter((reading) => reading.result)
       .map(({ result }) => hexToDec(result));
@@ -391,9 +396,8 @@ export class Service {
   private getPocketNodeHealth = async ({
     id,
     host: { fqdn, ip, name },
-    chain: { id: chainId },
+    chain: { id: chainId, variance },
     port,
-    variance,
   }: INode): Promise<IHealthResponse> => {
     const url = fqdn ? `https://${fqdn}:${port}` : `http://${ip}:${port}`;
 
