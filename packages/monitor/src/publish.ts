@@ -46,8 +46,10 @@ export class Publish {
         const count = this.map.get(id);
         this.map.delete(id);
 
-        const event: EventTypes.IRedisEvent = { ...message, id, count };
-        await this.redis.publish("send-event-resolved", JSON.stringify(event));
+        if (count >= this.threshold) {
+          const event: EventTypes.IRedisEvent = { ...message, id, count };
+          await this.redis.publish("send-event-resolved", JSON.stringify(event));
+        }
       }
     }
   }
