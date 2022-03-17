@@ -24,8 +24,7 @@ export class App {
   }
 
   /** Runs a health check on all non-muted nodes in the inventory DB at a set interval.
-   * Events are published to REDIS and logs written to MongoDB.
-   */
+   * Events are published to REDIS and logs written to MongoDB. */
   async main() {
     await connect();
 
@@ -34,9 +33,8 @@ export class App {
       .populate("chain")
       .exec();
 
-    console.log(
-      `📺 Monitor Running in ${mode} mode.\nCurrently monitoring ${nodes.length} nodes...`,
-    );
+    console.log(`Running in ${mode} mode with ${this.interval / 1000} sec interval.`);
+    console.log(`📺 Currently monitoring ${nodes.length} nodes...`);
 
     for await (const node of nodes) {
       const logger = this.log.init(node.id);
