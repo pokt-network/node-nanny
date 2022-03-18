@@ -50,8 +50,8 @@ query Nodes {
   }
 }
 
-query Logs($nodeId: ID!, $startDate: String, $endDate: String) {
-  logs(nodeId: $nodeId, startDate: $startDate, endDate: $endDate) {
+query Logs($nodeIds: [ID!]!, $startDate: String, $endDate: String) {
+  logs(nodeIds: $nodeIds, startDate: $startDate, endDate: $endDate) {
     message
     level
     timestamp
