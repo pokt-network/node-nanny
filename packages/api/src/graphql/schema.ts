@@ -92,7 +92,7 @@ const typeDefs = gql`
     oracles: [Oracle!]!
     webhooks: [Webhook!]!
 
-    logs(nodeId: ID!, startDate: String, endDate: String): [Log!]!
+    logs(nodeIds: [ID!]!, startDate: String, endDate: String): [Log!]!
 
     getHaProxyStatus(id: ID!): Int!
     nodeStatus(id: String): String!

@@ -85,11 +85,11 @@ export class Service {
   }
 
   public async getLogsForNode({
-    nodeId,
+    nodeIds,
     startDate,
     endDate,
   }: INodeLogParams): Promise<ILog[]> {
-    const query: FilterQuery<ILog> = { $and: [{ label: nodeId }] };
+    const query: FilterQuery<ILog> = { $and: [{ label: { $in: nodeIds } }] };
     if (startDate) query.$and.push({ timestamp: { $gte: new Date(startDate) } });
     if (endDate) query.$and.push({ timestamp: { $lte: new Date(endDate) } });
 
