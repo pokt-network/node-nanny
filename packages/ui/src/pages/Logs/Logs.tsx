@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 
 import { LogTable } from "components";
-import { useLogsLazyQuery, useNodesQuery } from "types";
+import { useLogsQuery, useNodesQuery } from "types";
 
 const ONE_MINUTE = 60 * 1000;
 const ONE_HOUR = ONE_MINUTE * 60;
@@ -20,18 +20,24 @@ const ONE_DAY = ONE_HOUR * 24;
 export function Logs() {
   const [nodes, setNodes] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<number>(ONE_MINUTE * 15);
+  const [logsLoading, setLogsLoading] = useState(false);
 
   const { data: nodesData, error: nodesError, loading: nodesLoading } = useNodesQuery();
-  const [submit, { data: logsData, error: logsError, loading: logsLoading, fetchMore }] =
-    useLogsLazyQuery();
+  const {
+    data: logsData,
+    error: logsError,
+    fetchMore,
+    refetch,
+  } = useLogsQuery({
+    variables: { nodeIds: nodes, page: 1, limit: 100 },
+    onCompleted: () => setLogsLoading(false),
+    onError: () => setLogsLoading(false),
+  });
 
   useEffect(() => {
-    // if (nodes.length) {
-    submit({
-      variables: { nodeIds: nodes, page: 1, limit: 100 },
-    });
-    // }
-  }, [nodes, startDate]);
+    setLogsLoading(true);
+    refetch();
+  }, [nodes]);
 
   const handleNodesChange = ({ target }: SelectChangeEvent<typeof nodes>) => {
     const { value } = target;
@@ -108,8 +114,8 @@ export function Logs() {
           })}
           loading={logsLoading}
           loadItems={() => {
-            console.log({ logsData });
             if (logsData.logs.hasNextPage) {
+              setLogsLoading(true);
               fetchMore({
                 variables: { page: logsData.logs.docs.length / 100 + 1 },
               });
