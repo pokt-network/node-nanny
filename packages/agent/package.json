@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc -b .",
+    "build:clean": "tsc --build --clean && rm -rf ./dist",
     "start": "pnpm build && node ./dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

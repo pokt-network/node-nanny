@@ -33,6 +33,7 @@
   "scripts": {
     "start": "export SKIP_PREFLIGHT_CHECK=true && react-scripts start",
     "build": "export SKIP_PREFLIGHT_CHECK=true && react-scripts build",
+    "build:clean": "rm -rf ./build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
