@@ -10,6 +10,7 @@
     "restart:log": "pm2 restart monitor --attach",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b .",
+    "build:clean": "tsc --build --clean && rm -rf ./dist",
     "build:watch": "tsc -b -w ."
   },
   "keywords": [],
