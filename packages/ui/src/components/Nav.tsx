@@ -18,11 +18,18 @@ export const Nav = (props: any) => {
       <Divider />
       <List>
         <div>
-          <ListItem button onClick={() => history.push("/chains")}>
+          <ListItem button onClick={() => history.push("/logs")}>
             <ListItemIcon>
-              <ShoppingCartIcon />
+              <LayersIcon />
             </ListItemIcon>
-            <ListItemText primary="Chains" />
+            <ListItemText primary="Logs" />
+          </ListItem>
+
+          <ListItem button onClick={() => history.push("/nodes")}>
+            <ListItemIcon>
+              <LayersIcon />
+            </ListItemIcon>
+            <ListItemText primary="Nodes" />
           </ListItem>
 
           <ListItem button onClick={() => history.push("/hosts")}>
@@ -31,18 +38,21 @@ export const Nav = (props: any) => {
             </ListItemIcon>
             <ListItemText primary="Hosts" />
           </ListItem>
+
+          <ListItem button onClick={() => history.push("/chains")}>
+            <ListItemIcon>
+              <ShoppingCartIcon />
+            </ListItemIcon>
+            <ListItemText primary="Chains" />
+          </ListItem>
+
           <ListItem button onClick={() => history.push("/oracles")}>
             <ListItemIcon>
               <BarChartIcon />
             </ListItemIcon>
             <ListItemText primary="Oracles" />
           </ListItem>
-          <ListItem button onClick={() => history.push("/nodes")}>
-            <ListItemIcon>
-              <LayersIcon />
-            </ListItemIcon>
-            <ListItemText primary="Nodes" />
-          </ListItem>
+
           <ListItem button onClick={() => history.push("/webhooks")}>
             <ListItemIcon>
               <LogsIcon />
