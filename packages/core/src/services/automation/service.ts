@@ -96,7 +96,7 @@ export class Service {
     if (startDate) query.$and.push({ timestamp: { $gte: new Date(startDate) } });
     if (endDate) query.$and.push({ timestamp: { $lte: new Date(endDate) } });
 
-    return await LogsModel.paginate(query, { page, limit });
+    return await LogsModel.paginate(query, { page, limit, sort: { timestamp: -1 } });
   }
 
   /* ---- Rotation Methods ----- */
