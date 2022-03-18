@@ -1,7 +1,7 @@
 import { EC2 } from "aws-sdk";
 import axios, { AxiosInstance } from "axios";
 import { exec } from "child_process";
-import { FilterQuery, Types } from "mongoose";
+import { FilterQuery } from "mongoose";
 
 import { Service as DiscordService } from "../discord";
 import {
@@ -9,6 +9,7 @@ import {
   NodesModel,
   ILog,
   INode,
+  IPaginatedLogs,
   HostsModel,
   ChainsModel,
 } from "../../models";
@@ -88,12 +89,14 @@ export class Service {
     nodeIds,
     startDate,
     endDate,
-  }: INodeLogParams): Promise<ILog[]> {
+    page,
+    limit,
+  }: INodeLogParams): Promise<IPaginatedLogs> {
     const query: FilterQuery<ILog> = { $and: [{ label: { $in: nodeIds } }] };
     if (startDate) query.$and.push({ timestamp: { $gte: new Date(startDate) } });
     if (endDate) query.$and.push({ timestamp: { $lte: new Date(endDate) } });
 
-    return await LogsModel.find(query);
+    return await LogsModel.paginate(query, { page, limit });
   }
 
   /* ---- Rotation Methods ----- */

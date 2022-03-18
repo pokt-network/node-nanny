@@ -24,6 +24,8 @@ export interface INodeCsvInput {
 
 export interface INodeLogParams {
   nodeIds: string[];
+  page: number;
+  limit: number;
   startDate?: string;
   endDate?: string;
 }
