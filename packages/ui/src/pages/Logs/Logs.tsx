@@ -22,18 +22,15 @@ export function Logs() {
   const [startDate, setStartDate] = useState<number>(ONE_MINUTE * 15);
 
   const { data: nodesData, error: nodesError, loading: nodesLoading } = useNodesQuery();
-  const [submit, { data: logsData, error: logsError, loading: logsLoading }] =
+  const [submit, { data: logsData, error: logsError, loading: logsLoading, fetchMore }] =
     useLogsLazyQuery();
 
   useEffect(() => {
-    if (nodes.length) {
-      submit({
-        variables: {
-          nodeIds: nodes,
-          startDate: new Date(Date.now() - startDate).toISOString(),
-        },
-      });
-    }
+    // if (nodes.length) {
+    submit({
+      variables: { nodeIds: nodes, page: 1, limit: 100 },
+    });
+    // }
   }, [nodes, startDate]);
 
   const handleNodesChange = ({ target }: SelectChangeEvent<typeof nodes>) => {
@@ -98,10 +95,10 @@ export function Logs() {
       <div style={{ marginTop: "10px" }} />
       {logsData && (
         <LogTable
-          type={`Showing ${logsData.logs.length} log entries for ${nodes.length} Nodes.`}
+          type={`Showing ${logsData.logs.docs.length} log entries for ${nodes.length} Nodes.`}
           searchable
-          rows={logsData.logs.map((log) => {
-            const { message, timestamp } = log;
+          rows={logsData.logs.docs.map((log) => {
+            const { message, timestamp } = log!;
             const parsedMessage = JSON.parse(message);
             delete parsedMessage.health;
             return {
@@ -111,10 +108,12 @@ export function Logs() {
           })}
           loading={logsLoading}
           loadItems={() => {
-            console.log("UPDATING START DATE", { startDate });
-            setStartDate(startDate + ONE_MINUTE * 15);
-            console.log("UPDATING START DATE AFTER", { startDate });
-            // submit();
+            console.log({ logsData });
+            if (logsData.logs.hasNextPage) {
+              fetchMore({
+                variables: { page: logsData.logs.docs.length / 100 + 1 },
+              });
+            }
           }}
         />
       )}

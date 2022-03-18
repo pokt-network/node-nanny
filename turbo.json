@@ -3,6 +3,9 @@
   "pipeline": {
     "build": {
       "dependsOn": ["^build"]
+    },
+    "build:clean": {
+      "dependsOn": ["^build:clean"]
     }
   }
 }

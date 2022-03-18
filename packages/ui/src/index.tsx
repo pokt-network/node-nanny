@@ -9,6 +9,19 @@ const client = new ApolloClient({
   uri: "http://localhost:4000",
   cache: new InMemoryCache({
     addTypename: true,
+    typePolicies: {
+      Query: {
+        fields: {
+          logs: {
+            keyArgs: false,
+            merge(existing = { docs: [] }, incoming) {
+              console.log({ existing, incoming });
+              return { ...incoming, docs: [...existing.docs, ...incoming.docs] };
+            },
+          },
+        },
+      },
+    },
   }),
 });
 
