@@ -3,6 +3,7 @@ import {
   MouseEvent,
   SetStateAction,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -138,7 +139,7 @@ export function LogTable({
       // calculate distanceBottom that works for you
       setDistanceBottom(Math.round((bottom / 100) * 20));
     }
-    if (tableEl.current.scrollTop > bottom - distanceBottom && hasMore && !loading) {
+    if (!loading && tableEl.current.scrollTop > bottom - distanceBottom && hasMore) {
       loadMore();
     }
   }, [hasMore, loadMore, loading, distanceBottom]);
@@ -168,7 +169,6 @@ export function LogTable({
           />
         )}
         <TableContainer sx={{ maxHeight: height || 600 }} ref={tableEl}>
-          {loading && <CircularProgress style={{ position: "absolute", top: "100px" }} />}
           <MUITable
             stickyHeader
             sx={{ minWidth: 750 }}
@@ -196,10 +196,10 @@ export function LogTable({
                       .includes(searchTerm.toLowerCase().trim()),
                 )
                 .sort(getComparator(order, orderBy))
-                .map((row: any) => {
+                .map((row: any, i: number) => {
                   return (
                     <TableRow
-                      key={String(row.id)}
+                      key={`${row.timestamp}-${i}`}
                       sx={{
                         "&:last-child td, &:last-child th": { border: 0 },
                         cursor: `${onSelectRow ? "pointer" : "default"}`,
@@ -225,6 +225,18 @@ export function LogTable({
                 })}
             </TableBody>
           </MUITable>
+          {loading && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                overflow: "hidden",
+                marginTop: 8,
+              }}
+            >
+              <CircularProgress />
+            </div>
+          )}
         </TableContainer>
       </Paper>
     </Box>
