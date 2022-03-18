@@ -201,7 +201,7 @@ export type IOracle = {
 };
 
 export type IPaginatedLogs = {
-  docs: Array<Maybe<ILog>>;
+  docs: Array<ILog>;
   hasNextPage: Scalars['Boolean'];
   hasPrevPage: Scalars['Boolean'];
   limit: Scalars['Int'];
@@ -365,7 +365,7 @@ export type ILogsQueryVariables = Exact<{
 }>;
 
 
-export type ILogsQuery = { logs: { totalDocs: number, page: number, hasPrevPage: boolean, hasNextPage: boolean, docs: Array<{ message: string, level: string, timestamp: string } | null> } };
+export type ILogsQuery = { logs: { totalDocs: number, page: number, hasPrevPage: boolean, hasNextPage: boolean, docs: Array<{ message: string, level: string, timestamp: string }> } };
 
 export type IOraclesQueryVariables = Exact<{ [key: string]: never; }>;
 
