@@ -1,10 +1,14 @@
-import { gql } from '@apollo/client';
-import * as Apollo from '@apollo/client';
+import { gql } from "@apollo/client";
+import * as Apollo from "@apollo/client";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]?: Maybe<T[SubKey]>;
+};
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]: Maybe<T[SubKey]>;
+};
 const defaultOptions = {} as const;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -16,32 +20,32 @@ export type Scalars = {
 };
 
 export type IChain = {
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  type: Scalars['String'];
-  variance?: Maybe<Scalars['Int']>;
+  id: Scalars["ID"];
+  name: Scalars["String"];
+  type: Scalars["String"];
+  variance?: Maybe<Scalars["Int"]>;
 };
 
 export type IHost = {
-  fqdn?: Maybe<Scalars['String']>;
-  id: Scalars['ID'];
-  ip?: Maybe<Scalars['String']>;
-  loadBalancer: Scalars['Boolean'];
-  location: Scalars['String'];
-  name: Scalars['String'];
+  fqdn?: Maybe<Scalars["String"]>;
+  id: Scalars["ID"];
+  ip?: Maybe<Scalars["String"]>;
+  loadBalancer: Scalars["Boolean"];
+  location: Scalars["String"];
+  name: Scalars["String"];
 };
 
 export type ILocation = {
-  id: Scalars['ID'];
-  name: Scalars['String'];
+  id: Scalars["ID"];
+  name: Scalars["String"];
 };
 
 export type ILog = {
-  id: Scalars['ID'];
-  label: Scalars['ID'];
-  level: Scalars['String'];
-  message: Scalars['String'];
-  timestamp: Scalars['String'];
+  id: Scalars["ID"];
+  label: Scalars["ID"];
+  level: Scalars["String"];
+  message: Scalars["String"];
+  timestamp: Scalars["String"];
 };
 
 export type IMutation = {
@@ -52,343 +56,357 @@ export type IMutation = {
   deleteHost?: Maybe<IHost>;
   deleteNode?: Maybe<INode>;
   deleteOracle?: Maybe<IOracle>;
-  disableHaProxyServer: Scalars['Boolean'];
-  enableHaProxyServer: Scalars['Boolean'];
+  disableHaProxyServer: Scalars["Boolean"];
+  enableHaProxyServer: Scalars["Boolean"];
   muteMonitor: INode;
-  rebootServer: Scalars['String'];
+  rebootServer: Scalars["String"];
   unmuteMonitor: INode;
   updateChain?: Maybe<IChain>;
   updateHost?: Maybe<IHost>;
   updateNode?: Maybe<INode>;
-  updateNodeInRotation?: Maybe<Scalars['String']>;
+  updateNodeInRotation?: Maybe<Scalars["String"]>;
   updateOracle?: Maybe<IOracle>;
 };
 
-
 export type IMutationCreateHostArgs = {
-  fqdn?: InputMaybe<Scalars['String']>;
-  ip?: InputMaybe<Scalars['String']>;
-  loadBalancer: Scalars['Boolean'];
-  location: Scalars['String'];
-  name: Scalars['String'];
+  fqdn?: InputMaybe<Scalars["String"]>;
+  ip?: InputMaybe<Scalars["String"]>;
+  loadBalancer: Scalars["Boolean"];
+  location: Scalars["String"];
+  name: Scalars["String"];
 };
-
 
 export type IMutationCreateNodeArgs = {
   input?: InputMaybe<INodeInput>;
 };
 
-
 export type IMutationCreateNodesCsvArgs = {
   nodes: Array<INodeCsvInput>;
 };
 
-
 export type IMutationDeleteChainArgs = {
-  id?: InputMaybe<Scalars['ID']>;
+  id?: InputMaybe<Scalars["ID"]>;
 };
-
 
 export type IMutationDeleteHostArgs = {
-  id?: InputMaybe<Scalars['ID']>;
+  id?: InputMaybe<Scalars["ID"]>;
 };
-
 
 export type IMutationDeleteNodeArgs = {
-  id?: InputMaybe<Scalars['ID']>;
+  id?: InputMaybe<Scalars["ID"]>;
 };
-
 
 export type IMutationDeleteOracleArgs = {
-  id?: InputMaybe<Scalars['ID']>;
+  id?: InputMaybe<Scalars["ID"]>;
 };
-
 
 export type IMutationDisableHaProxyServerArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 export type IMutationEnableHaProxyServerArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 export type IMutationMuteMonitorArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 export type IMutationRebootServerArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 export type IMutationUnmuteMonitorArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 export type IMutationUpdateChainArgs = {
-  name?: InputMaybe<Scalars['String']>;
-  type?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars["String"]>;
+  type?: InputMaybe<Scalars["String"]>;
 };
-
 
 export type IMutationUpdateHostArgs = {
-  ip?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
+  ip?: InputMaybe<Scalars["String"]>;
+  name?: InputMaybe<Scalars["String"]>;
 };
-
 
 export type IMutationUpdateNodeArgs = {
   input?: InputMaybe<INodeInput>;
 };
 
-
 export type IMutationUpdateNodeInRotationArgs = {
-  action?: InputMaybe<Scalars['String']>;
-  id?: InputMaybe<Scalars['ID']>;
+  action?: InputMaybe<Scalars["String"]>;
+  id?: InputMaybe<Scalars["ID"]>;
 };
 
-
 export type IMutationUpdateOracleArgs = {
-  action?: InputMaybe<Scalars['String']>;
-  id?: InputMaybe<Scalars['ID']>;
-  url?: InputMaybe<Scalars['String']>;
+  action?: InputMaybe<Scalars["String"]>;
+  id?: InputMaybe<Scalars["ID"]>;
+  url?: InputMaybe<Scalars["String"]>;
 };
 
 export type INode = {
-  backend?: Maybe<Scalars['String']>;
+  backend?: Maybe<Scalars["String"]>;
   chain: IChain;
-  haProxy: Scalars['Boolean'];
+  haProxy: Scalars["Boolean"];
   host: IHost;
-  id: Scalars['ID'];
-  loadBalancers?: Maybe<Array<Scalars['ID']>>;
-  muted: Scalars['Boolean'];
-  port: Scalars['Int'];
-  server?: Maybe<Scalars['String']>;
-  ssl?: Maybe<Scalars['Boolean']>;
-  url: Scalars['String'];
+  id: Scalars["ID"];
+  loadBalancers?: Maybe<Array<Scalars["ID"]>>;
+  muted: Scalars["Boolean"];
+  port: Scalars["Int"];
+  server?: Maybe<Scalars["String"]>;
+  ssl?: Maybe<Scalars["Boolean"]>;
+  url: Scalars["String"];
 };
 
 export type INodeCsvInput = {
-  backend?: InputMaybe<Scalars['String']>;
-  chain: Scalars['String'];
-  haProxy: Scalars['Boolean'];
-  host: Scalars['String'];
-  loadBalancers: Array<Scalars['String']>;
-  port: Scalars['Int'];
-  server?: InputMaybe<Scalars['String']>;
-  url: Scalars['String'];
+  backend?: InputMaybe<Scalars["String"]>;
+  chain: Scalars["String"];
+  haProxy: Scalars["Boolean"];
+  host: Scalars["String"];
+  loadBalancers: Array<Scalars["String"]>;
+  port: Scalars["Int"];
+  server?: InputMaybe<Scalars["String"]>;
+  url: Scalars["String"];
 };
 
 export type INodeInput = {
-  backend?: InputMaybe<Scalars['String']>;
-  chain: Scalars['ID'];
-  haProxy: Scalars['Boolean'];
-  host: Scalars['ID'];
-  loadBalancers: Array<Scalars['ID']>;
-  port: Scalars['Int'];
-  server?: InputMaybe<Scalars['String']>;
-  url: Scalars['String'];
+  backend?: InputMaybe<Scalars["String"]>;
+  chain: Scalars["ID"];
+  haProxy: Scalars["Boolean"];
+  host: Scalars["ID"];
+  loadBalancers: Array<Scalars["ID"]>;
+  port: Scalars["Int"];
+  server?: InputMaybe<Scalars["String"]>;
+  url: Scalars["String"];
 };
 
 export type IOracle = {
-  chain: Scalars['String'];
-  id: Scalars['ID'];
-  urls?: Maybe<Array<Maybe<Scalars['String']>>>;
+  chain: Scalars["String"];
+  id: Scalars["ID"];
+  urls?: Maybe<Array<Maybe<Scalars["String"]>>>;
 };
 
 export type IQuery = {
   chains: Array<IChain>;
-  getHaProxyStatus: Scalars['Int'];
+  getHaProxyStatus: Scalars["Int"];
   hosts: Array<IHost>;
   locations: Array<ILocation>;
   logs: Array<ILog>;
   node: INode;
-  nodeStatus: Scalars['String'];
+  nodeStatus: Scalars["String"];
   nodes: Array<INode>;
   oracles: Array<IOracle>;
   webhooks: Array<IWebhook>;
 };
 
-
 export type IQueryGetHaProxyStatusArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 export type IQueryHostsArgs = {
-  loadBalancer?: InputMaybe<Scalars['Boolean']>;
+  loadBalancer?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 export type IQueryLogsArgs = {
-  endDate?: InputMaybe<Scalars['String']>;
-  nodeIds: Array<Scalars['ID']>;
-  startDate?: InputMaybe<Scalars['String']>;
+  endDate?: InputMaybe<Scalars["String"]>;
+  nodeIds: Array<Scalars["ID"]>;
+  startDate?: InputMaybe<Scalars["String"]>;
 };
-
 
 export type IQueryNodeArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
 
-
 export type IQueryNodeStatusArgs = {
-  id?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars["String"]>;
 };
 
 export type IWebhook = {
-  chain: Scalars['String'];
-  id: Scalars['ID'];
-  location: Scalars['String'];
-  url: Scalars['String'];
+  chain: Scalars["String"];
+  id: Scalars["ID"];
+  location: Scalars["String"];
+  url: Scalars["String"];
 };
 
 export type ICreateHostMutationVariables = Exact<{
-  location: Scalars['String'];
-  name: Scalars['String'];
-  loadBalancer: Scalars['Boolean'];
-  ip?: InputMaybe<Scalars['String']>;
-  fqdn?: InputMaybe<Scalars['String']>;
+  location: Scalars["String"];
+  name: Scalars["String"];
+  loadBalancer: Scalars["Boolean"];
+  ip?: InputMaybe<Scalars["String"]>;
+  fqdn?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type ICreateHostMutation = { createHost?: { name: string, ip?: string | null, loadBalancer: boolean } | null };
+export type ICreateHostMutation = {
+  createHost?: { name: string; ip?: string | null; loadBalancer: boolean } | null;
+};
 
 export type ICreateNodeMutationVariables = Exact<{
-  chain: Scalars['ID'];
-  host: Scalars['ID'];
-  port: Scalars['Int'];
-  url: Scalars['String'];
-  loadBalancers: Array<Scalars['ID']> | Scalars['ID'];
-  haProxy: Scalars['Boolean'];
-  backend?: InputMaybe<Scalars['String']>;
-  server?: InputMaybe<Scalars['String']>;
+  chain: Scalars["ID"];
+  host: Scalars["ID"];
+  port: Scalars["Int"];
+  url: Scalars["String"];
+  loadBalancers: Array<Scalars["ID"]> | Scalars["ID"];
+  haProxy: Scalars["Boolean"];
+  backend?: InputMaybe<Scalars["String"]>;
+  server?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type ICreateNodeMutation = { createNode?: { id: string, url: string } | null };
+export type ICreateNodeMutation = { createNode?: { id: string; url: string } | null };
 
 export type ICreateNodesCsvMutationVariables = Exact<{
   nodes: Array<INodeCsvInput> | INodeCsvInput;
 }>;
 
-
 export type ICreateNodesCsvMutation = { createNodesCSV: Array<{ id: string } | null> };
 
 export type IRebootServerMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
-
 
 export type IRebootServerMutation = { rebootServer: string };
 
 export type IEnableHaProxyServerMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
-
 
 export type IEnableHaProxyServerMutation = { enableHaProxyServer: boolean };
 
 export type IDisableHaProxyServerMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
-
 
 export type IDisableHaProxyServerMutation = { disableHaProxyServer: boolean };
 
 export type IMuteMonitorMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type IMuteMonitorMutation = { muteMonitor: { id: string, muted: boolean } };
+export type IMuteMonitorMutation = { muteMonitor: { id: string; muted: boolean } };
 
 export type IUnmuteMonitorMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
+export type IUnmuteMonitorMutation = { unmuteMonitor: { id: string; muted: boolean } };
 
-export type IUnmuteMonitorMutation = { unmuteMonitor: { id: string, muted: boolean } };
+export type IChainsQueryVariables = Exact<{ [key: string]: never }>;
 
-export type IChainsQueryVariables = Exact<{ [key: string]: never; }>;
+export type IChainsQuery = {
+  chains: Array<{ id: string; name: string; type: string; variance?: number | null }>;
+};
 
+export type IHostsQueryVariables = Exact<{ [key: string]: never }>;
 
-export type IChainsQuery = { chains: Array<{ id: string, name: string, type: string, variance?: number | null }> };
+export type IHostsQuery = {
+  hosts: Array<{
+    id: string;
+    name: string;
+    ip?: string | null;
+    loadBalancer: boolean;
+    location: string;
+  }>;
+};
 
-export type IHostsQueryVariables = Exact<{ [key: string]: never; }>;
+export type ILocationsQueryVariables = Exact<{ [key: string]: never }>;
 
-
-export type IHostsQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, loadBalancer: boolean, location: string }> };
-
-export type ILocationsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type ILocationsQuery = { locations: Array<{ id: string, name: string }> };
+export type ILocationsQuery = { locations: Array<{ id: string; name: string }> };
 
 export type INodeQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
+export type INodeQuery = {
+  node: {
+    id: string;
+    backend?: string | null;
+    port: number;
+    server?: string | null;
+    url: string;
+    ssl?: boolean | null;
+    muted: boolean;
+    loadBalancers?: Array<string> | null;
+  };
+};
 
-export type INodeQuery = { node: { id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, loadBalancers?: Array<string> | null } };
+export type INodesQueryVariables = Exact<{ [key: string]: never }>;
 
-export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, loadBalancers?: Array<string> | null }> };
+export type INodesQuery = {
+  nodes: Array<{
+    id: string;
+    backend?: string | null;
+    port: number;
+    server?: string | null;
+    url: string;
+    ssl?: boolean | null;
+    muted: boolean;
+    loadBalancers?: Array<string> | null;
+  }>;
+};
 
 export type ILogsQueryVariables = Exact<{
-  nodeIds: Array<Scalars['ID']> | Scalars['ID'];
-  startDate?: InputMaybe<Scalars['String']>;
-  endDate?: InputMaybe<Scalars['String']>;
+  nodeIds: Array<Scalars["ID"]> | Scalars["ID"];
+  startDate?: InputMaybe<Scalars["String"]>;
+  endDate?: InputMaybe<Scalars["String"]>;
 }>;
 
+export type ILogsQuery = {
+  logs: Array<{ message: string; level: string; timestamp: string }>;
+};
 
-export type ILogsQuery = { logs: Array<{ message: string, level: string, timestamp: string }> };
+export type IOraclesQueryVariables = Exact<{ [key: string]: never }>;
 
-export type IOraclesQueryVariables = Exact<{ [key: string]: never; }>;
+export type IOraclesQuery = {
+  oracles: Array<{ id: string; chain: string; urls?: Array<string | null> | null }>;
+};
 
+export type IWebhooksQueryVariables = Exact<{ [key: string]: never }>;
 
-export type IOraclesQuery = { oracles: Array<{ id: string, chain: string, urls?: Array<string | null> | null }> };
+export type IWebhooksQuery = {
+  webhooks: Array<{ id: string; location: string; chain: string; url: string }>;
+};
 
-export type IWebhooksQueryVariables = Exact<{ [key: string]: never; }>;
+export type IGetHostsChainsAndLoadBalancersQueryVariables = Exact<{
+  [key: string]: never;
+}>;
 
-
-export type IWebhooksQuery = { webhooks: Array<{ id: string, location: string, chain: string, url: string }> };
-
-export type IGetHostsChainsAndLoadBalancersQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, location: string }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string }> };
+export type IGetHostsChainsAndLoadBalancersQuery = {
+  hosts: Array<{ id: string; name: string; ip?: string | null; location: string }>;
+  chains: Array<{ id: string; name: string }>;
+  loadBalancers: Array<{ id: string; name: string }>;
+};
 
 export type IGetNodeStatusQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
-
 
 export type IGetNodeStatusQuery = { haProxyStatus: number };
 
-
 export const CreateHostDocument = gql`
-    mutation CreateHost($location: String!, $name: String!, $loadBalancer: Boolean!, $ip: String, $fqdn: String) {
-  createHost(
-    location: $location
-    name: $name
-    ip: $ip
-    fqdn: $fqdn
-    loadBalancer: $loadBalancer
+  mutation CreateHost(
+    $location: String!
+    $name: String!
+    $loadBalancer: Boolean!
+    $ip: String
+    $fqdn: String
   ) {
-    name
-    ip
-    loadBalancer
+    createHost(
+      location: $location
+      name: $name
+      ip: $ip
+      fqdn: $fqdn
+      loadBalancer: $loadBalancer
+    ) {
+      name
+      ip
+      loadBalancer
+    }
   }
-}
-    `;
-export type ICreateHostMutationFn = Apollo.MutationFunction<ICreateHostMutation, ICreateHostMutationVariables>;
+`;
+export type ICreateHostMutationFn = Apollo.MutationFunction<
+  ICreateHostMutation,
+  ICreateHostMutationVariables
+>;
 
 /**
  * __useCreateHostMutation__
@@ -411,24 +429,56 @@ export type ICreateHostMutationFn = Apollo.MutationFunction<ICreateHostMutation,
  *   },
  * });
  */
-export function useCreateHostMutation(baseOptions?: Apollo.MutationHookOptions<ICreateHostMutation, ICreateHostMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ICreateHostMutation, ICreateHostMutationVariables>(CreateHostDocument, options);
-      }
+export function useCreateHostMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    ICreateHostMutation,
+    ICreateHostMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<ICreateHostMutation, ICreateHostMutationVariables>(
+    CreateHostDocument,
+    options,
+  );
+}
 export type CreateHostMutationHookResult = ReturnType<typeof useCreateHostMutation>;
 export type CreateHostMutationResult = Apollo.MutationResult<ICreateHostMutation>;
-export type CreateHostMutationOptions = Apollo.BaseMutationOptions<ICreateHostMutation, ICreateHostMutationVariables>;
+export type CreateHostMutationOptions = Apollo.BaseMutationOptions<
+  ICreateHostMutation,
+  ICreateHostMutationVariables
+>;
 export const CreateNodeDocument = gql`
-    mutation CreateNode($chain: ID!, $host: ID!, $port: Int!, $url: String!, $loadBalancers: [ID!]!, $haProxy: Boolean!, $backend: String, $server: String) {
-  createNode(
-    input: {chain: $chain, host: $host, port: $port, url: $url, loadBalancers: $loadBalancers, haProxy: $haProxy, backend: $backend, server: $server}
+  mutation CreateNode(
+    $chain: ID!
+    $host: ID!
+    $port: Int!
+    $url: String!
+    $loadBalancers: [ID!]!
+    $haProxy: Boolean!
+    $backend: String
+    $server: String
   ) {
-    id
-    url
+    createNode(
+      input: {
+        chain: $chain
+        host: $host
+        port: $port
+        url: $url
+        loadBalancers: $loadBalancers
+        haProxy: $haProxy
+        backend: $backend
+        server: $server
+      }
+    ) {
+      id
+      url
+    }
   }
-}
-    `;
-export type ICreateNodeMutationFn = Apollo.MutationFunction<ICreateNodeMutation, ICreateNodeMutationVariables>;
+`;
+export type ICreateNodeMutationFn = Apollo.MutationFunction<
+  ICreateNodeMutation,
+  ICreateNodeMutationVariables
+>;
 
 /**
  * __useCreateNodeMutation__
@@ -454,21 +504,35 @@ export type ICreateNodeMutationFn = Apollo.MutationFunction<ICreateNodeMutation,
  *   },
  * });
  */
-export function useCreateNodeMutation(baseOptions?: Apollo.MutationHookOptions<ICreateNodeMutation, ICreateNodeMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ICreateNodeMutation, ICreateNodeMutationVariables>(CreateNodeDocument, options);
-      }
+export function useCreateNodeMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    ICreateNodeMutation,
+    ICreateNodeMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<ICreateNodeMutation, ICreateNodeMutationVariables>(
+    CreateNodeDocument,
+    options,
+  );
+}
 export type CreateNodeMutationHookResult = ReturnType<typeof useCreateNodeMutation>;
 export type CreateNodeMutationResult = Apollo.MutationResult<ICreateNodeMutation>;
-export type CreateNodeMutationOptions = Apollo.BaseMutationOptions<ICreateNodeMutation, ICreateNodeMutationVariables>;
+export type CreateNodeMutationOptions = Apollo.BaseMutationOptions<
+  ICreateNodeMutation,
+  ICreateNodeMutationVariables
+>;
 export const CreateNodesCsvDocument = gql`
-    mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
-  createNodesCSV(nodes: $nodes) {
-    id
+  mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
+    createNodesCSV(nodes: $nodes) {
+      id
+    }
   }
-}
-    `;
-export type ICreateNodesCsvMutationFn = Apollo.MutationFunction<ICreateNodesCsvMutation, ICreateNodesCsvMutationVariables>;
+`;
+export type ICreateNodesCsvMutationFn = Apollo.MutationFunction<
+  ICreateNodesCsvMutation,
+  ICreateNodesCsvMutationVariables
+>;
 
 /**
  * __useCreateNodesCsvMutation__
@@ -487,19 +551,35 @@ export type ICreateNodesCsvMutationFn = Apollo.MutationFunction<ICreateNodesCsvM
  *   },
  * });
  */
-export function useCreateNodesCsvMutation(baseOptions?: Apollo.MutationHookOptions<ICreateNodesCsvMutation, ICreateNodesCsvMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ICreateNodesCsvMutation, ICreateNodesCsvMutationVariables>(CreateNodesCsvDocument, options);
-      }
-export type CreateNodesCsvMutationHookResult = ReturnType<typeof useCreateNodesCsvMutation>;
-export type CreateNodesCsvMutationResult = Apollo.MutationResult<ICreateNodesCsvMutation>;
-export type CreateNodesCsvMutationOptions = Apollo.BaseMutationOptions<ICreateNodesCsvMutation, ICreateNodesCsvMutationVariables>;
-export const RebootServerDocument = gql`
-    mutation RebootServer($id: ID!) {
-  rebootServer(id: $id)
+export function useCreateNodesCsvMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    ICreateNodesCsvMutation,
+    ICreateNodesCsvMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<ICreateNodesCsvMutation, ICreateNodesCsvMutationVariables>(
+    CreateNodesCsvDocument,
+    options,
+  );
 }
-    `;
-export type IRebootServerMutationFn = Apollo.MutationFunction<IRebootServerMutation, IRebootServerMutationVariables>;
+export type CreateNodesCsvMutationHookResult = ReturnType<
+  typeof useCreateNodesCsvMutation
+>;
+export type CreateNodesCsvMutationResult = Apollo.MutationResult<ICreateNodesCsvMutation>;
+export type CreateNodesCsvMutationOptions = Apollo.BaseMutationOptions<
+  ICreateNodesCsvMutation,
+  ICreateNodesCsvMutationVariables
+>;
+export const RebootServerDocument = gql`
+  mutation RebootServer($id: ID!) {
+    rebootServer(id: $id)
+  }
+`;
+export type IRebootServerMutationFn = Apollo.MutationFunction<
+  IRebootServerMutation,
+  IRebootServerMutationVariables
+>;
 
 /**
  * __useRebootServerMutation__
@@ -518,19 +598,33 @@ export type IRebootServerMutationFn = Apollo.MutationFunction<IRebootServerMutat
  *   },
  * });
  */
-export function useRebootServerMutation(baseOptions?: Apollo.MutationHookOptions<IRebootServerMutation, IRebootServerMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<IRebootServerMutation, IRebootServerMutationVariables>(RebootServerDocument, options);
-      }
+export function useRebootServerMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    IRebootServerMutation,
+    IRebootServerMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<IRebootServerMutation, IRebootServerMutationVariables>(
+    RebootServerDocument,
+    options,
+  );
+}
 export type RebootServerMutationHookResult = ReturnType<typeof useRebootServerMutation>;
 export type RebootServerMutationResult = Apollo.MutationResult<IRebootServerMutation>;
-export type RebootServerMutationOptions = Apollo.BaseMutationOptions<IRebootServerMutation, IRebootServerMutationVariables>;
+export type RebootServerMutationOptions = Apollo.BaseMutationOptions<
+  IRebootServerMutation,
+  IRebootServerMutationVariables
+>;
 export const EnableHaProxyServerDocument = gql`
-    mutation EnableHaProxyServer($id: ID!) {
-  enableHaProxyServer(id: $id)
-}
-    `;
-export type IEnableHaProxyServerMutationFn = Apollo.MutationFunction<IEnableHaProxyServerMutation, IEnableHaProxyServerMutationVariables>;
+  mutation EnableHaProxyServer($id: ID!) {
+    enableHaProxyServer(id: $id)
+  }
+`;
+export type IEnableHaProxyServerMutationFn = Apollo.MutationFunction<
+  IEnableHaProxyServerMutation,
+  IEnableHaProxyServerMutationVariables
+>;
 
 /**
  * __useEnableHaProxyServerMutation__
@@ -549,19 +643,36 @@ export type IEnableHaProxyServerMutationFn = Apollo.MutationFunction<IEnableHaPr
  *   },
  * });
  */
-export function useEnableHaProxyServerMutation(baseOptions?: Apollo.MutationHookOptions<IEnableHaProxyServerMutation, IEnableHaProxyServerMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<IEnableHaProxyServerMutation, IEnableHaProxyServerMutationVariables>(EnableHaProxyServerDocument, options);
-      }
-export type EnableHaProxyServerMutationHookResult = ReturnType<typeof useEnableHaProxyServerMutation>;
-export type EnableHaProxyServerMutationResult = Apollo.MutationResult<IEnableHaProxyServerMutation>;
-export type EnableHaProxyServerMutationOptions = Apollo.BaseMutationOptions<IEnableHaProxyServerMutation, IEnableHaProxyServerMutationVariables>;
-export const DisableHaProxyServerDocument = gql`
-    mutation DisableHaProxyServer($id: ID!) {
-  disableHaProxyServer(id: $id)
+export function useEnableHaProxyServerMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    IEnableHaProxyServerMutation,
+    IEnableHaProxyServerMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    IEnableHaProxyServerMutation,
+    IEnableHaProxyServerMutationVariables
+  >(EnableHaProxyServerDocument, options);
 }
-    `;
-export type IDisableHaProxyServerMutationFn = Apollo.MutationFunction<IDisableHaProxyServerMutation, IDisableHaProxyServerMutationVariables>;
+export type EnableHaProxyServerMutationHookResult = ReturnType<
+  typeof useEnableHaProxyServerMutation
+>;
+export type EnableHaProxyServerMutationResult =
+  Apollo.MutationResult<IEnableHaProxyServerMutation>;
+export type EnableHaProxyServerMutationOptions = Apollo.BaseMutationOptions<
+  IEnableHaProxyServerMutation,
+  IEnableHaProxyServerMutationVariables
+>;
+export const DisableHaProxyServerDocument = gql`
+  mutation DisableHaProxyServer($id: ID!) {
+    disableHaProxyServer(id: $id)
+  }
+`;
+export type IDisableHaProxyServerMutationFn = Apollo.MutationFunction<
+  IDisableHaProxyServerMutation,
+  IDisableHaProxyServerMutationVariables
+>;
 
 /**
  * __useDisableHaProxyServerMutation__
@@ -580,22 +691,39 @@ export type IDisableHaProxyServerMutationFn = Apollo.MutationFunction<IDisableHa
  *   },
  * });
  */
-export function useDisableHaProxyServerMutation(baseOptions?: Apollo.MutationHookOptions<IDisableHaProxyServerMutation, IDisableHaProxyServerMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<IDisableHaProxyServerMutation, IDisableHaProxyServerMutationVariables>(DisableHaProxyServerDocument, options);
-      }
-export type DisableHaProxyServerMutationHookResult = ReturnType<typeof useDisableHaProxyServerMutation>;
-export type DisableHaProxyServerMutationResult = Apollo.MutationResult<IDisableHaProxyServerMutation>;
-export type DisableHaProxyServerMutationOptions = Apollo.BaseMutationOptions<IDisableHaProxyServerMutation, IDisableHaProxyServerMutationVariables>;
-export const MuteMonitorDocument = gql`
-    mutation MuteMonitor($id: ID!) {
-  muteMonitor(id: $id) {
-    id
-    muted
-  }
+export function useDisableHaProxyServerMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    IDisableHaProxyServerMutation,
+    IDisableHaProxyServerMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    IDisableHaProxyServerMutation,
+    IDisableHaProxyServerMutationVariables
+  >(DisableHaProxyServerDocument, options);
 }
-    `;
-export type IMuteMonitorMutationFn = Apollo.MutationFunction<IMuteMonitorMutation, IMuteMonitorMutationVariables>;
+export type DisableHaProxyServerMutationHookResult = ReturnType<
+  typeof useDisableHaProxyServerMutation
+>;
+export type DisableHaProxyServerMutationResult =
+  Apollo.MutationResult<IDisableHaProxyServerMutation>;
+export type DisableHaProxyServerMutationOptions = Apollo.BaseMutationOptions<
+  IDisableHaProxyServerMutation,
+  IDisableHaProxyServerMutationVariables
+>;
+export const MuteMonitorDocument = gql`
+  mutation MuteMonitor($id: ID!) {
+    muteMonitor(id: $id) {
+      id
+      muted
+    }
+  }
+`;
+export type IMuteMonitorMutationFn = Apollo.MutationFunction<
+  IMuteMonitorMutation,
+  IMuteMonitorMutationVariables
+>;
 
 /**
  * __useMuteMonitorMutation__
@@ -614,22 +742,36 @@ export type IMuteMonitorMutationFn = Apollo.MutationFunction<IMuteMonitorMutatio
  *   },
  * });
  */
-export function useMuteMonitorMutation(baseOptions?: Apollo.MutationHookOptions<IMuteMonitorMutation, IMuteMonitorMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<IMuteMonitorMutation, IMuteMonitorMutationVariables>(MuteMonitorDocument, options);
-      }
+export function useMuteMonitorMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    IMuteMonitorMutation,
+    IMuteMonitorMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<IMuteMonitorMutation, IMuteMonitorMutationVariables>(
+    MuteMonitorDocument,
+    options,
+  );
+}
 export type MuteMonitorMutationHookResult = ReturnType<typeof useMuteMonitorMutation>;
 export type MuteMonitorMutationResult = Apollo.MutationResult<IMuteMonitorMutation>;
-export type MuteMonitorMutationOptions = Apollo.BaseMutationOptions<IMuteMonitorMutation, IMuteMonitorMutationVariables>;
+export type MuteMonitorMutationOptions = Apollo.BaseMutationOptions<
+  IMuteMonitorMutation,
+  IMuteMonitorMutationVariables
+>;
 export const UnmuteMonitorDocument = gql`
-    mutation UnmuteMonitor($id: ID!) {
-  unmuteMonitor(id: $id) {
-    id
-    muted
+  mutation UnmuteMonitor($id: ID!) {
+    unmuteMonitor(id: $id) {
+      id
+      muted
+    }
   }
-}
-    `;
-export type IUnmuteMonitorMutationFn = Apollo.MutationFunction<IUnmuteMonitorMutation, IUnmuteMonitorMutationVariables>;
+`;
+export type IUnmuteMonitorMutationFn = Apollo.MutationFunction<
+  IUnmuteMonitorMutation,
+  IUnmuteMonitorMutationVariables
+>;
 
 /**
  * __useUnmuteMonitorMutation__
@@ -648,23 +790,34 @@ export type IUnmuteMonitorMutationFn = Apollo.MutationFunction<IUnmuteMonitorMut
  *   },
  * });
  */
-export function useUnmuteMonitorMutation(baseOptions?: Apollo.MutationHookOptions<IUnmuteMonitorMutation, IUnmuteMonitorMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<IUnmuteMonitorMutation, IUnmuteMonitorMutationVariables>(UnmuteMonitorDocument, options);
-      }
+export function useUnmuteMonitorMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    IUnmuteMonitorMutation,
+    IUnmuteMonitorMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<IUnmuteMonitorMutation, IUnmuteMonitorMutationVariables>(
+    UnmuteMonitorDocument,
+    options,
+  );
+}
 export type UnmuteMonitorMutationHookResult = ReturnType<typeof useUnmuteMonitorMutation>;
 export type UnmuteMonitorMutationResult = Apollo.MutationResult<IUnmuteMonitorMutation>;
-export type UnmuteMonitorMutationOptions = Apollo.BaseMutationOptions<IUnmuteMonitorMutation, IUnmuteMonitorMutationVariables>;
+export type UnmuteMonitorMutationOptions = Apollo.BaseMutationOptions<
+  IUnmuteMonitorMutation,
+  IUnmuteMonitorMutationVariables
+>;
 export const ChainsDocument = gql`
-    query Chains {
-  chains {
-    id
-    name
-    type
-    variance
+  query Chains {
+    chains {
+      id
+      name
+      type
+      variance
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useChainsQuery__
@@ -681,28 +834,35 @@ export const ChainsDocument = gql`
  *   },
  * });
  */
-export function useChainsQuery(baseOptions?: Apollo.QueryHookOptions<IChainsQuery, IChainsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<IChainsQuery, IChainsQueryVariables>(ChainsDocument, options);
-      }
-export function useChainsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<IChainsQuery, IChainsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<IChainsQuery, IChainsQueryVariables>(ChainsDocument, options);
-        }
+export function useChainsQuery(
+  baseOptions?: Apollo.QueryHookOptions<IChainsQuery, IChainsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<IChainsQuery, IChainsQueryVariables>(ChainsDocument, options);
+}
+export function useChainsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<IChainsQuery, IChainsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<IChainsQuery, IChainsQueryVariables>(
+    ChainsDocument,
+    options,
+  );
+}
 export type ChainsQueryHookResult = ReturnType<typeof useChainsQuery>;
 export type ChainsLazyQueryHookResult = ReturnType<typeof useChainsLazyQuery>;
 export type ChainsQueryResult = Apollo.QueryResult<IChainsQuery, IChainsQueryVariables>;
 export const HostsDocument = gql`
-    query Hosts {
-  hosts {
-    id
-    name
-    ip
-    loadBalancer
-    location
+  query Hosts {
+    hosts {
+      id
+      name
+      ip
+      loadBalancer
+      location
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useHostsQuery__
@@ -719,25 +879,29 @@ export const HostsDocument = gql`
  *   },
  * });
  */
-export function useHostsQuery(baseOptions?: Apollo.QueryHookOptions<IHostsQuery, IHostsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<IHostsQuery, IHostsQueryVariables>(HostsDocument, options);
-      }
-export function useHostsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<IHostsQuery, IHostsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<IHostsQuery, IHostsQueryVariables>(HostsDocument, options);
-        }
+export function useHostsQuery(
+  baseOptions?: Apollo.QueryHookOptions<IHostsQuery, IHostsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<IHostsQuery, IHostsQueryVariables>(HostsDocument, options);
+}
+export function useHostsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<IHostsQuery, IHostsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<IHostsQuery, IHostsQueryVariables>(HostsDocument, options);
+}
 export type HostsQueryHookResult = ReturnType<typeof useHostsQuery>;
 export type HostsLazyQueryHookResult = ReturnType<typeof useHostsLazyQuery>;
 export type HostsQueryResult = Apollo.QueryResult<IHostsQuery, IHostsQueryVariables>;
 export const LocationsDocument = gql`
-    query Locations {
-  locations {
-    id
-    name
+  query Locations {
+    locations {
+      id
+      name
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useLocationsQuery__
@@ -754,31 +918,44 @@ export const LocationsDocument = gql`
  *   },
  * });
  */
-export function useLocationsQuery(baseOptions?: Apollo.QueryHookOptions<ILocationsQuery, ILocationsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ILocationsQuery, ILocationsQueryVariables>(LocationsDocument, options);
-      }
-export function useLocationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ILocationsQuery, ILocationsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ILocationsQuery, ILocationsQueryVariables>(LocationsDocument, options);
-        }
+export function useLocationsQuery(
+  baseOptions?: Apollo.QueryHookOptions<ILocationsQuery, ILocationsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<ILocationsQuery, ILocationsQueryVariables>(
+    LocationsDocument,
+    options,
+  );
+}
+export function useLocationsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ILocationsQuery, ILocationsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<ILocationsQuery, ILocationsQueryVariables>(
+    LocationsDocument,
+    options,
+  );
+}
 export type LocationsQueryHookResult = ReturnType<typeof useLocationsQuery>;
 export type LocationsLazyQueryHookResult = ReturnType<typeof useLocationsLazyQuery>;
-export type LocationsQueryResult = Apollo.QueryResult<ILocationsQuery, ILocationsQueryVariables>;
+export type LocationsQueryResult = Apollo.QueryResult<
+  ILocationsQuery,
+  ILocationsQueryVariables
+>;
 export const NodeDocument = gql`
-    query Node($id: ID!) {
-  node(id: $id) {
-    id
-    backend
-    port
-    server
-    url
-    ssl
-    muted
-    loadBalancers
+  query Node($id: ID!) {
+    node(id: $id) {
+      id
+      backend
+      port
+      server
+      url
+      ssl
+      muted
+      loadBalancers
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useNodeQuery__
@@ -796,31 +973,35 @@ export const NodeDocument = gql`
  *   },
  * });
  */
-export function useNodeQuery(baseOptions: Apollo.QueryHookOptions<INodeQuery, INodeQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<INodeQuery, INodeQueryVariables>(NodeDocument, options);
-      }
-export function useNodeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<INodeQuery, INodeQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<INodeQuery, INodeQueryVariables>(NodeDocument, options);
-        }
+export function useNodeQuery(
+  baseOptions: Apollo.QueryHookOptions<INodeQuery, INodeQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<INodeQuery, INodeQueryVariables>(NodeDocument, options);
+}
+export function useNodeLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<INodeQuery, INodeQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<INodeQuery, INodeQueryVariables>(NodeDocument, options);
+}
 export type NodeQueryHookResult = ReturnType<typeof useNodeQuery>;
 export type NodeLazyQueryHookResult = ReturnType<typeof useNodeLazyQuery>;
 export type NodeQueryResult = Apollo.QueryResult<INodeQuery, INodeQueryVariables>;
 export const NodesDocument = gql`
-    query Nodes {
-  nodes {
-    id
-    backend
-    port
-    server
-    url
-    ssl
-    muted
-    loadBalancers
+  query Nodes {
+    nodes {
+      id
+      backend
+      port
+      server
+      url
+      ssl
+      muted
+      loadBalancers
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useNodesQuery__
@@ -837,26 +1018,30 @@ export const NodesDocument = gql`
  *   },
  * });
  */
-export function useNodesQuery(baseOptions?: Apollo.QueryHookOptions<INodesQuery, INodesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<INodesQuery, INodesQueryVariables>(NodesDocument, options);
-      }
-export function useNodesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<INodesQuery, INodesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<INodesQuery, INodesQueryVariables>(NodesDocument, options);
-        }
+export function useNodesQuery(
+  baseOptions?: Apollo.QueryHookOptions<INodesQuery, INodesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<INodesQuery, INodesQueryVariables>(NodesDocument, options);
+}
+export function useNodesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<INodesQuery, INodesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<INodesQuery, INodesQueryVariables>(NodesDocument, options);
+}
 export type NodesQueryHookResult = ReturnType<typeof useNodesQuery>;
 export type NodesLazyQueryHookResult = ReturnType<typeof useNodesLazyQuery>;
 export type NodesQueryResult = Apollo.QueryResult<INodesQuery, INodesQueryVariables>;
 export const LogsDocument = gql`
-    query Logs($nodeIds: [ID!]!, $startDate: String, $endDate: String) {
-  logs(nodeIds: $nodeIds, startDate: $startDate, endDate: $endDate) {
-    message
-    level
-    timestamp
+  query Logs($nodeIds: [ID!]!, $startDate: String, $endDate: String) {
+    logs(nodeIds: $nodeIds, startDate: $startDate, endDate: $endDate) {
+      message
+      level
+      timestamp
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useLogsQuery__
@@ -876,26 +1061,30 @@ export const LogsDocument = gql`
  *   },
  * });
  */
-export function useLogsQuery(baseOptions: Apollo.QueryHookOptions<ILogsQuery, ILogsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ILogsQuery, ILogsQueryVariables>(LogsDocument, options);
-      }
-export function useLogsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ILogsQuery, ILogsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ILogsQuery, ILogsQueryVariables>(LogsDocument, options);
-        }
+export function useLogsQuery(
+  baseOptions: Apollo.QueryHookOptions<ILogsQuery, ILogsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<ILogsQuery, ILogsQueryVariables>(LogsDocument, options);
+}
+export function useLogsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ILogsQuery, ILogsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<ILogsQuery, ILogsQueryVariables>(LogsDocument, options);
+}
 export type LogsQueryHookResult = ReturnType<typeof useLogsQuery>;
 export type LogsLazyQueryHookResult = ReturnType<typeof useLogsLazyQuery>;
 export type LogsQueryResult = Apollo.QueryResult<ILogsQuery, ILogsQueryVariables>;
 export const OraclesDocument = gql`
-    query Oracles {
-  oracles {
-    id
-    chain
-    urls
+  query Oracles {
+    oracles {
+      id
+      chain
+      urls
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useOraclesQuery__
@@ -912,27 +1101,37 @@ export const OraclesDocument = gql`
  *   },
  * });
  */
-export function useOraclesQuery(baseOptions?: Apollo.QueryHookOptions<IOraclesQuery, IOraclesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<IOraclesQuery, IOraclesQueryVariables>(OraclesDocument, options);
-      }
-export function useOraclesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<IOraclesQuery, IOraclesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<IOraclesQuery, IOraclesQueryVariables>(OraclesDocument, options);
-        }
+export function useOraclesQuery(
+  baseOptions?: Apollo.QueryHookOptions<IOraclesQuery, IOraclesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<IOraclesQuery, IOraclesQueryVariables>(OraclesDocument, options);
+}
+export function useOraclesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<IOraclesQuery, IOraclesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<IOraclesQuery, IOraclesQueryVariables>(
+    OraclesDocument,
+    options,
+  );
+}
 export type OraclesQueryHookResult = ReturnType<typeof useOraclesQuery>;
 export type OraclesLazyQueryHookResult = ReturnType<typeof useOraclesLazyQuery>;
-export type OraclesQueryResult = Apollo.QueryResult<IOraclesQuery, IOraclesQueryVariables>;
+export type OraclesQueryResult = Apollo.QueryResult<
+  IOraclesQuery,
+  IOraclesQueryVariables
+>;
 export const WebhooksDocument = gql`
-    query Webhooks {
-  webhooks {
-    id
-    location
-    chain
-    url
+  query Webhooks {
+    webhooks {
+      id
+      location
+      chain
+      url
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useWebhooksQuery__
@@ -949,35 +1148,48 @@ export const WebhooksDocument = gql`
  *   },
  * });
  */
-export function useWebhooksQuery(baseOptions?: Apollo.QueryHookOptions<IWebhooksQuery, IWebhooksQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<IWebhooksQuery, IWebhooksQueryVariables>(WebhooksDocument, options);
-      }
-export function useWebhooksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<IWebhooksQuery, IWebhooksQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<IWebhooksQuery, IWebhooksQueryVariables>(WebhooksDocument, options);
-        }
+export function useWebhooksQuery(
+  baseOptions?: Apollo.QueryHookOptions<IWebhooksQuery, IWebhooksQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<IWebhooksQuery, IWebhooksQueryVariables>(
+    WebhooksDocument,
+    options,
+  );
+}
+export function useWebhooksLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<IWebhooksQuery, IWebhooksQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<IWebhooksQuery, IWebhooksQueryVariables>(
+    WebhooksDocument,
+    options,
+  );
+}
 export type WebhooksQueryHookResult = ReturnType<typeof useWebhooksQuery>;
 export type WebhooksLazyQueryHookResult = ReturnType<typeof useWebhooksLazyQuery>;
-export type WebhooksQueryResult = Apollo.QueryResult<IWebhooksQuery, IWebhooksQueryVariables>;
+export type WebhooksQueryResult = Apollo.QueryResult<
+  IWebhooksQuery,
+  IWebhooksQueryVariables
+>;
 export const GetHostsChainsAndLoadBalancersDocument = gql`
-    query GetHostsChainsAndLoadBalancers {
-  hosts {
-    id
-    name
-    ip
-    location
+  query GetHostsChainsAndLoadBalancers {
+    hosts {
+      id
+      name
+      ip
+      location
+    }
+    chains {
+      id
+      name
+    }
+    loadBalancers: hosts(loadBalancer: true) {
+      id
+      name
+    }
   }
-  chains {
-    id
-    name
-  }
-  loadBalancers: hosts(loadBalancer: true) {
-    id
-    name
-  }
-}
-    `;
+`;
 
 /**
  * __useGetHostsChainsAndLoadBalancersQuery__
@@ -994,22 +1206,45 @@ export const GetHostsChainsAndLoadBalancersDocument = gql`
  *   },
  * });
  */
-export function useGetHostsChainsAndLoadBalancersQuery(baseOptions?: Apollo.QueryHookOptions<IGetHostsChainsAndLoadBalancersQuery, IGetHostsChainsAndLoadBalancersQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<IGetHostsChainsAndLoadBalancersQuery, IGetHostsChainsAndLoadBalancersQueryVariables>(GetHostsChainsAndLoadBalancersDocument, options);
-      }
-export function useGetHostsChainsAndLoadBalancersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<IGetHostsChainsAndLoadBalancersQuery, IGetHostsChainsAndLoadBalancersQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<IGetHostsChainsAndLoadBalancersQuery, IGetHostsChainsAndLoadBalancersQueryVariables>(GetHostsChainsAndLoadBalancersDocument, options);
-        }
-export type GetHostsChainsAndLoadBalancersQueryHookResult = ReturnType<typeof useGetHostsChainsAndLoadBalancersQuery>;
-export type GetHostsChainsAndLoadBalancersLazyQueryHookResult = ReturnType<typeof useGetHostsChainsAndLoadBalancersLazyQuery>;
-export type GetHostsChainsAndLoadBalancersQueryResult = Apollo.QueryResult<IGetHostsChainsAndLoadBalancersQuery, IGetHostsChainsAndLoadBalancersQueryVariables>;
-export const GetNodeStatusDocument = gql`
-    query GetNodeStatus($id: ID!) {
-  haProxyStatus: getHaProxyStatus(id: $id)
+export function useGetHostsChainsAndLoadBalancersQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    IGetHostsChainsAndLoadBalancersQuery,
+    IGetHostsChainsAndLoadBalancersQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    IGetHostsChainsAndLoadBalancersQuery,
+    IGetHostsChainsAndLoadBalancersQueryVariables
+  >(GetHostsChainsAndLoadBalancersDocument, options);
 }
-    `;
+export function useGetHostsChainsAndLoadBalancersLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    IGetHostsChainsAndLoadBalancersQuery,
+    IGetHostsChainsAndLoadBalancersQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    IGetHostsChainsAndLoadBalancersQuery,
+    IGetHostsChainsAndLoadBalancersQueryVariables
+  >(GetHostsChainsAndLoadBalancersDocument, options);
+}
+export type GetHostsChainsAndLoadBalancersQueryHookResult = ReturnType<
+  typeof useGetHostsChainsAndLoadBalancersQuery
+>;
+export type GetHostsChainsAndLoadBalancersLazyQueryHookResult = ReturnType<
+  typeof useGetHostsChainsAndLoadBalancersLazyQuery
+>;
+export type GetHostsChainsAndLoadBalancersQueryResult = Apollo.QueryResult<
+  IGetHostsChainsAndLoadBalancersQuery,
+  IGetHostsChainsAndLoadBalancersQueryVariables
+>;
+export const GetNodeStatusDocument = gql`
+  query GetNodeStatus($id: ID!) {
+    haProxyStatus: getHaProxyStatus(id: $id)
+  }
+`;
 
 /**
  * __useGetNodeStatusQuery__
@@ -1027,14 +1262,32 @@ export const GetNodeStatusDocument = gql`
  *   },
  * });
  */
-export function useGetNodeStatusQuery(baseOptions: Apollo.QueryHookOptions<IGetNodeStatusQuery, IGetNodeStatusQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<IGetNodeStatusQuery, IGetNodeStatusQueryVariables>(GetNodeStatusDocument, options);
-      }
-export function useGetNodeStatusLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<IGetNodeStatusQuery, IGetNodeStatusQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<IGetNodeStatusQuery, IGetNodeStatusQueryVariables>(GetNodeStatusDocument, options);
-        }
+export function useGetNodeStatusQuery(
+  baseOptions: Apollo.QueryHookOptions<IGetNodeStatusQuery, IGetNodeStatusQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<IGetNodeStatusQuery, IGetNodeStatusQueryVariables>(
+    GetNodeStatusDocument,
+    options,
+  );
+}
+export function useGetNodeStatusLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    IGetNodeStatusQuery,
+    IGetNodeStatusQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<IGetNodeStatusQuery, IGetNodeStatusQueryVariables>(
+    GetNodeStatusDocument,
+    options,
+  );
+}
 export type GetNodeStatusQueryHookResult = ReturnType<typeof useGetNodeStatusQuery>;
-export type GetNodeStatusLazyQueryHookResult = ReturnType<typeof useGetNodeStatusLazyQuery>;
-export type GetNodeStatusQueryResult = Apollo.QueryResult<IGetNodeStatusQuery, IGetNodeStatusQueryVariables>;
+export type GetNodeStatusLazyQueryHookResult = ReturnType<
+  typeof useGetNodeStatusLazyQuery
+>;
+export type GetNodeStatusQueryResult = Apollo.QueryResult<
+  IGetNodeStatusQuery,
+  IGetNodeStatusQueryVariables
+>;
