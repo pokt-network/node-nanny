@@ -24,7 +24,13 @@ export default new ApolloClient({
               },
               incoming: IPaginatedLogs,
             ) {
-              return { ...incoming, docs: [...existing.docs, ...incoming.docs] };
+              return {
+                ...incoming,
+                docs: [...existing.docs, ...incoming.docs].sort(
+                  (a, b) =>
+                    new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+                ),
+              };
             },
           },
         },

@@ -32,7 +32,7 @@ const typeDefs = gql`
   }
 
   type PaginatedLogs {
-    docs: [Log]!
+    docs: [Log!]!
     totalDocs: Int!
     limit: Int!
     totalPages: Int!
