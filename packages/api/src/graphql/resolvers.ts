@@ -29,8 +29,8 @@ const resolvers = {
     oracles: async () => await OraclesModel.find({}).populate("chain").exec(),
     webhooks: async () => await WebhookModel.find({}).exec(),
 
-    logs: async (_, { nodeId, startDate, endDate }) =>
-      await new AutomationService().getLogsForNode({ nodeId, startDate, endDate }),
+    logs: async (_, { nodeIds, startDate, endDate }) =>
+      await new AutomationService().getLogsForNode({ nodeIds, startDate, endDate }),
 
     getHaProxyStatus: async (_, { id }) => {
       return await new AutomationService().getHaProxyStatus(id);

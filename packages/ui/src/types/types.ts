@@ -226,7 +226,7 @@ export type IQueryHostsArgs = {
 
 export type IQueryLogsArgs = {
   endDate?: InputMaybe<Scalars['String']>;
-  nodeId: Scalars['ID'];
+  nodeIds: Array<Scalars['ID']>;
   startDate?: InputMaybe<Scalars['String']>;
 };
 
@@ -340,6 +340,15 @@ export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, loadBalancers?: Array<string> | null }> };
+
+export type ILogsQueryVariables = Exact<{
+  nodeIds: Array<Scalars['ID']> | Scalars['ID'];
+  startDate?: InputMaybe<Scalars['String']>;
+  endDate?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type ILogsQuery = { logs: Array<{ message: string, level: string, timestamp: string }> };
 
 export type IOraclesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -839,6 +848,45 @@ export function useNodesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<INod
 export type NodesQueryHookResult = ReturnType<typeof useNodesQuery>;
 export type NodesLazyQueryHookResult = ReturnType<typeof useNodesLazyQuery>;
 export type NodesQueryResult = Apollo.QueryResult<INodesQuery, INodesQueryVariables>;
+export const LogsDocument = gql`
+    query Logs($nodeIds: [ID!]!, $startDate: String, $endDate: String) {
+  logs(nodeIds: $nodeIds, startDate: $startDate, endDate: $endDate) {
+    message
+    level
+    timestamp
+  }
+}
+    `;
+
+/**
+ * __useLogsQuery__
+ *
+ * To run a query within a React component, call `useLogsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLogsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLogsQuery({
+ *   variables: {
+ *      nodeIds: // value for 'nodeIds'
+ *      startDate: // value for 'startDate'
+ *      endDate: // value for 'endDate'
+ *   },
+ * });
+ */
+export function useLogsQuery(baseOptions: Apollo.QueryHookOptions<ILogsQuery, ILogsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ILogsQuery, ILogsQueryVariables>(LogsDocument, options);
+      }
+export function useLogsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ILogsQuery, ILogsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ILogsQuery, ILogsQueryVariables>(LogsDocument, options);
+        }
+export type LogsQueryHookResult = ReturnType<typeof useLogsQuery>;
+export type LogsLazyQueryHookResult = ReturnType<typeof useLogsLazyQuery>;
+export type LogsQueryResult = Apollo.QueryResult<ILogsQuery, ILogsQueryVariables>;
 export const OraclesDocument = gql`
     query Oracles {
   oracles {
