@@ -3,14 +3,16 @@ import {
   MouseEvent,
   SetStateAction,
   useCallback,
-  useEffect,
   useLayoutEffect,
   useRef,
   useState,
 } from "react";
 import {
   Box,
+  Chip,
   CircularProgress,
+  Collapse,
+  IconButton,
   Paper,
   Table as MUITable,
   TableBody,
@@ -21,7 +23,10 @@ import {
   TableSortLabel,
   Typography,
 } from "@mui/material";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
+import { ILogsQuery, IParsedLog } from "types";
 import { formatHeaderCell } from "utils";
 import SearchBar from "./SearchBar";
 
@@ -60,13 +65,15 @@ function EnhancedTableHead({ rows, order, orderBy, onRequestSort }: EnhancedTabl
   };
   const headCells = rows.length
     ? Object.keys(rows[0])
-        .filter((value) => value !== "id" && value !== "__typename")
+        .filter((value) => value !== "id" && value !== "__typename" && value !== "health")
         .map((column) => ({ id: column, label: formatHeaderCell(column) }))
     : [];
 
   return (
     <TableHead>
       <TableRow>
+        <TableCell />
+        <TableCell />
         {headCells.map((headCell, i) => (
           <TableCell
             key={headCell.id}
@@ -88,7 +95,7 @@ function EnhancedTableHead({ rows, order, orderBy, onRequestSort }: EnhancedTabl
 }
 
 interface TableProps {
-  rows: any;
+  rows: ILogsQuery["logs"]["docs"];
   loading: boolean;
   loadItems: any;
   height?: number;
@@ -112,6 +119,19 @@ export function LogTable({
   const [orderBy, setOrderBy] = useState("");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
+  const parseLogsForTable = (logs: ILogsQuery["logs"]["docs"]): IParsedLog[] => {
+    return logs.map(({ message, timestamp }) => {
+      const parsedMessage = JSON.parse(message);
+      return {
+        timestamp: new Date(Number(timestamp)).toISOString(),
+        ...parsedMessage,
+      };
+    });
+  };
+
+  const parsedRows = parseLogsForTable(rows);
+
+  /* ----- Sorting ----- */
   const handleRequestSort = (_event: MouseEvent<unknown>, property: any) => {
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
@@ -122,9 +142,6 @@ export function LogTable({
   const tableEl: any = useRef();
 
   const [distanceBottom, setDistanceBottom] = useState(0);
-  // hasMore should come from the place where you do the data fetching
-  // for example, it could be a prop passed from the parent component
-  // or come from some store
   const [hasMore] = useState(true);
 
   const loadMore = useCallback(() => {
@@ -133,10 +150,7 @@ export function LogTable({
 
   const scrollListener = useCallback(() => {
     let bottom = tableEl.current.scrollHeight - tableEl.current.clientHeight;
-    // if you want to change distanceBottom every time new data is loaded
-    // don't use the if statement
     if (!distanceBottom) {
-      // calculate distanceBottom that works for you
       setDistanceBottom(Math.round((bottom / 100) * 20));
     }
     if (!loading && tableEl.current.scrollTop > bottom - distanceBottom && hasMore) {
@@ -151,6 +165,75 @@ export function LogTable({
       tableRef.removeEventListener("scroll", scrollListener);
     };
   }, [scrollListener]);
+
+  /* ----- Row Component ----- */
+  interface RowProps {
+    row: IParsedLog;
+    index: number;
+  }
+
+  const Row = ({ row, index }: RowProps) => {
+    const [open, setOpen] = useState(false);
+
+    return (
+      <>
+        <TableRow
+          key={`${row.timestamp}-${index}`}
+          sx={{
+            "&:last-child td, &:last-child th": { border: 0 },
+            cursor: `${onSelectRow ? "pointer" : "default"}`,
+          }}
+          hover={!!onSelectRow}
+          selected={selectedRow === String(row.timestamp)}
+        >
+          <TableCell sx={{ width: 16 }}>
+            <Chip
+              sx={{ width: "100%" }}
+              color={
+                ({ OK: "success", ERROR: "error" }[row.status] as any) ||
+                ("default" as any)
+              }
+            />
+          </TableCell>
+          <TableCell>
+            <IconButton
+              aria-label="expand row"
+              size="small"
+              onClick={() => setOpen(!open)}
+            >
+              {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+            </IconButton>
+          </TableCell>
+          {Object.entries(row)
+            .filter(([key]) => key !== "id" && key !== "__typename" && key !== "health")
+            .map(([_, value], i) => {
+              return (
+                <TableCell
+                  key={`${value as any}-${i}`}
+                  align={!i ? "left" : "right"}
+                  onClick={() => onSelectRow?.(row)}
+                >
+                  {Array.isArray(value) ? value.join(", ") : String(value)}
+                </TableCell>
+              );
+            })}
+        </TableRow>
+        <TableRow>
+          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+            <Collapse in={open} timeout="auto" unmountOnExit>
+              <Box sx={{ margin: 1 }}>
+                <Typography variant="h6" gutterBottom component="div">
+                  <div>
+                    <pre>{JSON.stringify(row.health, null, 2)}</pre>
+                  </div>
+                </Typography>
+              </Box>
+            </Collapse>
+          </TableCell>
+        </TableRow>
+      </>
+    );
+  };
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -176,16 +259,15 @@ export function LogTable({
             size="small"
           >
             <EnhancedTableHead
-              rows={rows}
+              rows={parsedRows}
               order={order}
               orderBy={orderBy}
               onRequestSort={handleRequestSort}
               rowCount={rows.length}
             />
             <TableBody>
-              {rows
+              {parsedRows
                 .slice()
-
                 .filter(
                   (row: any) =>
                     !searchable ||
@@ -196,33 +278,9 @@ export function LogTable({
                       .includes(searchTerm.toLowerCase().trim()),
                 )
                 .sort(getComparator(order, orderBy))
-                .map((row: any, i: number) => {
-                  return (
-                    <TableRow
-                      key={`${row.timestamp}-${i}`}
-                      sx={{
-                        "&:last-child td, &:last-child th": { border: 0 },
-                        cursor: `${onSelectRow ? "pointer" : "default"}`,
-                      }}
-                      hover={!!onSelectRow}
-                      selected={selectedRow === String(row.id)}
-                    >
-                      {Object.entries(row)
-                        .filter(([key]) => key !== "id" && key !== "__typename")
-                        .map(([_, value], i) => {
-                          return (
-                            <TableCell
-                              key={`${value as any}-${i}`}
-                              align={!i ? "left" : "right"}
-                              onClick={() => onSelectRow?.(row)}
-                            >
-                              {Array.isArray(value) ? value.join(", ") : String(value)}
-                            </TableCell>
-                          );
-                        })}
-                    </TableRow>
-                  );
-                })}
+                .map((row, i: number) => (
+                  <Row row={row} index={i} />
+                ))}
             </TableBody>
           </MUITable>
           {loading && (

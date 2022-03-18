@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 
 import { LogTable } from "components";
-import { useLogsQuery, useNodesQuery } from "types";
+import { ILogsQuery, IParsedLog, useLogsQuery, useNodesQuery } from "types";
 
 const ONE_MINUTE = 60 * 1000;
 const ONE_HOUR = ONE_MINUTE * 60;
@@ -103,15 +103,7 @@ export function Logs() {
         <LogTable
           type={`Showing ${logsData.logs.docs.length} log entries for ${nodes.length} Nodes.`}
           searchable
-          rows={logsData.logs.docs.map((log) => {
-            const { message, timestamp } = log!;
-            const parsedMessage = JSON.parse(message);
-            delete parsedMessage.health;
-            return {
-              timestamp: new Date(Number(timestamp)).toISOString(),
-              ...parsedMessage,
-            };
-          })}
+          rows={logsData.logs.docs}
           loading={logsLoading}
           loadItems={() => {
             if (logsData.logs.hasNextPage) {
