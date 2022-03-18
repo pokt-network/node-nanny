@@ -10,26 +10,31 @@ import {
   SelectChangeEvent,
 } from "@mui/material";
 
-import { Table } from "components";
+import { LogTable } from "components";
 import { useLogsLazyQuery, useNodesQuery } from "types";
 
+const ONE_MINUTE = 60 * 1000;
+const ONE_HOUR = ONE_MINUTE * 60;
+const ONE_DAY = ONE_HOUR * 24;
+
 export function Logs() {
+  const [nodes, setNodes] = useState<string[]>([]);
+  const [startDate, setStartDate] = useState<number>(ONE_MINUTE * 15);
+
   const { data: nodesData, error: nodesError, loading: nodesLoading } = useNodesQuery();
   const [submit, { data: logsData, error: logsError, loading: logsLoading }] =
     useLogsLazyQuery();
-
-  const [nodes, setNodes] = useState<string[]>([]);
 
   useEffect(() => {
     if (nodes.length) {
       submit({
         variables: {
           nodeIds: nodes,
-          startDate: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+          startDate: new Date(Date.now() - startDate).toISOString(),
         },
       });
     }
-  }, [nodes]);
+  }, [nodes, startDate]);
 
   const handleNodesChange = ({ target }: SelectChangeEvent<typeof nodes>) => {
     const { value } = target;
@@ -74,12 +79,27 @@ export function Logs() {
           ))}
         </Select>
       </FormControl>
+      {/* <div style={{ marginTop: "10px" }} />
+      <FormControl fullWidth>
+        <InputLabel id="chain-label">Chain</InputLabel>
+        <Select
+          labelId="chain-label"
+          value={chain}
+          label="Chain"
+          onChange={handleChainChange}
+        >
+          {formData?.chains.map(({ name, id }) => (
+            <MenuItem key={id} value={id}>
+              {name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl> */}
       <div style={{ marginTop: "10px" }} />
       {logsData && (
-        <Table
+        <LogTable
           type={`Showing ${logsData.logs.length} log entries for ${nodes.length} Nodes.`}
           searchable
-          paginate
           rows={logsData.logs.map((log) => {
             const { message, timestamp } = log;
             const parsedMessage = JSON.parse(message);
@@ -89,6 +109,13 @@ export function Logs() {
               ...parsedMessage,
             };
           })}
+          loading={logsLoading}
+          loadItems={() => {
+            console.log("UPDATING START DATE", { startDate });
+            setStartDate(startDate + ONE_MINUTE * 15);
+            console.log("UPDATING START DATE AFTER", { startDate });
+            // submit();
+          }}
         />
       )}
     </div>

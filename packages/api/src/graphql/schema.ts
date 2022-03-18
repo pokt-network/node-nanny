@@ -31,6 +31,19 @@ const typeDefs = gql`
     label: ID!
   }
 
+  type PaginatedLogs {
+    docs: [Log]!
+    totalDocs: Int!
+    limit: Int!
+    totalPages: Int!
+    page: Int!
+    pagingCounter: Int!
+    hasPrevPage: Boolean!
+    hasNextPage: Boolean!
+    prevPage: Int
+    nextPage: Int
+  }
+
   type Node {
     id: ID!
     chain: Chain!
@@ -92,7 +105,13 @@ const typeDefs = gql`
     oracles: [Oracle!]!
     webhooks: [Webhook!]!
 
-    logs(nodeIds: [ID!]!, startDate: String, endDate: String): [Log!]!
+    logs(
+      nodeIds: [ID!]!
+      page: Int!
+      limit: Int!
+      startDate: String
+      endDate: String
+    ): PaginatedLogs!
 
     getHaProxyStatus(id: ID!): Int!
     nodeStatus(id: String): String!
