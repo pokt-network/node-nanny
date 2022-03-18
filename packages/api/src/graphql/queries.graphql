@@ -50,11 +50,29 @@ query Nodes {
   }
 }
 
-query Logs($nodeIds: [ID!]!, $startDate: String, $endDate: String) {
-  logs(nodeIds: $nodeIds, startDate: $startDate, endDate: $endDate) {
-    message
-    level
-    timestamp
+query Logs(
+  $nodeIds: [ID!]!
+  $page: Int!
+  $limit: Int!
+  $startDate: String
+  $endDate: String
+) {
+  logs(
+    nodeIds: $nodeIds
+    page: $page
+    limit: $limit
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    docs {
+      message
+      level
+      timestamp
+    }
+    totalDocs
+    page
+    hasPrevPage
+    hasNextPage
   }
 }
 
