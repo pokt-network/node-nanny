@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Checkbox,
   FormControl,
@@ -15,20 +15,34 @@ import { useLogsLazyQuery, useNodesQuery } from "types";
 
 export function Logs() {
   const { data: nodesData, error: nodesError, loading: nodesLoading } = useNodesQuery();
-  const [submit, { data, error, loading }] = useLogsLazyQuery();
+  const [submit, { data: logsData, error: logsError, loading: logsLoading }] =
+    useLogsLazyQuery();
 
   const [nodes, setNodes] = useState<string[]>([]);
 
+  useEffect(() => {
+    if (nodes.length) {
+      submit({
+        variables: {
+          nodeIds: nodes,
+          startDate: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+        },
+      });
+    }
+  }, [nodes]);
+
   const handleNodesChange = ({ target }: SelectChangeEvent<typeof nodes>) => {
     const { value } = target;
+    console.log({ value });
     setNodes(typeof value === "string" ? value.split(",") : value);
   };
 
   if (nodesLoading) return <>Loading...</>;
-  if (nodesError) return <>Error! ${nodesError.message}</>;
+  if (nodesError || logsError) return <>Error! ${(nodesError || logsError)?.message}</>;
+
+  if (logsData) console.log("LOGS DATA HERE!!!", { logsData });
 
   return (
-    //TEST
     <div
       style={{
         display: "flex",
@@ -61,7 +75,22 @@ export function Logs() {
         </Select>
       </FormControl>
       <div style={{ marginTop: "10px" }} />
-      {/* {data && <Table type="Chains" searchable paginate rows={data.chains} />} */}
+      {logsData && (
+        <Table
+          type={`Showing ${logsData.logs.length} log entries for ${nodes.length} Nodes.`}
+          searchable
+          paginate
+          rows={logsData.logs.map((log) => {
+            const { message, timestamp } = log;
+            const parsedMessage = JSON.parse(message);
+            delete parsedMessage.health;
+            return {
+              timestamp: new Date(Number(timestamp)).toISOString(),
+              ...parsedMessage,
+            };
+          })}
+        />
+      )}
     </div>
   );
 }
