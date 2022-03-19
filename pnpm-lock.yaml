@@ -140,9 +140,12 @@ importers:
       '@types/react': ^17.0.0
       '@types/react-dom': ^17.0.0
       '@types/react-router-dom': ^5.3.2
+      chart.js: ^3.7.1
+      dayjs: ^1.11.0
       emotion: ^10.0.0
       graphql: ^16.0.1
       react: ^17.0.2
+      react-chartjs-2: ^4.0.1
       react-csv-reader: ^3.4.0
       react-dom: ^17.0.2
       react-router-dom: ^5.3.0
@@ -156,7 +159,7 @@ importers:
       '@emotion/react': 11.8.2_00d6772dea80510e818fd171caaa025a
       '@emotion/styled': 11.8.1_19c9b884401318110e0b35fad34f7b03
       '@mui/icons-material': 5.5.1_60f8b97964d7bdbbeebbd56934a4b237
-      '@mui/lab': 5.0.0-alpha.73_443d084d0f852601ea4d0d409322d595
+      '@mui/lab': 5.0.0-alpha.73_336407bb9fe369eb0d38c9f855a4797c
       '@mui/material': 5.0.0-rc.1_04cccb159326fc32d263f5d228230564
       '@mui/styled-engine-sc': 5.4.2_styled-components@5.3.3
       '@testing-library/jest-dom': 5.16.2
@@ -167,9 +170,12 @@ importers:
       '@types/react': 17.0.40
       '@types/react-dom': 17.0.13
       '@types/react-router-dom': 5.3.3
+      chart.js: 3.7.1
+      dayjs: 1.11.0
       emotion: 10.0.27
       graphql: 16.3.0
       react: 17.0.2
+      react-chartjs-2: 4.0.1_chart.js@3.7.1+react@17.0.2
       react-csv-reader: 3.4.0_react-dom@17.0.2+react@17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-router-dom: 5.3.0_react@17.0.2
@@ -2632,7 +2638,7 @@ packages:
       '@date-io/core': 2.13.1
     dev: false
 
-  /@date-io/dayjs/2.13.1:
+  /@date-io/dayjs/2.13.1_dayjs@1.11.0:
     resolution: {integrity: sha512-5bL4WWWmlI4uGZVScANhHJV7Mjp93ec2gNeUHDqqLaMZhp51S0NgD25oqj/k0LqBn1cdU2MvzNpk/ObMmVv5cQ==}
     peerDependencies:
       dayjs: ^1.8.17
@@ -2641,6 +2647,7 @@ packages:
         optional: true
     dependencies:
       '@date-io/core': 2.13.1
+      dayjs: 1.11.0
     dev: false
 
   /@date-io/luxon/2.13.1:
@@ -3877,7 +3884,7 @@ packages:
       react: 17.0.2
     dev: false
 
-  /@mui/lab/5.0.0-alpha.73_443d084d0f852601ea4d0d409322d595:
+  /@mui/lab/5.0.0-alpha.73_336407bb9fe369eb0d38c9f855a4797c:
     resolution: {integrity: sha512-10Uj0Atc7gBTXKX4VV38P6RdqTQrJZxcl3HeEcytIO1S3NAGfc7gZ3Hdpnhtj5U8kcRJZZPH9LtrBbMZzxU/1A==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
@@ -3903,7 +3910,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.17.7
       '@date-io/date-fns': 2.13.1
-      '@date-io/dayjs': 2.13.1
+      '@date-io/dayjs': 2.13.1_dayjs@1.11.0
       '@date-io/luxon': 2.13.1
       '@date-io/moment': 2.13.1
       '@mui/base': 5.0.0-alpha.72_f456dfc349ace84b0ea11d9e6e4ef3ab
@@ -3912,6 +3919,7 @@ packages:
       '@mui/utils': 5.4.4_react@17.0.2
       '@types/react': 17.0.40
       clsx: 1.1.1
+      dayjs: 1.11.0
       prop-types: 15.8.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
@@ -6830,6 +6838,10 @@ packages:
     resolution: {integrity: sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==}
     dev: true
 
+  /chart.js/3.7.1:
+    resolution: {integrity: sha512-8knRegQLFnPQAheZV8MjxIXc5gQEfDFD897BJgv/klO/vtIyFFmgMXrNfgrXpbTr/XbTturxRgxIXx/Y+ASJBA==}
+    dev: false
+
   /check-types/11.1.2:
     resolution: {integrity: sha512-tzWzvgePgLORb9/3a0YenggReLKAIb2owL03H2Xdoe5pKcUyWRSEQ8xfCar8t2SIAuEDwtmx2da1YB52YuHQMQ==}
     dev: false
@@ -7735,6 +7747,10 @@ packages:
   /date-fns/1.30.1:
     resolution: {integrity: sha512-hBSVCvSmWC+QypYObzwGOd9wqdDpOt+0wl0KbU+R+uuZBS1jN8VsD1ss3irQDknRj5NvxiTF6oj/nDRnN/UQNw==}
     dev: true
+
+  /dayjs/1.11.0:
+    resolution: {integrity: sha512-JLC809s6Y948/FuCZPm5IX8rRhQwOiyMb2TfVVQEixG7P8Lm/gt5S7yoQZmC8x1UehI9Pb7sksEt4xx14m+7Ug==}
+    dev: false
 
   /dd-trace/1.7.1:
     resolution: {integrity: sha512-hRrgJgjP3xF/s4EKxSGzOG+ARkWyRz33dwIwi1gJych7zSE7qnt5VL6LcK1Jou4mfyn+kHUbbb0d7t19YpmZsg==}
@@ -14394,6 +14410,16 @@ packages:
       raf: 3.4.1
       regenerator-runtime: 0.13.9
       whatwg-fetch: 3.6.2
+    dev: false
+
+  /react-chartjs-2/4.0.1_chart.js@3.7.1+react@17.0.2:
+    resolution: {integrity: sha512-q8bgWzKoFvBvD7YcjT/hXG8jt55TaMAuJ1dmI3tKFJ7CijUWYz4pIfOhkTI6PBTwqu/pmeWsClBRd/7HiWzN1g==}
+    peerDependencies:
+      chart.js: ^3.5.0
+      react: ^16.8.0 || ^17.0.0
+    dependencies:
+      chart.js: 3.7.1
+      react: 17.0.2
     dev: false
 
   /react-csv-reader/3.4.0_react-dom@17.0.2+react@17.0.2:
