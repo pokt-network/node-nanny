@@ -34,9 +34,21 @@ export class Service {
     });
   }
 
-  private getLoadBalancerIP(ip: string): string {
-    if (process.env.MONITOR_TEST === "1") return "localhost";
-    return ip;
+  private getLoadBalancers({
+    loadBalancers,
+  }: INode): { internalHostName: string; externalHostName: string }[] {
+    if (process.env.MONITOR_TEST === "1")
+      return [
+        {
+          internalHostName: "ip-10-0-0-102.us-east-2.compute.internal",
+          externalHostName: "ec2-18-118-59-87.us-east-2.compute.amazonaws.com",
+        },
+        {
+          internalHostName: "ip-10-0-0-85.us-east-2.compute.internal",
+          externalHostName: "ec2-18-189-159-188.us-east-2.compute.amazonaws.com",
+        },
+      ];
+    return loadBalancers;
   }
 
   async isPeersOk({ chain, nodeId }) {
@@ -99,10 +111,10 @@ export class Service {
       }
       return await Promise.all(
         loadBalancers.map(async ({ internalHostName }) =>
-          this.agent.post(
-            `http://${this.getLoadBalancerIP(internalHostName)}:3001/webhook/lb/disable`,
-            { backend, server },
-          ),
+          this.agent.post(`http://${internalHostName}:3001/webhook/lb/disable`, {
+            backend,
+            server,
+          }),
         ),
       );
     } catch (error) {
@@ -117,10 +129,7 @@ export class Service {
     try {
       return await Promise.all(
         loadBalancers.map(({ internalHostName }) =>
-          this.agent.post(
-            `http://${this.getLoadBalancerIP(internalHostName)}:3001/webhook/lb/enable`,
-            { backend, server },
-          ),
+          this.agent.post(`http://${internalHostName}:3001/webhook/lb/enable`, { backend, server }),
         ),
       );
     } catch (error) {
@@ -194,7 +203,7 @@ export class Service {
     for (const { internalHostName } of loadBalancers) {
       try {
         const { data } = await this.agent.post(
-          `http://${this.getLoadBalancerIP(internalHostName)}:3001/webhook/lb/status`,
+          `http://${internalHostName}:3001/webhook/lb/status`,
           { backend, server },
         );
         results.push(data);
@@ -218,10 +227,9 @@ export class Service {
     let results = [];
     for (const { internalHostName } of loadBalancers) {
       try {
-        const { data } = await this.agent.post(
-          `http://${this.getLoadBalancerIP(internalHostName)}:3001/webhook/lb/count`,
-          { backend },
-        );
+        const { data } = await this.agent.post(`http://${internalHostName}:3001/webhook/lb/count`, {
+          backend,
+        });
         results.push(data);
       } catch (error) {
         throw new Error(`could not get backend status, ${internalHostName} ${backend} ${error}`);
@@ -239,9 +247,7 @@ export class Service {
   async getHAProxyMessage(backend, hosts) {
     const urls = hosts
       .map((host) => {
-        return `http://${this.getLoadBalancerIP(
-          host.externalHostName,
-        )}:8050/stats/;up?scope=${backend} \n`;
+        return `http://${host.externalHostName}:8050/stats/;up?scope=${backend} \n`;
       })
       .join("");
     return `HAProxy status\n${urls}`;
@@ -273,8 +279,9 @@ export class Service {
       removeNoResponse,
       docker,
       container,
-      loadBalancers,
     } = node;
+    const loadBalancers = this.getLoadBalancers(node);
+
     const chain = node.chain.name.toLowerCase();
     const host = node.host.name.toLowerCase();
     const name = node.hostname ? node.hostname : `${chain}/${host}/${container}`;

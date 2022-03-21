@@ -27,25 +27,37 @@ export class Service {
     return await NodesModel.findById(id).exec();
   }
 
-  private getLoadBalancerIP(ip: string): string {
-    if (process.env.MONITOR_TEST === "1") return "localhost";
-    return ip;
+  private getLoadBalancers({
+    loadBalancers,
+  }: INode): { internalHostName: string; externalHostName: string }[] {
+    if (process.env.MONITOR_TEST === "1")
+      return [
+        {
+          internalHostName: "ip-10-0-0-102.us-east-2.compute.internal",
+          externalHostName: "ec2-18-118-59-87.us-east-2.compute.amazonaws.com",
+        },
+        {
+          internalHostName: "ip-10-0-0-85.us-east-2.compute.internal",
+          externalHostName: "ec2-18-189-159-188.us-east-2.compute.amazonaws.com",
+        },
+      ];
+    return loadBalancers;
   }
 
   async getHaProxyStatus(id: string) {
-    const { backend, haProxy, server, loadBalancers } = await this.getNode(id);
+    const node = await this.getNode(id);
+    const { backend, haProxy, server } = node;
+    const loadBalancers = this.getLoadBalancers(node);
 
-    console.log(backend, haProxy, server);
     if (haProxy === false) {
       return -1;
     }
-    console.log(loadBalancers);
+
     const results = [];
     for (const { internalHostName } of loadBalancers) {
-      console.log(internalHostName);
       try {
         const { data } = await this.agent.post(
-          `http://${this.getLoadBalancerIP(internalHostName)}:3001/webhook/lb/status`,
+          `http://${internalHostName}:3001/webhook/lb/status`,
           { backend, server },
         );
         results.push(data);
@@ -128,19 +140,17 @@ export class Service {
   }
 
   async removeFromRotation(id: string) {
-    const { backend, server, hostname, host, chain, container, loadBalancers } = await this.getNode(
-      id,
-    );
+    const node = await this.getNode(id);
+    const { backend, server, hostname, host, chain, container } = node;
+    const loadBalancers = this.getLoadBalancers(node);
+
     try {
       await Promise.all(
         loadBalancers.map(({ internalHostName }) =>
-          this.agent.post(
-            `http://${this.getLoadBalancerIP(internalHostName)}:3001/webhook/lb/disable`,
-            {
-              backend,
-              server,
-            },
-          ),
+          this.agent.post(`http://${internalHostName}:3001/webhook/lb/disable`, {
+            backend,
+            server,
+          }),
         ),
       );
 
@@ -157,20 +167,17 @@ export class Service {
   }
 
   async addToRotation(id: string) {
-    const { backend, server, hostname, host, chain, container, loadBalancers } = await this.getNode(
-      id,
-    );
+    const node = await this.getNode(id);
+    const { backend, server, hostname, host, chain, container } = node;
+    const loadBalancers = this.getLoadBalancers(node);
 
     try {
       await Promise.all(
         loadBalancers.map(({ internalHostName }) =>
-          this.agent.post(
-            `http://${this.getLoadBalancerIP(internalHostName)}:3001/webhook/lb/enable`,
-            {
-              backend,
-              server,
-            },
-          ),
+          this.agent.post(`http://${internalHostName}:3001/webhook/lb/enable`, {
+            backend,
+            server,
+          }),
         ),
       );
 
