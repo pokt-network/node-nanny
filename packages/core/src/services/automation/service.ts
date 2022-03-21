@@ -166,7 +166,7 @@ export class Service {
     }
 
     const results: (boolean | -1)[] = [];
-    for (const { ip } of loadBalancers) {
+    for await (const { ip } of loadBalancers) {
       try {
         const { data } = await this.agent.post<{ status: boolean | -1 }>(
           `http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/status`,
