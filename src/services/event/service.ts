@@ -8,7 +8,7 @@ import {
   SupportedBlockChains,
   PocketTypes,
 } from "./types";
-import { INode, NodesModel, HostsModel } from "../../models";
+import { IHost, INode, NodesModel, HostsModel } from "../../models";
 
 /**
  *
@@ -37,7 +37,7 @@ export class Service {
   private getLoadBalancers({
     loadBalancers,
   }: INode): { internalHostName: string; externalHostName: string }[] {
-    if (process.env.MONITOR_TEST === "1")
+    if (process.env.MONITOR_TEST === "1") {
       return [
         {
           internalHostName: "ip-10-0-0-102.us-east-2.compute.internal",
@@ -48,6 +48,7 @@ export class Service {
           externalHostName: "ec2-18-189-159-188.us-east-2.compute.amazonaws.com",
         },
       ];
+    }
     return loadBalancers;
   }
 
@@ -223,7 +224,7 @@ export class Service {
     return LoadBalancerStatus.ERROR;
   }
 
-  async getBackendServerCount(backend, loadBalancers) {
+  async getBackendServerCount(backend: string, loadBalancers: IHost[]) {
     let results = [];
     for (const { internalHostName } of loadBalancers) {
       try {

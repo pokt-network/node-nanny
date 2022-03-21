@@ -49,7 +49,7 @@ app.post("/webhook/datadog/monitor/events", async ({ body }, res) => {
 
 app.post("/admin/monitor/onboard", async ({ body }, res) => {
   const { name, id, logGroup } = body;
-  console.log({ name, id, logGroup })
+  console.log({ name, id, logGroup });
   try {
     await dd.createMonitor({ name, logGroup, id });
     return res.status(200).json({ done: true });
@@ -111,7 +111,7 @@ app.post("/retool/monitor/unmute/:id", async (req, res) => {
 app.get("/retool/lb/status/:id", async (req, res) => {
   const { id } = req.params;
 
-  console.log(id)
+  console.log(id);
   try {
     const status = await retool.getHaProxyStatus(id);
     return res.status(200).json({ status });

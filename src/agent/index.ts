@@ -18,7 +18,7 @@ app.get("/ping", (req, res) => {
 });
 
 app.post("/webhook/docker/reboot", async ({ body }, res) => {
-  console.log(body)
+  console.log(body);
   const { name, type, compose, nginx, poktType } = body;
   try {
     const status = await reboot.rebootDockerContainerFromAgent({
@@ -35,7 +35,7 @@ app.post("/webhook/docker/reboot", async ({ body }, res) => {
 });
 
 app.post("/webhook/service/restart", async ({ body }, res) => {
-  console.log(body)
+  console.log(body);
   const { service } = body;
   try {
     const restart = await reboot.restartService(service);

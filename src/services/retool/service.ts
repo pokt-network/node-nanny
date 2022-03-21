@@ -162,7 +162,7 @@ export class Service {
         chain: chain.name,
       });
     } catch (error) {
-      throw new Error(`could not remove ${backend} ${server}from rotation, ${error}`);
+      throw new Error(`Could not remove ${backend} ${server} from rotation, ${error}`);
     }
   }
 
