@@ -27,42 +27,25 @@ export class Service {
     return await NodesModel.findById(id).exec();
   }
 
-  private async getLoadBalancers() {
-    if (process.env.MONITOR_TEST === "1") {
-      return [
-        {
-          internalHostName: "ip-10-0-0-102.us-east-2.compute.internal",
-          externalHostName: "ec2-18-118-59-87.us-east-2.compute.amazonaws.com",
-        },
-        {
-          internalHostName: "ip-10-0-0-85.us-east-2.compute.internal",
-          externalHostName: "ec2-18-189-159-188.us-east-2.compute.amazonaws.com",
-        },
-      ];
-    }
-    return await HostsModel.find(
-      { loadBalancer: true },
-      { internalHostName: 1, externalHostName: 1 },
-    ).exec();
+  private getLoadBalancerIP(ip: string): string {
+    if (process.env.MONITOR_TEST === "1") return "localhost";
+    return ip;
   }
 
   async getHaProxyStatus(id: string) {
-    const { backend, haProxy, server } = await this.getNode(id);
+    const { backend, haProxy, server, loadBalancers } = await this.getNode(id);
 
-    console.log( backend, haProxy, server)
+    console.log(backend, haProxy, server);
     if (haProxy === false) {
       return -1;
     }
-    const loadBalancers = await this.getLoadBalancers();
-
-    console.log(loadBalancers)
+    console.log(loadBalancers);
     const results = [];
     for (const { internalHostName } of loadBalancers) {
-
-      console.log(internalHostName)
+      console.log(internalHostName);
       try {
         const { data } = await this.agent.post(
-          `http://${internalHostName}:3001/webhook/lb/status`,
+          `http://${this.getLoadBalancerIP(internalHostName)}:3001/webhook/lb/status`,
           { backend, server },
         );
         results.push(data);
@@ -145,21 +128,27 @@ export class Service {
   }
 
   async removeFromRotation(id: string) {
-    const { backend, server, hostname, host, chain, container } = await this.getNode(id);
-    const loadBalancers = await this.getLoadBalancers();
+    const { backend, server, hostname, host, chain, container, loadBalancers } = await this.getNode(
+      id,
+    );
     try {
       await Promise.all(
         loadBalancers.map(({ internalHostName }) =>
-          this.agent.post(`http://${internalHostName}:3001/webhook/lb/disable`, {
-            backend,
-            server,
-          }),
+          this.agent.post(
+            `http://${this.getLoadBalancerIP(internalHostName)}:3001/webhook/lb/disable`,
+            {
+              backend,
+              server,
+            },
+          ),
         ),
       );
 
       return await this.alert.sendInfo({
         title: "Removed from rotation",
-        message: `${hostname ? hostname : `${host.name}/${chain.name}/${container}`} removed from ${backend}`,
+        message: `${
+          hostname ? hostname : `${host.name}/${chain.name}/${container}`
+        } removed from ${backend}`,
         chain: chain.name,
       });
     } catch (error) {
@@ -168,22 +157,28 @@ export class Service {
   }
 
   async addToRotation(id: string) {
-    const { backend, server, hostname, host, chain, container } = await this.getNode(id);
-    console.log(backend, server, hostname, host, chain, container)
-    const loadBalancers = await this.getLoadBalancers();
+    const { backend, server, hostname, host, chain, container, loadBalancers } = await this.getNode(
+      id,
+    );
+
     try {
-    const res =  await Promise.all(
+      await Promise.all(
         loadBalancers.map(({ internalHostName }) =>
-          this.agent.post(`http://${internalHostName}:3001/webhook/lb/enable`, {
-            backend,
-            server,
-          }),
+          this.agent.post(
+            `http://${this.getLoadBalancerIP(internalHostName)}:3001/webhook/lb/enable`,
+            {
+              backend,
+              server,
+            },
+          ),
         ),
       );
-      console.log(res);
+
       return await this.alert.sendInfo({
         title: "Added to rotation",
-        message: `${hostname ? hostname : `${host.name}/${chain.name}/${container}`} added to ${backend}`,
+        message: `${
+          hostname ? hostname : `${host.name}/${chain.name}/${container}`
+        } added to ${backend}`,
         chain: chain.name,
       });
     } catch (error) {

@@ -1,13 +1,10 @@
 import axios, { AxiosInstance } from "axios";
 import { DataDog, Alert } from "..";
-import { AlertTypes } from "../../types";
 import {
   DataDogMonitorStatus,
   BlockChainMonitorEvents,
   EventTransitions,
   LoadBalancerStatus,
-  Limits,
-  LoadBalancer,
   SupportedBlockChains,
   PocketTypes,
 } from "./types";
@@ -23,6 +20,7 @@ export class Service {
   private alert: Alert;
   private dd: DataDog;
   private threshold: number;
+
   constructor() {
     this.agent = this.initAgentClient();
     this.alert = new Alert();
@@ -36,24 +34,9 @@ export class Service {
     });
   }
 
-  async getLoadBalancers(): Promise<LoadBalancer[]> {
-    if (process.env.MONITOR_TEST === "1") {
-      return [
-        {
-          internalHostName: "ip-10-0-0-102.us-east-2.compute.internal",
-          externalHostName: "ec2-18-118-59-87.us-east-2.compute.amazonaws.com",
-        },
-        {
-          internalHostName: "ip-10-0-0-85.us-east-2.compute.internal",
-          externalHostName: "ec2-18-189-159-188.us-east-2.compute.amazonaws.com",
-        },
-      ];
-    }
-
-    return await HostsModel.find(
-      { loadBalancer: true },
-      { internalHostName: 1, externalHostName: 1 },
-    ).exec();
+  private getLoadBalancerIP(ip: string): string {
+    if (process.env.MONITOR_TEST === "1") return "localhost";
+    return ip;
   }
 
   async isPeersOk({ chain, nodeId }) {
@@ -96,10 +79,10 @@ export class Service {
     return peerStatus.filter((value) => value === DataDogMonitorStatus.ALERT).length;
   }
 
-  async disableServer({ backend, server }) {
+  async disableServer({ backend, server, loadBalancers }) {
     try {
-      const status = await this.getBackendServerStatus({ backend, server });
-      const count = await this.getBackendServerCount(backend);
+      const status = await this.getBackendServerStatus({ backend, server, loadBalancers });
+      const count = await this.getBackendServerCount(backend, loadBalancers);
       if (count <= 1) {
         return await this.alert.sendErrorChannel({
           title: backend,
@@ -114,14 +97,12 @@ export class Service {
           message: `could not remove from load balancer, server already offline`,
         });
       }
-
-      const loadBalancers = await this.getLoadBalancers();
       return await Promise.all(
         loadBalancers.map(async ({ internalHostName }) =>
-          this.agent.post(`http://${internalHostName}:3001/webhook/lb/disable`, {
-            backend,
-            server,
-          }),
+          this.agent.post(
+            `http://${this.getLoadBalancerIP(internalHostName)}:3001/webhook/lb/disable`,
+            { backend, server },
+          ),
         ),
       );
     } catch (error) {
@@ -132,15 +113,14 @@ export class Service {
     }
   }
 
-  async enableServer({ backend, server }) {
+  async enableServer({ backend, server, loadBalancers }) {
     try {
-      const loadBalancers = await this.getLoadBalancers();
       return await Promise.all(
         loadBalancers.map(({ internalHostName }) =>
-          this.agent.post(`http://${internalHostName}:3001/webhook/lb/enable`, {
-            backend,
-            server,
-          }),
+          this.agent.post(
+            `http://${this.getLoadBalancerIP(internalHostName)}:3001/webhook/lb/enable`,
+            { backend, server },
+          ),
         ),
       );
     } catch (error) {
@@ -153,6 +133,7 @@ export class Service {
 
   async rebootServer({ host, container, monitorId, chain, compose, nginx, poktType }) {
     const Host = await HostsModel.findOne({ name: host.name });
+
     if (!!Host) {
       let { internalIpaddress: ip } = Host;
 
@@ -191,6 +172,7 @@ export class Service {
 
   async restartService({ host, service, monitorId }) {
     const Host = await HostsModel.findOne({ name: host.name });
+
     if (!!Host) {
       let { internalIpaddress: ip } = Host;
       try {
@@ -206,13 +188,13 @@ export class Service {
     throw new Error("Host not found");
   }
 
-  async getBackendServerStatus({ backend, server }) {
-    const loadBalancers = await this.getLoadBalancers();
+  async getBackendServerStatus({ backend, server, loadBalancers }) {
     const results = [];
+
     for (const { internalHostName } of loadBalancers) {
       try {
         const { data } = await this.agent.post(
-          `http://${internalHostName}:3001/webhook/lb/status`,
+          `http://${this.getLoadBalancerIP(internalHostName)}:3001/webhook/lb/status`,
           { backend, server },
         );
         results.push(data);
@@ -232,14 +214,14 @@ export class Service {
     return LoadBalancerStatus.ERROR;
   }
 
-  async getBackendServerCount(backend) {
-    const loadBalancers = await this.getLoadBalancers();
+  async getBackendServerCount(backend, loadBalancers) {
     let results = [];
     for (const { internalHostName } of loadBalancers) {
       try {
-        const { data } = await this.agent.post(`http://${internalHostName}:3001/webhook/lb/count`, {
-          backend,
-        });
+        const { data } = await this.agent.post(
+          `http://${this.getLoadBalancerIP(internalHostName)}:3001/webhook/lb/count`,
+          { backend },
+        );
         results.push(data);
       } catch (error) {
         throw new Error(`could not get backend status, ${internalHostName} ${backend} ${error}`);
@@ -254,11 +236,12 @@ export class Service {
     return -1;
   }
 
-  async getHAProxyMessage(backend) {
-    const hosts = await this.getLoadBalancers();
+  async getHAProxyMessage(backend, hosts) {
     const urls = hosts
       .map((host) => {
-        return `http://${host.externalHostName}:8050/stats/;up?scope=${backend} \n`;
+        return `http://${this.getLoadBalancerIP(
+          host.externalHostName,
+        )}:8050/stats/;up?scope=${backend} \n`;
       })
       .join("");
     return `HAProxy status\n${urls}`;
@@ -290,6 +273,7 @@ export class Service {
       removeNoResponse,
       docker,
       container,
+      loadBalancers,
     } = node;
     const chain = node.chain.name.toLowerCase();
     const host = node.host.name.toLowerCase();
@@ -302,7 +286,7 @@ export class Service {
           title,
           message: `All ${chain} nodes are unhealthy! \n 
            See event ${link} \n
-            ${await this.getHAProxyMessage(backend)}`,
+            ${await this.getHAProxyMessage(backend, loadBalancers)}`,
           chain,
         });
       }
@@ -332,17 +316,17 @@ export class Service {
             message: `All ${chain} nodes are not synched \n 
             Manual intervention is required! \n
              See event ${link} \n
-              ${await this.getHAProxyMessage(backend)}`,
+              ${await this.getHAProxyMessage(backend, loadBalancers)}`,
             chain,
           });
         }
 
         if (haProxy) {
-          await this.disableServer({ backend, server });
+          await this.disableServer({ backend, server, loadBalancers });
           await this.alert.sendInfo({
             title,
             message: `Removed ${name} from load balancer, it will be restored once healthy again \n
-              ${await this.getHAProxyMessage(backend)}`,
+              ${await this.getHAProxyMessage(backend, loadBalancers)}`,
             chain,
           });
         }
@@ -370,11 +354,11 @@ export class Service {
           event === BlockChainMonitorEvents.NO_RESPONSE) &&
         removeNoResponse
       ) {
-        await this.disableServer({ backend, server });
+        await this.disableServer({ backend, server, loadBalancers });
         await this.alert.sendInfo({
           title,
           message: `Removed ${name}from load balancer, it will be restored once healthy again \n
-            ${await this.getHAProxyMessage(backend)}`,
+            ${await this.getHAProxyMessage(backend, loadBalancers)}`,
           chain,
         });
       }
@@ -386,7 +370,7 @@ export class Service {
             title,
             message: `${name} status is ${event} \n
             See event ${link} \n
-            ${await this.getHAProxyMessage(backend)}`,
+            ${await this.getHAProxyMessage(backend, loadBalancers)}`,
             chain,
           });
         }
@@ -407,7 +391,7 @@ export class Service {
           title,
           message: `${name} status is ${event} \n 
             See event ${link} \n
-            ${await this.getHAProxyMessage(backend)}`,
+            ${await this.getHAProxyMessage(backend, loadBalancers)}`,
           chain,
         });
       }
@@ -523,13 +507,13 @@ export class Service {
       if (event === BlockChainMonitorEvents.NOT_SYNCHRONIZED) {
         await this.alert.sendSuccess({ title, message: `${name} has recovered!`, chain });
         if (haProxy) {
-          await this.enableServer({ backend, server });
+          await this.enableServer({ backend, server, loadBalancers });
           await this.alert.sendSuccess({
             title,
             message: `
               Restored \n
               Added ${name} back to load balancer \n
-              ${await this.getHAProxyMessage(backend)}`,
+              ${await this.getHAProxyMessage(backend, loadBalancers)}`,
             chain,
           });
         }
@@ -546,11 +530,11 @@ export class Service {
         event === BlockChainMonitorEvents.OFFLINE
       ) {
         if (removeNoResponse) {
-          await this.enableServer({ backend, server });
+          await this.enableServer({ backend, server, loadBalancers });
           await this.alert.sendInfo({
             title,
             message: `Restored \n Added ${name} back to rotation \n
-              ${await this.getHAProxyMessage(backend)}`,
+              ${await this.getHAProxyMessage(backend, loadBalancers)}`,
             chain,
           });
         }

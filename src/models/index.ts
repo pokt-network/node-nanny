@@ -14,7 +14,7 @@ interface IChain {
   chain: string;
   name: string;
   type: string;
-  variance: number
+  variance: number;
 }
 
 export interface IOracle {
@@ -30,6 +30,7 @@ export interface INode {
   hasPeer: boolean;
   id: string;
   host: IHost;
+  loadBalancers: IHost[];
   hostname: string;
   reboot: boolean;
   monitorId: string;
@@ -57,12 +58,11 @@ const webhookSchema = new Schema<IWebhook>({
   url: String,
 });
 
-
 const chainSchema = new Schema<IChain>({
   chain: String,
   name: String,
   type: String,
-  variance: Number
+  variance: Number,
 });
 
 const oracleSchema = new Schema<IOracle>({
@@ -90,6 +90,7 @@ const nodesSchema = new Schema<INode>(
     reboot: Boolean,
     hasPeer: Boolean,
     host: hostsSchema,
+    loadBalancers: [hostsSchema],
     hostname: { type: String, unique: true },
     monitorId: String,
     port: Number,
