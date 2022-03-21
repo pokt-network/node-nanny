@@ -3,10 +3,10 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 nvm install 16
 npm install yarn pm2 -g
-git clone git@github.com:pokt-foundation/node-nanny.git
-cd node-monitoring
+git clone https://github.com/pokt-foundation/node-nanny.git
+cd node-nanny
 chmod +x scripts/agent_reboot.sh
 chmod +x scripts/agent_reboot_pokt.sh
-yarn && yarn build
+npm i && npm run build
 pm2 start dist/agent
 curl localhost:3001/ping
