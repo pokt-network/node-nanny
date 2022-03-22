@@ -1,4 +1,4 @@
-import BaseService from "./base-service";
+import BaseService from "../../../base-service/base-service";
 import { INode } from "../../../../models";
 import { s } from "../../../../utils";
 import { IRedisEvent, IRedisEventParams, IToggleServerParams } from "./types";
