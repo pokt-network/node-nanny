@@ -10,3 +10,4 @@ yarn-error.log*
 lerna-debug.log*
 dist
 tsconfig.tsbuildinfo
+pnpm-lock.yaml
