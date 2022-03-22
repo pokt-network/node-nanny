@@ -1,11 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "agent",
-      script: "./packages/agent/dist/server.js",
-    },
-    {
-      name: "graphql-api",
+      name: "api",
       script: "./packages/api/dist/graphql/server.js",
     },
     {
