@@ -55,7 +55,6 @@ export type IMutation = {
   disableHaProxyServer: Scalars['Boolean'];
   enableHaProxyServer: Scalars['Boolean'];
   muteMonitor: INode;
-  rebootServer: Scalars['String'];
   unmuteMonitor: INode;
   updateChain?: Maybe<IChain>;
   updateHost?: Maybe<IHost>;
@@ -115,11 +114,6 @@ export type IMutationEnableHaProxyServerArgs = {
 
 
 export type IMutationMuteMonitorArgs = {
-  id: Scalars['ID'];
-};
-
-
-export type IMutationRebootServerArgs = {
   id: Scalars['ID'];
 };
 
@@ -293,13 +287,6 @@ export type ICreateNodesCsvMutationVariables = Exact<{
 
 
 export type ICreateNodesCsvMutation = { createNodesCSV: Array<{ id: string } | null> };
-
-export type IRebootServerMutationVariables = Exact<{
-  id: Scalars['ID'];
-}>;
-
-
-export type IRebootServerMutation = { rebootServer: string };
 
 export type IEnableHaProxyServerMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -511,37 +498,6 @@ export function useCreateNodesCsvMutation(baseOptions?: Apollo.MutationHookOptio
 export type CreateNodesCsvMutationHookResult = ReturnType<typeof useCreateNodesCsvMutation>;
 export type CreateNodesCsvMutationResult = Apollo.MutationResult<ICreateNodesCsvMutation>;
 export type CreateNodesCsvMutationOptions = Apollo.BaseMutationOptions<ICreateNodesCsvMutation, ICreateNodesCsvMutationVariables>;
-export const RebootServerDocument = gql`
-    mutation RebootServer($id: ID!) {
-  rebootServer(id: $id)
-}
-    `;
-export type IRebootServerMutationFn = Apollo.MutationFunction<IRebootServerMutation, IRebootServerMutationVariables>;
-
-/**
- * __useRebootServerMutation__
- *
- * To run a mutation, you first call `useRebootServerMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useRebootServerMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [rebootServerMutation, { data, loading, error }] = useRebootServerMutation({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useRebootServerMutation(baseOptions?: Apollo.MutationHookOptions<IRebootServerMutation, IRebootServerMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<IRebootServerMutation, IRebootServerMutationVariables>(RebootServerDocument, options);
-      }
-export type RebootServerMutationHookResult = ReturnType<typeof useRebootServerMutation>;
-export type RebootServerMutationResult = Apollo.MutationResult<IRebootServerMutation>;
-export type RebootServerMutationOptions = Apollo.BaseMutationOptions<IRebootServerMutation, IRebootServerMutationVariables>;
 export const EnableHaProxyServerDocument = gql`
     mutation EnableHaProxyServer($id: ID!) {
   enableHaProxyServer(id: $id)

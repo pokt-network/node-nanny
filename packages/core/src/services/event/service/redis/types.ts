@@ -10,6 +10,7 @@ export interface IRotationParams {
   backend: string;
   loadBalancers: IHost[];
   server?: string;
+  manual?: boolean;
 }
 
 export interface IToggleServerParams {
