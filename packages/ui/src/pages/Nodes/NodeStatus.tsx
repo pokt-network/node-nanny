@@ -7,7 +7,6 @@ import {
   useEnableHaProxyServerMutation,
   useGetNodeStatusLazyQuery,
   useMuteMonitorMutation,
-  useRebootServerMutation,
   useUnmuteMonitorMutation,
 } from "types";
 
@@ -19,19 +18,7 @@ interface INodeStatusProps {
 export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) {
   const { id, backend, port, server, url, muted } = selectedNode;
 
-  const [rebooting, setRebooting] = useState<boolean>(false);
-
   const [getStatus, { data, error, loading }] = useGetNodeStatusLazyQuery();
-  const [rebootServer] = useRebootServerMutation({
-    onCompleted: () => {
-      setTimeout(() => {
-        getStatus();
-        setRebooting(false);
-      }, 10000);
-    },
-    // DEV NOTE -> Add error display to UI
-    onError: (_error) => setRebooting(false),
-  });
   const [enable] = useEnableHaProxyServerMutation({
     onCompleted: () => getStatus(),
   });
@@ -56,13 +43,6 @@ export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) 
     const { id } = selectedNode;
     getStatus({ variables: { id } });
   }, [getStatus, selectedNode]);
-
-  const handleRebootServer = (id: string): void => {
-    if (!rebooting) {
-      setRebooting(true);
-      rebootServer({ variables: { id } });
-    }
-  };
 
   const handleHaProxyToggle = (id: string, haProxyStatus: number) =>
     haProxyStatus === 0 ? disable({ variables: { id } }) : enable({ variables: { id } });
@@ -104,16 +84,10 @@ export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) 
             </Paper>
             <div style={{ marginTop: "10px" }} />
             <Paper style={{ padding: 10 }} variant="outlined">
-              {rebooting ? (
-                <Typography variant="h4">Rebooting...</Typography>
-              ) : (
-                <>
-                  <Typography variant="h6">
-                    HAProxy Status: {haProxyStatusText}
-                  </Typography>
-                  <Typography variant="h6">Mute Status: {muteStatusText}</Typography>
-                </>
-              )}
+              <>
+                <Typography variant="h6">HAProxy Status: {haProxyStatusText}</Typography>
+                <Typography variant="h6">Mute Status: {muteStatusText}</Typography>
+              </>
             </Paper>
             <div style={{ marginTop: "10px" }} />
             <Paper
@@ -126,23 +100,6 @@ export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) 
               variant="outlined"
             >
               <FormControl fullWidth>
-                <Button
-                  fullWidth
-                  style={{ display: "flex", justifyContent: "center" }}
-                  variant="outlined"
-                  onClick={() => handleRebootServer(id)}
-                  disabled={haProxyStatus !== 0}
-                >
-                  {rebooting ? (
-                    <>
-                      <CircularProgress size={20} sx={{ marginRight: "8px" }} />
-                      Rebooting Server...
-                    </>
-                  ) : (
-                    "Reboot Server"
-                  )}
-                </Button>
-                <div style={{ marginTop: "10px" }} />
                 <Button
                   fullWidth
                   style={{ display: "flex", justifyContent: "center" }}
