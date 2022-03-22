@@ -91,6 +91,7 @@ export function NodesCSV({
       value
         .toLowerCase()
         .split(",")
+        .map((lb) => lb.trim())
         .every((lb: string) => validLoadBalancers.includes(lb)),
     port: (value: string) =>
       /^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/.test(
@@ -120,7 +121,10 @@ export function NodesCSV({
         chain: node.chain.toUpperCase(),
         host: node.host.toLowerCase(),
         port: Number(node.port),
-        loadBalancers: node.loadBalancers?.toLowerCase().split(","),
+        loadBalancers: node.loadBalancers
+          ?.toLowerCase()
+          .split(",")
+          .map((lb) => lb.trim()),
         haProxy: Boolean(node.haProxy),
       };
     });

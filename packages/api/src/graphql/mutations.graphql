@@ -51,6 +51,12 @@ mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
   }
 }
 
+mutation CreateHostsCSV($hosts: [HostCSVInput!]!) {
+  createHostsCSV(hosts: $hosts) {
+    id
+  }
+}
+
 mutation EnableHaProxyServer($id: ID!) {
   enableHaProxyServer(id: $id)
 }

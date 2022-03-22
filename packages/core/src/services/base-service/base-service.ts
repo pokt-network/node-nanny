@@ -89,8 +89,9 @@ export default class Service {
   /** Ensures that the Load Balancer's IP is replaced with locahost when running in test mode.
    * This prevents the automation from taking production nodes out of protation. */
   private getLoadBalancerIP(ip: string): string {
-    if (process.env.MONITOR_TEST === "1")
+    if (process.env.MONITOR_TEST === "1") {
       return "ec2-3-145-99-143.us-east-2.compute.amazonaws.com";
+    }
     return ip;
   }
 

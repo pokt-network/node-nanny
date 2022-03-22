@@ -95,6 +95,14 @@ const typeDefs = gql`
     server: String
   }
 
+  input HostCSVInput {
+    name: String!
+    location: String!
+    loadBalancer: Boolean
+    fqdn: String
+    ip: String
+  }
+
   # Resolvers
   type Query {
     chains: [Chain!]!
@@ -127,6 +135,7 @@ const typeDefs = gql`
     ): Host
     createNode(input: NodeInput): Node
     createNodesCSV(nodes: [NodeCSVInput!]!): [Node]!
+    createHostsCSV(hosts: [HostCSVInput!]!): [Host]!
 
     updateNode(input: NodeInput): Node
     updateHost(name: String, ip: String): Host
