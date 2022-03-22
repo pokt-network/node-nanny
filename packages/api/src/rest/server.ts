@@ -118,15 +118,15 @@ app.post("/automation/lb/disable/:id", async (req, res) => {
   }
 });
 
-app.post("/automation/reboot/:id", async (req, res) => {
-  const { id } = req.params;
-  try {
-    const status = await automation.rebootServer(id);
-    return res.status(200).json({ status });
-  } catch (error) {
-    res.sendStatus(500);
-  }
-});
+// app.post("/automation/reboot/:id", async (req, res) => {
+//   const { id } = req.params;
+//   try {
+//     const status = await automation.rebootServer(id);
+//     return res.status(200).json({ status });
+//   } catch (error) {
+//     res.sendStatus(500);
+//   }
+// });
 
 const start = async () => {
   await connect();
