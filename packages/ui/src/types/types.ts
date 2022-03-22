@@ -31,6 +31,14 @@ export type IHost = {
   name: Scalars['String'];
 };
 
+export type IHostCsvInput = {
+  fqdn?: InputMaybe<Scalars['String']>;
+  ip?: InputMaybe<Scalars['String']>;
+  loadBalancer?: InputMaybe<Scalars['Boolean']>;
+  location: Scalars['String'];
+  name: Scalars['String'];
+};
+
 export type ILocation = {
   id: Scalars['ID'];
   name: Scalars['String'];
@@ -46,6 +54,7 @@ export type ILog = {
 
 export type IMutation = {
   createHost?: Maybe<IHost>;
+  createHostsCSV: Array<Maybe<IHost>>;
   createNode?: Maybe<INode>;
   createNodesCSV: Array<Maybe<INode>>;
   deleteChain?: Maybe<IChain>;
@@ -70,6 +79,11 @@ export type IMutationCreateHostArgs = {
   loadBalancer: Scalars['Boolean'];
   location: Scalars['String'];
   name: Scalars['String'];
+};
+
+
+export type IMutationCreateHostsCsvArgs = {
+  hosts: Array<IHostCsvInput>;
 };
 
 
@@ -288,6 +302,13 @@ export type ICreateNodesCsvMutationVariables = Exact<{
 
 export type ICreateNodesCsvMutation = { createNodesCSV: Array<{ id: string } | null> };
 
+export type ICreateHostsCsvMutationVariables = Exact<{
+  hosts: Array<IHostCsvInput> | IHostCsvInput;
+}>;
+
+
+export type ICreateHostsCsvMutation = { createHostsCSV: Array<{ id: string } | null> };
+
 export type IEnableHaProxyServerMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
@@ -498,6 +519,39 @@ export function useCreateNodesCsvMutation(baseOptions?: Apollo.MutationHookOptio
 export type CreateNodesCsvMutationHookResult = ReturnType<typeof useCreateNodesCsvMutation>;
 export type CreateNodesCsvMutationResult = Apollo.MutationResult<ICreateNodesCsvMutation>;
 export type CreateNodesCsvMutationOptions = Apollo.BaseMutationOptions<ICreateNodesCsvMutation, ICreateNodesCsvMutationVariables>;
+export const CreateHostsCsvDocument = gql`
+    mutation CreateHostsCSV($hosts: [HostCSVInput!]!) {
+  createHostsCSV(hosts: $hosts) {
+    id
+  }
+}
+    `;
+export type ICreateHostsCsvMutationFn = Apollo.MutationFunction<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>;
+
+/**
+ * __useCreateHostsCsvMutation__
+ *
+ * To run a mutation, you first call `useCreateHostsCsvMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateHostsCsvMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createHostsCsvMutation, { data, loading, error }] = useCreateHostsCsvMutation({
+ *   variables: {
+ *      hosts: // value for 'hosts'
+ *   },
+ * });
+ */
+export function useCreateHostsCsvMutation(baseOptions?: Apollo.MutationHookOptions<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>(CreateHostsCsvDocument, options);
+      }
+export type CreateHostsCsvMutationHookResult = ReturnType<typeof useCreateHostsCsvMutation>;
+export type CreateHostsCsvMutationResult = Apollo.MutationResult<ICreateHostsCsvMutation>;
+export type CreateHostsCsvMutationOptions = Apollo.BaseMutationOptions<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>;
 export const EnableHaProxyServerDocument = gql`
     mutation EnableHaProxyServer($id: ID!) {
   enableHaProxyServer(id: $id)
