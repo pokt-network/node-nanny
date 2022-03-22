@@ -66,9 +66,6 @@ const resolvers = {
     disableHaProxyServer: async (_, { id }) => {
       return await new AutomationService().removeFromRotation(id);
     },
-    rebootServer: async (_, { id }) => {
-      return await new AutomationService().rebootServer(id);
-    },
   },
 
   Host: {

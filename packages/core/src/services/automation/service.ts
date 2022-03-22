@@ -3,7 +3,9 @@ import axios, { AxiosInstance } from "axios";
 import { exec } from "child_process";
 import { FilterQuery } from "mongoose";
 
+import BaseService from "../base-service/base-service";
 import { Service as DiscordService } from "../discord";
+import { LoadBalancerStatus } from "../event/types";
 import {
   LogsModel,
   NodesModel,
@@ -13,33 +15,14 @@ import {
   HostsModel,
   ChainsModel,
 } from "../../models";
-import { HealthTypes, RebootTypes } from "../../types";
 import { INodeInput, INodeCsvInput, INodeLogParams } from "./types";
-import { Alert } from "..";
 
-export class Service {
-  private agent: AxiosInstance;
-  private alert: Alert;
+export class Service extends BaseService {
   private ec2: EC2;
 
   constructor() {
-    this.agent = this.initAgentClient();
+    super();
     this.ec2 = new EC2({ region: "us-east-2" });
-    this.alert = new Alert();
-  }
-
-  private initAgentClient() {
-    return axios.create({
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  private async getNode(id: string): Promise<INode> {
-    return await NodesModel.findById(id)
-      .populate("chain")
-      .populate({ path: "host", populate: "location" })
-      .populate("loadBalancers")
-      .exec();
   }
 
   /* ----- CRUD Methods ----- */
@@ -105,28 +88,13 @@ export class Service {
       id,
     );
 
-    try {
-      await Promise.all(
-        loadBalancers.map(({ ip }) =>
-          this.agent.post(`http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/enable`, {
-            backend,
-            server,
-          }),
-        ),
-      );
-    } catch (error) {
-      throw new Error(`Could not add ${backend} ${server} to rotation. ${error}`);
-    }
+    await this.enableServer({ backend, server, loadBalancers });
 
-    try {
-      return await this.alert.sendInfo({
-        title: "Added to rotation",
-        message: `${host.name}/${chain.name}/${container} to ${backend}`,
-        chain: chain.name,
-      });
-    } catch (error) {
-      throw new Error(`Could not send webhook alert. ${error}`);
-    }
+    return await this.alert.sendInfo({
+      title: "Added to rotation",
+      message: `${host.name}/${chain.name}/${container} to ${backend}`,
+      chain: chain.name,
+    });
   }
 
   async removeFromRotation(id: string): Promise<boolean> {
@@ -134,53 +102,29 @@ export class Service {
       id,
     );
 
-    try {
-      await Promise.all(
-        loadBalancers.map(({ ip }) =>
-          this.agent.post(
-            `http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/disable`,
-            { backend, server },
-          ),
-        ),
-      );
-    } catch (error) {
-      throw new Error(`Could not remove ${backend} ${server} from rotation. ${error}`);
-    }
+    await this.disableServer({ backend, server, loadBalancers, manual: true });
 
-    try {
-      return await this.alert.sendInfo({
-        title: "Removed from rotation",
-        message: `${host.name}/${chain.name}/${container} removed from ${backend}`,
-        chain: chain.name,
-      });
-    } catch (error) {
-      throw new Error(`Could not send webhook alert. ${error}`);
-    }
+    return await this.alert.sendInfo({
+      title: "Removed from rotation",
+      message: `${host.name}/${chain.name}/${container} removed from ${backend}`,
+      chain: chain.name,
+    });
   }
 
   /* ----- Status Check Methods ----- */
-  async getHaProxyStatus(id: string) {
+  async getHaProxyStatus(id: string): Promise<-1 | 0 | 1> {
     const { backend, haProxy, server, loadBalancers } = await this.getNode(id);
     if (haProxy === false) {
       return -1;
     }
 
-    const results: (boolean | -1)[] = [];
-    for await (const { ip } of loadBalancers) {
-      try {
-        const { data } = await this.agent.post<{ status: boolean | -1 }>(
-          `http://${this.getLoadBalancerIP(ip)}:3001/webhook/lb/status`,
-          { backend, server },
-        );
-        results.push(data.status);
-      } catch (error) {
-        throw new Error(
-          `Could not get backend status, ${ip} ${server} ${backend} ${error}`,
-        );
-      }
-    }
+    const result = await this.getServerStatus({
+      backend,
+      server,
+      loadBalancers,
+    });
 
-    if (results.every((status) => status === true)) {
+    if (result === LoadBalancerStatus.ONLINE) {
       return 0;
     }
     return 1;
@@ -193,45 +137,45 @@ export class Service {
   // }
 
   /* ----- Reboot Methods ----- */
-  async rebootServer(id: string): Promise<string> {
-    const {
-      host,
-      chain,
-      hostname,
-      container,
-      compose,
-      nginx,
-      poktType,
-    } = await this.getNode(id);
-    const { ip } = await HostsModel.findOne({ name: host.name });
+  // async rebootServer(id: string): Promise<string> {
+  //   const {
+  //     host,
+  //     chain,
+  //     hostname,
+  //     container,
+  //     compose,
+  //     nginx,
+  //     poktType,
+  //   } = await this.getNode(id);
+  //   const { ip } = await HostsModel.findOne({ name: host.name });
 
-    const requestData =
-      chain.type === HealthTypes.ESupportedBlockChains.POKT
-        ? {
-            name: container,
-            type: RebootTypes.ENodeTypes.POKT,
-            nginx,
-            poktType,
-          }
-        : {
-            name: container,
-            type: RebootTypes.ENodeTypes.DATA,
-            compose,
-          };
+  //   const requestData =
+  //     chain.type === HealthTypes.ESupportedBlockChains.POKT
+  //       ? {
+  //           name: container,
+  //           type: RebootTypes.ENodeTypes.POKT,
+  //           nginx,
+  //           poktType,
+  //         }
+  //       : {
+  //           name: container,
+  //           type: RebootTypes.ENodeTypes.DATA,
+  //           compose,
+  //         };
 
-    const { data } = await this.agent.post<{ reboot: string }>(
-      `http://${this.getLoadBalancerIP(ip)}:3001/webhook/docker/reboot`,
-      requestData,
-    );
-    const { reboot } = data;
+  //   const { data } = await this.agent.post<{ reboot: string }>(
+  //     `http://${this.getLoadBalancerIP(ip)}:3001/webhook/docker/reboot`,
+  //     requestData,
+  //   );
+  //   const { reboot } = data;
 
-    const hostString =
-      hostname || `${host.name}/${chain.name.toLowerCase()}/${container}`;
-    const message = `${hostString} rebooted.\n${reboot}`;
-    await this.alert.sendInfo({ title: "Manual Reboot", message, chain: chain.name });
+  //   const hostString =
+  //     hostname || `${host.name}/${chain.name.toLowerCase()}/${container}`;
+  //   const message = `${hostString} rebooted.\n${reboot}`;
+  //   await this.alert.sendInfo({ title: "Manual Reboot", message, chain: chain.name });
 
-    return reboot;
-  }
+  //   return reboot;
+  // }
 
   async muteMonitor(id: string): Promise<INode> {
     await NodesModel.updateOne({ _id: id }, { muted: true }).exec();
@@ -302,13 +246,5 @@ export class Service {
     }
 
     throw new Error(`could not create host ${awsInstanceId}`);
-  }
-
-  /* ---- Private Methods ----- */
-  /** Ensures that the Load Balancer's IP is replaced with locahost when running in test mode.
-   * This prevents the automation from takings production nodes out of protation. */
-  private getLoadBalancerIP(ip: string): string {
-    if (process.env.MONITOR_TEST === "1") return "localhost";
-    return ip;
   }
 }

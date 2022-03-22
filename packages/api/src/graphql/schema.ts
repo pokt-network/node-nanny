@@ -143,7 +143,6 @@ const typeDefs = gql`
     unmuteMonitor(id: ID!): Node!
     enableHaProxyServer(id: ID!): Boolean!
     disableHaProxyServer(id: ID!): Boolean!
-    rebootServer(id: ID!): String!
   }
 `;
 
