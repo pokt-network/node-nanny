@@ -51,10 +51,6 @@ mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
   }
 }
 
-mutation RebootServer($id: ID!) {
-  rebootServer(id: $id)
-}
-
 mutation EnableHaProxyServer($id: ID!) {
   enableHaProxyServer(id: $id)
 }
