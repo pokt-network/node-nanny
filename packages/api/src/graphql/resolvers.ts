@@ -53,6 +53,9 @@ const resolvers = {
     createNodesCSV: async (_, { nodes }) => {
       return await new AutomationService().createNodesCSV(nodes);
     },
+    createHostsCSV: async (_, { hosts }) => {
+      return await new AutomationService().createHostsCSV(hosts);
+    },
 
     muteMonitor: async (_, { id }) => {
       return await new AutomationService().muteMonitor(id);

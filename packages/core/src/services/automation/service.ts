@@ -9,13 +9,21 @@ import { LoadBalancerStatus } from "../event/types";
 import {
   LogsModel,
   NodesModel,
+  IHost,
   ILog,
   INode,
   IPaginatedLogs,
-  HostsModel,
   ChainsModel,
+  HostsModel,
+  LocationsModel,
 } from "../../models";
-import { INodeInput, INodeCsvInput, INodeLogParams } from "./types";
+import {
+  IHostInput,
+  IHostCsvInput,
+  INodeInput,
+  INodeCsvInput,
+  INodeLogParams,
+} from "./types";
 
 export class Service extends BaseService {
   private ec2: EC2;
@@ -49,8 +57,8 @@ export class Service extends BaseService {
       for await (const nodeInput of nodes) {
         const nodeInputWithIds: INodeInput = {
           ...nodeInput,
-          chain: await ChainsModel.findOne({ name: nodeInput.chain }),
-          host: await HostsModel.findOne({ name: nodeInput.host }),
+          chain: (await ChainsModel.findOne({ name: nodeInput.chain }))._id,
+          host: (await HostsModel.findOne({ name: nodeInput.host }))._id,
           loadBalancers: (
             await HostsModel.find({ name: { $in: nodeInput.loadBalancers } })
           ).map(({ _id }) => _id),
@@ -65,6 +73,28 @@ export class Service extends BaseService {
       return createdNodes;
     } catch (error) {
       throw new Error(`Node CSV creation error: ${error}`);
+    }
+  }
+
+  public async createHostsCSV(hosts: IHostCsvInput[]): Promise<IHost[]> {
+    try {
+      const createdHosts: IHost[] = [];
+      for await (let hostInput of hosts) {
+        const hostInputObj: IHostInput = {
+          name: hostInput.name,
+          loadBalancer: Boolean(hostInput.loadBalancer),
+          location: (await LocationsModel.findOne({ name: hostInput.location }))._id,
+        };
+        if (hostInput.ip) hostInputObj.ip = hostInput.ip;
+        if (hostInput.fqdn) hostInputObj.fqdn = hostInput.fqdn;
+
+        const host = await HostsModel.create(hostInputObj);
+        createdHosts.push(host);
+      }
+
+      return createdHosts;
+    } catch (error) {
+      throw new Error(`Host CSV creation error: ${error}`);
     }
   }
 
