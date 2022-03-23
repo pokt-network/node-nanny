@@ -90,11 +90,9 @@ export function HostsCSV({ locationsData: { locations }, refetchHosts }: NodesCS
     Object.keys(schema).filter((key) => !schema[key]?.(object[key]));
 
   const parseHostsCsv = (hostsData: ICSVHost[]) => {
-    console.log({ hostsData });
     const hostsWithRequiredFields = hostsData.filter((host) =>
       ["name", "location"].every((key) => Object.keys(host).includes(key)),
     );
-    console.log({ hostsWithRequiredFields });
 
     const invalidHosts: any = [];
     const parsedHosts = hostsWithRequiredFields.map((host: any) => {
