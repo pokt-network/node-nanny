@@ -291,6 +291,7 @@ export class Service {
     nodeId: Types.ObjectId,
   ): Promise<IOraclesAndPeers> {
     const { urls } = await OraclesModel.findOne({ chain });
+
     const {
       healthyUrls: healthyOracles,
       badUrls: badOracles,
@@ -388,45 +389,8 @@ export class Service {
   }
 
   /* ----- Harmony ----- */
-  private getHarmonyNodeHealth = async ({
-    host,
-    chain,
-    url,
-  }: INode): Promise<IHealthResponse> => {
-    const name = `${host.name}/${chain.name}`;
-
-    try {
-      const { data } = await this.rpc.get(`${url}/node-sync`);
-      if (data === true) {
-        return {
-          name,
-          conditions: EErrorConditions.HEALTHY,
-          status: EErrorStatus.OK,
-        };
-      } else {
-        return {
-          name,
-          conditions: EErrorConditions.NOT_SYNCHRONIZED,
-          status: EErrorStatus.ERROR,
-        };
-      }
-    } catch (error) {
-      if (!error.response) {
-        return {
-          name,
-          conditions: EErrorConditions.NO_RESPONSE,
-          status: EErrorStatus.ERROR,
-          health: error,
-        };
-      }
-      if (error.response.data === false) {
-        return {
-          name,
-          conditions: EErrorConditions.NOT_SYNCHRONIZED,
-          status: EErrorStatus.ERROR,
-        };
-      }
-    }
+  private getHarmonyNodeHealth = async (node: INode): Promise<IHealthResponse> => {
+    return await this.getEVMNodeHealth(node, { harmony: true });
   };
 
   /* ----- Pocket ----- */
