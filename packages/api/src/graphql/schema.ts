@@ -6,7 +6,7 @@ const typeDefs = gql`
     id: ID!
     name: String!
     type: String!
-    variance: Int
+    allowance: Int
   }
 
   type Host {

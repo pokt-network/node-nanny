@@ -1,11 +1,11 @@
 import { Alert } from "..";
 import { LoadBalancerStatus } from "../event/types";
-import { IRotationParams } from "../event/service/redis/types";
+import { IRotationParams } from "../event/types";
 import { NodesModel, INode } from "../../models";
 
 import { Service as HAProxyService } from "../haproxy";
 
-export default class Service {
+export class Service {
   private haProxy: HAProxyService;
   public alert: Alert;
 
