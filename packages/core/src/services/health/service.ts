@@ -145,7 +145,7 @@ export class Service {
     { chain, url, host, id, port, basicAuth, server }: INode,
     { harmony }: IEVMHealthCheckOptions = { harmony: false },
   ): Promise<IHealthResponse> => {
-    const { variance } = chain;
+    const { allowance } = chain;
     const healthResponse: IHealthResponse = {
       name: `${host.name}/${chain.name}/${server}`,
       status: EErrorStatus.OK,
@@ -194,7 +194,7 @@ export class Service {
     try {
       const [internalBh, externalBh, ethSyncing] = await Promise.all([
         this.getBlockHeight(url, basicAuth, harmony),
-        this.getReferenceBlockHeight(referenceUrls, variance, harmony),
+        this.getReferenceBlockHeight(referenceUrls, allowance, harmony),
         this.getEthSyncing(url, basicAuth),
       ]);
 
@@ -215,12 +215,12 @@ export class Service {
         };
       }
 
-      if (delta > variance) {
+      if (delta > allowance) {
         healthResponse.status = EErrorStatus.ERROR;
         healthResponse.conditions = EErrorConditions.NOT_SYNCHRONIZED;
       }
 
-      if (Math.sign(delta + variance) === -1) {
+      if (Math.sign(delta + allowance) === -1) {
         healthResponse.status = EErrorStatus.ERROR;
         healthResponse.conditions = EErrorConditions.PEER_NOT_SYNCHRONIZED;
       }
@@ -344,7 +344,7 @@ export class Service {
 
   private async getReferenceBlockHeight(
     endpoints: IReferenceURL[],
-    _variance: number,
+    _allowance: number,
     harmony: boolean,
   ): Promise<number> {
     const resolved = await Promise.all(
@@ -397,7 +397,7 @@ export class Service {
   private getPocketNodeHealth = async ({
     id,
     host: { fqdn, ip, name },
-    chain: { id: chainId, variance },
+    chain: { id: chainId, allowance },
     port,
   }: INode): Promise<IHealthResponse> => {
     const url = fqdn ? `https://${fqdn}:${port}` : `http://${ip}:${port}`;
@@ -436,15 +436,17 @@ export class Service {
       .sort()
       .slice(-1);
     const { height } = await this.getPocketHeight(url);
-    const notSynched = Number(highest) - Number(height) > variance;
+    const notSynched = Number(highest) - Number(height) > allowance;
 
-    if (Math.sign(Number(highest) - Number(height) + variance) === -1) {
+    if (Math.sign(Number(highest) - Number(height) + allowance) === -1) {
       return {
         name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
         delta: Number(highest) - Number(height),
-        referenceNodes: referenceNodes.map(({ hostname }) => `${hostname} \n`),
+        referenceNodes: referenceNodes.map(
+          ({ chain, host, server }) => `${host.name}/${chain.name}/${server}\n`,
+        ),
         highest,
         height,
       };
@@ -498,14 +500,10 @@ export class Service {
     url,
     host,
     chain,
-    hostname,
     basicAuth,
   }: INode): Promise<IHealthResponse> => {
     const name = `${host.name}/${chain.name}`;
     const execute = util.promisify(exec);
-    if (hostname) {
-      url = `https://${hostname}`;
-    }
 
     let command: string;
     if (basicAuth) {

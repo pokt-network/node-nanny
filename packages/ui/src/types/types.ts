@@ -16,10 +16,10 @@ export type Scalars = {
 };
 
 export type IChain = {
+  allowance?: Maybe<Scalars['Int']>;
   id: Scalars['ID'];
   name: Scalars['String'];
   type: Scalars['String'];
-  variance?: Maybe<Scalars['Int']>;
 };
 
 export type IHost = {
@@ -340,7 +340,7 @@ export type IUnmuteMonitorMutation = { unmuteMonitor: { id: string, muted: boole
 export type IChainsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IChainsQuery = { chains: Array<{ id: string, name: string, type: string, variance?: number | null }> };
+export type IChainsQuery = { chains: Array<{ id: string, name: string, type: string, allowance?: number | null }> };
 
 export type IHostsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -688,7 +688,7 @@ export const ChainsDocument = gql`
     id
     name
     type
-    variance
+    allowance
   }
 }
     `;

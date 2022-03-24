@@ -5,7 +5,7 @@ export interface IChain {
   chain: string;
   name: string;
   type: string;
-  variance?: number;
+  allowance?: number;
 }
 
 export const chainSchema = new Schema<IChain>(
@@ -13,9 +13,9 @@ export const chainSchema = new Schema<IChain>(
     name: { type: String, unique: true, required: true },
     chain: { type: String, required: true },
     type: { type: String, required: true },
-    variance: { type: Number },
+    allowance: { type: Number },
   },
   { timestamps: true },
 );
 
-export const ChainsModel: Model<IChain> = model("chains", chainSchema);
+export const ChainsModel: Model<IChain> = model("Chains", chainSchema);
