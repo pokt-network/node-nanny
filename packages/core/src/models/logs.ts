@@ -25,6 +25,6 @@ const logSchema = new Schema<ILog>(
 logSchema.plugin(mongoosePaginate);
 
 export const LogsModel = model<LogDocument, PaginateModel<LogDocument>>(
-  "logs",
+  "Logs",
   logSchema,
 );

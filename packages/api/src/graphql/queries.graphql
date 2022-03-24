@@ -3,7 +3,7 @@ query Chains {
     id
     name
     type
-    variance
+    allowance
   }
 }
 

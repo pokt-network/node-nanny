@@ -14,4 +14,4 @@ const oracleSchema = new Schema<IOracle>(
   { timestamps: true },
 );
 
-export const OraclesModel: Model<IOracle> = model("oracles", oracleSchema);
+export const OraclesModel: Model<IOracle> = model("Oracles", oracleSchema);
