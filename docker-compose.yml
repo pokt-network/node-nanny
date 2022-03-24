@@ -8,6 +8,8 @@ services:
       dockerfile: ./Dockerfile
     ports:
       - "3000:3000"
+    depends_on:
+      - redis
     environment:
       MONITOR_TEST: "1"
       MONGO_URI: "mongodb://root:rootpassword@127.0.0.1:27017/local?authSource=admin"
@@ -24,6 +26,10 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data_container:/data/db
+
+  redis:
+    container_name: redis
+    image: "redis:latest"
 
 volumes:
   mongodb_data_container:
