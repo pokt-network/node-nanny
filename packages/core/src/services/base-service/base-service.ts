@@ -1,17 +1,16 @@
-import { Alert } from "..";
-import { LoadBalancerStatus } from "../event/types";
-import { IRotationParams } from "../event/types";
+import { LoadBalancerStatus, IRotationParams } from "../event/types";
 import { NodesModel, INode } from "../../models";
 
+import { Service as AlertService } from "../alert";
 import { Service as HAProxyService } from "../haproxy";
 
 export class Service {
   private haProxy: HAProxyService;
-  public alert: Alert;
+  public alert: AlertService;
 
   constructor() {
     this.haProxy = new HAProxyService();
-    this.alert = new Alert();
+    this.alert = new AlertService();
   }
 
   async getNode(id: string): Promise<INode> {
