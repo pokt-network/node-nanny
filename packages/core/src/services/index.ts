@@ -1,5 +1,6 @@
 export { Service as Alert } from "./alert";
 export { Service as Automation } from "./automation";
+export { Service as BaseService } from "./base-service";
 export { Service as DataDog } from "./datadog";
 export { Service as Event } from "./event";
 export { Service as HAProxy } from "./haproxy";

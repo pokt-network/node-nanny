@@ -9,10 +9,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      MONITOR_TEST: 1
-      MONGO_URI: mongodb://root:rootpassword@127.0.0.1:27017/local?authSource=admin
-      DISCORD_SERVER_ID: 948015924005462036
-      DISCORD_TOKEN: OTQ4NzE0NDY1MDUzMDEyMDEw.Yh_1Mg.Fvgd9qZpQ2s0w5Rcdk1DDt7DvlE
+      MONITOR_TEST: "1"
+      MONGO_URI: "mongodb://root:rootpassword@127.0.0.1:27017/local?authSource=admin"
+      DISCORD_SERVER_ID: "948015924005462036"
+      DISCORD_TOKEN: "OTQ4NzE0NDY1MDUzMDEyMDEw.Yh_1Mg.Fvgd9qZpQ2s0w5Rcdk1DDt7DvlE"
 
   mongodb_container:
     container_name: nn_db

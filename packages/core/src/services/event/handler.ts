@@ -1,9 +1,9 @@
-import BaseService from "../../../base-service/base-service";
-import { INode } from "../../../../models";
-import { s } from "../../../../utils";
+import { INode } from "../../models";
+import { s } from "../../utils";
+import { EErrorConditions, EErrorStatus } from "../health/types";
+import { AlertTypes } from "../../types";
 import { IRedisEvent, IRedisEventParams, IToggleServerParams } from "./types";
-import { EErrorConditions, EErrorStatus } from "../../../health/types";
-import { AlertTypes } from "../../../../types";
+import { BaseService } from "..";
 
 export class Service extends BaseService {
   constructor() {
