@@ -22,7 +22,7 @@ import {
   INodeCsvInput,
   INodeLogParams,
 } from "./types";
-import { BaseService } from "..";
+import { Service as BaseService } from "../base-service/base-service";
 
 export class Service extends BaseService {
   private ec2: EC2;

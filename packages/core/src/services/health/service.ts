@@ -511,6 +511,7 @@ export class Service {
     } else {
       command = `curl -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`;
     }
+
     try {
       const { stdout, stderr } = await execute(command);
       if (stderr) {
