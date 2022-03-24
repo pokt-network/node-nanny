@@ -18,4 +18,4 @@ const webhookSchema = new Schema<IWebhook>(
 
 webhookSchema.index({ chain: 1, location: 1 }, { unique: true });
 
-export const WebhookModel: Model<IWebhook> = model("webhooks", webhookSchema);
+export const WebhookModel: Model<IWebhook> = model("Webhooks", webhookSchema);

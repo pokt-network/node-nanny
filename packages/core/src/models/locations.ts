@@ -11,4 +11,4 @@ export const locationSchema = new Schema<ILocation>(
   },
   { timestamps: true },
 );
-export const LocationsModel: Model<ILocation> = model("locations", locationSchema);
+export const LocationsModel: Model<ILocation> = model("Locations", locationSchema);
