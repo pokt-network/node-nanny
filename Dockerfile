@@ -5,11 +5,11 @@ RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm
 
 COPY ./pnpm-*.yaml ./
 
-RUN pnpm fetch
+RUN pnpm fetch --prod
 
 ADD . ./
-RUN pnpm install pm2 redis -g
-RUN pnpm install -r --offline
+RUN pnpm install pm2 turbo -g
+RUN pnpm install -r --offline --prod
 # RUN turbo run build
 
 EXPOSE 3000
