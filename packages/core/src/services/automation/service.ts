@@ -1,9 +1,7 @@
 import { EC2 } from "aws-sdk";
-import axios, { AxiosInstance } from "axios";
 import { exec } from "child_process";
 import { FilterQuery } from "mongoose";
 
-import BaseService from "../base-service/base-service";
 import { Service as DiscordService } from "../discord";
 import { LoadBalancerStatus } from "../event/types";
 import {
@@ -24,6 +22,7 @@ import {
   INodeCsvInput,
   INodeLogParams,
 } from "./types";
+import { BaseService } from "..";
 
 export class Service extends BaseService {
   private ec2: EC2;
@@ -114,29 +113,25 @@ export class Service extends BaseService {
 
   /* ---- Rotation Methods ----- */
   async addToRotation(id: string): Promise<boolean> {
-    const { backend, server, host, chain, container, loadBalancers } = await this.getNode(
-      id,
-    );
+    const { backend, server, host, chain, loadBalancers } = await this.getNode(id);
 
     await this.enableServer({ backend, server, loadBalancers });
 
     return await this.alert.sendInfo({
       title: "Added to rotation",
-      message: `${host.name}/${chain.name}/${container} to ${backend}`,
+      message: `${host.name}/${chain.name}/${server} added to ${backend}.`,
       chain: chain.name,
     });
   }
 
   async removeFromRotation(id: string): Promise<boolean> {
-    const { backend, server, host, chain, container, loadBalancers } = await this.getNode(
-      id,
-    );
+    const { backend, server, host, chain, loadBalancers } = await this.getNode(id);
 
     await this.disableServer({ backend, server, loadBalancers, manual: true });
 
     return await this.alert.sendInfo({
       title: "Removed from rotation",
-      message: `${host.name}/${chain.name}/${container} removed from ${backend}`,
+      message: `${host.name}/${chain.name}/${server} removed from ${backend}.`,
       chain: chain.name,
     });
   }
