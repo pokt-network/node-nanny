@@ -141,8 +141,10 @@ const getFQDN = (node): string => {
 
   const chainsProd = await ChainsModelProd.find({});
   const oraclesProd = await OraclesModelProd.find({});
-  const hostsProd = await HostsModelProd.find({});
-  const nodesProd = await NodesModelProd.find({});
+  const hostsProd = await HostsModelProd.find({ name: { $not: { $regex: /dispatch/ } } });
+  const nodesProd = await NodesModelProd.find({
+    "host.name": { $not: { $regex: /dispatch/ } },
+  });
 
   console.log(
     `Fetched ${chainsProd.length} chains, ${oraclesProd.length} oracles, ${hostsProd.length} hosts and ${nodesProd.length} nodes from the production database.`,
@@ -150,7 +152,7 @@ const getFQDN = (node): string => {
 
   await disconnect();
 
-  /* ------ Connect to New Schema DB ------ */
+  /* ------ Connect to New Inventory DB ------ */
   await connect(process.env.MONGO_URI);
 
   /* 1) Create Chains */
@@ -164,6 +166,7 @@ const getFQDN = (node): string => {
     };
     if (chain.type === "ETH") chainInput.type = "EVM";
     if (chain.type === "HRM") chainInput.type = "HMY";
+    if (chain.type === "HEI") chainInput.type = "TMT";
 
     await ChainsModel.create(chainInput);
     chainsCreated++;
