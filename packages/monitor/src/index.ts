@@ -1,12 +1,9 @@
 import { Health, Log } from "@pokt-foundation/node-monitoring-core/dist/services";
 import { NodesModel } from "@pokt-foundation/node-monitoring-core/dist/models";
 import { HealthTypes } from "@pokt-foundation/node-monitoring-core/dist/types";
-import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
-import { config } from "dotenv";
+import { connect, disconnect } from "@pokt-foundation/node-monitoring-core/dist/db";
 
 import { Publish } from "./publish";
-
-config();
 
 const mode = process.env.MONITOR_TEST === "1" ? "TEST" : "PRODUCTION";
 
@@ -62,5 +59,9 @@ export class App {
     }
   }
 }
+
+process.on("SIGINT", function () {
+  disconnect();
+});
 
 new App().main();
