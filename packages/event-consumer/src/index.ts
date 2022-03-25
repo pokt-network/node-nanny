@@ -1,10 +1,9 @@
 import Redis from "ioredis";
 import { Event as EventConsumer } from "@pokt-foundation/node-monitoring-core/dist/services";
-import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
+import { connect, disconnect } from "@pokt-foundation/node-monitoring-core/dist/db";
 
 const consumer = new EventConsumer();
 const redis = new Redis({
-  port: 6379,
   host: process.env.DOCKER === "true" ? "nn_redis" : "localhost",
 });
 
@@ -35,5 +34,9 @@ const main = async () => {
     }[channel](message);
   });
 };
+
+process.on("SIGINT", function () {
+  disconnect();
+});
 
 main();
