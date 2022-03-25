@@ -1,11 +1,8 @@
 import { ApolloServer } from "apollo-server";
-import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
-// import { config } from "dotenv";
+import { connect, disconnect } from "@pokt-foundation/node-monitoring-core/dist/db";
 
 import resolvers from "./resolvers";
 import typeDefs from "./schema";
-
-// config();
 
 (async (): Promise<void> => {
   console.log(`GraphQL server starting up ...`);
@@ -16,3 +13,7 @@ import typeDefs from "./schema";
   const { url } = await new ApolloServer({ typeDefs, resolvers }).listen();
   console.log(`🚀  GraphQL server ready at ${url}`);
 })();
+
+process.on("SIGINT", function () {
+  disconnect();
+});
