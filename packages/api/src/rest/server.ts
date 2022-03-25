@@ -9,7 +9,7 @@ import {
 import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
 
 config();
-const event = new Event.DataDog();
+// const event = new Event.DataDog();
 const dd = new DataDog();
 const automation = new Automation();
 // const infra = new Infra();
