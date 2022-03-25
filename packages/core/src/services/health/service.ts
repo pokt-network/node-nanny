@@ -253,8 +253,10 @@ export class Service {
     try {
       const nc = await this.nc({ host, port });
       let status = nc.split(" ");
+      console.debug("NC SUCCESS", { nc });
       return status[status.length - 1].includes(ENCResponse.SUCCESS);
     } catch (error) {
+      console.debug("NC ERROR", { error });
       return false;
     }
   }
