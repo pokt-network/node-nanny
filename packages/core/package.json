@@ -1,7 +1,6 @@
 {
   "name": "@pokt-foundation/node-monitoring-core",
   "version": "0.1.0",
-  "repository": "https://github.com/pokt-foundation/node-monitoring.git",
   "author": "JonathonJulian <john@pokt.network>",
   "license": "MIT",
   "scripts": {
