@@ -13,7 +13,7 @@ export class Service extends BaseService {
 
   /* ----- Trigger Methods ----- */
   processTriggered = async (eventJson: string): Promise<void> => {
-    const { title, message, node, notSynced, status } = await this.parseEvent(eventJson);
+    const { node, message, notSynced, status, title } = await this.parseEvent(eventJson);
     await this.sendMessage({ title, message, chain: node.chain.name }, status);
 
     if (notSynced) {
@@ -22,18 +22,30 @@ export class Service extends BaseService {
   };
 
   processRetriggered = async (eventJson: string): Promise<void> => {
-    const { title, message, node, status } = await this.parseEvent(eventJson);
+    const { node, message, notSynced, status, title } = await this.parseEvent(eventJson);
+    const messageParams = { title, message, chain: node.chain.name };
 
-    await this.sendMessage({ title, message, chain: node.chain.name }, status);
+    if (notSynced) {
+      const { backend, loadBalancers } = node;
+      const count = await this.getServerCount({ backend, loadBalancers });
+      await this.sendMessage(
+        messageParams,
+        count >= 2 ? EErrorStatus.WARNING : EErrorStatus.ERROR,
+      );
+
+      if (count >= 2) await this.toggleServer({ node, title, enable: false });
+    } else {
+      await this.sendMessage(messageParams, status);
+    }
   };
 
   processResolved = async (eventJson: string): Promise<void> => {
     const {
-      title,
-      message,
       node,
+      message,
       notSynced,
       status,
+      title,
       warningMessage,
     } = await this.parseEvent(eventJson);
 
@@ -55,13 +67,12 @@ export class Service extends BaseService {
     const event: IRedisEvent = JSON.parse(eventJson);
     const { conditions, id, name, status, sendWarning } = event;
 
-    const parsedEvent = {
+    const parsedEvent: IRedisEventParams = {
       title: `${name} is ${conditions}`,
       message: this.getAlertMessage(event),
       node: await this.getNode(id),
       notSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
       status,
-      warningMessage: sendWarning ? this.getWarningMessage(event) : null,
     };
     if (sendWarning) parsedEvent.warningMessage = this.getWarningMessage(event);
     return parsedEvent;
@@ -128,8 +139,10 @@ export class Service extends BaseService {
   }
 
   private getWarningMessage({ conditions, name, details }: IRedisEvent): string {
-    const bOracle = details?.badOracles;
-    const bOracleStr = bOracle ? `Bad Oracle${s(bOracle.length)}: ${bOracle}` : "";
+    const badOracles = details?.badOracles;
+    const bOracleStr = badOracles
+      ? `Bad Oracle${s(badOracles.length)}: ${badOracles}`
+      : "";
 
     return [`WARNING: ${name} is ${conditions}.`, bOracleStr].filter(Boolean).join("\n");
   }

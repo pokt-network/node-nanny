@@ -155,53 +155,6 @@ export class Service extends BaseService {
     return 1;
   }
 
-  // async getMonitorStatus(id: string) {
-  //   const { monitorId } = await this.getNode(id);
-  //   const status = await this.dd.getMonitorStatus(monitorId);
-  //   return !(status === DataDogTypes.Status.ALERT);
-  // }
-
-  /* ----- Reboot Methods ----- */
-  // async rebootServer(id: string): Promise<string> {
-  //   const {
-  //     host,
-  //     chain,
-  //     hostname,
-  //     container,
-  //     compose,
-  //     nginx,
-  //     poktType,
-  //   } = await this.getNode(id);
-  //   const { ip } = await HostsModel.findOne({ name: host.name });
-
-  //   const requestData =
-  //     chain.type === HealthTypes.ESupportedBlockChains.POKT
-  //       ? {
-  //           name: container,
-  //           type: RebootTypes.ENodeTypes.POKT,
-  //           nginx,
-  //           poktType,
-  //         }
-  //       : {
-  //           name: container,
-  //           type: RebootTypes.ENodeTypes.DATA,
-  //           compose,
-  //         };
-
-  //   const { data } = await this.agent.post<{ reboot: string }>(
-  //     `http://${this.getLoadBalancerIP(ip)}:3001/webhook/docker/reboot`,
-  //     requestData,
-  //   );
-  //   const { reboot } = data;
-
-  //   const hostString =
-  //     hostname || `${host.name}/${chain.name.toLowerCase()}/${container}`;
-  //   const message = `${hostString} rebooted.\n${reboot}`;
-  //   await this.alert.sendInfo({ title: "Manual Reboot", message, chain: chain.name });
-
-  //   return reboot;
-  // }
-
   async muteMonitor(id: string): Promise<INode> {
     await NodesModel.updateOne({ _id: id }, { muted: true }).exec();
     await this.restartMonitor();
