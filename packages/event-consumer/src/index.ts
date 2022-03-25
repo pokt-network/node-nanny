@@ -3,9 +3,7 @@ import { Event as EventConsumer } from "@pokt-foundation/node-monitoring-core/di
 import { connect, disconnect } from "@pokt-foundation/node-monitoring-core/dist/db";
 
 const consumer = new EventConsumer();
-const redis = new Redis({
-  host: process.env.DOCKER === "true" ? "nn_redis" : "localhost",
-});
+const redis = new Redis({ host: "nn_redis" });
 
 const main = async () => {
   await connect();
@@ -26,7 +24,6 @@ const main = async () => {
   });
 
   redis.on("message", (channel: string, message: string) => {
-    console.debug("EVENT CONSUMER RECEIVED", { message });
     return {
       "send-event-trigger": consumer.processTriggered,
       "send-event-retrigger": consumer.processRetriggered,
