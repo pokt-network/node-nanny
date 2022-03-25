@@ -16,7 +16,6 @@
   "dependencies": {
     "@pokt-foundation/node-monitoring-core": "workspace:^0.1.0",
     "apollo-server": "^3.6.3",
-    "dotenv": "^10.0.0",
     "express": "^4.17.3",
     "graphql": "^16.0.1"
   },
