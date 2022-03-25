@@ -1,5 +1,4 @@
 import express from "express";
-import { config } from "dotenv";
 import {
   Event,
   DataDog,
@@ -8,7 +7,6 @@ import {
 } from "@pokt-foundation/node-monitoring-core/dist/services";
 import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
 
-config();
 // const event = new Event.DataDog();
 const dd = new DataDog();
 const automation = new Automation();
