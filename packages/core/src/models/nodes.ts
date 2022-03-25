@@ -25,7 +25,7 @@ const nodesSchema = new Schema<INode>(
     port: { type: Number, required: true },
     url: { type: String, required: true },
     muted: { type: Boolean, required: true, default: false },
-    loadBalancers: [{ type: Schema.Types.ObjectId, ref: "hosts" }],
+    loadBalancers: [{ type: Schema.Types.ObjectId, ref: "Hosts" }],
     backend: String,
     server: String,
     basicAuth: String,
