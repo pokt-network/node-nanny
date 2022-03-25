@@ -1,16 +1,21 @@
-FROM node:16
+FROM ubuntu:20.04
 
 WORKDIR /usr/src/node-nanny
+
+RUN apt-get update
+RUN apt-get -y install curl gnupg
+RUN curl -sL https://deb.nodesource.com/setup_16.x  | bash -
+RUN apt-get -y install nodejs
 RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm
 
 COPY ./pnpm-*.yaml ./
 
-RUN pnpm fetch --prod
+RUN pnpm fetch
 
-ADD . ./
-RUN pnpm install pm2 turbo -g
-RUN pnpm install -r --offline --prod
-# RUN turbo run build
+COPY . ./
+RUN pnpm install pm2 turbo nc -g
+RUN pnpm install -r --offline
+RUN pnpm build
 
 EXPOSE 3000
 CMD ["pm2-runtime", "process.yml"]
