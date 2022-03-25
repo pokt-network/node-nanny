@@ -1,11 +1,12 @@
 import Redis from "ioredis";
-import { Event } from "@pokt-foundation/node-monitoring-core/dist/services";
+import { Event as EventConsumer } from "@pokt-foundation/node-monitoring-core/dist/services";
 import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
 
-const { Redis: Consumer } = Event;
-
-const consumer = new Consumer();
-const redis = new Redis();
+const consumer = new EventConsumer();
+const redis = new Redis({
+  port: 6379,
+  host: process.env.DOCKER === "true" ? "nn_redis" : "localhost",
+});
 
 const main = async () => {
   await connect();
@@ -26,6 +27,7 @@ const main = async () => {
   });
 
   redis.on("message", (channel: string, message: string) => {
+    console.debug("EVENT CONSUMER RECEIVED", { message });
     return {
       "send-event-trigger": consumer.processTriggered,
       "send-event-retrigger": consumer.processRetriggered,

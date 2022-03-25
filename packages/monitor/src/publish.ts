@@ -17,7 +17,10 @@ export class Publish {
 
   constructor() {
     this.map = new Map<string, number>();
-    this.redis = new Redis();
+    this.redis = new Redis({
+      port: 6379,
+      host: process.env.DOCKER === "true" ? "nn_redis" : "localhost",
+    });
     this.threshold = 6;
     this.retriggerThreshold = 20;
   }
@@ -31,6 +34,7 @@ export class Publish {
       const count = this.map.get(id);
 
       const event: EventTypes.IRedisEvent = { ...message, id, count };
+      console.debug("ERROR IN MONITOR", { count, event });
       if (count >= this.threshold && count < this.retriggerThreshold) {
         await this.redis.publish("send-event-trigger", JSON.stringify(event));
       }
@@ -41,6 +45,7 @@ export class Publish {
     }
 
     if (message.status === HealthTypes.EErrorStatus.OK) {
+      console.debug("OK IN MONITOR", { count: this.map.has(id) });
       /* If Node is healthy, check if it has recovered from previous errors */
       if (this.map.has(id)) {
         const count = this.map.get(id);
