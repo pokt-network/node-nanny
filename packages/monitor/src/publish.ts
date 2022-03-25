@@ -18,7 +18,6 @@ export class Publish {
   constructor() {
     this.map = new Map<string, number>();
     this.redis = new Redis({
-      port: 6379,
       host: process.env.DOCKER === "true" ? "nn_redis" : "localhost",
     });
     this.threshold = 6;

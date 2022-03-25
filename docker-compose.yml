@@ -33,8 +33,6 @@ services:
   nn_redis:
     container_name: nn_redis
     image: "redis:latest"
-    ports:
-      - "6739:6739"
 
 volumes:
   mongodb_data_container:
