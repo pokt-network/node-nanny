@@ -8,15 +8,18 @@ services:
       dockerfile: ./Dockerfile
     ports:
       - "3000:3000"
+      - "4000:4000"
     depends_on:
-      - redis
+      - nn_db
+      - nn_redis
     environment:
+      DOCKER: "true"
       MONITOR_TEST: "1"
-      MONGO_URI: "mongodb://root:rootpassword@127.0.0.1:27017/local?authSource=admin"
+      MONGO_URI: "mongodb://root:rootpassword@nn_db:27017/local?authSource=admin"
       DISCORD_SERVER_ID: "948015924005462036"
       DISCORD_TOKEN: "OTQ4NzE0NDY1MDUzMDEyMDEw.Yh_1Mg.Fvgd9qZpQ2s0w5Rcdk1DDt7DvlE"
 
-  mongodb_container:
+  nn_db:
     container_name: nn_db
     image: mongo:latest
     environment:
@@ -27,9 +30,11 @@ services:
     volumes:
       - mongodb_data_container:/data/db
 
-  redis:
-    container_name: redis
+  nn_redis:
+    container_name: nn_redis
     image: "redis:latest"
+    ports:
+      - "6739:6739"
 
 volumes:
   mongodb_data_container:
