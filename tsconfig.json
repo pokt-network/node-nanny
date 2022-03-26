@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "types": ["@types/jest"],
-    "target": "es6",
+    "target": "ES2020",
     "module": "commonjs",
     "skipLibCheck": true,
     "declaration": true,
@@ -13,9 +13,6 @@
     "jsx": "react-jsx",
     "outDir": "./dist",
     "rootDir": ".",
-    "paths": {
-      "@pokt-foundation/node-monitoring/*": ["./packages/*/src"]
-    },
     "strict": false,
     "moduleResolution": "node",
     "resolveJsonModule": true
