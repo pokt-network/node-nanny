@@ -4,9 +4,5 @@ module.exports = {
   testEnvironment: "node",
   testTimeout: 100000000,
   transformIgnorePatterns: ["^.+\\.js$"],
-  globals: {
-    "ts-jest": {
-      isolatedModules: true,
-    },
-  },
+  globals: { "ts-jest": { isolatedModules: true } },
 };
