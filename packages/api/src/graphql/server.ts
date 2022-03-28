@@ -10,8 +10,8 @@ import typeDefs from "./schema";
   await connect();
   console.log(`MongoDB connection established ...`);
 
-  const { url } = await new ApolloServer({ typeDefs, resolvers }).listen();
-  console.log(`🚀  GraphQL server ready at ${url}`);
+  const { url } = await new ApolloServer({ typeDefs, resolvers }).listen({ port: 4000 });
+  console.log(`🚀 GraphQL server ready at ${url}`);
 })();
 
 process.on("SIGINT", function () {
