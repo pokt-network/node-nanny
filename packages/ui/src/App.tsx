@@ -10,8 +10,9 @@ import IconButton from "@mui/material/IconButton";
 import Container from "@mui/material/Container";
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+
 import { Route } from "react-router-dom";
-import { Home, Chains, Hosts, Logs, Nodes, Oracles, Settings, Webhooks } from "./views";
+import { Home, Chains, Hosts, Logs, Nodes, Oracles, Settings, Webhooks } from "./pages";
 import { Nav } from "./components";
 
 const drawerWidth: number = 240;
@@ -126,7 +127,9 @@ function DashboardContent() {
           component="main"
           sx={{
             backgroundColor: (theme) =>
-              theme.palette.mode === "light" ? theme.palette.grey[100] : theme.palette.grey[900],
+              theme.palette.mode === "light"
+                ? theme.palette.grey[100]
+                : theme.palette.grey[900],
             flexGrow: 1,
             height: "100vh",
             overflow: "auto",
@@ -136,10 +139,12 @@ function DashboardContent() {
             <div>___</div>
           </Container>
           <Route exact path="/" component={Home} />
-          <Route exact path="/chains" component={Chains} />
-          <Route exact path="/hosts" component={Hosts} />
-          <Route exact path="/oracles" component={Oracles} />
+          <Route exact path="/logs" component={Logs} />
           <Route exact path="/nodes" component={Nodes} />
+          <Route exact path="/hosts" component={Hosts} />
+
+          <Route exact path="/chains" component={Chains} />
+          <Route exact path="/oracles" component={Oracles} />
           <Route exact path="/webhooks" component={Webhooks} />
           <Route exact path="/settings" component={Settings} />
         </Box>

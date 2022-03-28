@@ -1,19 +1,30 @@
-import { Schema, model, Model } from "mongoose";
+import { Schema, model, Document, PaginateModel, PaginateResult } from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
+
+interface LogDocument extends Document, ILog {}
+
+export type IPaginatedLogs = PaginateResult<ILog>;
 
 export interface ILog {
-  id: string;
-  timestamp: string;
+  timestamp: Date;
+  label: string;
   level: string;
   message: string;
-  label: string;
 }
 
-const logSchema = new Schema<ILog>({
-  id: Schema.Types.ObjectId,
-  timestamp: String,
-  level: String,
-  message: String,
-  label: Schema.Types.ObjectId
-});
+const logSchema = new Schema<ILog>(
+  {
+    timestamp: Schema.Types.Date,
+    label: String,
+    level: String,
+    message: String,
+  },
+  { timestamps: true },
+);
 
-export const LogsModel: Model<ILog> = model("logs", logSchema);
+logSchema.plugin(mongoosePaginate);
+
+export const LogsModel = model<LogDocument, PaginateModel<LogDocument>>(
+  "Logs",
+  logSchema,
+);

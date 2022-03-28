@@ -1,8 +1,8 @@
-export enum NCResponse {
+export enum ENCResponse {
   SUCCESS = "succeeded!",
 }
 
-export enum SupportedBlockChains {
+export enum ESupportedBlockChains {
   AVA = "AVA",
   AVATST = "AVATST",
   ETH = "ETH",
@@ -17,50 +17,92 @@ export enum SupportedBlockChains {
   GOE = "GOE",
   KOV = "KOV",
   HEI = "HEI",
-  POKT = "POKT"
+  POKT = "POKT",
 }
 
-export enum SupportedBlockChainTypes {
+export enum ESupportedBlockChainTypes {
   EVM = "EVM",
-  ETH = "ETH",
   AVA = "AVA",
-  HEI = "HEI",
+  TMT = "TMT",
   POKT = "POKT",
   SOL = "SOL",
   ALG = "ALG",
-  HRM = "HRM"
+  HMY = "HMY",
 }
 
-export enum ErrorConditions {
+export enum EErrorConditions {
   HEALTHY = "HEALTHY",
   OFFLINE = "OFFLINE",
+  NO_ORACLE = "NO_ORACLE",
+  BAD_ORACLE = "BAD_ORACLE",
   NO_RESPONSE = "NO_RESPONSE",
   NOT_SYNCHRONIZED = "NOT_SYNCHRONIZED",
   NO_PEERS = "NO_PEERS",
-  PEER_NOT_SYNCHRONIZED = "PEER_NOT_SYNCHRONIZED"
+  PEER_NOT_SYNCHRONIZED = "PEER_NOT_SYNCHRONIZED",
 }
 
-export enum ErrorStatus {
+export enum EErrorStatus {
   ERROR = "ERROR",
   OK = "OK",
   INFO = "INFO",
   WARNING = "WARNING",
 }
 
-interface BlockHeight {
+interface IBlockHeight {
   delta: number;
   externalHeight: number;
   internalHeight: number;
 }
 
-export interface HealthResponse {
+export interface IPocketBlockHeight {
+  height: number;
+}
+
+export interface IHealthResponse {
   name: string;
-  conditions?: ErrorConditions;
-  ethSyncing?: any;
-  height?: BlockHeight;
+  status: EErrorStatus;
+  conditions?: EErrorConditions;
+  height?: IBlockHeight | number;
   peers?: number;
-  status: ErrorStatus;
+  details?: IHealthResponseDetails;
   health?: any;
-  details?: any;
   id?: string;
+  ethSyncing?: boolean;
+  delta?: number;
+  referenceNodes?: string[];
+  highest?: any;
+  sendWarning?: boolean;
+}
+
+export interface IHealthResponseDetails {
+  badOracles?: string[];
+}
+
+export interface IReferenceURL {
+  url: string;
+  auth?: string;
+}
+
+export interface IRPCResponse {
+  jsonrpc: string;
+  id: number;
+  result?: string | number;
+  error?: { code: number; message: string };
+}
+
+export interface IRPCSyncResponse {
+  jsonrpc: string;
+  id: number;
+  result: boolean;
+  error?: { code: number; message: string };
+}
+
+export interface IEVMHealthCheckOptions {
+  harmony?: boolean;
+}
+
+export interface IOraclesAndPeers {
+  healthyOracles: IReferenceURL[];
+  badOracles: IReferenceURL[];
+  healthyPeers: IReferenceURL[];
 }
