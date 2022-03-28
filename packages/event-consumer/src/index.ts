@@ -1,13 +1,13 @@
 import Redis from "ioredis";
-import { Event } from "@pokt-foundation/node-monitoring-core/dist/services";
-import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
-const { Redis: Consumer } = Event;
+import { Event as EventConsumer } from "@pokt-foundation/node-monitoring-core/dist/services";
+import { connect, disconnect } from "@pokt-foundation/node-monitoring-core/dist/db";
 
-const consumer = new Consumer();
-const redis = new Redis();
+const consumer = new EventConsumer();
+const redis = new Redis({ host: "nn_redis" });
 
 const main = async () => {
   await connect();
+
   redis.subscribe("send-event-trigger", (err, count) => {
     if (err) console.error(err.message);
     console.log(`Subscribed to ${count} channels.`);
@@ -23,13 +23,17 @@ const main = async () => {
     console.log(`Subscribed to ${count} channels.`);
   });
 
-  redis.on("message", (channel, message) => {
+  redis.on("message", (channel: string, message: string) => {
     return {
       "send-event-trigger": consumer.processTriggered,
-      "send-event-retrigger": consumer.processReTriggered,
+      "send-event-retrigger": consumer.processRetriggered,
       "send-event-resolved": consumer.processResolved,
     }[channel](message);
   });
 };
+
+process.on("SIGINT", function () {
+  disconnect();
+});
 
 main();
