@@ -1,0 +1,14 @@
+apps:
+  - script: ./packages/api/dist/graphql/server.js
+    name: api
+  - script: ./packages/event-consumer/dist/index.js
+    name: event-consumer
+  - script: ./packages/monitor/dist/index.js
+    name: monitor
+  - script: ./packages/core/dist/jobs/updater.js
+    name: updater
+    restart_delay: 3600000
+  - script: npm
+    name: ui
+    cwd: ./packages/ui
+    args: start

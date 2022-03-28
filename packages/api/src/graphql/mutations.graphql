@@ -1,0 +1,80 @@
+mutation CreateHost(
+  $location: String!
+  $name: String!
+  $loadBalancer: Boolean!
+  $ip: String
+  $fqdn: String
+) {
+  createHost(
+    location: $location
+    name: $name
+    ip: $ip
+    fqdn: $fqdn
+    loadBalancer: $loadBalancer
+  ) {
+    name
+    ip
+    loadBalancer
+  }
+}
+
+mutation CreateNode(
+  $chain: ID!
+  $host: ID!
+  $port: Int!
+  $url: String!
+  $loadBalancers: [ID!]!
+  $haProxy: Boolean!
+  $backend: String
+  $server: String
+) {
+  createNode(
+    input: {
+      chain: $chain
+      host: $host
+      port: $port
+      url: $url
+      loadBalancers: $loadBalancers
+      haProxy: $haProxy
+      backend: $backend
+      server: $server
+    }
+  ) {
+    id
+    url
+  }
+}
+
+mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
+  createNodesCSV(nodes: $nodes) {
+    id
+  }
+}
+
+mutation CreateHostsCSV($hosts: [HostCSVInput!]!) {
+  createHostsCSV(hosts: $hosts) {
+    id
+  }
+}
+
+mutation EnableHaProxyServer($id: ID!) {
+  enableHaProxyServer(id: $id)
+}
+
+mutation DisableHaProxyServer($id: ID!) {
+  disableHaProxyServer(id: $id)
+}
+
+mutation MuteMonitor($id: ID!) {
+  muteMonitor(id: $id) {
+    id
+    muted
+  }
+}
+
+mutation UnmuteMonitor($id: ID!) {
+  unmuteMonitor(id: $id) {
+    id
+    muted
+  }
+}
