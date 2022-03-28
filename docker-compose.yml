@@ -14,9 +14,11 @@ services:
       - nn_redis
     environment:
       MONITOR_TEST: ${MONITOR_TEST}
+      MONITOR_LOGGER: ${MONITOR_LOGGER}
       MONGO_URI: "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@nn_db:27017/${MONGO_DB_NAME}?authSource=admin"
       DISCORD_SERVER_ID: ${DISCORD_SERVER_ID}
       DISCORD_TOKEN: ${DISCORD_TOKEN}
+      DD_API_KEY: ${DD_API_KEY}
 
   nn_db:
     container_name: nn_db
