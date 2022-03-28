@@ -1,55 +1,225 @@
-import * as React from "react";
-import Link from "@mui/material/Link";
-import UITable from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import { Title } from "./Title";
+import { ChangeEvent, Dispatch, MouseEvent, SetStateAction, useState } from "react";
+import {
+  Box,
+  Paper,
+  Table as MUITable,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  TableSortLabel,
+  Typography,
+} from "@mui/material";
 
-function preventDefault(event: React.MouseEvent) {
-  event.preventDefault();
+import { formatHeaderCell } from "utils";
+import SearchBar from "./SearchBar";
+
+function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
+  if (b[orderBy] < a[orderBy]) {
+    return -1;
+  }
+  if (b[orderBy] > a[orderBy]) {
+    return 1;
+  }
+  return 0;
 }
+
+type Order = "asc" | "desc";
+
+function getComparator<Key extends keyof any>(
+  order: Order,
+  orderBy: Key,
+): (a: { [key in Key]: any }, b: { [key in Key]: any }) => number {
+  return order === "desc"
+    ? (a, b) => descendingComparator(a, b, orderBy)
+    : (a, b) => -descendingComparator(a, b, orderBy);
+}
+
+interface EnhancedTableProps {
+  rows: any[];
+  onRequestSort: (event: MouseEvent<unknown>, property: any) => void;
+  order: Order;
+  orderBy: string;
+  rowCount: number;
+}
+
+function EnhancedTableHead({ rows, order, orderBy, onRequestSort }: EnhancedTableProps) {
+  const createSortHandler = (property: any) => (event: MouseEvent<unknown>) => {
+    onRequestSort(event, property);
+  };
+  const headCells = rows.length
+    ? Object.keys(rows[0])
+        .filter((value) => value !== "id" && value !== "__typename")
+        .map((column) => ({ id: column, label: formatHeaderCell(column) }))
+    : [];
+
+  return (
+    <TableHead>
+      <TableRow>
+        {headCells.map((headCell, i) => (
+          <TableCell
+            key={headCell.id}
+            align={!i ? "left" : "right"}
+            sortDirection={orderBy === headCell.id ? order : false}
+          >
+            <TableSortLabel
+              active={orderBy === headCell.id}
+              direction={orderBy === headCell.id ? order : "asc"}
+              onClick={createSortHandler(headCell.id)}
+            >
+              {headCell.label}
+            </TableSortLabel>
+          </TableCell>
+        ))}
+      </TableRow>
+    </TableHead>
+  );
+}
+
+interface TableProps {
+  rows: any;
+  height?: number;
+  searchable?: boolean;
+  paginate?: boolean;
+  numPerPage?: number;
+  selectedRow?: string;
+  type?: string;
+  onSelectRow?: Dispatch<SetStateAction<any>>;
+}
+
 export function Table({
   rows,
-}: {
-  rows: {
-    id: number;
-    date: string;
-    name: string;
-    shipTo: string;
-    paymentMethod: string;
-    amount: number;
-  }[];
-}) {
+  height,
+  searchable,
+  paginate,
+  numPerPage,
+  selectedRow,
+  type,
+  onSelectRow,
+}: TableProps) {
+  const [order, setOrder] = useState<Order>("asc");
+  const [orderBy, setOrderBy] = useState("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(
+    paginate ? numPerPage || 25 : rows.length,
+  );
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
+  const handleRequestSort = (_event: MouseEvent<unknown>, property: any) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+  };
+
+  const handleChangePage = (_: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+
   return (
-    <React.Fragment>
-      <Title>Recent Orders</Title>
-      <UITable size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Date</TableCell>
-            <TableCell>Name</TableCell>
-            <TableCell>Ship To</TableCell>
-            <TableCell>Payment Method</TableCell>
-            <TableCell align="right">Sale Amount</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.id}>
-              <TableCell>{row.date}</TableCell>
-              <TableCell>{row.name}</TableCell>
-              <TableCell>{row.shipTo}</TableCell>
-              <TableCell>{row.paymentMethod}</TableCell>
-              <TableCell align="right">{`$${row.amount}`}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </UITable>
-      <Link color="primary" href="#" onClick={preventDefault} sx={{ mt: 3 }}>
-        See more orders
-      </Link>
-    </React.Fragment>
+    <Box sx={{ width: "100%" }}>
+      <Paper sx={{ width: "100%", overflow: "hidden", padding: "16px" }}>
+        {type && (
+          <Typography align="center" variant="h4" gutterBottom>
+            {type}
+          </Typography>
+        )}
+        {searchable && (
+          <SearchBar
+            value={searchTerm}
+            handleChange={setSearchTerm}
+            type={type}
+            sx={{ marginBottom: "16px" }}
+          />
+        )}
+        <TableContainer sx={{ maxHeight: height || 600 }}>
+          <MUITable
+            stickyHeader
+            sx={{ minWidth: 750 }}
+            aria-labelledby="tableTitle"
+            size="small"
+          >
+            <EnhancedTableHead
+              rows={rows}
+              order={order}
+              orderBy={orderBy}
+              onRequestSort={handleRequestSort}
+              rowCount={rows.length}
+            />
+            <TableBody>
+              {rows
+                .slice()
+
+                .filter(
+                  (row: any) =>
+                    !searchable ||
+                    Object.values(row)
+                      .join()
+                      .toLowerCase()
+                      .trim()
+                      .includes(searchTerm.toLowerCase().trim()),
+                )
+                .sort(getComparator(order, orderBy))
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((row: any) => {
+                  return (
+                    <TableRow
+                      key={String(row.id)}
+                      sx={{
+                        "&:last-child td, &:last-child th": { border: 0 },
+                        cursor: `${onSelectRow ? "pointer" : "default"}`,
+                      }}
+                      hover={!!onSelectRow}
+                      selected={selectedRow === String(row.id)}
+                    >
+                      {Object.entries(row)
+                        .filter(([key]) => key !== "id" && key !== "__typename")
+                        .map(([_, value], i) => {
+                          return (
+                            <TableCell
+                              key={`${value as any}-${i}`}
+                              align={!i ? "left" : "right"}
+                              onClick={() => onSelectRow?.(row)}
+                            >
+                              {Array.isArray(value) ? value.join(", ") : String(value)}
+                            </TableCell>
+                          );
+                        })}
+                    </TableRow>
+                  );
+                })}
+              {emptyRows > 0 && (
+                <TableRow
+                  style={{
+                    height: 33 * emptyRows,
+                  }}
+                >
+                  <TableCell colSpan={6} />
+                </TableRow>
+              )}
+            </TableBody>
+          </MUITable>
+        </TableContainer>
+        {paginate && (
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={rows.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        )}
+      </Paper>
+    </Box>
   );
 }

@@ -1,15 +1,21 @@
-import { Schema, model, Model } from "mongoose";
+import { model, Model, Schema, Types } from "mongoose";
 
 export interface IChain {
-    chain: string;
-    name: string;
-    type: string;
-  }
-  
-export const chainSchema = new Schema<IChain>({
-    chain: String,
-    name: String,
-    type: String,
-  });
+  id: Types.ObjectId;
+  chain: string;
+  name: string;
+  type: string;
+  allowance?: number;
+}
 
-export const ChainsModel: Model<IChain> = model("chains", chainSchema);
+export const chainSchema = new Schema<IChain>(
+  {
+    name: { type: String, unique: true, required: true },
+    chain: { type: String, required: true },
+    type: { type: String, required: true },
+    allowance: { type: Number },
+  },
+  { timestamps: true },
+);
+
+export const ChainsModel: Model<IChain> = model("Chains", chainSchema);

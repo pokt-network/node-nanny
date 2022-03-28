@@ -1,30 +1,10 @@
 import { exec } from "child_process";
 
+import { IHAProxyParams } from "./types";
+
 export class Service {
-  private async getCurrentStateByChainCommand(backend): Promise<string> {
-    return new Promise((resolve, reject) => {
-      exec(`echo "show servers state ${backend}" | nc -v localhost 9999`, (error, stdout) => {
-        if (error) {
-          reject(`error: ${error.message}`);
-        }
-        resolve(stdout);
-      });
-    });
-  }
-
-  async disableServer({ backend, server }) {
-    const cmd = `echo "disable server ${backend}/${server}" | nc -v localhost 9999`;
-    return new Promise((resolve, reject) => {
-      exec(cmd, (error, stdout) => {
-        if (error) {
-          reject(`error: ${error.message}`);
-        }
-        resolve(stdout);
-      });
-    });
-  }
-  async enableServer({ backend, server }) {
-    const cmd = `echo "enable server ${backend}/${server}" | nc -v localhost 9999`;
+  async disableServer({ backend, server, destination }: IHAProxyParams) {
+    const cmd = `echo "disable server ${backend}/${server}" | nc -v ${destination} 9999`;
     return new Promise((resolve, reject) => {
       exec(cmd, (error, stdout) => {
         if (error) {
@@ -35,8 +15,20 @@ export class Service {
     });
   }
 
-  async getServerStatus({ backend, server }) {
-    const raw = await this.getCurrentStateByChainCommand(backend);
+  async enableServer({ backend, server, destination }: IHAProxyParams) {
+    const cmd = `echo "enable server ${backend}/${server}" | nc -v ${destination} 9999`;
+    return new Promise((resolve, reject) => {
+      exec(cmd, (error, stdout) => {
+        if (error) {
+          reject(`error: ${error.message}`);
+        }
+        resolve(stdout);
+      });
+    });
+  }
+
+  async getServerStatus({ backend, server, destination }: IHAProxyParams) {
+    const raw = await this.getCurrentStateByChainCommand({ backend, destination });
     const lines = raw.split("\n");
     for (const line of lines) {
       if (line.includes(backend) && line.includes(server)) {
@@ -44,14 +36,31 @@ export class Service {
       }
     }
 
-    return -1;
+    return null;
   }
 
-  async getServerCount(backend) {
-    const raw = await this.getCurrentStateByChainCommand(backend);
+  async getServerCount({ backend, destination }: IHAProxyParams) {
+    const raw = await this.getCurrentStateByChainCommand({ backend, destination });
     const lines = raw.split("\n");
     return lines.filter((line) => {
       return line.includes(backend) && Number(line.split(" ")[5]) === 2;
     }).length;
+  }
+
+  private async getCurrentStateByChainCommand({
+    backend,
+    destination,
+  }: IHAProxyParams): Promise<string> {
+    return new Promise((resolve, reject) => {
+      exec(
+        `echo "show servers state ${backend}" | nc -v ${destination} 9999`,
+        (error, stdout) => {
+          if (error) {
+            reject(`error: ${error.message}`);
+          }
+          resolve(stdout);
+        },
+      );
+    });
   }
 }

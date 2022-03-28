@@ -9,7 +9,11 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 dist
+dist/**
+build
+build/**
 tsconfig.tsbuildinfo
 *.js.map
 *.d.ts.*
 *.d.ts
+.turbo

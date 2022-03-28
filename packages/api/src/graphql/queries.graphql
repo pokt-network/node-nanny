@@ -1,0 +1,115 @@
+query Chains {
+  chains {
+    id
+    name
+    type
+    allowance
+  }
+}
+
+query Hosts {
+  hosts {
+    id
+    name
+    ip
+    loadBalancer
+    location
+  }
+}
+
+query Locations {
+  locations {
+    id
+    name
+  }
+}
+
+query Node($id: ID!) {
+  node(id: $id) {
+    id
+    backend
+    port
+    server
+    url
+    ssl
+    muted
+    loadBalancers
+  }
+}
+
+query Nodes {
+  nodes {
+    id
+    backend
+    port
+    server
+    url
+    ssl
+    muted
+    loadBalancers
+  }
+}
+
+query Logs(
+  $nodeIds: [ID!]!
+  $page: Int!
+  $limit: Int!
+  $startDate: String
+  $endDate: String
+) {
+  logs(
+    nodeIds: $nodeIds
+    page: $page
+    limit: $limit
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    docs {
+      message
+      level
+      timestamp
+    }
+    totalDocs
+    page
+    hasPrevPage
+    hasNextPage
+  }
+}
+
+query Oracles {
+  oracles {
+    id
+    chain
+    urls
+  }
+}
+
+query Webhooks {
+  webhooks {
+    id
+    location
+    chain
+    url
+  }
+}
+
+query GetHostsChainsAndLoadBalancers {
+  hosts {
+    id
+    name
+    ip
+    location
+  }
+  chains {
+    id
+    name
+  }
+  loadBalancers: hosts(loadBalancer: true) {
+    id
+    name
+  }
+}
+
+query GetNodeStatus($id: ID!) {
+  haProxyStatus: getHaProxyStatus(id: $id)
+}
