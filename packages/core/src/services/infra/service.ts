@@ -6,6 +6,7 @@ const colors = {
   SUCCESS: 3066993,
 };
 
+// DEV NOTE -> Do we need this service? Looks like it's only concerned with Datadog.
 export class Service {
   private alert: Alert;
   private dd: DataDog;
@@ -68,7 +69,7 @@ export class Service {
           value: JSON.stringify(message, null, 2),
         };
       });
-      formated.length = 5
+      formated.length = 5;
       fields = fields.concat(formated);
     }
 
@@ -85,18 +86,19 @@ export class Service {
         };
       });
 
-      formated.length = 5
+      formated.length = 5;
       fields = fields.concat(formated);
     }
 
-    return await this.alert.sendDiscordMessage({
-      fields,
-      title,
-      color: colors[type],
-      channel:
-        process.env.MONITOR_TEST === "1"
-          ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST
-          : AlertTypes.Webhooks.DATADOG_ALERTS,
-    });
+    // return await this.alert.sendDiscordMessage({
+    //   fields,
+    //   title,
+    //   color: colors[type],
+    //   channel:
+    //     process.env.MONITOR_TEST === "1"
+    //       ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST
+    //       : AlertTypes.Webhooks.DATADOG_ALERTS,
+    // });
+    return true;
   }
 }

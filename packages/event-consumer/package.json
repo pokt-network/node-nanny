@@ -1,11 +1,12 @@
 {
-  "name": "@pokt-foundation/node-monitoring-monitor",
+  "name": "@pokt-foundation/event-consumer",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b .",
+    "build:clean": "tsc --build --clean && rm -rf ./dist",
     "build:watch": "tsc -b -w ."
   },
   "keywords": [],
@@ -14,5 +15,8 @@
   "dependencies": {
     "@pokt-foundation/node-monitoring-core": "workspace:^0.1.0",
     "ioredis": "^4.28.1"
+  },
+  "devDependencies": {
+    "@types/ioredis": "^4.28.8"
   }
 }

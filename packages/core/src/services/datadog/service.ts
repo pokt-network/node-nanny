@@ -1,12 +1,12 @@
 import axios, { AxiosInstance } from "axios";
 import { v1, v2 } from "@datadog/datadog-api-client";
 import { ApiDetails } from "./types";
-import { resourceUsage } from "process";
 
 export class Service {
   private sdkClient: v1.MonitorsApi;
   private restClient: AxiosInstance;
   private ddlogs: v2.LogsApi;
+
   constructor() {
     this.ddlogs = this.logsInitSdk();
     this.sdkClient = this.initSdk();
