@@ -1,17 +1,17 @@
-import { Schema, model, Model } from "mongoose";
-import { IChain } from "./chains";
+import { Schema, model, Model, Types } from "mongoose";
+
 export interface IOracle {
-  id: string;
-  chain: IChain;
+  id: Types.ObjectId;
+  chain: string;
   urls: string[];
 }
 
-const oracleSchema = new Schema<IOracle>({
-  chain: {
-    type: Schema.Types.ObjectId,
-    ref: "chains",
+const oracleSchema = new Schema<IOracle>(
+  {
+    chain: { type: String, unique: true },
+    urls: [String],
   },
-  urls: [String],
-});
+  { timestamps: true },
+);
 
-export const OraclesModel: Model<IOracle> = model("oracles", oracleSchema);
+export const OraclesModel: Model<IOracle> = model("Oracles", oracleSchema);

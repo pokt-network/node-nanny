@@ -1,28 +1,25 @@
-import { Schema, model, Model } from "mongoose";
+import { Schema, model, Model, Types } from "mongoose";
 
-export interface IHost {
-    name: string;
-    internalIpaddress: string;
-    internalHostName: string;
-    externalHostName: string;
-    awsInstanceId: string;
-    loadBalancer: boolean;
-    hostType: string;
-    ip: string;
-    location: string;
-  }
+import { ILocation } from "./locations";
 
+export interface IHost<Populated = true> {
+  id: Types.ObjectId;
+  name: string;
+  loadBalancer: boolean;
+  location: Populated extends true ? ILocation : Types.ObjectId;
+  ip?: string;
+  fqdn?: string;
+}
 
-  export const hostsSchema = new Schema<IHost>({
-    name: String,
-    internalIpaddress: String,
-    internalHostName: String,
-    externalHostName: String,
-    awsInstanceId: String,
-    loadBalancer: Boolean,
-    hostType: String,
-    ip: String,
-    location: String
-  })
+export const hostsSchema = new Schema<IHost>(
+  {
+    name: { type: String, unique: true, required: true },
+    loadBalancer: { type: Boolean, required: true },
+    location: { type: Schema.Types.ObjectId, ref: "Locations", required: true },
+    ip: { type: String, unique: true, sparse: true },
+    fqdn: { type: String, unique: true, sparse: true },
+  },
+  { timestamps: true },
+);
 
-  export const HostsModel: Model<IHost> = model("hosts", hostsSchema);
+export const HostsModel: Model<IHost> = model("Hosts", hostsSchema);
