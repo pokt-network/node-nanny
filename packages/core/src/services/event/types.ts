@@ -5,8 +5,38 @@ export {
   EventTypes,
 } from "../datadog/types";
 export { Webhooks as DiscordChannel } from "../alert/types";
-export { ErrorConditions as BlockChainMonitorEvents } from "../health/types";
-export { SupportedBlockChains } from "../health/types";
+export { EErrorConditions as BlockChainMonitorEvents } from "../health/types";
+export { ESupportedBlockChains } from "../health/types";
+
+import { IHost, INode } from "../../models";
+import { HealthTypes } from "../../types";
+
+export interface IRedisEvent extends HealthTypes.IHealthResponse {
+  id: string;
+  count: number;
+}
+
+export interface IRotationParams {
+  backend: string;
+  loadBalancers: IHost[];
+  server?: string;
+  manual?: boolean;
+}
+
+export interface IToggleServerParams {
+  node: INode;
+  title: string;
+  enable: boolean;
+}
+
+export interface IRedisEventParams {
+  title: string;
+  message: string;
+  node: INode;
+  notSynced: boolean;
+  status: HealthTypes.EErrorStatus;
+  warningMessage?: string;
+}
 
 export enum PocketTypes {
   PEER = "peer",

@@ -1,70 +1,38 @@
-import { Schema, model, Model } from "mongoose";
+import { model, Model, Schema, Types } from "mongoose";
+
 import { IChain } from "./chains";
 import { IHost } from "./hosts";
 
-export interface INode {
-  backend: string;
-  chain: IChain;
-  container: string;
+export interface INode<Populated = true> {
+  id: Types.ObjectId;
+  chain: Populated extends true ? IChain : Types.ObjectId;
+  host: Populated extends true ? IHost : Types.ObjectId;
   haProxy: boolean;
-  hasPeer: boolean;
-  id: string;
-  host: IHost;
-  hostname: string;
-  reboot: boolean;
-  monitorId: string;
   port: number;
-  server: string;
-  threshold: number;
   url: string;
-  variance: number;
-  logGroup: string;
-  nginx: string;
-  compose: string;
-  poktType: string;
-  service: string;
-  removeNoResponse: boolean;
-  docker: boolean;
-  basicAuth: string;
-  ssl: boolean;
-  loadBalancers: string[];
+  muted: boolean;
+  loadBalancers?: (Populated extends true ? IHost : Types.ObjectId)[];
+  backend?: string;
+  server?: string;
+  basicAuth?: string;
 }
 
 const nodesSchema = new Schema<INode>(
   {
-    id: String,
+    chain: { type: Schema.Types.ObjectId, ref: "Chains", required: true },
+    host: { type: Schema.Types.ObjectId, ref: "Hosts", required: true },
+    haProxy: { type: Boolean, required: true },
+    port: { type: Number, required: true },
+    url: { type: String, required: true },
+    muted: { type: Boolean, required: true, default: false },
+    loadBalancers: [{ type: Schema.Types.ObjectId, ref: "Hosts" }],
     backend: String,
-    chain: {
-      type: Schema.Types.ObjectId,
-      ref: "chains",
-    },
-    container: String,
-    haProxy: Boolean,
-    reboot: Boolean,
-    hasPeer: Boolean,
-    host: {
-      type: Schema.Types.ObjectId,
-      ref: "hosts",
-    },
-    hostname: String,
-    monitorId: String,
-    port: Number,
     server: String,
-    threshold: Number,
-    url: String,
-    variance: Number,
-    logGroup: String,
-    nginx: String,
-    poktType: String,
-    compose: String,
-    docker: Boolean,
-    service: String,
-    removeNoResponse: Boolean,
     basicAuth: String,
-    ssl: Boolean,
-    loadBalancers: [Schema.Types.ObjectId],
   },
-  { collection: "nodes" },
+  { timestamps: true },
 );
 
-export const NodesModel: Model<INode> = model("nodes", nodesSchema);
+nodesSchema.index({ port: 1, server: 1 }, { unique: true });
+
+export const NodesModel: Model<INode> = model("Nodes", nodesSchema);
