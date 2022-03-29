@@ -12,9 +12,9 @@
     "docker:start": "docker-compose up nn_stack -d",
     "docker:stop": "docker stop nn_stack",
     "docker:rebuild": "docker-compose build --no-cache",
-    "docker:terminal": "command docker exec -it nn_stack /bin/bash",
-    "docker:monitor": "command docker exec -it nn_stack pm2 log monitor",
-    "docker:console": "command docker exec -it nn_stack pm2 monit"
+    "docker:terminal": "docker exec -it nn_stack /bin/bash",
+    "docker:monitor": "docker exec -it nn_stack pm2 log monitor",
+    "docker:console": "docker exec -it nn_stack pm2 monit"
   },
   "devDependencies": {
     "prettier": "2.5.1",
