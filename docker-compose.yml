@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   nn_stack:
-    image: ubuntu:20.04
+    image: pascalvl/node-nanny
     container_name: nn_stack
     build:
       context: .
@@ -21,8 +21,8 @@ services:
       DD_API_KEY: ${DD_API_KEY}
 
   nn_db:
-    container_name: nn_db
     image: mongo:latest
+    container_name: nn_db
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-root}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-rootpassword}
@@ -30,8 +30,8 @@ services:
       - mongodb_data_container:/data/db
 
   nn_redis:
-    container_name: nn_redis
     image: "redis:latest"
+    container_name: nn_redis
 
 volumes:
   mongodb_data_container:
