@@ -30,7 +30,7 @@ Permissions
 - `Manage Channels`
 - `Manage Webhooks`
 
-The last step is to take note of your bots token, in `Bot` on the left panel. Once generated it cannot be viewed again so save the token at this step.
+The last step is to generate a bot application token; this can be done in the `Bot` settings on the left panel. Once this token is generated it cannot be viewed again so save the token at this step.
 
 ### 2. Set Environment Variables
 
