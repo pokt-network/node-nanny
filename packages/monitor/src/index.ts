@@ -25,7 +25,7 @@ export class App {
   async main() {
     await connect();
 
-    const nodes = await NodesModel.find({ muted: false })
+    const nodes = await NodesModel.find({ muted: false, frontend: { $exists: true } })
       .populate("host")
       .populate("chain")
       .exec();
@@ -34,7 +34,9 @@ export class App {
     console.log(`📺 Currently monitoring ${nodes.length} nodes...`);
 
     for await (const node of nodes) {
-      const logger = this.log.init(node.id);
+      const { id, chain, host, server } = node;
+      const name = `${host.name}/${chain.name}${server ? `/${server}` : ""}`;
+      const logger = this.log.init(id, name);
 
       setInterval(async () => {
         /* Get Node health */
@@ -50,7 +52,7 @@ export class App {
         }
 
         /* Publish event to REDIS */
-        await this.publish.evaluate({ message: healthResponse, id: node.id });
+        await this.publish.evaluate({ message: healthResponse, id });
 
         /* Log to MongoDB logs collection */
         const level = status === HealthTypes.EErrorStatus.ERROR ? "error" : "info";

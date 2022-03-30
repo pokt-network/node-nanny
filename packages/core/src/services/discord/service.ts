@@ -55,6 +55,25 @@ export class Service {
     }
   }
 
+  public async addWebhookForFrontendNode(): Promise<void> {
+    const channelName = "frontend-alert";
+
+    const server = await this.initServer();
+    const channels = (await server.channels.fetch()).filter(
+      ({ type }) => type === "GUILD_TEXT",
+    );
+
+    const channelExists = channels?.some(({ name }) => name === channelName);
+    if (!channelExists) {
+      const channel = await server.channels.create(channelName, {
+        type: "GUILD_TEXT",
+      });
+
+      const { url } = await channel.createWebhook(`${channelName}-alert`);
+      await WebhookModel.create({ chain: "FRONTEND_ALERT", location: "n/a", url });
+    }
+  }
+
   public async clearChannels() {
     const server = await this.initServer();
     const allChannels = await server.channels.fetch();
