@@ -3,10 +3,29 @@ import { connect, disconnect } from "../db";
 import { ChainsModel, OraclesModel, IChain, IOracle } from "../models";
 import { getTimestamp } from "../utils";
 
-interface IChainsAndOraclesResponse {
-  chains: IChain[];
-  oracles: IOracle[];
+/* TEMP */
+interface IChainProd {
+  chain: string;
+  name: string;
+  type: string;
+  variance: number;
 }
+
+interface IOracleProd {
+  chain: string;
+  urls: string[];
+}
+
+interface IChainsAndOraclesResponse {
+  chains: IChainProd[];
+  oracles: IOracleProd[];
+}
+/* TEMP */
+
+// interface IChainsAndOraclesResponse {
+//   chains: IChain[];
+//   oracles: IOracle[];
+// }
 
 (async () => {
   await connect();
@@ -30,7 +49,14 @@ interface IChainsAndOraclesResponse {
 
     try {
       if (!existingChains.includes(name)) {
-        await ChainsModel.create(chain);
+        const chainInput = {
+          type: chain.type,
+          name: chain.name,
+          // TEMP. Change to variance when prod DB migrated
+          allowance: chain.variance,
+          // TEMP. Change to variance when prod DB migrated
+        };
+        await ChainsModel.create(chainInput);
       }
     } catch (error) {
       console.error(`Error updating Chains. Chain: ${name} ${error}`);

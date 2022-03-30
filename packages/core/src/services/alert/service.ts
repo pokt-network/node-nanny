@@ -39,12 +39,12 @@ export class Service {
     }
   };
 
-  sendError = async ({ title, message, chain }: AlertTypes.IAlertParams) => {
+  sendError = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
     try {
       return await this.sendDiscordMessage({
         title,
         color: AlertColor.ERROR,
-        channel: await this.getWebhookUrl(chain.toUpperCase()),
+        channel: await this.getWebhookUrl(chain.toUpperCase(), frontend),
         fields: [{ name: "Error", value: message }],
       });
     } catch (error) {
@@ -52,12 +52,12 @@ export class Service {
     }
   };
 
-  sendInfo = async ({ title, message, chain }: AlertTypes.IAlertParams) => {
+  sendInfo = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
     try {
       return await this.sendDiscordMessage({
         title,
         color: AlertColor.INFO,
-        channel: await this.getWebhookUrl(chain),
+        channel: await this.getWebhookUrl(chain.toUpperCase(), frontend),
         fields: [{ name: "Info", value: message }],
       });
     } catch (error) {
@@ -65,12 +65,12 @@ export class Service {
     }
   };
 
-  sendWarn = async ({ title, message, chain }: AlertTypes.IAlertParams) => {
+  sendWarn = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
     try {
       return await this.sendDiscordMessage({
         title,
         color: AlertColor.WARNING,
-        channel: await this.getWebhookUrl(chain.toUpperCase()),
+        channel: await this.getWebhookUrl(chain.toUpperCase(), frontend),
         fields: [{ name: "Warning", value: message }],
       });
     } catch (error) {
@@ -78,12 +78,12 @@ export class Service {
     }
   };
 
-  sendSuccess = async ({ title, message, chain }: AlertTypes.IAlertParams) => {
+  sendSuccess = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
     try {
       return await this.sendDiscordMessage({
         title,
         color: AlertColor.SUCCESS,
-        channel: await this.getWebhookUrl(chain.toUpperCase()),
+        channel: await this.getWebhookUrl(chain.toUpperCase(), frontend),
         fields: [{ name: "Success", value: message }],
       });
     } catch (error) {
@@ -134,8 +134,11 @@ export class Service {
     }
   }
 
-  private async getWebhookUrl(chain: string): Promise<string> {
-    const { url } = await WebhookModel.findOne({ chain }).exec();
+  private async getWebhookUrl(chain: string, frontend = false): Promise<string> {
+    const { url } = await WebhookModel.findOne({
+      chain: frontend ? "FRONTEND_ALERT" : chain,
+    });
+
     return url;
   }
 }
