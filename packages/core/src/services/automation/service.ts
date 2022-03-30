@@ -36,23 +36,16 @@ export class Service extends BaseService {
   public async createNode(nodeInput: INodeInput, restart = true): Promise<INode> {
     let id: string;
 
-    console.log({ nodeInput });
-
     try {
       const { fqdn, ip } = await HostsModel.findOne({ _id: nodeInput.host });
+      const { port } = nodeInput;
+      const url = fqdn ? `https://${fqdn}:${port}` : `http://${ip}:${port}`;
 
-      ({ id } = await NodesModel.create({
-        ...nodeInput,
-        url: fqdn
-          ? `https://${fqdn}:${nodeInput.port}`
-          : `http://${ip}:${nodeInput.port}`,
-      }));
+      ({ id } = await NodesModel.create({ ...nodeInput, url }));
+
       const node = await this.getNode(id);
 
-      if (!nodeInput.frontend) {
-        await new DiscordService().addWebhookForNode(node);
-      }
-
+      if (!nodeInput.frontend) await new DiscordService().addWebhookForNode(node);
       if (restart) await this.restartMonitor();
 
       return node;
