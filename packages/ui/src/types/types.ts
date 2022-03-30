@@ -169,7 +169,8 @@ export type IMutationUpdateOracleArgs = {
 export type INode = {
   backend?: Maybe<Scalars['String']>;
   chain: IChain;
-  haProxy: Scalars['Boolean'];
+  frontend?: Maybe<Scalars['String']>;
+  haProxy?: Maybe<Scalars['Boolean']>;
   host: IHost;
   id: Scalars['ID'];
   loadBalancers?: Maybe<Array<Scalars['ID']>>;
@@ -188,7 +189,6 @@ export type INodeCsvInput = {
   loadBalancers: Array<Scalars['String']>;
   port: Scalars['Int'];
   server?: InputMaybe<Scalars['String']>;
-  url: Scalars['String'];
 };
 
 export type INodeInput = {
@@ -199,7 +199,6 @@ export type INodeInput = {
   loadBalancers: Array<Scalars['ID']>;
   port: Scalars['Int'];
   server?: InputMaybe<Scalars['String']>;
-  url: Scalars['String'];
 };
 
 export type IOracle = {
@@ -285,7 +284,6 @@ export type ICreateNodeMutationVariables = Exact<{
   chain: Scalars['ID'];
   host: Scalars['ID'];
   port: Scalars['Int'];
-  url: Scalars['String'];
   loadBalancers: Array<Scalars['ID']> | Scalars['ID'];
   haProxy: Scalars['Boolean'];
   backend?: InputMaybe<Scalars['String']>;
@@ -444,9 +442,9 @@ export type CreateHostMutationHookResult = ReturnType<typeof useCreateHostMutati
 export type CreateHostMutationResult = Apollo.MutationResult<ICreateHostMutation>;
 export type CreateHostMutationOptions = Apollo.BaseMutationOptions<ICreateHostMutation, ICreateHostMutationVariables>;
 export const CreateNodeDocument = gql`
-    mutation CreateNode($chain: ID!, $host: ID!, $port: Int!, $url: String!, $loadBalancers: [ID!]!, $haProxy: Boolean!, $backend: String, $server: String) {
+    mutation CreateNode($chain: ID!, $host: ID!, $port: Int!, $loadBalancers: [ID!]!, $haProxy: Boolean!, $backend: String, $server: String) {
   createNode(
-    input: {chain: $chain, host: $host, port: $port, url: $url, loadBalancers: $loadBalancers, haProxy: $haProxy, backend: $backend, server: $server}
+    input: {chain: $chain, host: $host, port: $port, loadBalancers: $loadBalancers, haProxy: $haProxy, backend: $backend, server: $server}
   ) {
     id
     url
@@ -471,7 +469,6 @@ export type ICreateNodeMutationFn = Apollo.MutationFunction<ICreateNodeMutation,
  *      chain: // value for 'chain'
  *      host: // value for 'host'
  *      port: // value for 'port'
- *      url: // value for 'url'
  *      loadBalancers: // value for 'loadBalancers'
  *      haProxy: // value for 'haProxy'
  *      backend: // value for 'backend'
