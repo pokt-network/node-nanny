@@ -30,7 +30,6 @@ interface HostsFormProps {
 export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
   const [chain, setChain] = useState("");
   const [host, setHost] = useState("");
-  const [ip, setIp] = useState("");
   const [loadBalancers, setLoadBalancers] = useState<string[]>([]);
   const [port, setPort] = useState(0);
   const [backend, setBackend] = useState("");
@@ -47,12 +46,6 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
   };
 
   const handleHostChange = (event: SelectChangeEvent<typeof host>) => {
-    if (formData?.hosts) {
-      const { ip } = formData.hosts.find(({ id }) => id === event.target.value)!;
-      setIp(ip!);
-      console.log({ ip });
-    }
-
     setHost(event.target.value);
   };
 
@@ -197,7 +190,6 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
                   port,
                   server,
                   loadBalancers,
-                  url: `http://${ip}:${port}`,
                 },
               });
             }}
