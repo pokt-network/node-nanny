@@ -35,11 +35,23 @@ export class Service extends BaseService {
   /* ----- CRUD Methods ----- */
   public async createNode(nodeInput: INodeInput, restart = true): Promise<INode> {
     let id: string;
+
+    console.log({ nodeInput });
+
     try {
-      ({ id } = await NodesModel.create(nodeInput));
+      const { fqdn, ip } = await HostsModel.findOne({ _id: nodeInput.host });
+
+      ({ id } = await NodesModel.create({
+        ...nodeInput,
+        url: fqdn
+          ? `https://${fqdn}:${nodeInput.port}`
+          : `http://${ip}:${nodeInput.port}`,
+      }));
       const node = await this.getNode(id);
 
-      await new DiscordService().addWebhookForNode(node);
+      if (!nodeInput.frontend) {
+        await new DiscordService().addWebhookForNode(node);
+      }
 
       if (restart) await this.restartMonitor();
 
