@@ -36,12 +36,12 @@ The last step is to generate a bot application token; this can be done in the `B
 
 On your chosen host, you will have to configure the environment variables in your shell environment. Add the following variables to your shell configuration file (`.bashrc` or `.zshrc`).
 
-- ex. **EXPORT DISCORD_SERVER_ID="3r34fub78fjf239fhdsfs"**
+- ex. **export DISCORD_SERVER_ID="3r34fub78fjf239fhdsfs"**
 
 #### Required Variables
 
 - **DISCORD_SERVER_ID** - The server ID for the server you wish to receive alerts in.
-- **DISCORD_TOKEN** - The secret token for your server's got application.
+- **DISCORD_TOKEN** - The secret token for your server's bot application.
 
 #### Optional Variables
 
