@@ -7,6 +7,7 @@ import {
   OraclesModel,
 } from "./models";
 import { Service as AutomationService } from "./services/automation";
+import { INodeInput } from "./services/automation/types";
 import { Service as DiscordService } from "./services/discord";
 
 interface IHostProd {
@@ -138,14 +139,12 @@ const getFQDN = (node): string => {
 /* ------ Script Function Begins ------ */
 (async () => {
   /* ------ Connect to Production Inventory DB ------*/
-  await connect("PROD_URI_GOES_HERE");
+  await connect(process.env.PROD_MONGO_URI);
 
   const chainsProd = await ChainsModelProd.find({});
   const oraclesProd = await OraclesModelProd.find({});
-  const hostsProd = await HostsModelProd.find({ name: { $not: { $regex: /dispatch/ } } });
-  const nodesProd = await NodesModelProd.find({
-    "host.name": { $not: { $regex: /dispatch/ } },
-  });
+  const hostsProd = await HostsModelProd.find({});
+  const nodesProd = await NodesModelProd.find({});
 
   console.log(
     `Fetched ${chainsProd.length} chains, ${oraclesProd.length} oracles, ${hostsProd.length} hosts and ${nodesProd.length} nodes from the production database.`,
@@ -155,6 +154,9 @@ const getFQDN = (node): string => {
 
   /* ------ Connect to New Inventory DB ------ */
   await connect(process.env.MONGO_URI);
+
+  const hostsNotCreated: IHostProd[] = [];
+  const nodesNotCreated: INodeProd[] = [];
 
   /* 1) Create Chains */
   let chainsCreated = 0;
@@ -249,6 +251,8 @@ const getFQDN = (node): string => {
       await HostsModel.create(hostInput);
       hostsCreated++;
       console.log(`Created ${hostsCreated} of ${hostsProd.length} hosts ...`);
+    } else {
+      hostsNotCreated.push(host);
     }
     console.log("Finished creating Hosts.");
   }
@@ -266,26 +270,29 @@ const getFQDN = (node): string => {
       const hostName = isHarmony ? node.host.name.split("-new").join("") : node.host.name;
       const port = isHarmony ? 9500 : Number(node.port);
 
+      const nodeInput: INodeInput = {
+        chain: (await ChainsModel.findOne({ name: node.chain.name }))._id,
+        host: (await HostsModel.findOne({ name: hostName }))._id,
+        haProxy: node.haProxy,
+        port,
+        loadBalancers: (
+          await HostsModel.find({
+            name: { $in: node.loadBalancers.map(({ name }) => name) },
+          })
+        ).map(({ _id }) => _id),
+      };
+      if (node.backend) nodeInput.backend = node.backend;
+      if (node.server) nodeInput.server = node.server;
+
       if (!exists) {
-        await new AutomationService().createNode(
-          {
-            chain: (await ChainsModel.findOne({ name: node.chain.name }))._id,
-            host: (await HostsModel.findOne({ name: hostName }))._id,
-            haProxy: node.haProxy,
-            port,
-            loadBalancers: (
-              await HostsModel.find({
-                name: { $in: node.loadBalancers.map(({ name }) => name) },
-              })
-            ).map(({ _id }) => _id),
-            backend: node.backend,
-            server: node.server,
-          },
-          false,
-        );
+        await new AutomationService().createNode(nodeInput, false);
         nodesCreated++;
         console.log(`Created ${nodesCreated} of ${nodesProd.length} nodes ...`);
+      } else {
+        nodesNotCreated.push(node);
       }
+    } else {
+      nodesNotCreated.push(node);
     }
   }
   console.log("Finished creating Nodes.");
@@ -373,5 +380,14 @@ const getFQDN = (node): string => {
   }
   console.log("Finished creating frontend Nodes.");
 
+  if (hostsNotCreated.length) {
+    console.log(`Unable to create ${hostsNotCreated.length} hosts.`, { hostsNotCreated });
+  }
+  if (nodesNotCreated.length) {
+    console.log(`Unable to create ${nodesNotCreated.length} nodes.`, { nodesNotCreated });
+  }
+
   await disconnect();
+
+  console.log("Fin.");
 })();
