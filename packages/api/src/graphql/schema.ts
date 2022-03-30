@@ -48,14 +48,15 @@ const typeDefs = gql`
     id: ID!
     chain: Chain!
     host: Host!
-    haProxy: Boolean!
     port: Int!
     url: String!
     muted: Boolean!
     loadBalancers: [ID!]
     backend: String
+    frontend: String
     server: String
     ssl: Boolean
+    haProxy: Boolean
   }
 
   # EVM chains only
@@ -77,7 +78,6 @@ const typeDefs = gql`
     chain: ID!
     host: ID!
     port: Int!
-    url: String!
     loadBalancers: [ID!]!
     haProxy: Boolean!
     backend: String
@@ -87,7 +87,6 @@ const typeDefs = gql`
   input NodeCSVInput {
     chain: String!
     host: String!
-    url: String!
     loadBalancers: [String!]!
     port: Int!
     haProxy: Boolean!

@@ -7,6 +7,7 @@ import {
   OraclesModel,
 } from "./models";
 import { Service as AutomationService } from "./services/automation";
+import { Service as DiscordService } from "./services/discord";
 
 interface IHostProd {
   _id: Types.ObjectId;
@@ -137,7 +138,7 @@ const getFQDN = (node): string => {
 /* ------ Script Function Begins ------ */
 (async () => {
   /* ------ Connect to Production Inventory DB ------*/
-  await connect("PROD_MONGO_URI_GOES_HERE");
+  await connect("PROD_URI_GOES_HERE");
 
   const chainsProd = await ChainsModelProd.find({});
   const oraclesProd = await OraclesModelProd.find({});
@@ -159,7 +160,6 @@ const getFQDN = (node): string => {
   let chainsCreated = 0;
   for await (let chain of chainsProd) {
     const chainInput = {
-      chain: chain.chain,
       type: chain.type,
       name: chain.name,
       allowance: chain.variance,
@@ -187,6 +187,10 @@ const getFQDN = (node): string => {
   await OraclesModel.create({
     chain: "HRM",
     urls: ["https://api.s0.t.hmny.io", "https://api.harmony.one"],
+  });
+  await OraclesModel.create({
+    chain: "OEC_FE",
+    urls: ["https://exchaintmrpc.okex.org", "https://exchainrpc.okex.org/"],
   });
   console.log("Finished creating Oracles.");
 
@@ -260,7 +264,6 @@ const getFQDN = (node): string => {
 
       const isHarmony = node.host.name.includes("harmony-new");
       const hostName = isHarmony ? node.host.name.split("-new").join("") : node.host.name;
-      const url = isHarmony ? node.url.replace("5000", "9500") : node.url;
       const port = isHarmony ? 9500 : Number(node.port);
 
       if (!exists) {
@@ -270,7 +273,6 @@ const getFQDN = (node): string => {
             host: (await HostsModel.findOne({ name: hostName }))._id,
             haProxy: node.haProxy,
             port,
-            url,
             loadBalancers: (
               await HostsModel.find({
                 name: { $in: node.loadBalancers.map(({ name }) => name) },
@@ -287,6 +289,89 @@ const getFQDN = (node): string => {
     }
   }
   console.log("Finished creating Nodes.");
+
+  /* 6) Create Frontend Node Records */
+  await new DiscordService().addWebhookForFrontendNode();
+
+  const frontends = [
+    { name: "poktmainnet", port: 18081, backend: "poktmainnet" },
+    { name: "poktrpc", port: 18082, backend: "poktrpc" },
+    { name: "avaxmainnet", port: 19650, backend: "avaxmainnet" },
+    { name: "avaxtestnet", port: 19651, backend: "avaxtestnet" },
+    { name: "bscmainnet", port: 18552, backend: "bscmainnet" },
+    { name: "bsctestnet", port: 18559, backend: "bsctestnet" },
+    { name: "fusemainnet", port: 18553, backend: "fusemainnet" },
+    { name: "polymainnet", port: 18554, backend: "polymainnet" },
+    { name: "polytestnet", port: 18558, backend: "polytestnet" },
+    { name: "ethmainnet", port: 18545, backend: "ethmainnet" },
+    { name: "ethropsten", port: 18557, backend: "ethropsten" },
+    { name: "ethkovan", port: 18548, backend: "ethkovan" },
+    { name: "ethrinkeby", port: 18555, backend: "ethrinkeby" },
+    { name: "ethgoerli", port: 18556, backend: "ethgoerli" },
+    { name: "daimainnet", port: 18546, backend: "daimainnet" },
+    { name: "solanamainnet", port: 18899, backend: "solanamainnet" },
+    { name: "algmainnet", port: 19999, backend: "algmainnet" },
+    { name: "algtestnet", port: 19998, backend: "algtestnet" },
+    { name: "hmy0", port: 19500, backend: "hmy0" },
+    { name: "iotexmainnet", port: 18560, backend: "iotexmainnet" },
+    { name: "evmtestnet", port: 18561, backend: "evmtestnet" },
+    { name: "oecmainnet", port: 18562, backend: "oecmainnet" },
+    { name: "bobamainnet", port: 18563, backend: "bobamainnet" },
+  ];
+
+  let frontendsCreated = 0;
+  for await (const frontend of frontends) {
+    let polyChainId: Types.ObjectId;
+    let query: any;
+    if (frontend.name === "polymainnet") {
+      polyChainId = (await ChainsModel.findOne({ name: "POL", type: "EVM" }))._id;
+      query = { chain: polyChainId, backend: frontend.backend };
+    } else {
+      query = { backend: frontend.backend };
+    }
+
+    const node = await NodesModel.findOne(query)
+      .populate("host")
+      .populate("loadBalancers")
+      .exec();
+
+    if (node) {
+      for await (const loadBalancer of node.loadBalancers) {
+        const url = loadBalancer.name.includes("shared-2")
+          ? `shared-use${loadBalancer.name.split("-")[1]}.pocketblockchains.com`
+          : `${loadBalancer.name}.pocketblockchains.com`;
+
+        let chain: Types.ObjectId;
+        if (frontend.name === "oecmainnet") {
+          const oecQuery = { name: "OEC_FE", type: "EVM" };
+          chain = (await ChainsModel.exists(oecQuery))
+            ? (await ChainsModel.findOne(oecQuery))._id
+            : (await ChainsModel.create(oecQuery))._id;
+        } else {
+          chain = (node.chain as unknown) as Types.ObjectId;
+        }
+
+        const nodeInput = {
+          chain,
+          host: loadBalancer.id,
+          port: frontend.port,
+          url: `http://${url}:${frontend.port}`,
+          frontend: frontend.name,
+          basicAuth: "pnfblockchains:UEnJdyW23ch92rf",
+        };
+
+        await NodesModel.create(nodeInput);
+
+        frontendsCreated++;
+        console.log(
+          `Created ${frontendsCreated} of ${frontends.length * 2} frontend nodes ...`,
+        );
+      }
+    } else {
+      console.error(`No Node found for backend: ${frontend.backend}, skipping ...`);
+    }
+  }
+  console.log("Finished creating frontend Nodes.");
 
   await disconnect();
 })();
