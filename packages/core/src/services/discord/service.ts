@@ -56,17 +56,23 @@ export class Service {
   }
 
   public async addWebhookForFrontendNode(): Promise<void> {
+    const categoryName = "NODE-NANNY-FRONTEND-ALERT ";
     const channelName = "frontend-alert";
 
     const server = await this.initServer();
-    const channels = (await server.channels.fetch()).filter(
-      ({ type }) => type === "GUILD_TEXT",
-    );
+    const allChannels = await server.channels.fetch();
+    const categories = allChannels.filter(({ type }) => type === "GUILD_CATEGORY");
+    const channels = allChannels.filter(({ type }) => type === "GUILD_TEXT");
+
+    const category =
+      categories?.find(({ name }) => name === categoryName) ||
+      (await server.channels.create(categoryName, { type: "GUILD_CATEGORY" }));
 
     const channelExists = channels?.some(({ name }) => name === channelName);
     if (!channelExists) {
       const channel = await server.channels.create(channelName, {
         type: "GUILD_TEXT",
+        parent: category as CategoryChannel,
       });
 
       const { url } = await channel.createWebhook(`${channelName}-alert`);

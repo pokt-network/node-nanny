@@ -7,6 +7,18 @@ import { Publish } from "./publish";
 
 const mode = process.env.MONITOR_TEST === "1" ? "TEST" : "PRODUCTION";
 
+//TEMP
+const dispatchHostIds = [
+  "62447691e5372089b1a683ac",
+  "62447691e5372089b1a683b0",
+  "62447691e5372089b1a683b4",
+  "62447691e5372089b1a683b8",
+  "62447691e5372089b1a683bc",
+  "62447691e5372089b1a683c0",
+  "62447691e5372089b1a683c4",
+];
+//TEMP
+
 export class App {
   private log: Log;
   private health: Health;
@@ -25,7 +37,7 @@ export class App {
   async main() {
     await connect();
 
-    const nodes = await NodesModel.find({ muted: false, frontend: { $exists: true } })
+    const nodes = await NodesModel.find({ muted: false, host: { $in: dispatchHostIds } })
       .populate("host")
       .populate("chain")
       .exec();
