@@ -11,7 +11,6 @@ import {
   ENCResponse,
   ESupportedBlockChainTypes,
   IHealthResponse,
-  IHealthResponseDetails,
   IEVMHealthCheckOptions,
   IOraclesAndPeers,
   IPocketBlockHeight,
@@ -67,8 +66,9 @@ export class Service {
     host,
     chain,
     basicAuth,
+    frontend,
   }: INode): Promise<IHealthResponse> => {
-    const name = `${host.name}/${chain.name}`;
+    const name = `${frontend ? `frontend: ${frontend}/` : ""}${host.name}/${chain.name}`;
 
     try {
       const { data, status } = await this.rpc.get(
@@ -105,8 +105,10 @@ export class Service {
     host,
     chain,
     basicAuth,
+    frontend,
   }: INode): Promise<IHealthResponse> => {
-    const name = `${host.name}/${chain.name}`;
+    const name = `${frontend ? `frontend: ${frontend}/` : ""}${host.name}/${chain.name}`;
+
     try {
       const { data } = await this.rpc.post(
         `${url}/ext/health`,
@@ -142,12 +144,14 @@ export class Service {
 
   /* ----- Ethereum Virtual Machine ----- */
   private getEVMNodeHealth = async (
-    { chain, url, host, id, port, basicAuth, server }: INode,
+    { chain, url, host, id, port, basicAuth, server, frontend }: INode,
     { harmony }: IEVMHealthCheckOptions = { harmony: false },
   ): Promise<IHealthResponse> => {
     const { allowance } = chain;
+    const name = `${host.name}/${chain.name}${server ? `/${server}` : ""}`;
+
     const healthResponse: IHealthResponse = {
-      name: `${host.name}/${chain.name}/${server}`,
+      name: frontend ? `frontend: ${frontend}/${name}` : name,
       status: EErrorStatus.OK,
       conditions: EErrorConditions.HEALTHY,
     };
@@ -396,11 +400,13 @@ export class Service {
   /* ----- Pocket ----- */
   private getPocketNodeHealth = async ({
     id,
-    host: { fqdn, ip, name },
-    chain: { id: chainId, allowance },
-    port,
+    chain,
+    host,
+    url,
+    frontend,
   }: INode): Promise<IHealthResponse> => {
-    const url = fqdn ? `https://${fqdn}:${port}` : `http://${ip}:${port}`;
+    const { id: chainId, allowance } = chain;
+    const name = `${frontend ? `frontend: ${frontend}/` : ""}${host.name}/${chain.name}`;
 
     const { height: isRpcResponding } = await this.getPocketHeight(url);
     if (isRpcResponding === 0) {
@@ -413,6 +419,7 @@ export class Service {
 
     const query = { chain: chainId, _id: { $ne: id } };
     const referenceNodes = await NodesModel.find(query, null, { limit: 20 })
+      .populate("chain")
       .populate("host")
       .exec();
     if (!referenceNodes?.length) {
@@ -424,10 +431,7 @@ export class Service {
     }
 
     // Get highest block height from reference nodes
-    const pocketNodes = referenceNodes.map(({ host, port }) => {
-      const { fqdn, ip } = host;
-      return fqdn ? `https://${fqdn}:${port}` : `http://${ip}:${port}`;
-    });
+    const pocketNodes = referenceNodes.map(({ url }) => url);
     const pocketHeight = await Promise.all(
       pocketNodes.map((node) => this.getPocketHeight(node)),
     );
@@ -501,16 +505,14 @@ export class Service {
     host,
     chain,
     basicAuth,
+    frontend,
   }: INode): Promise<IHealthResponse> => {
-    const name = `${host.name}/${chain.name}`;
+    const name = `${frontend ? `frontend: ${frontend}/` : ""}${host.name}/${chain.name}`;
     const execute = util.promisify(exec);
 
-    let command: string;
-    if (basicAuth) {
-      `curl -u ${basicAuth} -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`;
-    } else {
-      command = `curl -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`;
-    }
+    const command = basicAuth
+      ? `curl -u ${basicAuth} -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`
+      : `curl -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`;
 
     try {
       const { stdout, stderr } = await execute(command);
@@ -557,8 +559,10 @@ export class Service {
     host,
     chain,
     basicAuth,
+    frontend,
   }: INode): Promise<IHealthResponse> => {
-    const name = `${host.name}/${chain.name}`;
+    const name = `${frontend ? `frontend: ${frontend}/` : ""}${host.name}/${chain.name}`;
+
     try {
       const { data } = await this.rpc.get(
         `${url}/status`,

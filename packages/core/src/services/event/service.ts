@@ -14,18 +14,28 @@ export class Service extends BaseService {
   /* ----- Trigger Methods ----- */
   processTriggered = async (eventJson: string): Promise<void> => {
     const { node, message, notSynced, status, title } = await this.parseEvent(eventJson);
-    await this.sendMessage({ title, message, chain: node.chain.name }, status);
+    const { chain, frontend } = node;
+    await this.sendMessage(
+      { title, message, chain: chain.name, frontend: Boolean(frontend) },
+      status,
+    );
 
-    if (notSynced) {
+    if (!frontend && notSynced) {
       await this.toggleServer({ node, title, enable: false });
     }
   };
 
   processRetriggered = async (eventJson: string): Promise<void> => {
     const { node, message, notSynced, status, title } = await this.parseEvent(eventJson);
-    const messageParams = { title, message, chain: node.chain.name };
+    const { chain, frontend } = node;
+    const messageParams = {
+      title,
+      message,
+      chain: chain.name,
+      frontend: Boolean(frontend),
+    };
 
-    if (notSynced) {
+    if (!frontend && notSynced) {
       const { backend, loadBalancers } = node;
       const count = await this.getServerCount({ backend, loadBalancers });
       await this.sendMessage(
@@ -48,16 +58,25 @@ export class Service extends BaseService {
       title,
       warningMessage,
     } = await this.parseEvent(eventJson);
+    const { chain, frontend } = node;
 
-    await this.sendMessage({ title, message, chain: node.chain.name }, status);
+    await this.sendMessage(
+      { title, message, chain: chain.name, frontend: Boolean(frontend) },
+      status,
+    );
     if (warningMessage) {
       await this.sendMessage(
-        { title, message: warningMessage, chain: node.chain.name },
+        {
+          title,
+          message: warningMessage,
+          chain: chain.name,
+          frontend: Boolean(frontend),
+        },
         EErrorStatus.WARNING,
       );
     }
 
-    if (notSynced) {
+    if (!frontend && notSynced) {
       await this.toggleServer({ node, title, enable: true });
     }
   };

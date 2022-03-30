@@ -2,7 +2,7 @@ import { createLogger, format, Logger, transports } from "winston";
 import "winston-mongodb";
 
 export class Service {
-  public init(id: string): Logger {
+  public init(id: string, name: string): Logger {
     const transport = {
       mongodb: new transports.MongoDB({
         db: process.env.MONGO_URI,
