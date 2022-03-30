@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   nn_stack:
-    image: pascalvl/node-nanny
+    image: pocketfoundation/node-nanny
     container_name: nn_stack
     build:
       context: .
