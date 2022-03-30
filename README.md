@@ -47,8 +47,8 @@ On your chosen host, you will have to configure the environment variables in you
 
 - **MONGO_USER** - The user that will be used for your inventory database.
   **Defaults to `root`**
-- **MONGO_PASSWORD** - The password that will be used for your database. **Defaults to `rootpassword`**
-- **MONGO_DB_NAME** - The name of the database that will be used for your inventory. **Defaults to `local`**
+- **MONGO_PASSWORD** - The password that will be used for your inventory database. **Defaults to `rootpassword`**
+- **MONGO_DB_NAME** - The name of the inventory database. **Defaults to `local`**
 
 ### 3. Setup Docker Compose
 
