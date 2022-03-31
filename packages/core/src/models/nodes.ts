@@ -16,6 +16,7 @@ export interface INode<Populated = true> {
   server?: string;
   basicAuth?: string;
   haProxy?: boolean;
+  dispatch?: boolean;
 }
 
 const nodesSchema = new Schema<INode>(
@@ -31,12 +32,13 @@ const nodesSchema = new Schema<INode>(
     server: String,
     basicAuth: String,
     haProxy: Boolean,
+    dispatch: Boolean,
   },
   { timestamps: true },
 );
 
 nodesSchema.index(
-  { port: 1, server: 1 },
+  { host: 1, port: 1, server: 1 },
   { unique: true, partialFilterExpression: { server: { $type: "string" } } },
 );
 
