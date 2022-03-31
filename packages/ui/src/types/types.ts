@@ -169,6 +169,7 @@ export type IMutationUpdateOracleArgs = {
 export type INode = {
   backend?: Maybe<Scalars['String']>;
   chain: IChain;
+  dispatch?: Maybe<Scalars['Boolean']>;
   frontend?: Maybe<Scalars['String']>;
   haProxy?: Maybe<Scalars['Boolean']>;
   host: IHost;
