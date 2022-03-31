@@ -36,7 +36,7 @@ const nodesSchema = new Schema<INode>(
 );
 
 nodesSchema.index(
-  { port: 1, server: 1 },
+  { host: 1, port: 1, server: 1 },
   { unique: true, partialFilterExpression: { server: { $type: "string" } } },
 );
 
