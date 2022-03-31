@@ -57,6 +57,7 @@ const typeDefs = gql`
     server: String
     ssl: Boolean
     haProxy: Boolean
+    dispatch: Boolean
   }
 
   # EVM chains only
