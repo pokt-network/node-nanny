@@ -81,7 +81,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-root}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-rootpassword}
     volumes:
-      - **SET DB PATH HERE**
+      - **SET DB PATH HERE**:/data/db
 
   nn_redis:
     image: "redis:latest"
