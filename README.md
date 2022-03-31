@@ -16,9 +16,11 @@ Monitor alerts are sent to a Discord channel. In order to receive alerts, you wi
 
 Take note of your server's ID, which you can find in `Server Settings > Widget`.
 
-[Now, create a bot application on your server.](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot)
+[Now, create a bot application...](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot) _(make sure to save your bot's token as once this token is generated it cannot be viewed again.)_
 
-[Access the Discord Developer Portal](https://discord.com/developers/applications) and set your bot's scope and permissions:
+[...and add it to your server.](https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links)
+
+The bot will need the following:
 
 Scopes
 
@@ -29,8 +31,6 @@ Permissions
 
 - `Manage Channels`
 - `Manage Webhooks`
-
-The last step is to generate a bot application token; this can be done in the `Bot` settings on the left panel. Once this token is generated it cannot be viewed again so save the token at this step.
 
 ### 2. Set Environment Variables
 
@@ -81,15 +81,14 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-root}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-rootpassword}
     volumes:
-      - mongodb_data_container:/data/db
+      - **SET DB PATH HERE**
 
   nn_redis:
     image: "redis:latest"
     container_name: nn_redis
-
-volumes:
-  mongodb_data_container:
 ```
+
+Set the `nn_db.volumes` property to the path you would like to store your inventory DB and logs.
 
 Then, run `docker-compose up -d` from the same directory as this file. This will pull down the latest None Nannyimage, as well as setup the DB and redis containers and start everything up. You are now ready to start adding inventory data.
 
