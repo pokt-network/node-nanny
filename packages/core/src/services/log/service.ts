@@ -13,9 +13,7 @@ export class Service {
       }),
       datadog: new transports.Http({
         host: "http-intake.logs.datadoghq.eu",
-        path: `/api/v2/logs?dd-api-key=${
-          process.env.DD_API_KEY
-        }&ddsource=nodejs&service=${`newNN-${name}`}`,
+        path: `/api/v2/logs?dd-api-key=${process.env.DD_API_KEY}&ddsource=nodejs&service=node-nanny/${name}`,
         ssl: true,
       }),
     }[process.env.MONITOR_LOGGER];

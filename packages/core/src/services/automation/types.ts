@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 export interface INodeInput {
   chain: Types.ObjectId;
   host: Types.ObjectId;
+  name: string;
   loadBalancers: Types.ObjectId[];
   port: number;
   haProxy: boolean;
@@ -14,6 +15,7 @@ export interface INodeInput {
 export interface INodeCsvInput {
   chain: string;
   host: string;
+  name: string;
   loadBalancers: string[];
   port: number;
   haProxy: boolean;
