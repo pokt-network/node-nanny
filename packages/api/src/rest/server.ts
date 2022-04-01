@@ -26,6 +26,15 @@ app.post("/webhook/datadog/infra", async ({ body }, res) => {
   }
 });
 
+app.post("/webhook/datadog/apm", async ({ body }, res) => {
+  try {
+    await infra.processEvent({ event: body, channel: "APM" });
+    return res.status(200).json({ done: true });
+  } catch (error) {
+    res.sendStatus(500);
+  }
+});
+
 app.post("/admin/monitor/onboard", async ({ body }, res) => {
   const { name, id, logGroup } = body;
   try {
