@@ -91,9 +91,7 @@ const NodesModelProd: Model<INodeProd> = model("nodes", nodesSchemaProd);
 /* ------ Script Function Begins ------ */
 (async () => {
   /* ------ Connect to Production Inventory DB ------*/
-  await connect(
-    "***REMOVED***",
-  );
+  await connect(process.env.PROD_MONGO_URI);
 
   const nodesProd = await NodesModelProd.find({});
 
