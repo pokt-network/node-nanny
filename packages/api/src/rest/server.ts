@@ -3,8 +3,8 @@ import {
   DataDog,
   Automation,
   Infra,
-} from "@pokt-foundation/node-monitoring-core/dist/services";
-import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
+} from "@pokt-foundation/node-nanny-core/dist/services";
+import { connect } from "@pokt-foundation/node-nanny-core/dist/db";
 
 // const event = new Event.DataDog();
 const automation = new Automation();

@@ -1,8 +1,5 @@
 import Redis from "ioredis";
-import {
-  EventTypes,
-  HealthTypes,
-} from "@pokt-foundation/node-monitoring-core/dist/types";
+import { EventTypes, HealthTypes } from "@pokt-foundation/node-nanny-core/dist/types";
 
 interface IMonitorEvent {
   message: HealthTypes.IHealthResponse;

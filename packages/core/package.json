@@ -1,5 +1,5 @@
 {
-  "name": "@pokt-foundation/node-monitoring-core",
+  "name": "@pokt-foundation/node-nanny-core",
   "version": "0.1.0",
   "author": "JonathonJulian <john@pokt.network>",
   "license": "MIT",
