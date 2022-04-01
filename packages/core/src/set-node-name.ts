@@ -91,9 +91,7 @@ const NodesModelProd: Model<INodeProd> = model("nodes", nodesSchemaProd);
 /* ------ Script Function Begins ------ */
 (async () => {
   /* ------ Connect to Production Inventory DB ------*/
-  await connect(
-    "mongodb+srv://node-monitor:4ZRH7jjdEheEtXwN@node-monitor.kxobp.mongodb.net/node-monitor?authSource=admin",
-  );
+  await connect(process.env.PROD_MONGO_URI);
 
   const nodesProd = await NodesModelProd.find({});
 
