@@ -145,7 +145,7 @@ export class Service {
     const { allowance } = chain;
 
     const healthResponse: IHealthResponse = {
-      name: frontend ? `frontend: ${frontend}/${name}` : name,
+      name,
       status: EErrorStatus.OK,
       conditions: EErrorConditions.HEALTHY,
     };
