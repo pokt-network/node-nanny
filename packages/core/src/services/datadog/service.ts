@@ -1,22 +1,22 @@
 import axios, { AxiosInstance } from "axios";
-import { v1, v2 } from "@datadog/datadog-api-client";
-import { ApiDetails } from "./types";
+import {
+  // v1,
+  v2,
+} from "@datadog/datadog-api-client";
+
+// import { ApiDetails } from "./types";
 
 export class Service {
-  private sdkClient: v1.MonitorsApi;
+  //   private sdkClient: v1.MonitorsApi;
   private restClient: AxiosInstance;
   private ddlogs: v2.LogsApi;
 
   constructor() {
     this.ddlogs = this.logsInitSdk();
-    this.sdkClient = this.initSdk();
+    // this.sdkClient = this.initSdk();
     this.restClient = this.initRest();
   }
 
-  private initSdk(): v1.MonitorsApi {
-    const configuration = v1.createConfiguration();
-    return new v1.MonitorsApi(configuration);
-  }
   private logsInitSdk(): v2.LogsApi {
     const configuration = v2.createConfiguration();
     return new v2.LogsApi(configuration);
@@ -29,68 +29,13 @@ export class Service {
         "DD-API-KEY": process.env.DD_API_KEY,
         "DD-APPLICATION-KEY": process.env.DD_APP_KEY,
       },
-      baseURL: ApiDetails.BASE_URL,
+      baseURL: "https://api.datadoghq.eu/api/v1",
     });
-  }
-
-  async getMonitor(monitorId) {
-    return await this.sdkClient.getMonitor({ monitorId });
-  }
-
-  async doesMonitorExist(monitorId) {
-    try {
-      await this.sdkClient.getMonitor({ monitorId });
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  async getMonitorStatus(id) {
-    const { overallState } = await this.getMonitor(id);
-    return overallState;
-  }
-
-  async getAllMonitors() {
-    return await this.sdkClient.listMonitors();
-  }
-
-  async getMonitorsByTag(monitorTags) {
-    return await this.sdkClient.listMonitors({ monitorTags });
-  }
-
-  async getContainerLogs({ instance, container }) {
-    let params: v2.LogsApiListLogsRequest = {
-      body: {
-        filter: {
-          from: "now-3m",
-          query: `host:${instance} container_name:${container}`,
-          to: "now",
-        },
-        sort: "-timestamp",
-      },
-    };
-
-    try {
-      return await (await this.ddlogs.listLogs(params)).data.map(({ attributes }) => {
-        const { timestamp, service, message } = attributes;
-        return { timestamp, service, message };
-      });
-    } catch (error) {
-      throw new Error(error);
-    }
   }
 
   async getLogs({ query, from }) {
     let params: v2.LogsApiListLogsRequest = {
-      body: {
-        filter: {
-          from,
-          query,
-          to: "now",
-        },
-        sort: "-timestamp",
-      },
+      body: { filter: { from, query, to: "now" }, sort: "-timestamp" },
     };
 
     const logs = await this.ddlogs.listLogs(params);
@@ -100,63 +45,6 @@ export class Service {
         message: attributes.attributes,
       };
     });
-  }
-
-  async getHealthLogs({ host, logGroup }) {
-    let params: v2.LogsApiListLogsRequest = {
-      body: {
-        filter: {
-          from: "now-3m",
-          query: `service:"${logGroup}"`,
-          to: "now",
-        },
-        sort: "-timestamp",
-      },
-    };
-    return await (await this.ddlogs.listLogs(params)).data.map(({ attributes }) => {
-      return {
-        host,
-        condition: attributes.attributes.conditions,
-        status: attributes.attributes.status,
-        delta: attributes.attributes.height.delta,
-      };
-    });
-  }
-
-  async deleteMonitor(monitorId) {
-    return await this.sdkClient.deleteMonitor({ monitorId });
-  }
-
-  async muteMonitor({ id, minutes }) {
-    const currentDate = new Date();
-    const futureDate = new Date(currentDate.getTime() + minutes * 60000);
-    const ts = parseInt((new Date(futureDate).getTime() / 1000).toFixed(0));
-    try {
-      const { options } = await this.getMonitor(id);
-      if (options.silenced.hasOwnProperty("*")) {
-        return -1;
-      }
-      const { data } = await this.restClient.post(`/monitor/${id}/mute?end=${ts}`);
-      return data;
-    } catch (error) {
-      throw new Error(error);
-    }
-  }
-
-  async unmuteMonitor({ id }) {
-    try {
-      const { data } = await this.restClient.post(`/monitor/${id}/unmute`);
-      return data;
-    } catch (error) {
-      throw new Error(error);
-    }
-  }
-
-  parseWebhookMessage({ msg, id, transition, type, title, link }) {
-    let [, , nodeId, event] = msg.split("\n");
-    event = event.split("event_")[1];
-    nodeId = nodeId.split("nodeId_")[1];
-    return { event, id, nodeId, transition, type, title, link };
   }
 
   async createMonitor({ name, logGroup, id }) {
@@ -187,11 +75,121 @@ export class Service {
     return monitorId;
   }
 
-  async getAllMonitorsByTag(tag) {
-    return await this.restClient.get(`/monitor?monitor_tags=${tag}`);
-  }
+  //   private initSdk(): v1.MonitorsApi {
+  //     const configuration = v1.createConfiguration();
+  //     return new v1.MonitorsApi(configuration);
+  //   }
 
-  async updateMonitor({ id, update }) {
-    return await this.restClient.put(`/monitor/${id}`, update);
-  }
+  //   async getMonitor(monitorId) {
+  //     return await this.sdkClient.getMonitor({ monitorId });
+  //   }
+
+  //   async doesMonitorExist(monitorId) {
+  //     try {
+  //       await this.sdkClient.getMonitor({ monitorId });
+  //       return true;
+  //     } catch (error) {
+  //       return false;
+  //     }
+  //   }
+
+  //   async getMonitorStatus(id) {
+  //     const { overallState } = await this.getMonitor(id);
+  //     return overallState;
+  //   }
+
+  //   async getAllMonitors() {
+  //     return await this.sdkClient.listMonitors();
+  //   }
+
+  //   async getMonitorsByTag(monitorTags) {
+  //     return await this.sdkClient.listMonitors({ monitorTags });
+  //   }
+
+  //   async getContainerLogs({ instance, container }) {
+  //     let params: v2.LogsApiListLogsRequest = {
+  //       body: {
+  //         filter: {
+  //           from: "now-3m",
+  //           query: `host:${instance} container_name:${container}`,
+  //           to: "now",
+  //         },
+  //         sort: "-timestamp",
+  //       },
+  //     };
+
+  //     try {
+  //       return await (await this.ddlogs.listLogs(params)).data.map(({ attributes }) => {
+  //         const { timestamp, service, message } = attributes;
+  //         return { timestamp, service, message };
+  //       });
+  //     } catch (error) {
+  //       throw new Error(error);
+  //     }
+  //   }
+
+  //   async getHealthLogs({ host, logGroup }) {
+  //     let params: v2.LogsApiListLogsRequest = {
+  //       body: {
+  //         filter: {
+  //           from: "now-3m",
+  //           query: `service:"${logGroup}"`,
+  //           to: "now",
+  //         },
+  //         sort: "-timestamp",
+  //       },
+  //     };
+  //     return await (await this.ddlogs.listLogs(params)).data.map(({ attributes }) => {
+  //       return {
+  //         host,
+  //         condition: attributes.attributes.conditions,
+  //         status: attributes.attributes.status,
+  //         delta: attributes.attributes.height.delta,
+  //       };
+  //     });
+  //   }
+
+  //   async deleteMonitor(monitorId) {
+  //     return await this.sdkClient.deleteMonitor({ monitorId });
+  //   }
+
+  //   async muteMonitor({ id, minutes }) {
+  //     const currentDate = new Date();
+  //     const futureDate = new Date(currentDate.getTime() + minutes * 60000);
+  //     const ts = parseInt((new Date(futureDate).getTime() / 1000).toFixed(0));
+  //     try {
+  //       const { options } = await this.getMonitor(id);
+  //       if (options.silenced.hasOwnProperty("*")) {
+  //         return -1;
+  //       }
+  //       const { data } = await this.restClient.post(`/monitor/${id}/mute?end=${ts}`);
+  //       return data;
+  //     } catch (error) {
+  //       throw new Error(error);
+  //     }
+  //   }
+
+  //   async unmuteMonitor({ id }) {
+  //     try {
+  //       const { data } = await this.restClient.post(`/monitor/${id}/unmute`);
+  //       return data;
+  //     } catch (error) {
+  //       throw new Error(error);
+  //     }
+  //   }
+
+  //   parseWebhookMessage({ msg, id, transition, type, title, link }) {
+  //     let [, , nodeId, event] = msg.split("\n");
+  //     event = event.split("event_")[1];
+  //     nodeId = nodeId.split("nodeId_")[1];
+  //     return { event, id, nodeId, transition, type, title, link };
+  //   }
+
+  //   async getAllMonitorsByTag(tag) {
+  //     return await this.restClient.get(`/monitor?monitor_tags=${tag}`);
+  //   }
+
+  //   async updateMonitor({ id, update }) {
+  //     return await this.restClient.put(`/monitor/${id}`, update);
+  //   }
 }
