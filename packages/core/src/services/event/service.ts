@@ -200,33 +200,33 @@ export class Service extends BaseService {
     { count, conditions, name, ethSyncing, height }: IRedisEvent,
     alertType: EAlertTypes,
   ): string {
+    const statusStr = `${name} is ${conditions}.`;
+    const alertTypeStr = {
+      [EAlertTypes.TRIGGER]: "First Alert",
+      [EAlertTypes.RETRIGGER]: "Retriggered Alert",
+      [EAlertTypes.RESOLVED]: "Event Resolved",
+    }[alertType];
+    const countStr =
+      alertType !== EAlertTypes.RESOLVED
+        ? `This event has occurred ${count} time${s(count)} since first occurrence.`
+        : "";
     const ethSyncStr = ethSyncing ? `ETH Syncing: ${JSON.stringify(ethSyncing)}` : "";
     const heightStr = height ? `Height: ${JSON.stringify(height)}` : "";
 
-    const alertTypeString = {
-      [EAlertTypes.TRIGGER]: "First Alert",
-      [EAlertTypes.RETRIGGER]: "Continuous Alert",
-      [EAlertTypes.RESOLVED]: "Event Resolved",
-    }[alertType];
-
-    return [
-      alertTypeString,
-      `${name} is ${conditions}.`,
-      `This event has occurred ${count} time${s(count)} since first occurrence.`,
-      ethSyncStr,
-      heightStr,
-    ]
+    return [alertTypeStr, statusStr, countStr, ethSyncStr, heightStr]
       .filter(Boolean)
       .join("\n");
   }
 
   private getWarningMessage({ conditions, name, details }: IRedisEvent): string {
     const badOracles = details?.badOracles;
+
+    const warningStr = `WARNING: ${name} is ${conditions}.`;
     const bOracleStr = badOracles
       ? `Bad Oracle${s(badOracles.length)}: ${badOracles}`
       : "";
 
-    return [`WARNING: ${name} is ${conditions}.`, bOracleStr].filter(Boolean).join("\n");
+    return [warningStr, bOracleStr].filter(Boolean).join("\n");
   }
 
   private getRotationMessage(
