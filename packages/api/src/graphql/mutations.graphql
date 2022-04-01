@@ -22,6 +22,7 @@ mutation CreateNode(
   $chain: ID!
   $host: ID!
   $port: Int!
+  $name: String!
   $loadBalancers: [ID!]!
   $haProxy: Boolean!
   $backend: String
@@ -31,6 +32,7 @@ mutation CreateNode(
     input: {
       chain: $chain
       host: $host
+      name: $name
       port: $port
       loadBalancers: $loadBalancers
       haProxy: $haProxy
