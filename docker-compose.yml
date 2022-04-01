@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   nn_stack:
-    image: pocketfoundation/node-nanny
+    image: pocketfoundation/node-nanny:latest
     container_name: nn_stack
     build:
       context: .
@@ -19,6 +19,7 @@ services:
       DISCORD_SERVER_ID: ${DISCORD_SERVER_ID:?Discord Server ID not set.}
       DISCORD_TOKEN: ${DISCORD_TOKEN:?Discord token not set.}
       REDIS_HOST: nn_redis
+      API_HOST: nn_stack
 
   nn_db:
     image: mongo:latest
