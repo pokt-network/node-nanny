@@ -31,6 +31,7 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
   const [chain, setChain] = useState("");
   const [host, setHost] = useState("");
   const [loadBalancers, setLoadBalancers] = useState<string[]>([]);
+  const [name, setName] = useState("");
   const [port, setPort] = useState(0);
   const [backend, setBackend] = useState("");
   const [server, setServer] = useState("");
@@ -54,6 +55,10 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
   }: SelectChangeEvent<typeof loadBalancers>) => {
     const { value } = target;
     setLoadBalancers(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setName(event.target.value);
   };
 
   const handlePortChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -139,6 +144,15 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
           <div style={{ marginTop: "10px" }} />
           <FormControl fullWidth>
             <TextField
+              value={name}
+              onChange={handleNameChange}
+              label="Name"
+              variant="outlined"
+            />
+          </FormControl>
+          <div style={{ marginTop: "10px" }} />
+          <FormControl fullWidth>
+            <TextField
               value={port}
               onChange={handlePortChange}
               label="Port"
@@ -187,6 +201,7 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
                   chain,
                   haProxy,
                   host,
+                  name,
                   port,
                   server,
                   loadBalancers,

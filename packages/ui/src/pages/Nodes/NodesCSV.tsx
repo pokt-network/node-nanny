@@ -36,6 +36,7 @@ interface ICSVNode {
   chain: string;
   haProxy: string;
   host: string;
+  name: string;
   loadBalancers: string;
   port: string;
   url: string;
@@ -85,6 +86,7 @@ export function NodesCSV({
   const schema = {
     chain: (value: string) => validChains.includes(value.toUpperCase()),
     host: (value: string) => validHosts.includes(value.toLowerCase()),
+    name: (value: string) => !!value,
     haProxy: (value: string) =>
       value.toLowerCase() === "true" || value.toLowerCase() === "false",
     loadBalancers: (value: string) =>
@@ -120,6 +122,7 @@ export function NodesCSV({
         ...node,
         chain: node.chain.toUpperCase(),
         host: node.host.toLowerCase(),
+        name: node.name,
         port: Number(node.port),
         loadBalancers: node.loadBalancers
           ?.toLowerCase()
