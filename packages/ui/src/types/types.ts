@@ -191,6 +191,7 @@ export type INodeCsvInput = {
   haProxy: Scalars['Boolean'];
   host: Scalars['String'];
   loadBalancers: Array<Scalars['String']>;
+  name: Scalars['String'];
   port: Scalars['Int'];
   server?: InputMaybe<Scalars['String']>;
 };
@@ -201,6 +202,7 @@ export type INodeInput = {
   haProxy: Scalars['Boolean'];
   host: Scalars['ID'];
   loadBalancers: Array<Scalars['ID']>;
+  name: Scalars['String'];
   port: Scalars['Int'];
   server?: InputMaybe<Scalars['String']>;
 };
@@ -288,6 +290,7 @@ export type ICreateNodeMutationVariables = Exact<{
   chain: Scalars['ID'];
   host: Scalars['ID'];
   port: Scalars['Int'];
+  name: Scalars['String'];
   loadBalancers: Array<Scalars['ID']> | Scalars['ID'];
   haProxy: Scalars['Boolean'];
   backend?: InputMaybe<Scalars['String']>;
@@ -446,9 +449,9 @@ export type CreateHostMutationHookResult = ReturnType<typeof useCreateHostMutati
 export type CreateHostMutationResult = Apollo.MutationResult<ICreateHostMutation>;
 export type CreateHostMutationOptions = Apollo.BaseMutationOptions<ICreateHostMutation, ICreateHostMutationVariables>;
 export const CreateNodeDocument = gql`
-    mutation CreateNode($chain: ID!, $host: ID!, $port: Int!, $loadBalancers: [ID!]!, $haProxy: Boolean!, $backend: String, $server: String) {
+    mutation CreateNode($chain: ID!, $host: ID!, $port: Int!, $name: String!, $loadBalancers: [ID!]!, $haProxy: Boolean!, $backend: String, $server: String) {
   createNode(
-    input: {chain: $chain, host: $host, port: $port, loadBalancers: $loadBalancers, haProxy: $haProxy, backend: $backend, server: $server}
+    input: {chain: $chain, host: $host, name: $name, port: $port, loadBalancers: $loadBalancers, haProxy: $haProxy, backend: $backend, server: $server}
   ) {
     id
     url
@@ -473,6 +476,7 @@ export type ICreateNodeMutationFn = Apollo.MutationFunction<ICreateNodeMutation,
  *      chain: // value for 'chain'
  *      host: // value for 'host'
  *      port: // value for 'port'
+ *      name: // value for 'name'
  *      loadBalancers: // value for 'loadBalancers'
  *      haProxy: // value for 'haProxy'
  *      backend: // value for 'backend'
