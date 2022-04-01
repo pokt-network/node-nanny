@@ -587,9 +587,7 @@ export class Service {
   };
 
   /* ----- String Methods ----- */
-  private getNodeNameForHealthCheck({ frontend, host, name, server }: INode): string {
-    return `${frontend ? `[Frontend]${frontend}/` : ""}${host.name}/${name}${
-      server ? `/${server}` : ""
-    }`;
+  private getNodeNameForHealthCheck({ frontend, host, name }: INode): string {
+    return `${frontend ? `[Frontend]${frontend}/` : ""}${host.name}/${name}`;
   }
 }
