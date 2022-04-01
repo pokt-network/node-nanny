@@ -9,7 +9,7 @@ import {
   EErrorConditions,
   EErrorStatus,
   ENCResponse,
-  ESupportedBlockChainTypes,
+  ESupportedBlockchainTypes,
   IHealthResponse,
   IEVMHealthCheckOptions,
   IOraclesAndPeers,
@@ -41,24 +41,27 @@ export class Service {
     }
   }
 
-  /* ----- Health Check Methods ----- */
+  /* ----- Node Health Check ----- */
   public async getNodeHealth(node: INode): Promise<IHealthResponse> {
     const { chain } = node;
-
-    if (!Object.keys(ESupportedBlockChainTypes).includes(chain.type)) {
+    if (!Object.keys(ESupportedBlockchainTypes).includes(chain.type)) {
       throw new Error(`${chain.type} is not a supported chain type`);
     }
 
-    return await {
-      ALG: this.getAlgorandNodeHealth,
-      AVA: this.getAvaNodeHealth,
-      EVM: this.getEVMNodeHealth,
-      HMY: this.getHarmonyNodeHealth,
-      POKT: this.getPocketNodeHealth,
-      SOL: this.getSolNodeHealth,
-      TMT: this.getTendermintNodeHealth,
-    }[chain.type](node);
+    return this.healthCheckMethods[chain.type](node);
   }
+
+  private healthCheckMethods: {
+    [chainType in ESupportedBlockchainTypes]: (node: INode) => Promise<IHealthResponse>;
+  } = {
+    ALG: (node) => this.getAlgorandNodeHealth(node),
+    AVA: (node) => this.getAvaNodeHealth(node),
+    EVM: (node) => this.getEVMNodeHealth(node),
+    HMY: (node) => this.getHarmonyNodeHealth(node),
+    POKT: (node) => this.getPocketNodeHealth(node),
+    SOL: (node) => this.getSolNodeHealth(node),
+    TMT: (node) => this.getTendermintNodeHealth(node),
+  };
 
   /* ----- Algorand ----- */
   private getAlgorandNodeHealth = async ({
