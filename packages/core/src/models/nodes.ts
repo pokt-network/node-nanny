@@ -8,6 +8,7 @@ export interface INode<Populated = true> {
   id: Types.ObjectId;
   chain: Populated extends true ? IChain : Types.ObjectId;
   host: Populated extends true ? IHost : Types.ObjectId;
+  name: string;
   port: number;
   url: string;
   muted: boolean;
@@ -26,6 +27,7 @@ const nodesSchema = new Schema<INode>(
   {
     chain: { type: Schema.Types.ObjectId, ref: "Chains", required: true },
     host: { type: Schema.Types.ObjectId, ref: "Hosts", required: true },
+    name: { type: String, required: true },
     port: { type: Number, required: true },
     url: { type: String, required: true },
     muted: { type: Boolean, required: true, default: false },
