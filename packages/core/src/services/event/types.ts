@@ -56,3 +56,9 @@ export enum Limits {
   MAX_LOG = 3000,
   MAX_LOG_MSG = "Logs are too big",
 }
+
+export enum EAlertTypes {
+  TRIGGER = "trigger",
+  RETRIGGER = "retrigger",
+  RESOLVED = "resolved",
+}

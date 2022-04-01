@@ -15,8 +15,8 @@ export class Publish {
   constructor() {
     this.map = new Map<string, number>();
     this.redis = new Redis({ host: process.env.REDIS_HOST });
-    this.threshold = 6;
-    this.retriggerThreshold = 20;
+    this.threshold = Number(process.env.ALERT_TRIGGER_THESHOLD || 6);
+    this.retriggerThreshold = Number(process.env.ALERT_RETRIGGER_THESHOLD || 20);
   }
 
   async evaluate({ message, id }: IMonitorEvent) {
@@ -28,11 +28,11 @@ export class Publish {
       const count = this.map.get(id);
 
       const event: EventTypes.IRedisEvent = { ...message, id, count };
-      if (count >= this.threshold && count < this.retriggerThreshold) {
+      if (count === this.threshold) {
         await this.redis.publish("send-event-trigger", JSON.stringify(event));
       }
 
-      if (count >= this.retriggerThreshold) {
+      if (count !== 0 && count % this.retriggerThreshold === 0) {
         await this.redis.publish("send-event-retrigger", JSON.stringify(event));
       }
     }
