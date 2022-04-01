@@ -6,59 +6,29 @@ const colors = {
   SUCCESS: 3066993,
 };
 
-// DEV NOTE -> Do we need this service? Looks like it's only concerned with Datadog.
 export class Service {
   private alert: Alert;
   private dd: DataDog;
+
   constructor() {
     this.alert = new Alert();
     this.dd = new DataDog();
   }
 
-  parseEvent({ msg, type, title, link, tags, status }) {
-    const lines = msg.split("\n");
-    const metric = lines[7];
-    const monitorStatus = lines.splice(-1).join("");
-    return {
-      tags: tags.split(",").reduce((acc, curr) => {
-        if (curr.includes(":")) {
-          const [key, value] = curr.split(":");
-          acc[key] = value;
-        } else {
-          acc[curr] = 1;
-        }
-        return acc;
-      }, {}),
-      status,
-      metric,
-      monitorStatus,
-      title,
-      link,
-      type: type.toUpperCase(),
-    };
-  }
-
   async processEvent(event) {
     const { title, monitorStatus, link, type, metric, tags } = this.parseEvent(event);
+
     let fields = [
-      {
-        name: "Monitor Status",
-        value: monitorStatus,
-      },
-      {
-        name: "Link",
-        value: link,
-      },
+      { name: "Monitor Status", value: monitorStatus },
+      { name: "Link", value: link },
     ];
     if (type === "ERROR") {
-      fields.unshift({
-        name: "Metrics",
-        value: metric,
-      });
+      fields.unshift({ name: "Metrics", value: metric });
     }
 
     if (tags.hasOwnProperty("latency")) {
       const { blockchainid, servicedomain, region } = tags;
+
       const logs = await this.dd.getLogs({
         query: `@blockchainID:${blockchainid} @serviceDomain:${servicedomain} @elapsedTime:>6 region:${region}`,
         from: "now-10m",
@@ -90,15 +60,38 @@ export class Service {
       fields = fields.concat(formated);
     }
 
-    // return await this.alert.sendDiscordMessage({
-    //   fields,
-    //   title,
-    //   color: colors[type],
-    //   channel:
-    //     process.env.MONITOR_TEST === "1"
-    //       ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST
-    //       : AlertTypes.Webhooks.DATADOG_ALERTS,
-    // });
-    return true;
+    return await this.alert.sendDiscordMessage({
+      fields,
+      title,
+      color: colors[type],
+      channel:
+        process.env.MONITOR_TEST === "1"
+          ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST
+          : AlertTypes.Webhooks.DATADOG_ALERTS,
+    });
+  }
+
+  private parseEvent({ msg, type, title, link, tags, status }) {
+    const lines = msg.split("\n");
+    const metric = lines[7];
+    const monitorStatus = lines.splice(-1).join("");
+
+    return {
+      tags: tags.split(",").reduce((acc, curr) => {
+        if (curr.includes(":")) {
+          const [key, value] = curr.split(":");
+          acc[key] = value;
+        } else {
+          acc[curr] = 1;
+        }
+        return acc;
+      }, {}),
+      status,
+      metric,
+      monitorStatus,
+      title,
+      link,
+      type: type.toUpperCase(),
+    };
   }
 }

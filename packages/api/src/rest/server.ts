@@ -1,40 +1,30 @@
 import express from "express";
 import {
-  Event,
   DataDog,
   Automation,
-  // Infra,
+  Infra,
 } from "@pokt-foundation/node-monitoring-core/dist/services";
 import { connect } from "@pokt-foundation/node-monitoring-core/dist/db";
 
 // const event = new Event.DataDog();
-const dd = new DataDog();
 const automation = new Automation();
-// const infra = new Infra();
+const dd = new DataDog();
+const infra = new Infra();
+
 const app = express();
 const port = 3000;
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// app.post("/webhook/datadog/infra", async ({ body }, res) => {
-//   try {
-//     await infra.processEvent(body);
-//     return res.status(200).json({ done: true });
-//   } catch (error) {
-//     res.sendStatus(500);
-//   }
-// });
-
-// app.post("/webhook/datadog/monitor/events", async ({ body }, res) => {
-//   console.log(body);
-//   try {
-//     await event.processEvent(body);
-//     return res.status(200).json({ done: true });
-//   } catch (error) {
-//     res.sendStatus(500);
-//   }
-// });
+app.post("/webhook/datadog/infra", async ({ body }, res) => {
+  try {
+    await infra.processEvent(body);
+    return res.status(200).json({ done: true });
+  } catch (error) {
+    res.sendStatus(500);
+  }
+});
 
 app.post("/admin/monitor/onboard", async ({ body }, res) => {
   const { name, id, logGroup } = body;
@@ -45,6 +35,16 @@ app.post("/admin/monitor/onboard", async ({ body }, res) => {
     res.sendStatus(500);
   }
 });
+
+// app.post("/webhook/datadog/monitor/events", async ({ body }, res) => {
+//   console.log(body);
+//   try {
+//     await event.processEvent(body);
+//     return res.status(200).json({ done: true });
+//   } catch (error) {
+//     res.sendStatus(500);
+//   }
+// });
 
 // app.get("/automation/monitor/status/:id", async (req, res) => {
 //   const { id } = req.params;
@@ -126,12 +126,11 @@ app.post("/automation/lb/disable/:id", async (req, res) => {
 //   }
 // });
 
-const start = async () => {
+(async () => {
   await connect();
   console.log("MongoDB connected ...");
+
   return app.listen(port, () => {
     console.log(`Webhook api listening at http://localhost:${port}`);
   });
-};
-
-start();
+})();
