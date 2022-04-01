@@ -33,6 +33,8 @@ query Node($id: ID!) {
     url
     ssl
     muted
+    status
+    conditions
     loadBalancers
   }
 }
@@ -46,6 +48,8 @@ query Nodes {
     url
     ssl
     muted
+    status
+    conditions
     loadBalancers
   }
 }

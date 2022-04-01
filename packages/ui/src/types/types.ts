@@ -169,6 +169,7 @@ export type IMutationUpdateOracleArgs = {
 export type INode = {
   backend?: Maybe<Scalars['String']>;
   chain: IChain;
+  conditions: Scalars['String'];
   dispatch?: Maybe<Scalars['Boolean']>;
   frontend?: Maybe<Scalars['String']>;
   haProxy?: Maybe<Scalars['Boolean']>;
@@ -179,6 +180,7 @@ export type INode = {
   port: Scalars['Int'];
   server?: Maybe<Scalars['String']>;
   ssl?: Maybe<Scalars['Boolean']>;
+  status: Scalars['String'];
   url: Scalars['String'];
 };
 
@@ -356,12 +358,12 @@ export type INodeQueryVariables = Exact<{
 }>;
 
 
-export type INodeQuery = { node: { id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, loadBalancers?: Array<string> | null } };
+export type INodeQuery = { node: { id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, status: string, conditions: string, loadBalancers?: Array<string> | null } };
 
 export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, loadBalancers?: Array<string> | null }> };
+export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, status: string, conditions: string, loadBalancers?: Array<string> | null }> };
 
 export type ILogsQueryVariables = Exact<{
   nodeIds: Array<Scalars['ID']> | Scalars['ID'];
@@ -800,6 +802,8 @@ export const NodeDocument = gql`
     url
     ssl
     muted
+    status
+    conditions
     loadBalancers
   }
 }
@@ -842,6 +846,8 @@ export const NodesDocument = gql`
     url
     ssl
     muted
+    status
+    conditions
     loadBalancers
   }
 }
