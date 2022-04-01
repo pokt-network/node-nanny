@@ -270,11 +270,15 @@ const getFQDN = (node): string => {
       const hostName = isHarmony ? node.host.name.split("-new").join("") : node.host.name;
       const port = isHarmony ? 9500 : Number(node.port);
 
-      const name;
+      const name =
+        node.chain.type === "POKT"
+          ? node.hostname.split(".")[0]
+          : `${node.chain.name}/${node.container}`;
 
       const nodeInput: INodeInput = {
         chain: (await ChainsModel.findOne({ name: node.chain.name }))._id,
         host: (await HostsModel.findOne({ name: hostName }))._id,
+        name,
         haProxy: node.haProxy,
         port,
         loadBalancers: (
