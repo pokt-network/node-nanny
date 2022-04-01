@@ -166,12 +166,12 @@ export class Service extends BaseService {
   }
 
   private async alertPocketDispatchersAreDown(node: INode) {
-    const downDispatchers = await this.checkPocketPeers(node);
+    const downDispatchers = await this.checkPocketDispatchPeers(node);
     const dispatchUrls = downDispatchers.map(({ url }) => `${url}\n`);
 
     if (downDispatchers?.length >= this.threshold) {
       await this.alert.createPagerDutyIncident({
-        title: "Dispatchers are down!",
+        title: "ALERT - Dispatchers are down!",
         details: [
           `${downDispatchers.length} dispatchers are down!`,
           `Down Dispatchers: ${dispatchUrls}`,
@@ -180,7 +180,7 @@ export class Service extends BaseService {
     }
   }
 
-  private async checkPocketPeers({ id, chain }: INode): Promise<INode[]> {
+  private async checkPocketDispatchPeers({ id, chain }: INode): Promise<INode[]> {
     return NodesModel.find({
       _id: { $ne: id },
       dispatch: true,
@@ -188,7 +188,6 @@ export class Service extends BaseService {
       status: { $ne: EErrorStatus.OK },
       conditions: { $ne: EErrorConditions.HEALTHY },
     });
-    c;
   }
 
   /* ----- Message String Methods ----- */
