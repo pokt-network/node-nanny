@@ -93,7 +93,7 @@ export class Service extends BaseService {
       { title, message, chain: chain.name, frontend: Boolean(frontend) },
       status,
     );
-    if (warningMessage) {
+    if (warningMessage && !frontend) {
       await this.sendMessage(
         {
           title,
@@ -118,11 +118,12 @@ export class Service extends BaseService {
     alertType: EAlertTypes,
   ): Promise<IRedisEventParams> {
     const event: IRedisEvent = JSON.parse(eventJson);
-    const { conditions, id, name, status, sendWarning } = event;
+    const { conditions, id, status, sendWarning } = event;
+    const { message, statusStr } = this.getAlertMessage(event, alertType);
 
     const parsedEvent: IRedisEventParams = {
-      title: `${name} is ${conditions}`,
-      message: this.getAlertMessage(event, alertType),
+      title: statusStr,
+      message,
       node: await this.getNode(id),
       notSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
       status,
@@ -197,10 +198,13 @@ export class Service extends BaseService {
 
   /* ----- Message String Methods ----- */
   private getAlertMessage(
-    { count, conditions, name, ethSyncing, height }: IRedisEvent,
+    { count, conditions, name, ethSyncing, height, status }: IRedisEvent,
     alertType: EAlertTypes,
-  ): string {
-    const statusStr = `${name} is ${conditions}.`;
+  ): { message: string; statusStr: string } {
+    const badOracle = conditions === EErrorConditions.BAD_ORACLE;
+    const ok = status === EErrorStatus.OK;
+    const conditionsStr = ok && badOracle ? EErrorConditions.HEALTHY : conditions;
+    const statusStr = `${name} is ${conditionsStr}.`;
     const alertTypeStr = {
       [EAlertTypes.TRIGGER]: "First Alert",
       [EAlertTypes.RETRIGGER]: "Retriggered Alert",
@@ -210,18 +214,22 @@ export class Service extends BaseService {
       alertType !== EAlertTypes.RESOLVED
         ? `This event has occurred ${count} time${s(count)} since first occurrence.`
         : "";
+    const badOracleStr = badOracle ? "Warning: Bad Oracle for node." : "";
     const ethSyncStr = ethSyncing ? `ETH Syncing: ${JSON.stringify(ethSyncing)}` : "";
     const heightStr = height ? `Height: ${JSON.stringify(height)}` : "";
 
-    return [alertTypeStr, statusStr, countStr, ethSyncStr, heightStr]
-      .filter(Boolean)
-      .join("\n");
+    return {
+      message: [alertTypeStr, statusStr, countStr, badOracleStr, ethSyncStr, heightStr]
+        .filter(Boolean)
+        .join("\n"),
+      statusStr,
+    };
   }
 
   private getWarningMessage({ conditions, name, details }: IRedisEvent): string {
     const badOracles = details?.badOracles;
 
-    const warningStr = `WARNING: ${name} is ${conditions}.`;
+    const warningStr = `${name} is ${conditions}.`;
     const bOracleStr = badOracles
       ? `Bad Oracle${s(badOracles.length)}: ${badOracles}`
       : "";
