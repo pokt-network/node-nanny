@@ -64,14 +64,9 @@ export class Service {
   };
 
   /* ----- Algorand ----- */
-  private getAlgorandNodeHealth = async ({
-    url,
-    host,
-    chain,
-    basicAuth,
-    frontend,
-  }: INode): Promise<IHealthResponse> => {
-    const name = `${frontend ? `frontend: ${frontend}/` : ""}${host.name}/${chain.name}`;
+  private getAlgorandNodeHealth = async (node: INode): Promise<IHealthResponse> => {
+    const name = this.getNodeNameForHealthCheck(node);
+    const { url, basicAuth } = node;
 
     try {
       const { data, status } = await this.rpc.get(
@@ -103,14 +98,9 @@ export class Service {
   };
 
   /* ----- Avalanche ----- */
-  private getAvaNodeHealth = async ({
-    url,
-    host,
-    chain,
-    basicAuth,
-    frontend,
-  }: INode): Promise<IHealthResponse> => {
-    const name = `${frontend ? `frontend: ${frontend}/` : ""}${host.name}/${chain.name}`;
+  private getAvaNodeHealth = async (node: INode): Promise<IHealthResponse> => {
+    const name = this.getNodeNameForHealthCheck(node);
+    const { url, basicAuth } = node;
 
     try {
       const { data } = await this.rpc.post(
@@ -147,11 +137,12 @@ export class Service {
 
   /* ----- Ethereum Virtual Machine ----- */
   private getEVMNodeHealth = async (
-    { chain, url, host, id, port, basicAuth, server, frontend }: INode,
+    node: INode,
     { harmony }: IEVMHealthCheckOptions = { harmony: false },
   ): Promise<IHealthResponse> => {
+    const name = this.getNodeNameForHealthCheck(node);
+    const { chain, url, host, id, port, basicAuth, frontend } = node;
     const { allowance } = chain;
-    const name = `${host.name}/${chain.name}${server ? `/${server}` : ""}`;
 
     const healthResponse: IHealthResponse = {
       name: frontend ? `frontend: ${frontend}/${name}` : name,
@@ -401,15 +392,10 @@ export class Service {
   };
 
   /* ----- Pocket ----- */
-  private getPocketNodeHealth = async ({
-    id,
-    chain,
-    host,
-    url,
-    frontend,
-  }: INode): Promise<IHealthResponse> => {
+  private getPocketNodeHealth = async (node: INode): Promise<IHealthResponse> => {
+    const name = this.getNodeNameForHealthCheck(node);
+    const { id, chain, url } = node;
     const { allowance } = chain;
-    const name = `${frontend ? `frontend: ${frontend}/` : ""}${host.name}/${chain.name}`;
 
     const { height: isRpcResponding } = await this.getPocketHeight(url);
     if (isRpcResponding === 0) {
@@ -516,16 +502,11 @@ export class Service {
   }
 
   /* ----- Solana ----- */
-  private getSolNodeHealth = async ({
-    url,
-    host,
-    chain,
-    basicAuth,
-    frontend,
-  }: INode): Promise<IHealthResponse> => {
-    const name = `${frontend ? `frontend: ${frontend}/` : ""}${host.name}/${chain.name}`;
-    const execute = util.promisify(exec);
+  private getSolNodeHealth = async (node: INode): Promise<IHealthResponse> => {
+    const name = this.getNodeNameForHealthCheck(node);
+    const { url, basicAuth } = node;
 
+    const execute = util.promisify(exec);
     const command = basicAuth
       ? `curl -u ${basicAuth} -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`
       : `curl -X POST -H 'Content-Type: application/json' -s --data '{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}' ${url}`;
@@ -570,14 +551,9 @@ export class Service {
   };
 
   /* ----- Tendermint ----- */
-  private getTendermintNodeHealth = async ({
-    url,
-    host,
-    chain,
-    basicAuth,
-    frontend,
-  }: INode): Promise<IHealthResponse> => {
-    const name = `${frontend ? `frontend: ${frontend}/` : ""}${host.name}/${chain.name}`;
+  private getTendermintNodeHealth = async (node: INode): Promise<IHealthResponse> => {
+    const name = this.getNodeNameForHealthCheck(node);
+    const { url, basicAuth } = node;
 
     try {
       const { data } = await this.rpc.get(
@@ -609,4 +585,11 @@ export class Service {
       };
     }
   };
+
+  /* ----- String Methods ----- */
+  private getNodeNameForHealthCheck({ frontend, host, name, server }: INode): string {
+    return `${frontend ? `[Frontend]${frontend}/` : ""}${host.name}/${name}${
+      server ? `/${server}` : ""
+    }`;
+  }
 }

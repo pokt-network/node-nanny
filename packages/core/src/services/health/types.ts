@@ -18,6 +18,7 @@ export enum ESupportedBlockchains {
   KOV = "KOV",
   HEI = "HEI",
   POKT = "POKT",
+  "POKT-DIS" = "POKT-DIS",
 }
 
 export enum ESupportedBlockchainTypes {
