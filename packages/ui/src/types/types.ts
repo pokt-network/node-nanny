@@ -177,6 +177,7 @@ export type INode = {
   id: Scalars['ID'];
   loadBalancers?: Maybe<Array<Scalars['ID']>>;
   muted: Scalars['Boolean'];
+  name: Scalars['String'];
   port: Scalars['Int'];
   server?: Maybe<Scalars['String']>;
   ssl?: Maybe<Scalars['Boolean']>;
@@ -358,12 +359,12 @@ export type INodeQueryVariables = Exact<{
 }>;
 
 
-export type INodeQuery = { node: { id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, status: string, conditions: string, loadBalancers?: Array<string> | null } };
+export type INodeQuery = { node: { id: string, backend?: string | null, port: number, name: string, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, status: string, conditions: string, loadBalancers?: Array<string> | null } };
 
 export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, port: number, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, status: string, conditions: string, loadBalancers?: Array<string> | null }> };
+export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, port: number, name: string, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, status: string, conditions: string, loadBalancers?: Array<string> | null }> };
 
 export type ILogsQueryVariables = Exact<{
   nodeIds: Array<Scalars['ID']> | Scalars['ID'];
@@ -798,6 +799,7 @@ export const NodeDocument = gql`
     id
     backend
     port
+    name
     server
     url
     ssl
@@ -842,6 +844,7 @@ export const NodesDocument = gql`
     id
     backend
     port
+    name
     server
     url
     ssl

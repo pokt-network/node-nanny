@@ -27,7 +27,7 @@ const nodesSchema = new Schema<INode>(
   {
     chain: { type: Schema.Types.ObjectId, ref: "Chains", required: true },
     host: { type: Schema.Types.ObjectId, ref: "Hosts", required: true },
-    name: { type: String, required: true },
+    name: { type: String, required: true, unique: true },
     port: { type: Number, required: true },
     url: { type: String, required: true },
     muted: { type: Boolean, required: true, default: false },
