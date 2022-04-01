@@ -73,7 +73,7 @@ export class Service {
         `${url}/health`,
         this.getAxiosRequestConfig(basicAuth),
       );
-      if (status == 200) {
+      if (status === 200) {
         return {
           name,
           conditions: EErrorConditions.HEALTHY,
@@ -587,7 +587,7 @@ export class Service {
   };
 
   /* ----- String Methods ----- */
-  private getNodeNameForHealthCheck({ frontend, host, name }: INode): string {
-    return `${frontend ? `[Frontend]${frontend}/` : ""}${host.name}/${name}`;
+  private getNodeNameForHealthCheck({ host, name }: INode): string {
+    return `${host.name}/${name}`;
   }
 }
