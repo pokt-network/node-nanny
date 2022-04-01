@@ -1,5 +1,5 @@
 import { ApolloServer } from "apollo-server";
-import { connect, disconnect } from "@pokt-foundation/node-monitoring-core/dist/db";
+import { connect, disconnect } from "@pokt-foundation/node-nanny-core/dist/db";
 
 import resolvers from "./resolvers";
 import typeDefs from "./schema";

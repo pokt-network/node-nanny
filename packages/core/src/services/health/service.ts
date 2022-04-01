@@ -4,7 +4,7 @@ import axiosRetry from "axios-retry";
 import { exec } from "child_process";
 import { Types } from "mongoose";
 
-import { IChain, INode, NodesModel, OraclesModel } from "../../models";
+import { IChain, INode, ChainsModel, NodesModel, OraclesModel } from "../../models";
 import {
   EErrorConditions,
   EErrorStatus,
@@ -408,7 +408,7 @@ export class Service {
     url,
     frontend,
   }: INode): Promise<IHealthResponse> => {
-    const { id: chainId, allowance } = chain;
+    const { allowance } = chain;
     const name = `${frontend ? `frontend: ${frontend}/` : ""}${host.name}/${chain.name}`;
 
     const { height: isRpcResponding } = await this.getPocketHeight(url);
@@ -420,12 +420,8 @@ export class Service {
       };
     }
 
-    const query = { chain: chainId, _id: { $ne: id } };
-    const referenceNodes = await NodesModel.find(query, null, { limit: 20 })
-      .populate("chain")
-      .populate("host")
-      .exec();
-    if (!referenceNodes?.length) {
+    const referenceNodeUrls = await this.getPocketReferenceNodeUrls(id);
+    if (!referenceNodeUrls?.length) {
       return {
         name,
         status: EErrorStatus.ERROR,
@@ -434,9 +430,8 @@ export class Service {
     }
 
     // Get highest block height from reference nodes
-    const pocketNodes = referenceNodes.map(({ url }) => url);
     const pocketHeight = await Promise.all(
-      pocketNodes.map((node) => this.getPocketHeight(node)),
+      referenceNodeUrls.map((url) => this.getPocketHeight(url)),
     );
     const [highest] = pocketHeight
       .map(({ height }) => height)
@@ -451,9 +446,7 @@ export class Service {
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
         delta: Number(highest) - Number(height),
-        referenceNodes: referenceNodes.map(
-          ({ chain, host, server }) => `${host.name}/${chain.name}/${server}\n`,
-        ),
+        referenceNodeUrls: referenceNodeUrls.map((url) => `${url}\n`),
         highest,
         height,
       };
@@ -500,6 +493,26 @@ export class Service {
     } catch (error) {
       return { height: 0 };
     }
+  }
+
+  private async getPocketReferenceNodeUrls(nodeId: Types.ObjectId): Promise<string[]> {
+    const pocketChainIds = (
+      await ChainsModel.find({ type: ESupportedBlockchainTypes.POKT })
+    ).map(({ _id }) => _id);
+
+    const referenceNodes = await NodesModel.aggregate<INode>([
+      {
+        $match: {
+          chain: { $in: pocketChainIds },
+          _id: { $ne: nodeId },
+          status: EErrorStatus.OK,
+          conditions: EErrorConditions.HEALTHY,
+        },
+      },
+      { $sample: { size: 20 } },
+    ]);
+
+    return referenceNodes?.map(({ url }) => url) || [];
   }
 
   /* ----- Solana ----- */

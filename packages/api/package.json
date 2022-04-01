@@ -14,7 +14,7 @@
     "generate": "graphql-codegen --config codegen.yml"
   },
   "dependencies": {
-    "@pokt-foundation/node-monitoring-core": "workspace:^0.1.0",
+    "@pokt-foundation/node-nanny-core": "workspace:^0.1.0",
     "apollo-server": "^3.6.3",
     "express": "^4.17.3",
     "graphql": "^16.0.1"

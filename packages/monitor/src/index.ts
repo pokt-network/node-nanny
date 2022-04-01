@@ -1,7 +1,7 @@
-import { Health, Log } from "@pokt-foundation/node-monitoring-core/dist/services";
-import { NodesModel } from "@pokt-foundation/node-monitoring-core/dist/models";
-import { HealthTypes } from "@pokt-foundation/node-monitoring-core/dist/types";
-import { connect, disconnect } from "@pokt-foundation/node-monitoring-core/dist/db";
+import { connect, disconnect } from "@pokt-foundation/node-nanny-core/dist/db";
+import { NodesModel } from "@pokt-foundation/node-nanny-core/dist/models";
+import { Health, Log } from "@pokt-foundation/node-nanny-core/dist/services";
+import { HealthTypes } from "@pokt-foundation/node-nanny-core/dist/types";
 
 import { Publish } from "./publish";
 

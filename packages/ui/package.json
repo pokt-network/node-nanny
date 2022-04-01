@@ -1,5 +1,5 @@
 {
-  "name": "@pokt-foundation/node-monitoring-ui",
+  "name": "@pokt-foundation/node-nanny-ui",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
