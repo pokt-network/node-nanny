@@ -1,5 +1,5 @@
 import { EErrorConditions, EErrorStatus } from "../health/types";
-import { INode } from "../../models";
+import { INode, NodesModel } from "../../models";
 import { s } from "../../utils";
 import { AlertTypes } from "../../types";
 import { IRedisEvent, IRedisEventParams, IToggleServerParams } from "./types";
@@ -8,15 +8,19 @@ import { Service as BaseService } from "../base-service/base-service";
 
 export class Service extends BaseService {
   private pnf: boolean;
+  private threshold: number;
 
   constructor() {
     super();
     this.pnf = Boolean(process.env.PNF === "1");
+    this.threshold = Number(process.env.PNF_DISPATCH_THRESHOLD || 3);
   }
 
   /* ----- Trigger Methods ----- */
   processTriggered = async (eventJson: string): Promise<void> => {
-    const { node, message, notSynced, status, title } = await this.parseEvent(eventJson);
+    const { node, message, notSynced, status, conditions, title } = await this.parseEvent(
+      eventJson,
+    );
     const { chain, frontend } = node;
     await this.sendMessage(
       { title, message, chain: chain.name, frontend: Boolean(frontend) },
@@ -26,10 +30,18 @@ export class Service extends BaseService {
     if (!frontend && notSynced) {
       await this.toggleServer({ node, title, enable: false });
     }
+
+    if (this.pnf && node.dispatch) {
+      await this.alertPocketDispatchersAreDown(node);
+    }
+
+    await NodesModel.updateOne({ _id: node.id }, { status, conditions });
   };
 
   processRetriggered = async (eventJson: string): Promise<void> => {
-    const { node, message, notSynced, status, title } = await this.parseEvent(eventJson);
+    const { node, message, notSynced, status, conditions, title } = await this.parseEvent(
+      eventJson,
+    );
     const { chain, frontend } = node;
     const messageParams = {
       title,
@@ -50,6 +62,12 @@ export class Service extends BaseService {
     } else {
       await this.sendMessage(messageParams, status);
     }
+
+    if (this.pnf && node.dispatch) {
+      await this.alertPocketDispatchersAreDown(node);
+    }
+
+    await NodesModel.updateOne({ _id: node.id }, { status, conditions });
   };
 
   processResolved = async (eventJson: string): Promise<void> => {
@@ -58,6 +76,7 @@ export class Service extends BaseService {
       message,
       notSynced,
       status,
+      conditions,
       title,
       warningMessage,
     } = await this.parseEvent(eventJson);
@@ -82,6 +101,12 @@ export class Service extends BaseService {
     if (!frontend && notSynced) {
       await this.toggleServer({ node, title, enable: true });
     }
+
+    if (this.pnf && node.dispatch) {
+      await this.alertPocketDispatchersAreDown(node);
+    }
+
+    await NodesModel.updateOne({ _id: node.id }, { status, conditions });
   };
 
   /* ----- Private Methods ----- */
@@ -95,6 +120,7 @@ export class Service extends BaseService {
       node: await this.getNode(id),
       notSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
       status,
+      conditions,
     };
     if (sendWarning) parsedEvent.warningMessage = this.getWarningMessage(event);
     return parsedEvent;
@@ -139,19 +165,31 @@ export class Service extends BaseService {
     }
   }
 
-  // private async checkPocketPeers({ nodeId, poktType }) {
-  //   const peers: INode[] = await NodesModel.find({
-  //     "chain.name": "POKT",
-  //     poktType,
-  //     _id: { $ne: nodeId },
-  //   });
-  //   const peerStatus = await Promise.all(
-  //     peers.map(async ({ monitorId }) => {
-  //       return await this.dd.getMonitorStatus(monitorId);
-  //     }),
-  //   );
-  //   return peerStatus.filter((value) => value === DataDogMonitorStatus.ALERT).length;
-  // }
+  private async alertPocketDispatchersAreDown(node: INode) {
+    const downDispatchers = await this.checkPocketPeers(node);
+    const dispatchUrls = downDispatchers.map(({ url }) => `${url}\n`);
+
+    if (downDispatchers?.length >= this.threshold) {
+      await this.alert.createPagerDutyIncident({
+        title: "Dispatchers are down!",
+        details: [
+          `${downDispatchers.length} dispatchers are down!`,
+          `Down Dispatchers: ${dispatchUrls}`,
+        ].join("\n"),
+      });
+    }
+  }
+
+  private async checkPocketPeers({ id, chain }: INode): Promise<INode[]> {
+    return NodesModel.find({
+      _id: { $ne: id },
+      dispatch: true,
+      chain: chain.id,
+      status: { $ne: EErrorStatus.OK },
+      conditions: { $ne: EErrorConditions.HEALTHY },
+    });
+    c;
+  }
 
   /* ----- Message String Methods ----- */
   private getAlertMessage({

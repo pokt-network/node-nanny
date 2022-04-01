@@ -2,6 +2,7 @@ import { model, Model, Schema, Types } from "mongoose";
 
 import { IChain } from "./chains";
 import { IHost } from "./hosts";
+import { HealthTypes } from "../types";
 
 export interface INode<Populated = true> {
   id: Types.ObjectId;
@@ -10,6 +11,8 @@ export interface INode<Populated = true> {
   port: number;
   url: string;
   muted: boolean;
+  status: HealthTypes.EErrorStatus;
+  conditions: HealthTypes.EErrorConditions;
   loadBalancers?: (Populated extends true ? IHost : Types.ObjectId)[];
   backend?: string;
   frontend?: string;
@@ -26,6 +29,16 @@ const nodesSchema = new Schema<INode>(
     port: { type: Number, required: true },
     url: { type: String, required: true },
     muted: { type: Boolean, required: true, default: false },
+    status: {
+      type: String,
+      enum: Object.values(HealthTypes.EErrorStatus),
+      default: HealthTypes.EErrorStatus.OK,
+    },
+    conditions: {
+      type: String,
+      enum: Object.values(HealthTypes.EErrorConditions),
+      default: HealthTypes.EErrorConditions.HEALTHY,
+    },
     loadBalancers: [{ type: Schema.Types.ObjectId, ref: "Hosts" }],
     backend: String,
     frontend: String,

@@ -51,6 +51,8 @@ const typeDefs = gql`
     port: Int!
     url: String!
     muted: Boolean!
+    status: String!
+    conditions: String!
     loadBalancers: [ID!]
     backend: String
     frontend: String
