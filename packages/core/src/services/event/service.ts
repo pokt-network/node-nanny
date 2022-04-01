@@ -7,8 +7,11 @@ import { IRedisEvent, IRedisEventParams, IToggleServerParams } from "./types";
 import { Service as BaseService } from "../base-service/base-service";
 
 export class Service extends BaseService {
+  private pnf: boolean;
+
   constructor() {
     super();
+    this.pnf = Boolean(process.env.PNF === "1");
   }
 
   /* ----- Trigger Methods ----- */
@@ -135,6 +138,20 @@ export class Service extends BaseService {
       await this.alert.sendError({ title, message, chain });
     }
   }
+
+  // private async checkPocketPeers({ nodeId, poktType }) {
+  //   const peers: INode[] = await NodesModel.find({
+  //     "chain.name": "POKT",
+  //     poktType,
+  //     _id: { $ne: nodeId },
+  //   });
+  //   const peerStatus = await Promise.all(
+  //     peers.map(async ({ monitorId }) => {
+  //       return await this.dd.getMonitorStatus(monitorId);
+  //     }),
+  //   );
+  //   return peerStatus.filter((value) => value === DataDogMonitorStatus.ALERT).length;
+  // }
 
   /* ----- Message String Methods ----- */
   private getAlertMessage({

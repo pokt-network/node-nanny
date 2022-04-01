@@ -69,6 +69,7 @@ services:
       - nn_db
       - nn_redis
     environment:
+      REDIS_HOST: nn_redis
       MONITOR_LOGGER: mongodb
       MONGO_URI: "mongodb://${MONGO_USER:-root}:${MONGO_PASSWORD:-rootpassword}@nn_db:27017/${MONGO_DB_NAME:-local}?authSource=admin"
       DISCORD_SERVER_ID: ${DISCORD_SERVER_ID:?Discord Server ID not set.}

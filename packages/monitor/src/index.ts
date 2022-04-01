@@ -23,6 +23,7 @@ export class App {
   /** Runs a health check on all non-muted nodes in the inventory DB at a set interval.
    * Events are published to REDIS and logs written to MongoDB. */
   async main() {
+    console.debug("CONNECTING TO", process.env.MONGO_URI);
     await connect();
 
     const nodes = await NodesModel.find({ muted: false })

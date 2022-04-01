@@ -17,7 +17,7 @@ export class Publish {
 
   constructor() {
     this.map = new Map<string, number>();
-    this.redis = new Redis({ host: "nn_redis" });
+    this.redis = new Redis({ host: process.env.REDIS_HOST });
     this.threshold = 6;
     this.retriggerThreshold = 20;
   }
