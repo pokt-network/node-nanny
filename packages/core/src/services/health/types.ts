@@ -2,7 +2,7 @@ export enum ENCResponse {
   SUCCESS = "succeeded!",
 }
 
-export enum ESupportedBlockChains {
+export enum ESupportedBlockchains {
   AVA = "AVA",
   AVATST = "AVATST",
   ETH = "ETH",
@@ -20,7 +20,7 @@ export enum ESupportedBlockChains {
   POKT = "POKT",
 }
 
-export enum ESupportedBlockChainTypes {
+export enum ESupportedBlockchainTypes {
   EVM = "EVM",
   AVA = "AVA",
   TMT = "TMT",

@@ -3,7 +3,7 @@ import { Event as EventConsumer } from "@pokt-foundation/node-monitoring-core/di
 import { connect, disconnect } from "@pokt-foundation/node-monitoring-core/dist/db";
 
 const consumer = new EventConsumer();
-const redis = new Redis({ host: "nn_redis" });
+const redis = new Redis({ host: process.env.REDIS_HOST });
 
 const main = async () => {
   await connect();
