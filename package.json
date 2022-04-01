@@ -13,7 +13,7 @@
     "docker:stop": "docker stop nn_stack",
     "docker:rebuild": "docker-compose build --no-cache",
     "docker:terminal": "docker exec -it nn_stack /bin/bash",
-    "docker:monitor": "pm2 log monitor",
+    "docker:monitor": "docker exec -it nn_stack pm2 log monitor",
     "docker:console": "docker exec -it nn_stack pm2 monit",
     "monitor": "pm2 log monitor",
     "console": "pm2 monit"

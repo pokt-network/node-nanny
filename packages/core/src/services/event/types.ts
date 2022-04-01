@@ -1,12 +1,6 @@
-export {
-  Status as DataDogMonitorStatus,
-  AlertColor,
-  EventTransitions,
-  EventTypes,
-} from "../datadog/types";
 export { Webhooks as DiscordChannel } from "../alert/types";
 export { EErrorConditions as BlockChainMonitorEvents } from "../health/types";
-export { ESupportedBlockChains } from "../health/types";
+export { ESupportedBlockchains } from "../health/types";
 
 import { IHost, INode } from "../../models";
 import { HealthTypes } from "../../types";
