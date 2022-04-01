@@ -1,6 +1,6 @@
 import Redis from "ioredis";
-import { Event as EventConsumer } from "@pokt-foundation/node-monitoring-core/dist/services";
-import { connect, disconnect } from "@pokt-foundation/node-monitoring-core/dist/db";
+import { Event as EventConsumer } from "@pokt-foundation/node-nanny-core/dist/services";
+import { connect, disconnect } from "@pokt-foundation/node-nanny-core/dist/db";
 
 const consumer = new EventConsumer();
 const redis = new Redis({ host: process.env.REDIS_HOST });

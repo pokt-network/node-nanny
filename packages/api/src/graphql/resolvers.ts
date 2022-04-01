@@ -5,8 +5,8 @@ import {
   OraclesModel,
   LocationsModel,
   WebhookModel,
-} from "@pokt-foundation/node-monitoring-core/dist/models";
-import { Automation as AutomationService } from "@pokt-foundation/node-monitoring-core/dist/services";
+} from "@pokt-foundation/node-nanny-core/dist/models";
+import { Automation as AutomationService } from "@pokt-foundation/node-nanny-core/dist/services";
 
 const resolvers = {
   Query: {

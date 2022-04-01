@@ -69,7 +69,7 @@ export interface IHealthResponse {
   id?: string;
   ethSyncing?: boolean;
   delta?: number;
-  referenceNodes?: string[];
+  referenceNodeUrls?: string[];
   highest?: any;
   sendWarning?: boolean;
 }
