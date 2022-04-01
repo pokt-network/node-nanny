@@ -91,6 +91,30 @@ export class Service {
     }
   };
 
+  async sendDiscordMessage({
+    title,
+    color,
+    fields,
+    channel,
+  }: SendMessageInput): Promise<boolean> {
+    const embeds = [{ title, color, fields }];
+
+    try {
+      const { status } = await this.discordClient.post(channel, { embeds });
+      return status === 204;
+    } catch (error) {
+      throw new Error(`Could not send alert to Discord. ${error}`);
+    }
+  }
+
+  private async getWebhookUrl(chain: string, frontend = false): Promise<string> {
+    const { url } = await WebhookModel.findOne({
+      chain: frontend ? "FRONTEND_ALERT" : chain,
+    });
+
+    return url;
+  }
+
   /* ----- Pager Duty Alert ----- */
   async createPagerDutyIncident({
     title,
@@ -115,30 +139,5 @@ export class Service {
     } catch (error) {
       throw new Error(`Could not create PD incident. ${error}`);
     }
-  }
-
-  /* ----- Private Methods ----- */
-  private async sendDiscordMessage({
-    title,
-    color,
-    fields,
-    channel,
-  }: SendMessageInput): Promise<boolean> {
-    const embeds = [{ title, color, fields }];
-
-    try {
-      const { status } = await this.discordClient.post(channel, { embeds });
-      return status === 204;
-    } catch (error) {
-      throw new Error(`Could not send alert to Discord. ${error}`);
-    }
-  }
-
-  private async getWebhookUrl(chain: string, frontend = false): Promise<string> {
-    const { url } = await WebhookModel.findOne({
-      chain: frontend ? "FRONTEND_ALERT" : chain,
-    });
-
-    return url;
   }
 }

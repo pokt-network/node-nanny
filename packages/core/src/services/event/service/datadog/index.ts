@@ -8,7 +8,7 @@
 //   LoadBalancerStatus,
 //   Limits,
 //   LoadBalancer,
-//   ESupportedBlockChains,
+//   ESupportedBlockchains,
 //   PocketTypes,
 // } from "../../types";
 // import { INode, NodesModel, HostsModel } from "../../../../models";
@@ -60,7 +60,7 @@
 //     console.log("isPeersOk", chain, nodeId);
 //     //todo this is just a temp fix for the pocket nodes, needs more sophistiacted handling to check peers
 //     if (
-//       chain.toUpperCase() === ESupportedBlockChains.POKT ||
+//       chain.toUpperCase() === ESupportedBlockchains.POKT ||
 //       chain.toUpperCase() === "POKT-DIS" ||
 //       chain.toUpperCase() === "POKT-MAIN" ||
 //       chain.toUpperCase() === "POKT-BT"
@@ -165,7 +165,7 @@
 
 //       let reboot;
 //       try {
-//         if (chain.type === ESupportedBlockChains.POKT) {
+//         if (chain.type === ESupportedBlockchains.POKT) {
 //           const { data } = await this.agent.post(
 //             `http://${ip}:3001/webhook/docker/reboot`,
 //             {
@@ -223,12 +223,13 @@
 //     const results = [];
 //     for (const { internalHostName } of loadBalancers) {
 //       try {
-//         const {
-//           data,
-//         } = await this.agent.post(`http://${internalHostName}:3001/webhook/lb/status`, {
-//           backend,
-//           server,
-//         });
+//         const { data } = await this.agent.post(
+//           `http://${internalHostName}:3001/webhook/lb/status`,
+//           {
+//             backend,
+//             server,
+//           },
+//         );
 //         results.push(data);
 //       } catch (error) {
 //         throw new Error(
@@ -307,7 +308,7 @@
 
 //     /*++++++++++++++++++++++++TRIGGERED++++++++++++++++++++++++++++++++ */
 //     if (transition === EventTransitions.TRIGGERED) {
-//       if (node.chain.name === ESupportedBlockChains.ETH) {
+//       if (node.chain.name === ESupportedBlockchains.ETH) {
 //         await this.alert.createPagerDutyIncident({
 //           title: "Problem with Ethereum Node!",
 //           details: `${title}\n${event}\n${link}`,
@@ -369,7 +370,7 @@
 
 //       /*============================NO_RESPONSE and OFFLINE POKT ==========================*/
 //       if (
-//         node.chain.type === ESupportedBlockChains.POKT &&
+//         node.chain.type === ESupportedBlockchains.POKT &&
 //         (event === BlockChainMonitorEvents.NO_RESPONSE ||
 //           event === BlockChainMonitorEvents.OFFLINE)
 //       ) {
@@ -502,7 +503,7 @@
 //           });
 //         }
 
-//         if (node.chain.type === ESupportedBlockChains.POKT) {
+//         if (node.chain.type === ESupportedBlockchains.POKT) {
 //           const badCount = await this.checkPocketPeers({ nodeId, poktType });
 //           if (poktType === PocketTypes.DISPATCH && badCount >= this.threshold) {
 //             await this.alert.createPagerDutyIncident({
