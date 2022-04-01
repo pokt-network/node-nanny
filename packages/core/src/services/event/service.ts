@@ -1,25 +1,31 @@
-import { EErrorConditions, EErrorStatus } from "../health/types";
+import { EErrorConditions, EErrorStatus, ESupportedBlockchains } from "../health/types";
 import { INode, NodesModel } from "../../models";
 import { s } from "../../utils";
 import { AlertTypes } from "../../types";
-import { IRedisEvent, IRedisEventParams, IToggleServerParams } from "./types";
+import {
+  EAlertTypes,
+  IRedisEvent,
+  IRedisEventParams,
+  IToggleServerParams,
+} from "./types";
 
 import { Service as BaseService } from "../base-service/base-service";
 
 export class Service extends BaseService {
   private pnf: boolean;
-  private threshold: number;
+  private pnfDispatchThreshold: number;
 
   constructor() {
     super();
     this.pnf = Boolean(process.env.PNF === "1");
-    this.threshold = Number(process.env.PNF_DISPATCH_THRESHOLD || 3);
+    this.pnfDispatchThreshold = Number(process.env.PNF_DISPATCH_THRESHOLD || 5);
   }
 
   /* ----- Trigger Methods ----- */
   processTriggered = async (eventJson: string): Promise<void> => {
     const { node, message, notSynced, status, conditions, title } = await this.parseEvent(
       eventJson,
+      EAlertTypes.TRIGGER,
     );
     const { chain, frontend } = node;
     await this.sendMessage(
@@ -31,7 +37,7 @@ export class Service extends BaseService {
       await this.toggleServer({ node, title, enable: false });
     }
 
-    if (this.pnf && node.dispatch) {
+    if (this.pnf && node.dispatch && chain.type === ESupportedBlockchains["POKT-DIS"]) {
       await this.alertPocketDispatchersAreDown(node);
     }
 
@@ -41,6 +47,7 @@ export class Service extends BaseService {
   processRetriggered = async (eventJson: string): Promise<void> => {
     const { node, message, notSynced, status, conditions, title } = await this.parseEvent(
       eventJson,
+      EAlertTypes.RETRIGGER,
     );
     const { chain, frontend } = node;
     const messageParams = {
@@ -63,7 +70,7 @@ export class Service extends BaseService {
       await this.sendMessage(messageParams, status);
     }
 
-    if (this.pnf && node.dispatch) {
+    if (this.pnf && node.dispatch && chain.type === ESupportedBlockchains["POKT-DIS"]) {
       await this.alertPocketDispatchersAreDown(node);
     }
 
@@ -79,7 +86,7 @@ export class Service extends BaseService {
       conditions,
       title,
       warningMessage,
-    } = await this.parseEvent(eventJson);
+    } = await this.parseEvent(eventJson, EAlertTypes.RESOLVED);
     const { chain, frontend } = node;
 
     await this.sendMessage(
@@ -102,21 +109,20 @@ export class Service extends BaseService {
       await this.toggleServer({ node, title, enable: true });
     }
 
-    if (this.pnf && node.dispatch) {
-      await this.alertPocketDispatchersAreDown(node);
-    }
-
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
   };
 
   /* ----- Private Methods ----- */
-  private async parseEvent(eventJson: string): Promise<IRedisEventParams> {
+  private async parseEvent(
+    eventJson: string,
+    alertType: EAlertTypes,
+  ): Promise<IRedisEventParams> {
     const event: IRedisEvent = JSON.parse(eventJson);
     const { conditions, id, name, status, sendWarning } = event;
 
     const parsedEvent: IRedisEventParams = {
       title: `${name} is ${conditions}`,
-      message: this.getAlertMessage(event),
+      message: this.getAlertMessage(event, alertType),
       node: await this.getNode(id),
       notSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
       status,
@@ -165,11 +171,11 @@ export class Service extends BaseService {
     }
   }
 
-  private async alertPocketDispatchersAreDown(node: INode) {
+  private async alertPocketDispatchersAreDown(node: INode): Promise<void> {
     const downDispatchers = await this.checkPocketDispatchPeers(node);
     const dispatchUrls = downDispatchers.map(({ url }) => `${url}\n`);
 
-    if (downDispatchers?.length >= this.threshold) {
+    if (downDispatchers?.length >= this.pnfDispatchThreshold) {
       await this.alert.createPagerDutyIncident({
         title: "ALERT - Dispatchers are down!",
         details: [
@@ -180,9 +186,8 @@ export class Service extends BaseService {
     }
   }
 
-  private async checkPocketDispatchPeers({ id, chain }: INode): Promise<INode[]> {
+  private async checkPocketDispatchPeers({ chain }: INode): Promise<INode[]> {
     return NodesModel.find({
-      _id: { $ne: id },
       dispatch: true,
       chain: chain.id,
       status: { $ne: EErrorStatus.OK },
@@ -191,17 +196,21 @@ export class Service extends BaseService {
   }
 
   /* ----- Message String Methods ----- */
-  private getAlertMessage({
-    count,
-    conditions,
-    name,
-    ethSyncing,
-    height,
-  }: IRedisEvent): string {
+  private getAlertMessage(
+    { count, conditions, name, ethSyncing, height }: IRedisEvent,
+    alertType: EAlertTypes,
+  ): string {
     const ethSyncStr = ethSyncing ? `ETH Syncing: ${JSON.stringify(ethSyncing)}` : "";
     const heightStr = height ? `Height: ${JSON.stringify(height)}` : "";
 
+    const alertTypeString = {
+      [EAlertTypes.TRIGGER]: "First Alert",
+      [EAlertTypes.RETRIGGER]: "Continuous Alert",
+      [EAlertTypes.RESOLVED]: "Event Resolved",
+    }[alertType];
+
     return [
+      alertTypeString,
       `${name} is ${conditions}.`,
       `This event has occurred ${count} time${s(count)} since first occurrence.`,
       ethSyncStr,

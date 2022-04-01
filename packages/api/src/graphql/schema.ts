@@ -49,6 +49,7 @@ const typeDefs = gql`
     chain: Chain!
     host: Host!
     port: Int!
+    name: String!
     url: String!
     muted: Boolean!
     status: String!

@@ -29,6 +29,7 @@ query Node($id: ID!) {
     id
     backend
     port
+    name
     server
     url
     ssl
@@ -44,6 +45,7 @@ query Nodes {
     id
     backend
     port
+    name
     server
     url
     ssl
