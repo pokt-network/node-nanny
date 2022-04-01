@@ -81,6 +81,7 @@ const typeDefs = gql`
   input NodeInput {
     chain: ID!
     host: ID!
+    name: String!
     port: Int!
     loadBalancers: [ID!]!
     haProxy: Boolean!
@@ -91,6 +92,7 @@ const typeDefs = gql`
   input NodeCSVInput {
     chain: String!
     host: String!
+    name: String!
     loadBalancers: [String!]!
     port: Int!
     haProxy: Boolean!
