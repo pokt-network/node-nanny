@@ -123,7 +123,7 @@ export class Service extends BaseService {
     await this.enableServer({ backend, server, loadBalancers });
 
     return await this.alert.sendInfo({
-      title: "Added to rotation",
+      title: "[Added to Rotation] - Success",
       message: `${host.name}/${chain.name}/${server} added to ${backend}.`,
       chain: chain.name,
     });
@@ -135,7 +135,7 @@ export class Service extends BaseService {
     await this.disableServer({ backend, server, loadBalancers, manual: true });
 
     return await this.alert.sendInfo({
-      title: "Removed from rotation",
+      title: "[Removed from Rotation] - Success",
       message: `${host.name}/${chain.name}/${server} removed from ${backend}.`,
       chain: chain.name,
     });
