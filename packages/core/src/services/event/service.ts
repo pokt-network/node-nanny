@@ -102,7 +102,7 @@ export class Service extends BaseService {
     if (warningMessage && !frontend) {
       await this.sendMessage(
         {
-          title,
+          title: "Warning",
           message: warningMessage,
           chain: chain.name,
           frontend: Boolean(frontend),
@@ -237,11 +237,10 @@ export class Service extends BaseService {
     };
   }
 
-  private getWarningMessage({ conditions, name, details }: IRedisEvent): string {
+  private getWarningMessage({ details }: IRedisEvent): string {
     const badOracles = details?.badOracles;
     const noOracle = details?.noOracle;
 
-    const warningStr = `${name} is ${conditions}.`;
     const bOracleStr = badOracles
       ? `Bad Oracle${s(badOracles.length)}: ${badOracles}`
       : "";
@@ -249,7 +248,7 @@ export class Service extends BaseService {
       ? `Warning: No Oracle for node. Node has ${details?.numPeers} peers.`
       : "";
 
-    return [warningStr, bOracleStr, noOracleStr].filter(Boolean).join("\n");
+    return [bOracleStr, noOracleStr].filter(Boolean).join("\n");
   }
 
   private getRotationMessage(
