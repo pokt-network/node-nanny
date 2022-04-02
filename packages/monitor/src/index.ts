@@ -2,7 +2,6 @@ import { connect, disconnect } from "@pokt-foundation/node-nanny-core/dist/db";
 import { NodesModel } from "@pokt-foundation/node-nanny-core/dist/models";
 import { Health, Log } from "@pokt-foundation/node-nanny-core/dist/services";
 import { HealthTypes } from "@pokt-foundation/node-nanny-core/dist/types";
-import { colorLog } from "@pokt-foundation/node-nanny-core/dist/utils";
 
 import { Publish } from "./publish";
 
@@ -52,24 +51,42 @@ export class App {
         // if (status === HealthTypes.EErrorStatus.ERROR) {
         //   colorLog(JSON.stringify(healthResponse), "red");
         // }
-
+        //TEMP DIAGNOSTIC
         if (id === "6244d698d8877341d1c35312") {
           if (count <= 21) {
-            healthResponse.status === HealthTypes.EErrorStatus.ERROR;
-            healthResponse.conditions === HealthTypes.EErrorConditions.NOT_SYNCHRONIZED;
-            await this.publish.evaluate({ message: healthResponse, id });
+            await this.publish.evaluate({
+              message: {
+                ...healthResponse,
+                status: HealthTypes.EErrorStatus.ERROR,
+                conditions: HealthTypes.EErrorConditions.NOT_SYNCHRONIZED,
+              },
+              id,
+            });
             count++;
           } else if (count === 22) {
-            healthResponse.status === HealthTypes.EErrorStatus.OK;
-            healthResponse.conditions === HealthTypes.EErrorConditions.NOT_SYNCHRONIZED;
-            await this.publish.evaluate({ message: healthResponse, id });
+            await this.publish.evaluate({
+              message: {
+                ...healthResponse,
+                status: HealthTypes.EErrorStatus.OK,
+                conditions: HealthTypes.EErrorConditions.NOT_SYNCHRONIZED,
+              },
+              id,
+            });
             count++;
           } else {
             healthResponse.status === HealthTypes.EErrorStatus.OK;
             healthResponse.conditions === HealthTypes.EErrorConditions.HEALTHY;
-            await this.publish.evaluate({ message: healthResponse, id });
+            await this.publish.evaluate({
+              message: {
+                ...healthResponse,
+                status: HealthTypes.EErrorStatus.OK,
+                conditions: HealthTypes.EErrorConditions.HEALTHY,
+              },
+              id,
+            });
             count = 0;
           }
+          //TEMP DIAGNOSTIC
         } else {
           /* Publish event to REDIS */
           await this.publish.evaluate({ message: healthResponse, id });
