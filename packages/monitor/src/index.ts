@@ -2,6 +2,7 @@ import { connect, disconnect } from "@pokt-foundation/node-nanny-core/dist/db";
 import { NodesModel } from "@pokt-foundation/node-nanny-core/dist/models";
 import { Health, Log } from "@pokt-foundation/node-nanny-core/dist/services";
 import { HealthTypes } from "@pokt-foundation/node-nanny-core/dist/types";
+import { colorLog } from "@pokt-foundation/node-nanny-core/dist/utils";
 
 import { Publish } from "./publish";
 
@@ -38,59 +39,21 @@ export class App {
       const name = `${host.name}/${chain.name}${server ? `/${server}` : ""}`;
       const logger = this.log.init(id, name);
 
-      let count = 0;
       setInterval(async () => {
         /* Get Node health */
         const healthResponse = await this.health.getNodeHealth(node);
         const status: HealthTypes.EErrorStatus = healthResponse?.status;
 
         /* Log to process output */
-        // if (status === HealthTypes.EErrorStatus.OK) {
-        //   colorLog(JSON.stringify(healthResponse), "green");
-        // }
-        // if (status === HealthTypes.EErrorStatus.ERROR) {
-        //   colorLog(JSON.stringify(healthResponse), "red");
-        // }
-        //TEMP DIAGNOSTIC
-        if (id === "6244d698d8877341d1c35312") {
-          if (count <= 21) {
-            await this.publish.evaluate({
-              message: {
-                ...healthResponse,
-                status: HealthTypes.EErrorStatus.ERROR,
-                conditions: HealthTypes.EErrorConditions.NOT_SYNCHRONIZED,
-              },
-              id,
-            });
-            count++;
-          } else if (count === 22) {
-            await this.publish.evaluate({
-              message: {
-                ...healthResponse,
-                status: HealthTypes.EErrorStatus.OK,
-                conditions: HealthTypes.EErrorConditions.NOT_SYNCHRONIZED,
-              },
-              id,
-            });
-            count++;
-          } else {
-            healthResponse.status === HealthTypes.EErrorStatus.OK;
-            healthResponse.conditions === HealthTypes.EErrorConditions.HEALTHY;
-            await this.publish.evaluate({
-              message: {
-                ...healthResponse,
-                status: HealthTypes.EErrorStatus.OK,
-                conditions: HealthTypes.EErrorConditions.HEALTHY,
-              },
-              id,
-            });
-            count = 0;
-          }
-          //TEMP DIAGNOSTIC
-        } else {
-          /* Publish event to REDIS */
-          await this.publish.evaluate({ message: healthResponse, id });
+        if (status === HealthTypes.EErrorStatus.OK) {
+          colorLog(JSON.stringify(healthResponse), "green");
         }
+        if (status === HealthTypes.EErrorStatus.ERROR) {
+          colorLog(JSON.stringify(healthResponse), "red");
+        }
+
+        /* Publish event to REDIS */
+        await this.publish.evaluate({ message: healthResponse, id });
 
         /* Log to MongoDB logs collection */
         const level = status === HealthTypes.EErrorStatus.ERROR ? "error" : "info";
