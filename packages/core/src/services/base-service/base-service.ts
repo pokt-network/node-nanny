@@ -126,6 +126,7 @@ export class Service {
     loadBalancers,
   }: IRotationParams): Promise<ELoadBalancerStatus> {
     const results: boolean[] = [];
+
     for (const { fqdn, ip } of loadBalancers) {
       try {
         const status = await this.haProxy.getServerStatus({
