@@ -1,8 +1,11 @@
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { IPaginatedLogs } from "../types";
 
+const hostname = process.env.HOSTNAME || "localhost";
+const apiPort = process.env.API_PORT || 4000;
+
 export default new ApolloClient({
-  uri: `http://${process.env.API_HOST}:4000/`,
+  uri: `http://${hostname}:${apiPort}`,
   cache: new InMemoryCache({
     addTypename: true,
     typePolicies: {
