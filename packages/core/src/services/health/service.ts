@@ -212,8 +212,8 @@ export class Service {
       if (internalBh.error?.code) {
         return {
           ...healthResponse,
-          conditions: EErrorConditions.NOT_SYNCHRONIZED,
           status: EErrorStatus.ERROR,
+          conditions: EErrorConditions.NOT_SYNCHRONIZED,
           health: internalBh,
         };
       }
