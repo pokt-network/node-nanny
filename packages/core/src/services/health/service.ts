@@ -141,10 +141,10 @@ export class Service {
     { harmony }: IEVMHealthCheckOptions = { harmony: false },
   ): Promise<IHealthResponse> => {
     const name = this.getNodeNameForHealthCheck(node);
-    const { chain, url, host, id, port, basicAuth, frontend } = node;
+    const { chain, url, host, id, port, basicAuth } = node;
     const { allowance } = chain;
 
-    const healthResponse: IHealthResponse = {
+    let healthResponse: IHealthResponse = {
       name,
       status: EErrorStatus.OK,
       conditions: EErrorConditions.HEALTHY,
@@ -180,12 +180,17 @@ export class Service {
         conditions: EErrorConditions.NO_PEERS,
       };
     } else if (!healthyOracles.length && healthyPeers.length >= 2) {
-      healthResponse.sendWarning = true;
-      healthResponse.conditions = EErrorConditions.NO_ORACLE;
+      healthResponse = {
+        ...healthResponse,
+        sendWarning: true,
+        details: { noOracle: true, numPeers: healthyPeers.length },
+      };
     } else if (badOracles.length) {
-      healthResponse.sendWarning = true;
-      healthResponse.conditions = EErrorConditions.BAD_ORACLE;
-      healthResponse.details = { badOracles: badOracles.map(({ url }) => url) };
+      healthResponse = {
+        ...healthResponse,
+        sendWarning: true,
+        details: { badOracles: badOracles.map(({ url }) => url) },
+      };
     }
 
     const referenceUrls = [...healthyOracles, ...healthyPeers];
@@ -214,13 +219,19 @@ export class Service {
       }
 
       if (delta > allowance) {
-        healthResponse.status = EErrorStatus.ERROR;
-        healthResponse.conditions = EErrorConditions.NOT_SYNCHRONIZED;
+        healthResponse = {
+          ...healthResponse,
+          status: EErrorStatus.ERROR,
+          conditions: EErrorConditions.NOT_SYNCHRONIZED,
+        };
       }
 
       if (Math.sign(delta + allowance) === -1) {
-        healthResponse.status = EErrorStatus.ERROR;
-        healthResponse.conditions = EErrorConditions.PEER_NOT_SYNCHRONIZED;
+        healthResponse = {
+          ...healthResponse,
+          status: EErrorStatus.ERROR,
+          conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
+        };
       }
 
       return {
