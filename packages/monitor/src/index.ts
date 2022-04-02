@@ -1,6 +1,6 @@
 import { connect, disconnect } from "@pokt-foundation/node-nanny-core/dist/db";
 import { NodesModel } from "@pokt-foundation/node-nanny-core/dist/models";
-import { Health, Log } from "@pokt-foundation/node-nanny-core/dist/services";
+import { Health, Log, Automation } from "@pokt-foundation/node-nanny-core/dist/services";
 import { HealthTypes } from "@pokt-foundation/node-nanny-core/dist/types";
 import { colorLog, s } from "@pokt-foundation/node-nanny-core/dist/utils";
 
@@ -8,13 +8,15 @@ import { Publish } from "./publish";
 
 export class App {
   private log: Log;
+  private automation: Automation;
   private health: Health;
   private publish: Publish;
   private interval: number;
 
   constructor() {
-    this.health = new Health();
     this.log = new Log();
+    this.automation = new Automation();
+    this.health = new Health();
     this.publish = new Publish();
     this.interval = Number(process.env.MONITOR_INTERVAL || 30000);
   }
@@ -32,24 +34,6 @@ export class App {
     const mode = process.env.MONITOR_TEST === "1" ? "TEST" : "PRODUCTION";
     const secs = this.interval / 1000;
     console.log(`Starting monitor in ${mode} mode with ${secs} sec interval ...`);
-
-    /* ----- Update Node status fields on Monitor Start ----- */
-    if (!process.env.RESTART) {
-      colorLog(`Updating status for ${nodes.length} node${s(nodes.length)} ...`, "blue");
-      let updated = 0;
-      for await (const node of nodes) {
-        const { status, conditions } = await this.health.getNodeHealth(node);
-        await NodesModel.updateOne({ _id: node.id }, { status, conditions });
-        updated++;
-        if (updated % 5 === 0) {
-          console.log(`Updated ${updated} of ${nodes.length} nodes ...`);
-        }
-      }
-      colorLog(
-        "Status update complete!\n Starting node monitoring interval ...",
-        "green",
-      );
-    }
 
     /* ----- Start Node Monitoring Interval ----- */
     console.log(`📺 Monitor running. Monitoring ${nodes.length} node${s(nodes.length)}`);
