@@ -53,7 +53,7 @@ export class App {
       const { status, conditions } = await this.health.getNodeHealth(node);
       await NodesModel.updateOne({ _id: id }, { status, conditions });
       updated++;
-      console.log(`Updated status fields for ${updated} of nodes.length nodes ...`);
+      console.log(`Updated status fields for ${updated} of ${nodes.length} nodes ...`);
 
       /* ----- Starts Node Monitoring Interval ----- */
       setInterval(async () => {
