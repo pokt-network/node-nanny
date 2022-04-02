@@ -14,8 +14,8 @@ export class Publish {
   constructor() {
     this.map = new Map<string, number>();
     this.redis = new Redis({ host: process.env.REDIS_HOST });
-    this.threshold = Number(process.env.ALERT_TRIGGER_THESHOLD || 6);
-    this.retriggerThreshold = Number(process.env.ALERT_RETRIGGER_THESHOLD || 20);
+    this.threshold = Number(process.env.ALERT_TRIGGER_THRESHOLD || 6);
+    this.retriggerThreshold = Number(process.env.ALERT_RETRIGGER_THRESHOLD || 20);
   }
 
   async evaluate({ message, id }: IMonitorEvent) {
