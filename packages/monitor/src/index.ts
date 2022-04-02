@@ -35,13 +35,13 @@ export class App {
     console.log(`📺 Currently monitoring ${nodes.length} nodes...`);
 
     for await (const node of nodes) {
-      const { id, chain, host, server } = node;
-      const name = `${host.name}/${chain.name}${server ? `/${server}` : ""}`;
-      const logger = this.log.init(id, name);
+      const { id, host, name } = node;
+      const ddLogGroupName = `${host.name}/${name}`;
+      const logger = this.log.init(id, ddLogGroupName);
 
       /* Update Node status fields  on Monitor Start/Restart */
       const { status, conditions } = await this.health.getNodeHealth(node);
-      await NodesModel.updateOne({ _id: node.id }, { status, conditions });
+      await NodesModel.updateOne({ _id: id }, { status, conditions });
 
       /* ----- Starts Node Monitoring Interval ----- */
       setInterval(async () => {
