@@ -15,6 +15,7 @@
     "docker:terminal": "docker exec -it nn_stack /bin/bash",
     "docker:monitor": "docker exec -it nn_stack pm2 log monitor",
     "docker:console": "docker exec -it nn_stack pm2 monit",
+    "docker:push:latest": "pnpm i && pnpm build && docker build -f ./Dockerfile --no-cache --tag pocketfoundation/node-nanny:latest . && docker push pocketfoundation/node-nanny:latest",
     "monitor": "pm2 log monitor",
     "console": "pm2 monit"
   },
