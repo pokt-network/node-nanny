@@ -175,7 +175,7 @@ export class Service extends BaseService {
   private async restartMonitor(): Promise<boolean> {
     try {
       return await new Promise((resolve, reject) => {
-        exec("pm2 restart monitor", (error, stdout) => {
+        exec("RESTART=true pm2 restart monitor --update-env", (error, stdout) => {
           if (error) reject(`error: ${error.message}`);
           resolve(!!stdout);
         });

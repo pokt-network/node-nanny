@@ -33,18 +33,23 @@ export class App {
     const secs = this.interval / 1000;
     console.log(`Starting monitor in ${mode} mode with ${secs} sec interval ...`);
 
-    /* ----- Update Node status fields on Monitor Start/Restart ----- */
-    colorLog(`Updating status for ${nodes.length} node${s(nodes.length)} ...`, "blue");
-    let updated = 0;
-    for await (const node of nodes) {
-      const { status, conditions } = await this.health.getNodeHealth(node);
-      await NodesModel.updateOne({ _id: node.id }, { status, conditions });
-      updated++;
-      if (updated % 5 === 0) {
-        console.log(`Updated ${updated} of ${nodes.length} nodes ...`);
+    /* ----- Update Node status fields on Monitor Start ----- */
+    if (!process.env.RESTART) {
+      colorLog(`Updating status for ${nodes.length} node${s(nodes.length)} ...`, "blue");
+      let updated = 0;
+      for await (const node of nodes) {
+        const { status, conditions } = await this.health.getNodeHealth(node);
+        await NodesModel.updateOne({ _id: node.id }, { status, conditions });
+        updated++;
+        if (updated % 5 === 0) {
+          console.log(`Updated ${updated} of ${nodes.length} nodes ...`);
+        }
       }
+      colorLog(
+        "Status update complete!\n Starting node monitoring interval ...",
+        "green",
+      );
     }
-    colorLog("Status update complete!\n Starting node monitoring interval ...", "green");
 
     /* ----- Start Node Monitoring Interval ----- */
     console.log(`📺 Monitor running. Monitoring ${nodes.length} node${s(nodes.length)}`);
