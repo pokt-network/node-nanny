@@ -29,7 +29,7 @@ export class Service extends BaseService {
     );
     const { chain, frontend } = node;
 
-    colorLog(`[Event Triggered] ----- Start Message -----\n${message}`, "yellow");
+    colorLog(`[Event Triggered]\n${message}`, "yellow");
     await this.sendMessage(
       { title, message, chain: chain.name, frontend: Boolean(frontend) },
       status,
@@ -44,7 +44,6 @@ export class Service extends BaseService {
     }
 
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
-    colorLog("[Event Triggered] ----- End Message -----", "blue");
   };
 
   processRetriggered = async (eventJson: string): Promise<void> => {
@@ -60,7 +59,7 @@ export class Service extends BaseService {
       frontend: Boolean(frontend),
     };
 
-    colorLog(`[Event Retriggered] ----- Start Message -----\n${message}`, "red");
+    colorLog(`[Event Retriggered]\n${message}`, "red");
     if (!frontend && notSynced) {
       const { backend, loadBalancers } = node;
       const count = await this.getServerCount({ backend, loadBalancers });
@@ -79,7 +78,6 @@ export class Service extends BaseService {
     }
 
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
-    colorLog("[Event Retriggered] ----- End Message -----", "blue");
   };
 
   processResolved = async (eventJson: string): Promise<void> => {
@@ -93,7 +91,7 @@ export class Service extends BaseService {
       warningMessage,
     } = await this.parseEvent(eventJson, EAlertTypes.RESOLVED);
     const { chain, frontend } = node;
-    colorLog(`[Event Resolved] ----- Start Message -----\n${message}`, "green");
+    colorLog(`[Event Resolved]\n${message}`, "green");
 
     await this.sendMessage(
       { title, message, chain: chain.name, frontend: Boolean(frontend) },
@@ -116,7 +114,6 @@ export class Service extends BaseService {
     }
 
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
-    colorLog("[Event Resolved] ----- End Message -----", "blue");
   };
 
   /* ----- Private Methods ----- */
