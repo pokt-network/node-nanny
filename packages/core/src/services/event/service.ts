@@ -93,7 +93,7 @@ export class Service extends BaseService {
       title,
       warningMessage,
     } = await this.parseEvent(eventJson, EAlertTypes.RESOLVED);
-    const { chain, frontend, backend, server, loadBalancers } = node;
+    const { chain, frontend } = node;
 
     await this.sendMessage(
       { title, message, chain: chain.name, frontend: Boolean(frontend) },
@@ -112,10 +112,7 @@ export class Service extends BaseService {
     }
 
     if (!frontend && healthy) {
-      const onlineStatus = await this.getServerStatus({ backend, server, loadBalancers });
-      if (onlineStatus !== ELoadBalancerStatus.ONLINE) {
-        await this.toggleServer({ node, title, enable: true });
-      }
+      await this.toggleServer({ node, title, enable: true });
     }
 
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
