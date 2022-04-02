@@ -153,9 +153,9 @@ export class Service {
     const urls = loadBalancers
       .map(
         ({ ip }) =>
-          `http://${this.getLoadBalancerIP(ip)}:8050/stats/;up?scope=${backend}\n`,
+          `http://${this.getLoadBalancerIP(ip)}:8050/stats/;up?scope=${backend}`,
       )
-      .join("");
+      .join("\n");
     const testIndicator = process.env.MONITOR_TEST === "1" ? "TEST MODE\n" : "";
     return `${testIndicator}HAProxy Status\n${urls}`;
   }
