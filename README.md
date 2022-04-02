@@ -45,8 +45,7 @@ On your chosen host, you will have to configure the environment variables in you
 
 #### Optional Variables
 
-- **MONGO_USER** - The user that will be used for your inventory database.
-  **Defaults to `root`**
+- **MONGO_USER** - The user that will be used for your inventory database. **Defaults to `root`**
 - **MONGO_PASSWORD** - The password that will be used for your inventory database. **Defaults to `rootpassword`**
 - **MONGO_DB_NAME** - The name of the inventory database. **Defaults to `local`**
 - **ALERT_TRIGGER_THRESHOLD** - The number of times a health check should fail before triggering. **Defaults to `6`**
