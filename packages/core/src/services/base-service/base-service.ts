@@ -1,4 +1,4 @@
-import { LoadBalancerStatus, IRotationParams } from "../event/types";
+import { ELoadBalancerStatus, IRotationParams } from "../event/types";
 import { NodesModel, INode } from "../../models";
 import { colorLog } from "../../utils";
 
@@ -28,8 +28,6 @@ export class Service {
     server,
     loadBalancers,
   }: IRotationParams): Promise<boolean> {
-    colorLog(`Attempting to add ${backend}/${server} to rotation.`, "blue");
-
     try {
       const loadBalancerResponse = await Promise.all(
         loadBalancers.map(({ fqdn, ip }) =>
@@ -41,11 +39,9 @@ export class Service {
         ),
       );
 
-      colorLog(`Successfully added ${backend}/${server} to rotation.`, "blue");
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
       const message = `Could not add ${backend}/${server} to rotation. ${error}`;
-      colorLog(message, "red");
       await this.alert.sendErrorChannel({ title: backend, message });
       throw new Error(message);
     }
@@ -57,19 +53,18 @@ export class Service {
     loadBalancers,
     manual = false,
   }: IRotationParams): Promise<boolean> {
-    colorLog(`Attempting to remove ${backend}/${server} from rotation.`, "purple");
     try {
       if (!manual) {
         const count = await this.getServerCount({ backend, loadBalancers });
         if (count <= 1) {
           const message = this.getErrorMessage(server, "count", count);
-          console.log(message);
+          colorLog(message, "red");
           await this.alert.sendErrorChannel({ title: backend, message });
           throw new Error(message);
         }
 
         const status = await this.getServerStatus({ backend, server, loadBalancers });
-        if (status === LoadBalancerStatus.OFFLINE) {
+        if (status === ELoadBalancerStatus.OFFLINE) {
           const message = this.getErrorMessage(server, "offline");
           colorLog(message, "red");
           await this.alert.sendErrorChannel({ title: backend, message });
@@ -86,7 +81,6 @@ export class Service {
           }),
         ),
       );
-      colorLog(`Successfully removed ${backend}/${server} from rotation.`, "purple");
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
       const message = `Could not remove ${backend}/${server} from rotation. ${error}`;
@@ -130,7 +124,7 @@ export class Service {
     backend,
     server,
     loadBalancers,
-  }: IRotationParams): Promise<LoadBalancerStatus> {
+  }: IRotationParams): Promise<ELoadBalancerStatus> {
     const results: boolean[] = [];
     for (const { fqdn, ip } of loadBalancers) {
       try {
@@ -146,12 +140,12 @@ export class Service {
     }
 
     if (results.every((status) => status === true)) {
-      return LoadBalancerStatus.ONLINE;
+      return ELoadBalancerStatus.ONLINE;
     }
     if (results.every((status) => status === false)) {
-      return LoadBalancerStatus.OFFLINE;
+      return ELoadBalancerStatus.OFFLINE;
     }
-    return LoadBalancerStatus.ERROR;
+    return ELoadBalancerStatus.ERROR;
   }
 
   /* ----- Message String Methods ----- */
