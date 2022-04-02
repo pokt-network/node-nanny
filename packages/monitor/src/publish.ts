@@ -24,12 +24,14 @@ export class Publish {
   async evaluate({ message, id }: IMonitorEvent) {
     if (message.status === HealthTypes.EErrorStatus.ERROR) {
       //TEMP DIAGNOSTIC
-      colorLog(
-        `PROCESSING ERROR\n${message}\nID: ${id}\nCount: ${
-          this.map.has(id) ? this.map.get(id) : 0
-        }`,
-        "red",
-      );
+      if (id === "6244d698d8877341d1c35312") {
+        colorLog(
+          `PROCESSING ERROR\n${JSON.stringify(message)}\nID: ${id}\nCount: ${
+            this.map.has(id) ? this.map.get(id) : 0
+          }`,
+          "red",
+        );
+      }
       //TEMP DIAGNOSTIC
 
       /* Save number of times this node has errored */
@@ -50,12 +52,14 @@ export class Publish {
 
     if (message.status === HealthTypes.EErrorStatus.OK) {
       //TEMP DIAGNOSTIC
-      colorLog(
-        `PROCESSING OK\n${message}\nID: ${id}\nCount: ${
-          this.map.has(id) ? this.map.get(id) : 0
-        }`,
-        "green",
-      );
+      if (id === "6244d698d8877341d1c35312") {
+        colorLog(
+          `PROCESSING OK\n${JSON.stringify(message)}\nID: ${id}\nCount: ${
+            this.map.has(id) ? this.map.get(id) : 0
+          }`,
+          "green",
+        );
+      }
       //TEMP DIAGNOSTIC
 
       /* If Node is healthy, check if it has recovered from previous errors */
