@@ -3,7 +3,7 @@ import { exec } from "child_process";
 import { FilterQuery } from "mongoose";
 
 import { Service as DiscordService } from "../discord";
-import { LoadBalancerStatus } from "../event/types";
+import { ELoadBalancerStatus } from "../event/types";
 import {
   LogsModel,
   NodesModel,
@@ -154,7 +154,7 @@ export class Service extends BaseService {
       loadBalancers,
     });
 
-    if (result === LoadBalancerStatus.ONLINE) {
+    if (result === ELoadBalancerStatus.ONLINE) {
       return 0;
     }
     return 1;
