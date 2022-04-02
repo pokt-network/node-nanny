@@ -1,8 +1,9 @@
 import axios, { AxiosInstance } from "axios";
 import { api as pagerDutyApi } from "@pagerduty/pdjs";
 
-import { AlertTypes } from "../../types";
 import { WebhookModel } from "../../models";
+import { AlertTypes } from "../../types";
+import { colorLog } from "../../utils";
 import {
   AlertColor,
   SendMessageInput,
@@ -24,6 +25,7 @@ export class Service {
 
   /* ----- Discord Alerts ----- */
   sendErrorChannel = async ({ title, message }: AlertTypes.IAlertParams) => {
+    colorLog(message, "red");
     try {
       return await this.sendDiscordMessage({
         title,
@@ -40,6 +42,7 @@ export class Service {
   };
 
   sendError = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
+    colorLog(message, "red");
     try {
       return await this.sendDiscordMessage({
         title,
@@ -53,6 +56,7 @@ export class Service {
   };
 
   sendInfo = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
+    colorLog(message, "blue");
     try {
       return await this.sendDiscordMessage({
         title,
@@ -66,6 +70,7 @@ export class Service {
   };
 
   sendWarn = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
+    colorLog(message, "yellow");
     try {
       return await this.sendDiscordMessage({
         title,
@@ -80,6 +85,7 @@ export class Service {
 
   sendSuccess = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
     try {
+      colorLog(message, "green");
       return await this.sendDiscordMessage({
         title,
         color: AlertColor.SUCCESS,

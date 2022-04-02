@@ -40,7 +40,7 @@ export enum PocketTypes {
   BT = "bt",
 }
 
-export enum LoadBalancerStatus {
+export enum ELoadBalancerStatus {
   ONLINE = "online",
   OFFLINE = "offline",
   ERROR = "error",
