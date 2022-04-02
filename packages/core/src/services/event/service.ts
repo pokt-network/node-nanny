@@ -87,13 +87,13 @@ export class Service extends BaseService {
     const {
       node,
       message,
-      notSynced,
+      healthy,
       status,
       conditions,
       title,
       warningMessage,
     } = await this.parseEvent(eventJson, EAlertTypes.RESOLVED);
-    const { chain, frontend } = node;
+    const { chain, frontend, backend, server, loadBalancers } = node;
 
     await this.sendMessage(
       { title, message, chain: chain.name, frontend: Boolean(frontend) },
@@ -111,17 +111,14 @@ export class Service extends BaseService {
       );
     }
 
-    if (!frontend && notSynced) {
-      await this.toggleServer({ node, title, enable: true });
+    if (!frontend && healthy) {
+      const onlineStatus = await this.getServerStatus({ backend, server, loadBalancers });
+      if (onlineStatus !== ELoadBalancerStatus.ONLINE) {
+        await this.toggleServer({ node, title, enable: true });
+      }
     }
 
-    await NodesModel.updateOne(
-      { _id: node.id },
-      {
-        status: HealthTypes.EErrorStatus.OK,
-        conditions: HealthTypes.EErrorConditions.HEALTHY,
-      },
-    );
+    await NodesModel.updateOne({ _id: node.id }, { status, conditions });
   };
 
   /* ----- Private Methods ----- */
@@ -137,6 +134,7 @@ export class Service extends BaseService {
       title: `[${alertType}] - ${statusStr}`,
       message,
       node: await this.getNode(id),
+      healthy: conditions === EErrorConditions.HEALTHY,
       notSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
       status,
       conditions,
