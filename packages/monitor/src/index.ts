@@ -39,12 +39,17 @@ export class App {
       const name = `${host.name}/${chain.name}${server ? `/${server}` : ""}`;
       const logger = this.log.init(id, name);
 
+      /* Update Node status fields  on Monitor Start/Restart */
+      const { status, conditions } = await this.health.getNodeHealth(node);
+      await NodesModel.updateOne({ _id: node.id }, { status, conditions });
+
+      /* ----- Starts Node Monitoring Interval ----- */
       setInterval(async () => {
         /* Get Node health */
         const healthResponse = await this.health.getNodeHealth(node);
         const status: HealthTypes.EErrorStatus = healthResponse?.status;
 
-        /* Log to process output */
+        /* Log to process console */
         if (status === HealthTypes.EErrorStatus.OK) {
           colorLog(JSON.stringify(healthResponse), "green");
         }
@@ -52,10 +57,10 @@ export class App {
           colorLog(JSON.stringify(healthResponse), "red");
         }
 
-        /* Publish event to REDIS */
+        /* Publish event to Redis */
         await this.publish.evaluate({ message: healthResponse, id });
 
-        /* Log to MongoDB logs collection */
+        /* Log to MongoDB or Datadog */
         const level = status === HealthTypes.EErrorStatus.ERROR ? "error" : "info";
         logger.log({ level, message: JSON.stringify(healthResponse) });
       }, this.interval);

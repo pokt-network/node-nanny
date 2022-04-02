@@ -5,7 +5,7 @@
 //   DataDogMonitorStatus,
 //   BlockChainMonitorEvents,
 //   EventTransitions,
-//   LoadBalancerStatus,
+//   ELoadBalancerStatus,
 //   Limits,
 //   LoadBalancer,
 //   ESupportedBlockchains,
@@ -111,7 +111,7 @@
 //         });
 //       }
 
-//       if (status === LoadBalancerStatus.OFFLINE) {
+//       if (status === ELoadBalancerStatus.OFFLINE) {
 //         return await this.alert.sendErrorChannel({
 //           title: backend,
 //           message: `could not remove from load balancer, server already offline`,
@@ -239,14 +239,14 @@
 //     }
 
 //     if (results.every(({ status }) => status === true)) {
-//       return LoadBalancerStatus.ONLINE;
+//       return ELoadBalancerStatus.ONLINE;
 //     }
 
 //     if (results.every(({ status }) => status === false)) {
-//       return LoadBalancerStatus.OFFLINE;
+//       return ELoadBalancerStatus.OFFLINE;
 //     }
 
-//     return LoadBalancerStatus.ERROR;
+//     return ELoadBalancerStatus.ERROR;
 //   }
 
 //   async getBackendServerCount(backend) {
