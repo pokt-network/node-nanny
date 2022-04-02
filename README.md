@@ -49,6 +49,10 @@ On your chosen host, you will have to configure the environment variables in you
   **Defaults to `root`**
 - **MONGO_PASSWORD** - The password that will be used for your inventory database. **Defaults to `rootpassword`**
 - **MONGO_DB_NAME** - The name of the inventory database. **Defaults to `local`**
+- **ALERT_TRIGGER_THRESHOLD** - The number of times a health check should fail before triggering. **Defaults to `6`**
+- **ALERT_RETRIGGER_THRESHOLD** - The number of times a health check should fail before retriggering. **Defaults to `local`**
+- **MONITOR_LOGGER** - The number of times a health check should fail before retriggering. **Defaults to `local`**
+- **UI_PORT** - The port the React UI will run on. **Defaults to `3001`**
 
 ### 3. Setup Docker Compose
 
@@ -63,17 +67,25 @@ services:
     image: pocketfoundation/node-nanny:latest
     container_name: nn_stack
     ports:
-      - "3000:3000"
-      - "4000:4000"
+      - "${UI_PORT:-3001}:${UI_PORT:-3001}"
+      - "${API_PORT:-4000}:${API_PORT:-4000}"
+    hostname: nn_host
     depends_on:
       - nn_db
       - nn_redis
     environment:
       REDIS_HOST: nn_redis
+      HOSTNAME: nn_host
       MONITOR_LOGGER: mongodb
-      MONGO_URI: "mongodb://${MONGO_USER:-root}:${MONGO_PASSWORD:-rootpassword}@nn_db:27017/${MONGO_DB_NAME:-local}?authSource=admin"
+      API_PORT: 4000
+
       DISCORD_SERVER_ID: ${DISCORD_SERVER_ID:?Discord Server ID not set.}
       DISCORD_TOKEN: ${DISCORD_TOKEN:?Discord token not set.}
+
+      MONGO_URI: "mongodb://${MONGO_USER:-root}:${MONGO_PASSWORD:-rootpassword}@nn_db:27017/${MONGO_DB_NAME:-local}?authSource=admin"
+      ALERT_TRIGGER_THRESHOLD: ${ALERT_TRIGGER_THRESHOLD:-6}
+      ALERT_RETRIGGER_THRESHOLD: ${ALERT_RETRIGGER_THRESHOLD:-20}
+      PORT: ${UI_PORT:-3001}
 
   nn_db:
     image: mongo:latest
@@ -82,7 +94,9 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-root}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-rootpassword}
     volumes:
-      - **SET DB PATH HERE**:/data/db
+      - ${MONGO_DB_PATH:-~/data/db}:/data/db
+    ports:
+      - 27017:27017
 
   nn_redis:
     image: "redis:latest"
