@@ -25,7 +25,7 @@ export class Service {
 
   /* ----- Discord Alerts ----- */
   sendErrorChannel = async ({ title, message }: AlertTypes.IAlertParams) => {
-    colorLog(message, "red");
+    colorLog(`${title}\n${message}`, "red");
     try {
       return await this.sendDiscordMessage({
         title,
@@ -42,7 +42,7 @@ export class Service {
   };
 
   sendError = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
-    colorLog(message, "red");
+    colorLog(`${title}\n${message}`, "red");
     try {
       return await this.sendDiscordMessage({
         title,
@@ -56,7 +56,7 @@ export class Service {
   };
 
   sendInfo = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
-    colorLog(message, "blue");
+    colorLog(`${title}\n${message}`, "blue");
     try {
       return await this.sendDiscordMessage({
         title,
@@ -70,7 +70,7 @@ export class Service {
   };
 
   sendWarn = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
-    colorLog(message, "yellow");
+    colorLog(`${title}\n${message}`, "yellow");
     try {
       return await this.sendDiscordMessage({
         title,
@@ -85,7 +85,7 @@ export class Service {
 
   sendSuccess = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
     try {
-      colorLog(message, "green");
+      colorLog(`${title}\n${message}`, "green");
       return await this.sendDiscordMessage({
         title,
         color: AlertColor.SUCCESS,
