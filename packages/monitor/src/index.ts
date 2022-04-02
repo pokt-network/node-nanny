@@ -40,7 +40,9 @@ export class App {
       const { status, conditions } = await this.health.getNodeHealth(node);
       await NodesModel.updateOne({ _id: node.id }, { status, conditions });
       updated++;
-      console.log(`Updated ${updated} of ${nodes.length} nodes ...`);
+      if (updated % 5 === 0) {
+        console.log(`Updated ${updated} of ${nodes.length} nodes ...`);
+      }
     }
     colorLog("Status update complete!\n Starting node monitoring interval ...", "green");
 
