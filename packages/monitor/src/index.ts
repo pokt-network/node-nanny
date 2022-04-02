@@ -31,14 +31,19 @@ export class App {
       .populate("chain")
       .exec();
 
-    console.log(
-      `Starting monitor in ${mode} mode with ${this.interval / 1000} sec interval ...`,
-    );
-    colorLog(
-      `Updating health status fields for ${nodes.length} node${s(nodes.length)} ...`,
-      "blue",
-    );
+    const secs = this.interval / 1000;
+    console.log(`Starting monitor in ${mode} mode with ${secs} sec interval ...`);
 
+    /* ----- Update Node status fields on Monitor Start/Restart ----- */
+    colorLog(`Updating status for ${nodes.length} node${s(nodes.length)} ...`, "blue");
+    for await (const node of nodes) {
+      const { status, conditions } = await this.health.getNodeHealth(node);
+      await NodesModel.updateOne({ _id: node.id }, { status, conditions });
+    }
+    colorLog("Status update complete!\n Starting node monitoring interval ...", "green");
+
+    /* ----- Start Node Monitoring Interval ----- */
+    console.log(`📺 Monitor running. Monitoring ${nodes.length} node${s(nodes.length)}`);
     for await (const node of nodes) {
       const { id, host, name } = node;
       const ddLogGroupName = `${host.name}/${name}`;
@@ -48,7 +53,6 @@ export class App {
       const { status, conditions } = await this.health.getNodeHealth(node);
       await NodesModel.updateOne({ _id: id }, { status, conditions });
 
-      /* ----- Starts Node Monitoring Interval ----- */
       setInterval(async () => {
         /* Get Node health */
         const healthResponse = await this.health.getNodeHealth(node);
