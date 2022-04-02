@@ -1,6 +1,6 @@
 import { EErrorConditions, EErrorStatus, ESupportedBlockchains } from "../health/types";
 import { INode, NodesModel } from "../../models";
-import { s } from "../../utils";
+import { s, colorLog } from "../../utils";
 import { AlertTypes } from "../../types";
 import {
   EAlertTypes,
@@ -28,9 +28,8 @@ export class Service extends BaseService {
       EAlertTypes.TRIGGER,
     );
     const { chain, frontend } = node;
-    console.log(
-      `"\x1b[31m%s\x1b[0m",[Event Triggered] Processing...\nSending message: ${message}`,
-    );
+
+    colorLog(`[Event Triggered]\n----- Message -----\n${message}`, "yellow");
     await this.sendMessage(
       { title, message, chain: chain.name, frontend: Boolean(frontend) },
       status,
@@ -45,7 +44,7 @@ export class Service extends BaseService {
     }
 
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
-    console.log(`"\x1b[31m%s\x1b[0m",[Event Triggered] Processed Successfully.`);
+    colorLog("[Event Triggered] ----- Processed -----", "blue");
   };
 
   processRetriggered = async (eventJson: string): Promise<void> => {
@@ -61,10 +60,7 @@ export class Service extends BaseService {
       frontend: Boolean(frontend),
     };
 
-    console.log(
-      "\x1b[31m%s\x1b[0m",
-      `[Event Retriggered] Processing...\nSending message: ${message}`,
-    );
+    colorLog(`[Event Retriggered]\n----- Message -----\n${message}`, "red");
     if (!frontend && notSynced) {
       const { backend, loadBalancers } = node;
       const count = await this.getServerCount({ backend, loadBalancers });
@@ -83,7 +79,7 @@ export class Service extends BaseService {
     }
 
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
-    console.log(`"\x1b[31m%s\x1b[0m", [Event Retriggered] Processed Successfully.`);
+    colorLog("[Event Retriggered] ----- Processed -----", "blue");
   };
 
   processResolved = async (eventJson: string): Promise<void> => {
@@ -97,9 +93,7 @@ export class Service extends BaseService {
       warningMessage,
     } = await this.parseEvent(eventJson, EAlertTypes.RESOLVED);
     const { chain, frontend } = node;
-    console.log(
-      `"\x1b[32m%s\x1b[0m", [Event Resolved] Processing...\nSending message: ${message}`,
-    );
+    colorLog(`[Event Resolved]\n----- Message -----\n${message}`, "green");
 
     await this.sendMessage(
       { title, message, chain: chain.name, frontend: Boolean(frontend) },
@@ -122,7 +116,7 @@ export class Service extends BaseService {
     }
 
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
-    console.log(`"\x1b[32m%s\x1b[0m", [Event Resolved] Processed Successfully.`);
+    colorLog("[Event Resolved] ----- Processed -----", "blue");
   };
 
   /* ----- Private Methods ----- */
