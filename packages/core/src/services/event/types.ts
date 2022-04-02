@@ -58,7 +58,7 @@ export enum Limits {
 }
 
 export enum EAlertTypes {
-  TRIGGER = "trigger",
-  RETRIGGER = "retrigger",
-  RESOLVED = "resolved",
+  TRIGGER = "Triggered",
+  RETRIGGER = "Retriggered",
+  RESOLVED = "Resolved",
 }
