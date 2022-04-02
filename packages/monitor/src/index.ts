@@ -35,9 +35,12 @@ export class App {
 
     /* ----- Update Node status fields on Monitor Start/Restart ----- */
     colorLog(`Updating status for ${nodes.length} node${s(nodes.length)} ...`, "blue");
+    let updated = 0;
     for await (const node of nodes) {
       const { status, conditions } = await this.health.getNodeHealth(node);
       await NodesModel.updateOne({ _id: node.id }, { status, conditions });
+      updated++;
+      console.log(`Updated ${updated} of ${nodes.length} nodes ...`);
     }
     colorLog("Status update complete!\n Starting node monitoring interval ...", "green");
 
