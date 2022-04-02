@@ -28,6 +28,9 @@ export class Service extends BaseService {
       EAlertTypes.TRIGGER,
     );
     const { chain, frontend } = node;
+    console.log(
+      `"\x1b[31m%s\x1b[0m",[Event Triggered] Processing...\nSending message: ${message}`,
+    );
     await this.sendMessage(
       { title, message, chain: chain.name, frontend: Boolean(frontend) },
       status,
@@ -42,6 +45,7 @@ export class Service extends BaseService {
     }
 
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
+    console.log(`"\x1b[31m%s\x1b[0m",[Event Triggered] Processed Successfully.`);
   };
 
   processRetriggered = async (eventJson: string): Promise<void> => {
@@ -57,6 +61,10 @@ export class Service extends BaseService {
       frontend: Boolean(frontend),
     };
 
+    console.log(
+      "\x1b[31m%s\x1b[0m",
+      `[Event Retriggered] Processing...\nSending message: ${message}`,
+    );
     if (!frontend && notSynced) {
       const { backend, loadBalancers } = node;
       const count = await this.getServerCount({ backend, loadBalancers });
@@ -75,6 +83,7 @@ export class Service extends BaseService {
     }
 
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
+    console.log(`"\x1b[31m%s\x1b[0m", [Event Retriggered] Processed Successfully.`);
   };
 
   processResolved = async (eventJson: string): Promise<void> => {
@@ -88,6 +97,9 @@ export class Service extends BaseService {
       warningMessage,
     } = await this.parseEvent(eventJson, EAlertTypes.RESOLVED);
     const { chain, frontend } = node;
+    console.log(
+      `"\x1b[32m%s\x1b[0m", [Event Resolved] Processing...\nSending message: ${message}`,
+    );
 
     await this.sendMessage(
       { title, message, chain: chain.name, frontend: Boolean(frontend) },
@@ -110,6 +122,7 @@ export class Service extends BaseService {
     }
 
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
+    console.log(`"\x1b[32m%s\x1b[0m", [Event Resolved] Processed Successfully.`);
   };
 
   /* ----- Private Methods ----- */
