@@ -47,7 +47,7 @@ export enum EErrorStatus {
   WARNING = "WARNING",
 }
 
-interface IBlockHeight {
+export interface IBlockHeight {
   delta: number;
   externalHeight: number;
   internalHeight: number;
