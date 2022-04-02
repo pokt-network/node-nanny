@@ -27,6 +27,7 @@ export class Service {
     server,
     loadBalancers,
   }: IRotationParams): Promise<boolean> {
+    console.log(`Attempting to add ${backend}/${server} to rotation ...`);
     try {
       const loadBalancerResponse = await Promise.all(
         loadBalancers.map(({ fqdn, ip }) =>
@@ -37,9 +38,13 @@ export class Service {
           }),
         ),
       );
+      console.log(
+        `"\x1b[32m%s\x1b[0m", Successfully added ${backend}/${server} to rotation ...`,
+      );
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
       const message = `Could not add ${backend}/${server} to rotation. ${error}`;
+      console.error("\x1b[31m%s\x1b[0m", message);
       await this.alert.sendErrorChannel({ title: backend, message });
       throw new Error(message);
     }
@@ -51,11 +56,13 @@ export class Service {
     loadBalancers,
     manual = false,
   }: IRotationParams): Promise<boolean> {
+    console.log(`Attempting to remove ${backend}/${server} from rotation ...`);
     try {
       if (!manual) {
         const count = await this.getServerCount({ backend, loadBalancers });
         if (count <= 1) {
           const message = this.getErrorMessage(server, "count", count);
+          console.error(message);
           await this.alert.sendErrorChannel({ title: backend, message });
           throw new Error(message);
         }
@@ -63,6 +70,7 @@ export class Service {
         const status = await this.getServerStatus({ backend, server, loadBalancers });
         if (status === LoadBalancerStatus.OFFLINE) {
           const message = this.getErrorMessage(server, "offline");
+          console.error(message);
           await this.alert.sendErrorChannel({ title: backend, message });
           throw new Error(message);
         }
@@ -77,9 +85,13 @@ export class Service {
           }),
         ),
       );
+      console.log(
+        `"\x1b[32m%s\x1b[0m", Successfully added ${backend}/${server} to rotation ...`,
+      );
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
       const message = `Could not remove ${backend}/${server} from rotation. ${error}`;
+      console.error("\x1b[31m%s\x1b[0m", message);
       await this.alert.sendErrorChannel({ title: backend, message });
       throw new Error(message);
     }
