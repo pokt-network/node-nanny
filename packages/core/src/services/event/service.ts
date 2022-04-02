@@ -1,7 +1,6 @@
 import { EErrorConditions, EErrorStatus, ESupportedBlockchains } from "../health/types";
 import { INode, NodesModel } from "../../models";
-import { s, colorLog } from "../../utils";
-import { AlertTypes } from "../../types";
+import { AlertTypes, HealthTypes } from "../../types";
 import {
   EAlertTypes,
   ELoadBalancerStatus,
@@ -9,6 +8,7 @@ import {
   IRedisEventParams,
   IToggleServerParams,
 } from "./types";
+import { s } from "../../utils";
 
 import { Service as BaseService } from "../base-service/base-service";
 
@@ -30,7 +30,6 @@ export class Service extends BaseService {
     );
     const { chain, frontend } = node;
 
-    colorLog(`[Event Triggered]\n${message}`, "yellow");
     await this.sendMessage(
       { title, message, chain: chain.name, frontend: Boolean(frontend) },
       status,
@@ -62,7 +61,6 @@ export class Service extends BaseService {
       frontend: Boolean(frontend),
     };
 
-    colorLog(`[Event Retriggered]\n${message}`, "yellow");
     if (!frontend && notSynced) {
       const count = await this.getServerCount({ backend, loadBalancers });
       await this.sendMessage(
@@ -96,7 +94,6 @@ export class Service extends BaseService {
       warningMessage,
     } = await this.parseEvent(eventJson, EAlertTypes.RESOLVED);
     const { chain, frontend } = node;
-    colorLog(`[Event Resolved]\n${message}`, "green");
 
     await this.sendMessage(
       { title, message, chain: chain.name, frontend: Boolean(frontend) },
@@ -118,7 +115,13 @@ export class Service extends BaseService {
       await this.toggleServer({ node, title, enable: true });
     }
 
-    await NodesModel.updateOne({ _id: node.id }, { status, conditions });
+    await NodesModel.updateOne(
+      { _id: node.id },
+      {
+        status: HealthTypes.EErrorStatus.OK,
+        conditions: HealthTypes.EErrorConditions.HEALTHY,
+      },
+    );
   };
 
   /* ----- Private Methods ----- */
@@ -131,7 +134,7 @@ export class Service extends BaseService {
     const { message, statusStr } = this.getAlertMessage(event, alertType);
 
     const parsedEvent: IRedisEventParams = {
-      title: statusStr,
+      title: `[${alertType}] - ${statusStr}`,
       message,
       node: await this.getNode(id),
       notSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
@@ -204,28 +207,34 @@ export class Service extends BaseService {
 
   /* ----- Message String Methods ----- */
   private getAlertMessage(
-    { count, conditions, name, ethSyncing, height, status }: IRedisEvent,
+    { count, conditions, name, ethSyncing, height, details }: IRedisEvent,
     alertType: EAlertTypes,
   ): { message: string; statusStr: string } {
-    const badOracle = conditions === EErrorConditions.BAD_ORACLE;
-    const ok = status === EErrorStatus.OK;
-    const conditionsStr = ok && badOracle ? EErrorConditions.HEALTHY : conditions;
-    const statusStr = `${name} is ${conditionsStr}.`;
-    const alertTypeStr = {
-      [EAlertTypes.TRIGGER]: "First Alert",
-      [EAlertTypes.RETRIGGER]: "Retriggered Alert",
-      [EAlertTypes.RESOLVED]: "Event Resolved",
-    }[alertType];
+    const badOracle = details?.badOracles;
+    const noOracle = details?.noOracle;
+
+    const statusStr = `${name} is ${conditions}.`;
     const countStr =
       alertType !== EAlertTypes.RESOLVED
         ? `This event has occurred ${count} time${s(count)} since first occurrence.`
         : "";
     const badOracleStr = badOracle ? "Warning: Bad Oracle for node." : "";
+    const noOracleStr = noOracle
+      ? `Warning: No Oracle for node. Node has ${details?.numPeers} peers.`
+      : "";
     const ethSyncStr = ethSyncing ? `ETH Syncing: ${JSON.stringify(ethSyncing)}` : "";
     const heightStr = height ? `Height: ${JSON.stringify(height)}` : "";
 
     return {
-      message: [alertTypeStr, statusStr, countStr, badOracleStr, ethSyncStr, heightStr]
+      message: [
+        alertType,
+        statusStr,
+        countStr,
+        badOracleStr,
+        noOracleStr,
+        ethSyncStr,
+        heightStr,
+      ]
         .filter(Boolean)
         .join("\n"),
       statusStr,
@@ -234,13 +243,17 @@ export class Service extends BaseService {
 
   private getWarningMessage({ conditions, name, details }: IRedisEvent): string {
     const badOracles = details?.badOracles;
+    const noOracle = details?.noOracle;
 
     const warningStr = `${name} is ${conditions}.`;
     const bOracleStr = badOracles
       ? `Bad Oracle${s(badOracles.length)}: ${badOracles}`
       : "";
+    const noOracleStr = noOracle
+      ? `Warning: No Oracle for node. Node has ${details?.numPeers} peers.`
+      : "";
 
-    return [warningStr, bOracleStr].filter(Boolean).join("\n");
+    return [warningStr, bOracleStr, noOracleStr].filter(Boolean).join("\n");
   }
 
   private getRotationMessage(
