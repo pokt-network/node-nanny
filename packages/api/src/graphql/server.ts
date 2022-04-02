@@ -12,7 +12,7 @@ import typeDefs from "./schema";
 
   const hostname = process.env.HOSTNAME || "localhost";
   const port = process.env.API_PORT || 4000;
-  const uiPort = process.env.UI_PORT || 3000;
+  const uiPort = process.env.PORT || 3000;
   const cors = {
     origin: `http://${hostname}:${uiPort}`,
     credentials: true,
