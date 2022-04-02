@@ -1,11 +1,13 @@
 import Redis from "ioredis";
 import { EventTypes, HealthTypes } from "@pokt-foundation/node-nanny-core/dist/types";
+//TEMP DIAGNOSTIC
+import { colorLog } from "@pokt-foundation/node-nanny-core/dist/utils";
+//TEMP DIAGNOSTIC
 
 interface IMonitorEvent {
   message: HealthTypes.IHealthResponse;
   id: string;
 }
-
 export class Publish {
   private map: Map<string, number>;
   private threshold: number;
@@ -21,6 +23,15 @@ export class Publish {
 
   async evaluate({ message, id }: IMonitorEvent) {
     if (message.status === HealthTypes.EErrorStatus.ERROR) {
+      //TEMP DIAGNOSTIC
+      colorLog(
+        `PROCESSING ERROR\n${message}\nID: ${id}\nCount: ${
+          this.map.has(id) ? this.map.get(id) : 0
+        }`,
+        "red",
+      );
+      //TEMP DIAGNOSTIC
+
       /* Save number of times this node has errored */
       this.map.has(id)
         ? this.map.set(id, Number(this.map.get(id) + 1))
@@ -38,6 +49,15 @@ export class Publish {
     }
 
     if (message.status === HealthTypes.EErrorStatus.OK) {
+      //TEMP DIAGNOSTIC
+      colorLog(
+        `PROCESSING OK\n${message}\nID: ${id}\nCount: ${
+          this.map.has(id) ? this.map.get(id) : 0
+        }`,
+        "green",
+      );
+      //TEMP DIAGNOSTIC
+
       /* If Node is healthy, check if it has recovered from previous errors */
       if (this.map.has(id)) {
         const count = this.map.get(id);
