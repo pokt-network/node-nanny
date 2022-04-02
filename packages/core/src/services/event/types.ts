@@ -27,6 +27,7 @@ export interface IRedisEventParams {
   title: string;
   message: string;
   node: INode;
+  healthy: boolean;
   notSynced: boolean;
   status: HealthTypes.EErrorStatus;
   conditions: HealthTypes.EErrorConditions;
