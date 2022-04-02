@@ -4,6 +4,7 @@ import { s, colorLog } from "../../utils";
 import { AlertTypes } from "../../types";
 import {
   EAlertTypes,
+  ELoadBalancerStatus,
   IRedisEvent,
   IRedisEventParams,
   IToggleServerParams,
@@ -41,6 +42,7 @@ export class Service extends BaseService {
 
     if (this.pnf && node.dispatch && chain.type === ESupportedBlockchains["POKT-DIS"]) {
       await this.alertPocketDispatchersAreDown(node);
+      ELoadBalancerStatus;
     }
 
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
@@ -51,7 +53,8 @@ export class Service extends BaseService {
       eventJson,
       EAlertTypes.RETRIGGER,
     );
-    const { chain, frontend } = node;
+    const { backend, chain, frontend, loadBalancers, server } = node;
+
     const messageParams = {
       title,
       message,
@@ -59,16 +62,18 @@ export class Service extends BaseService {
       frontend: Boolean(frontend),
     };
 
-    colorLog(`[Event Retriggered]\n${message}`, "red");
+    colorLog(`[Event Retriggered]\n${message}`, "yellow");
     if (!frontend && notSynced) {
-      const { backend, loadBalancers } = node;
       const count = await this.getServerCount({ backend, loadBalancers });
       await this.sendMessage(
         messageParams,
         count >= 2 ? EErrorStatus.WARNING : EErrorStatus.ERROR,
       );
 
-      if (count >= 2) await this.toggleServer({ node, title, enable: false });
+      const onlineStatus = await this.getServerStatus({ backend, server, loadBalancers });
+      if (count >= 2 && onlineStatus !== ELoadBalancerStatus.OFFLINE) {
+        await this.toggleServer({ node, title, enable: false });
+      }
     } else {
       await this.sendMessage(messageParams, status);
     }
@@ -159,9 +164,6 @@ export class Service extends BaseService {
       loadBalancers,
       server,
     } = node;
-
-    const message = this.getRotationMessage(node, enable, "attempt");
-    await this.alert.sendInfo({ title, message, chain });
 
     try {
       enable /* Enable or Disable Server */
