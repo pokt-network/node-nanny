@@ -6,8 +6,6 @@ import { colorLog, s } from "@pokt-foundation/node-nanny-core/dist/utils";
 
 import { Publish } from "./publish";
 
-const mode = process.env.MONITOR_TEST === "1" ? "TEST" : "PRODUCTION";
-
 export class App {
   private log: Log;
   private health: Health;
@@ -31,6 +29,7 @@ export class App {
       .populate("chain")
       .exec();
 
+    const mode = process.env.MONITOR_TEST === "1" ? "TEST" : "PRODUCTION";
     const secs = this.interval / 1000;
     console.log(`Starting monitor in ${mode} mode with ${secs} sec interval ...`);
 
@@ -48,10 +47,6 @@ export class App {
       const { id, host, name } = node;
       const ddLogGroupName = `${host.name}/${name}`;
       const logger = this.log.init(id, ddLogGroupName);
-
-      /* Update Node status fields on Monitor Start/Restart */
-      const { status, conditions } = await this.health.getNodeHealth(node);
-      await NodesModel.updateOne({ _id: id }, { status, conditions });
 
       setInterval(async () => {
         /* Get Node health */
