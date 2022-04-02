@@ -28,7 +28,8 @@ export class Service {
     server,
     loadBalancers,
   }: IRotationParams): Promise<boolean> {
-    colorLog(`Attempting to add ${backend}/${server} to rotation ...`, "teal");
+    colorLog(`Attempting to add ${backend}/${server} to rotation.`, "blue");
+
     try {
       const loadBalancerResponse = await Promise.all(
         loadBalancers.map(({ fqdn, ip }) =>
@@ -39,7 +40,8 @@ export class Service {
           }),
         ),
       );
-      colorLog(`Successfully added ${backend}/${server} to rotation ...`, "green");
+
+      colorLog(`Successfully added ${backend}/${server} to rotation.`, "blue");
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
       const message = `Could not add ${backend}/${server} to rotation. ${error}`;
@@ -55,7 +57,7 @@ export class Service {
     loadBalancers,
     manual = false,
   }: IRotationParams): Promise<boolean> {
-    colorLog(`Attempting to remove ${backend}/${server} from rotation ...`, "purple");
+    colorLog(`Attempting to remove ${backend}/${server} from rotation.`, "purple");
     try {
       if (!manual) {
         const count = await this.getServerCount({ backend, loadBalancers });
@@ -84,7 +86,7 @@ export class Service {
           }),
         ),
       );
-      colorLog(`Successfully added ${backend}/${server} to rotation ...`, "green");
+      colorLog(`Successfully removed ${backend}/${server} from rotation.`, "purple");
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
       const message = `Could not remove ${backend}/${server} from rotation. ${error}`;
