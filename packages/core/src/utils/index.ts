@@ -18,3 +18,15 @@ export const getTimestamp = (): string => {
 };
 
 export const s = (count: number): string => (count === 1 ? "" : "s");
+
+const colorCodes = {
+  red: "\x1B[31m%s\x1B[0m",
+  green: "\x1B[32m%s\x1B[0m",
+  yellow: "\x1B[33m%s\x1B[0m",
+  blue: "\x1B[34m%s\x1B[0m",
+  purple: "\x1B[35m%s\x1B[0m",
+  teal: "\x1B[36m%s\x1B[0m",
+};
+type IColors = "red" | "green" | "yellow" | "blue" | "purple" | "teal";
+export const colorLog = (string: string, color: IColors): void =>
+  console.log(colorCodes[color], string);

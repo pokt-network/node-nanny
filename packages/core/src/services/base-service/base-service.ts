@@ -1,5 +1,6 @@
 import { LoadBalancerStatus, IRotationParams } from "../event/types";
 import { NodesModel, INode } from "../../models";
+import { colorLog } from "../../utils";
 
 import { Service as AlertService } from "../alert";
 import { Service as HAProxyService } from "../haproxy";
@@ -27,7 +28,7 @@ export class Service {
     server,
     loadBalancers,
   }: IRotationParams): Promise<boolean> {
-    console.log(`Attempting to add ${backend}/${server} to rotation ...`);
+    colorLog(`Attempting to add ${backend}/${server} to rotation ...`, "teal");
     try {
       const loadBalancerResponse = await Promise.all(
         loadBalancers.map(({ fqdn, ip }) =>
@@ -38,13 +39,11 @@ export class Service {
           }),
         ),
       );
-      console.log(
-        `"\x1b[32m%s\x1b[0m", Successfully added ${backend}/${server} to rotation ...`,
-      );
+      colorLog(`Successfully added ${backend}/${server} to rotation ...`, "green");
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
       const message = `Could not add ${backend}/${server} to rotation. ${error}`;
-      console.error("\x1b[31m%s\x1b[0m", message);
+      colorLog(message, "red");
       await this.alert.sendErrorChannel({ title: backend, message });
       throw new Error(message);
     }
@@ -56,13 +55,13 @@ export class Service {
     loadBalancers,
     manual = false,
   }: IRotationParams): Promise<boolean> {
-    console.log(`Attempting to remove ${backend}/${server} from rotation ...`);
+    colorLog(`Attempting to remove ${backend}/${server} from rotation ...`, "purple");
     try {
       if (!manual) {
         const count = await this.getServerCount({ backend, loadBalancers });
         if (count <= 1) {
           const message = this.getErrorMessage(server, "count", count);
-          console.error(message);
+          console.log(message);
           await this.alert.sendErrorChannel({ title: backend, message });
           throw new Error(message);
         }
@@ -70,7 +69,7 @@ export class Service {
         const status = await this.getServerStatus({ backend, server, loadBalancers });
         if (status === LoadBalancerStatus.OFFLINE) {
           const message = this.getErrorMessage(server, "offline");
-          console.error(message);
+          colorLog(message, "red");
           await this.alert.sendErrorChannel({ title: backend, message });
           throw new Error(message);
         }
@@ -85,13 +84,11 @@ export class Service {
           }),
         ),
       );
-      console.log(
-        `"\x1b[32m%s\x1b[0m", Successfully added ${backend}/${server} to rotation ...`,
-      );
+      colorLog(`Successfully added ${backend}/${server} to rotation ...`, "green");
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
       const message = `Could not remove ${backend}/${server} from rotation. ${error}`;
-      console.error("\x1b[31m%s\x1b[0m", message);
+      console.log("\x1b[31m%s\x1b[0m", message);
       await this.alert.sendErrorChannel({ title: backend, message });
       throw new Error(message);
     }
