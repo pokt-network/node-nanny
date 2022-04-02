@@ -35,7 +35,6 @@ export enum EErrorConditions {
   HEALTHY = "HEALTHY",
   OFFLINE = "OFFLINE",
   NO_ORACLE = "NO_ORACLE",
-  BAD_ORACLE = "BAD_ORACLE",
   NO_RESPONSE = "NO_RESPONSE",
   NOT_SYNCHRONIZED = "NOT_SYNCHRONIZED",
   NO_PEERS = "NO_PEERS",
@@ -76,6 +75,8 @@ export interface IHealthResponse {
 }
 
 export interface IHealthResponseDetails {
+  noOracle?: boolean;
+  numPeers?: number;
   badOracles?: string[];
 }
 
