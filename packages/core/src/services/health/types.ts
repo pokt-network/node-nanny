@@ -34,7 +34,6 @@ export enum ESupportedBlockchainTypes {
 export enum EErrorConditions {
   HEALTHY = "HEALTHY",
   OFFLINE = "OFFLINE",
-  NO_ORACLE = "NO_ORACLE",
   NO_RESPONSE = "NO_RESPONSE",
   NOT_SYNCHRONIZED = "NOT_SYNCHRONIZED",
   NO_PEERS = "NO_PEERS",
