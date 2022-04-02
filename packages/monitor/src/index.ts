@@ -31,7 +31,6 @@ export class App {
       .populate("chain")
       .exec();
 
-    let updated = 0;
     console.log(
       `Starting monitor in ${mode} mode with ${this.interval / 1000} sec interval ...`,
     );
@@ -39,10 +38,6 @@ export class App {
       `Updating health status fields for ${nodes.length} node${s(nodes.length)} ...`,
       "blue",
     );
-    if (updated === nodes.length) {
-      colorLog("Status update complete!", "green");
-      console.log(`📺 Currently monitoring ${nodes.length} node${s(nodes.length)}`);
-    }
 
     for await (const node of nodes) {
       const { id, host, name } = node;
@@ -52,8 +47,6 @@ export class App {
       /* Update Node status fields on Monitor Start/Restart */
       const { status, conditions } = await this.health.getNodeHealth(node);
       await NodesModel.updateOne({ _id: id }, { status, conditions });
-      updated++;
-      console.log(`Updated status fields for ${updated} of ${nodes.length} nodes ...`);
 
       /* ----- Starts Node Monitoring Interval ----- */
       setInterval(async () => {
