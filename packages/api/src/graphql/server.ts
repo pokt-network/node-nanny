@@ -18,11 +18,11 @@ import typeDefs from "./schema";
     credentials: true,
   };
 
-  const { url } = await new ApolloServer({ typeDefs, resolvers, cors }).listen({
+  await new ApolloServer({ typeDefs, resolvers, cors }).listen({
     hostname,
     port,
   });
-  console.log(`🚀 GraphQL server ready at ${url}`);
+  console.log(`🚀 GraphQL server ready at ${`http://${hostname}:${port}`}`);
 })();
 
 process.on("SIGINT", function () {
