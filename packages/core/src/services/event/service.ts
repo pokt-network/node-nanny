@@ -223,7 +223,13 @@ export class Service extends BaseService {
       ? `Warning: No Oracle for node. Node has ${details?.numPeers} peers.`
       : "";
     const ethSyncStr = ethSyncing ? `ETH Syncing: ${JSON.stringify(ethSyncing)}` : "";
-    const heightStr = height ? `Height: ${JSON.stringify(height)}` : "";
+    const heightStr = height
+      ? `Block Height\n${
+          typeof height === "number"
+            ? height
+            : `Internal: ${height.internalHeight} External: ${height.externalHeight} Delta: ${height.delta}`
+        }`
+      : "";
 
     return {
       message: [countStr, badOracleStr, noOracleStr, ethSyncStr, heightStr]
