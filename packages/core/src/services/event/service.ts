@@ -226,15 +226,7 @@ export class Service extends BaseService {
     const heightStr = height ? `Height: ${JSON.stringify(height)}` : "";
 
     return {
-      message: [
-        alertType,
-        statusStr,
-        countStr,
-        badOracleStr,
-        noOracleStr,
-        ethSyncStr,
-        heightStr,
-      ]
+      message: [countStr, badOracleStr, noOracleStr, ethSyncStr, heightStr]
         .filter(Boolean)
         .join("\n"),
       statusStr,
