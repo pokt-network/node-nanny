@@ -12,7 +12,7 @@ import {
   ESupportedBlockchainTypes,
   IHealthResponse,
   IEVMHealthCheckOptions,
-  IOraclesAndPeers,
+  IOraclesResponse,
   IPocketBlockHeight,
   IReferenceURL,
   IRPCResponse,
@@ -169,31 +169,39 @@ export class Service {
     }
 
     /* Check for required number of Oracles and/or Peers */
-    const { healthyOracles, healthyPeers, badOracles } = await this.getOraclesAndPeers(
-      chain,
-      id,
-    );
-    if (!healthyOracles.length && healthyPeers.length < 2) {
-      return {
-        ...healthResponse,
-        status: EErrorStatus.ERROR,
-        conditions: EErrorConditions.NO_PEERS,
-      };
-    } else if (!healthyOracles.length && healthyPeers.length >= 2) {
+    let referenceUrls: IReferenceURL[];
+    const { healthyOracles, badOracles } = await this.getOracles(chain);
+    if (healthyOracles.length >= 3) {
+      referenceUrls = healthyOracles;
+    } else {
+      const healthyPeers = await this.getPeers(chain, node.id);
+      if (!healthyOracles.length && healthyPeers.length < 2) {
+        return {
+          ...healthResponse,
+          status: EErrorStatus.ERROR,
+          conditions: EErrorConditions.NO_PEERS,
+        };
+      } else if (!healthyOracles.length && healthyPeers.length >= 2) {
+        healthResponse = {
+          ...healthResponse,
+          sendWarning: true,
+          details: { noOracle: true, numPeers: healthyPeers.length },
+        };
+      }
+      referenceUrls = [...healthyOracles, ...healthyPeers];
+    }
+
+    if (badOracles.length) {
       healthResponse = {
         ...healthResponse,
         sendWarning: true,
-        details: { noOracle: true, numPeers: healthyPeers.length },
-      };
-    } else if (badOracles.length) {
-      healthResponse = {
-        ...healthResponse,
-        sendWarning: true,
-        details: { badOracles: badOracles.map(({ url }) => url) },
+        details: {
+          ...healthResponse.details,
+          badOracles: badOracles.map(({ url }) => url),
+        },
       };
     }
 
-    const referenceUrls = [...healthyOracles, ...healthyPeers];
     try {
       const [internalBh, externalBh, ethSyncing] = await Promise.all([
         this.getBlockHeight(url, basicAuth, harmony),
@@ -201,7 +209,7 @@ export class Service {
         this.getEthSyncing(url, basicAuth),
       ]);
 
-      const { result } = await this.getPeers(url, basicAuth);
+      const { result } = await this.getExternalPeers(url, basicAuth);
       const numPeers = hexToDec(result);
       const internalHeight = hexToDec(internalBh.result);
       const externalHeight = externalBh;
@@ -295,23 +303,27 @@ export class Service {
     }
   }
 
-  private async getOraclesAndPeers(
-    { id: chainId, name: chain }: IChain,
-    nodeId: Types.ObjectId,
-  ): Promise<IOraclesAndPeers> {
-    const { urls } = await OraclesModel.findOne({ chain });
+  private async getOracles({ name }: IChain): Promise<IOraclesResponse> {
+    const { urls } = await OraclesModel.findOne({ chain: name });
 
     const {
       healthyUrls: healthyOracles,
       badUrls: badOracles,
     } = await this.checkRefUrlHealth(urls.map((url) => ({ url })));
 
+    return { healthyOracles, badOracles };
+  }
+
+  private async getPeers(
+    { id: chainId }: IChain,
+    nodeId: Types.ObjectId,
+  ): Promise<IReferenceURL[]> {
     const peers = await NodesModel.find({ chain: chainId, _id: { $ne: nodeId } });
     const { healthyUrls: healthyPeers } = await this.checkRefUrlHealth(
       peers.map(({ url, basicAuth: auth }) => ({ url, auth })),
     );
 
-    return { healthyOracles, healthyPeers, badOracles };
+    return healthyPeers;
   }
 
   private async checkRefUrlHealth(
@@ -384,7 +396,7 @@ export class Service {
     }
   }
 
-  private async getPeers(url: string, auth?: string): Promise<IRPCResponse> {
+  private async getExternalPeers(url: string, auth?: string): Promise<IRPCResponse> {
     try {
       const { data } = await this.rpc.post<IRPCResponse>(
         url,
@@ -393,7 +405,9 @@ export class Service {
       );
       return data;
     } catch (error) {
-      throw new Error(`getPeers could not contact blockchain node ${error} ${url}`);
+      throw new Error(
+        `getExternalPeers could not contact blockchain node ${error} ${url}`,
+      );
     }
   }
 
