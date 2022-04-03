@@ -102,8 +102,7 @@ export interface IEVMHealthCheckOptions {
   harmony?: boolean;
 }
 
-export interface IOraclesAndPeers {
+export interface IOraclesResponse {
   healthyOracles: IReferenceURL[];
   badOracles: IReferenceURL[];
-  healthyPeers: IReferenceURL[];
 }
