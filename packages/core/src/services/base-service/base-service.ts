@@ -55,10 +55,10 @@ export class Service {
     manual = false,
   }: IRotationParams): Promise<boolean> {
     try {
+      const serverCount = await this.getServerCount({ backend, loadBalancers });
       if (!manual) {
-        const count = await this.getServerCount({ backend, loadBalancers });
-        if (count <= 1) {
-          const message = this.getErrorMessage(server, "count", count);
+        if (serverCount <= 1) {
+          const message = this.getErrorMessage(server, "count", serverCount);
           colorLog(message, "red");
           await this.alert.sendErrorChannel({ title: backend, message });
           throw new Error(message);
