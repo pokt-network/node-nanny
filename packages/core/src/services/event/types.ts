@@ -31,6 +31,7 @@ export interface IRedisEventParams {
   notSynced: boolean;
   status: HealthTypes.EErrorStatus;
   conditions: HealthTypes.EErrorConditions;
+  serverCount: number;
   warningMessage?: string;
 }
 
