@@ -1,6 +1,6 @@
 import { ELoadBalancerStatus, IRotationParams } from "../event/types";
 import { NodesModel, INode } from "../../models";
-import { colorLog } from "../../utils";
+import { colorLog, s } from "../../utils";
 
 import { Service as AlertService } from "../alert";
 import { Service as HAProxyService } from "../haproxy";
@@ -42,6 +42,7 @@ export class Service {
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
       const message = `Could not add ${backend}/${server} to rotation. ${error}`;
+      colorLog(message, "red");
       await this.alert.sendErrorChannel({ title: backend, message });
       throw new Error(message);
     }
@@ -85,7 +86,7 @@ export class Service {
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
       const message = `Could not remove ${backend}/${server} from rotation. ${error}`;
-      console.log("\x1b[31m%s\x1b[0m", message);
+      colorLog(message, "red");
       await this.alert.sendErrorChannel({ title: backend, message });
       throw new Error(message);
     }
@@ -168,9 +169,9 @@ export class Service {
     count?: number,
   ): string {
     return {
-      count: `Could not remove ${server} from load balancer. ${
-        count === 1 ? "Only one server" : "No servers"
-      } online.\nManual intervention required.`,
+      count: `Could not remove ${server} from load balancer. ${count} server${s(
+        count,
+      )} online.\nManual intervention required.`,
       offline: `Could not remove ${server} from load balancer. Server already offline.`,
       online: `Could not add ${server} to load balancer. Server already online.`,
     }[mode];
