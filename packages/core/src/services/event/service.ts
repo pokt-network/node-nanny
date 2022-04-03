@@ -271,7 +271,7 @@ export class Service extends BaseService {
     const haProxyMessage = this.getHAProxyMessage({ backend, loadBalancers });
     const title = enable
       ? {
-          success: `[Added} - Successfully added ${name} to rotation`,
+          success: `[Added] - Successfully added ${name} to rotation`,
           error: `[Error] -Could not add ${name} to rotation`,
         }[mode]
       : {
