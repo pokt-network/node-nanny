@@ -69,7 +69,7 @@ export class Service extends BaseService {
       );
 
       const onlineStatus = await this.getServerStatus({ backend, server, loadBalancers });
-      if (count >= 2 && onlineStatus !== ELoadBalancerStatus.OFFLINE) {
+      if (count >= 2 && onlineStatus === ELoadBalancerStatus.ONLINE) {
         await this.toggleServer({ node, title, enable: false });
       }
     } else {
