@@ -1,6 +1,6 @@
 import { connect, disconnect } from "@pokt-foundation/node-nanny-core/dist/db";
 import { NodesModel } from "@pokt-foundation/node-nanny-core/dist/models";
-import { Health, Log, Automation } from "@pokt-foundation/node-nanny-core/dist/services";
+import { Health, Log } from "@pokt-foundation/node-nanny-core/dist/services";
 import { HealthTypes } from "@pokt-foundation/node-nanny-core/dist/types";
 import { colorLog, s } from "@pokt-foundation/node-nanny-core/dist/utils";
 
@@ -8,14 +8,12 @@ import { Publish } from "./publish";
 
 export class App {
   private log: Log;
-  private automation: Automation;
   private health: Health;
   private publish: Publish;
   private interval: number;
 
   constructor() {
     this.log = new Log();
-    this.automation = new Automation();
     this.health = new Health();
     this.publish = new Publish();
     this.interval = Number(process.env.MONITOR_INTERVAL || 30000);
