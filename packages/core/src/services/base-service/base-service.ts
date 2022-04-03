@@ -153,10 +153,7 @@ export class Service {
   /* ----- Message String Methods ----- */
   getHAProxyMessage({ backend, loadBalancers }: IRotationParams): string {
     const urls = loadBalancers
-      .map(
-        ({ ip }) =>
-          `http://${this.getLoadBalancerIP(ip)}:8050/stats/;up?scope=${backend}`,
-      )
+      .map(({ ip }) => `http://${this.getLoadBalancerIP(ip)}:8050/stats?scope=${backend}`)
       .join("\n");
     const testIndicator = process.env.MONITOR_TEST === "1" ? "TEST MODE\n" : "";
     return `${testIndicator}HAProxy Status\n${urls}`;
