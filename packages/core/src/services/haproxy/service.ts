@@ -41,7 +41,7 @@ export class Service {
 
   async getServerCount({ backend, destination }: IHAProxyParams) {
     const raw = await this.getCurrentStateByChainCommand({ backend, destination });
-    const lines = raw.split("\n");
+    const lines = raw.split("\n").filter((line) => !line.includes("backup"));
     return lines.filter((line) => {
       return line.includes(backend) && Number(line.split(" ")[5]) === 2;
     }).length;

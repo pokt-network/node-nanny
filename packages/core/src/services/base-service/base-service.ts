@@ -57,8 +57,7 @@ export class Service {
     try {
       if (!manual) {
         const count = await this.getServerCount({ backend, loadBalancers });
-        const countAllowance = backend === "ethmainnet" ? 2 : 1;
-        if (count <= countAllowance) {
+        if (count <= 1) {
           const message = this.getErrorMessage(server, "count", count);
           colorLog(message, "red");
           await this.alert.sendErrorChannel({ title: backend, message });
