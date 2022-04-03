@@ -238,7 +238,8 @@ export class Service extends BaseService {
             : `Internal: ${height.internalHeight} External: ${height.externalHeight} Delta: ${height.delta}`
         }`
       : "";
-    const serverCountStr = `${serverCount} server${s(serverCount)} online.`;
+    const serverCountStr =
+      serverCount >= 0 ? `${serverCount} server${s(serverCount)} online` : "";
 
     return {
       message: [
