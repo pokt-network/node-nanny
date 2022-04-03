@@ -26,7 +26,7 @@ export class App {
   async main() {
     await connect();
 
-    const nodes = await NodesModel.find({ muted: false, backend: "ethmainnet" })
+    const nodes = await NodesModel.find({ muted: false })
       .populate("host")
       .populate("chain")
       .exec();
