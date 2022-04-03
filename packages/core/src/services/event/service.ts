@@ -48,10 +48,15 @@ export class Service extends BaseService {
   };
 
   processRetriggered = async (eventJson: string): Promise<void> => {
-    const { node, message, notSynced, status, conditions, title } = await this.parseEvent(
-      eventJson,
-      EAlertTypes.RETRIGGER,
-    );
+    const {
+      node,
+      message,
+      notSynced,
+      status,
+      conditions,
+      title,
+      serverCount,
+    } = await this.parseEvent(eventJson, EAlertTypes.RETRIGGER);
     const { backend, chain, frontend, loadBalancers, server } = node;
 
     const messageParams = {
@@ -62,14 +67,13 @@ export class Service extends BaseService {
     };
 
     if (!frontend && notSynced) {
-      const count = await this.getServerCount({ backend, loadBalancers });
       await this.sendMessage(
         messageParams,
-        count >= 2 ? EErrorStatus.WARNING : EErrorStatus.ERROR,
+        serverCount >= 2 ? EErrorStatus.WARNING : EErrorStatus.ERROR,
       );
 
       const onlineStatus = await this.getServerStatus({ backend, server, loadBalancers });
-      if (count >= 2 && onlineStatus === ELoadBalancerStatus.ONLINE) {
+      if (serverCount >= 2 && onlineStatus === ELoadBalancerStatus.ONLINE) {
         await this.toggleServer({ node, title, enable: false });
       }
     } else {
@@ -128,16 +132,21 @@ export class Service extends BaseService {
   ): Promise<IRedisEventParams> {
     const event: IRedisEvent = JSON.parse(eventJson);
     const { conditions, id, status, sendWarning } = event;
-    const { message, statusStr } = this.getAlertMessage(event, alertType);
+
+    const node = await this.getNode(id);
+    const { backend, loadBalancers } = node;
+    const serverCount = await this.getServerCount({ backend, loadBalancers });
+    const { message, statusStr } = this.getAlertMessage(event, alertType, serverCount);
 
     const parsedEvent: IRedisEventParams = {
       title: `[${alertType}] - ${statusStr}`,
       message,
-      node: await this.getNode(id),
+      node,
       healthy: conditions === EErrorConditions.HEALTHY,
       notSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
       status,
       conditions,
+      serverCount,
     };
     if (sendWarning) parsedEvent.warningMessage = this.getWarningMessage(event);
     return parsedEvent;
@@ -207,6 +216,7 @@ export class Service extends BaseService {
   private getAlertMessage(
     { count, conditions, name, ethSyncing, height, details }: IRedisEvent,
     alertType: EAlertTypes,
+    serverCount: number,
   ): { message: string; statusStr: string } {
     const badOracle = details?.badOracles;
     const noOracle = details?.noOracle;
@@ -222,15 +232,23 @@ export class Service extends BaseService {
       : "";
     const ethSyncStr = ethSyncing ? `ETH Syncing: ${JSON.stringify(ethSyncing)}` : "";
     const heightStr = height
-      ? `Block Height\n${
+      ? `Block Height - ${
           typeof height === "number"
             ? height
             : `Internal: ${height.internalHeight} External: ${height.externalHeight} Delta: ${height.delta}`
         }`
       : "";
+    const serverCountStr = `${serverCount} server${s(serverCount)} online.`;
 
     return {
-      message: [countStr, badOracleStr, noOracleStr, ethSyncStr, heightStr]
+      message: [
+        countStr,
+        badOracleStr,
+        noOracleStr,
+        ethSyncStr,
+        heightStr,
+        serverCountStr,
+      ]
         .filter(Boolean)
         .join("\n"),
       statusStr,
