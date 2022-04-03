@@ -163,28 +163,19 @@ export class Service extends BaseService {
     }[status]();
   }
 
-  private async toggleServer({
-    node,
-    title,
-    enable,
-  }: IToggleServerParams): Promise<void> {
-    const {
-      backend,
-      chain: { name: chain },
-      loadBalancers,
-      server,
-    } = node;
+  private async toggleServer({ node, enable }: IToggleServerParams): Promise<void> {
+    const { backend, chain, loadBalancers, server } = node;
 
     try {
       enable /* Enable or Disable Server */
         ? await this.enableServer({ backend, server, loadBalancers })
         : await this.disableServer({ backend, server, loadBalancers });
 
-      const message = this.getRotationMessage(node, enable, "success");
-      await this.alert.sendSuccess({ title, message, chain });
+      const { title, message } = this.getRotationMessage(node, enable, "success");
+      await this.alert.sendSuccess({ title, message, chain: chain.name });
     } catch (error) {
-      const message = this.getRotationMessage(node, enable, "error", error);
-      await this.alert.sendError({ title, message, chain });
+      const { title, message } = this.getRotationMessage(node, enable, "error", error);
+      await this.alert.sendError({ title, message, chain: chain.name });
     }
   }
 
@@ -232,10 +223,10 @@ export class Service extends BaseService {
       : "";
     const ethSyncStr = ethSyncing ? `ETH Syncing: ${JSON.stringify(ethSyncing)}` : "";
     const heightStr = height
-      ? `Block Height - ${
+      ? `Height: ${
           typeof height === "number"
             ? height
-            : `Internal: ${height.internalHeight} External: ${height.externalHeight} Delta: ${height.delta}`
+            : `Internal: ${height.internalHeight} /External: ${height.externalHeight}/ Delta: ${height.delta}`
         }`
       : "";
     const serverCountStr =
@@ -273,22 +264,22 @@ export class Service extends BaseService {
   private getRotationMessage(
     { backend, chain, host, loadBalancers }: INode,
     enable: boolean,
-    mode: "attempt" | "success" | "error",
+    mode: "success" | "error",
     error?: any,
-  ): string {
+  ): { title: string; message: string } {
     const name = `${host.name}/${chain.name}`;
     const haProxyMessage = this.getHAProxyMessage({ backend, loadBalancers });
-    const errorMessage = `\n${error}`;
-    return enable
+    const title = enable
       ? {
-          attempt: `Attempting to add ${name} to rotation.\n${haProxyMessage}`,
-          success: `Successfully added ${name} to rotation.\n${haProxyMessage}`,
-          error: `Could not add ${name} to rotation.\n${haProxyMessage}${errorMessage}`,
+          success: `[Added} - Successfully added ${name} to rotation`,
+          error: `[Error] -Could not add ${name} to rotation`,
         }[mode]
       : {
-          attempt: `Attempting to remove ${name} from rotation.\n${haProxyMessage}`,
-          success: `Successfully removed ${name} from rotation.\n${haProxyMessage}`,
-          error: `Could not remove ${name} from rotation.\n${haProxyMessage}${errorMessage}`,
+          success: `[Removed] - Successfully removed ${name} from rotation`,
+          error: `[Error] - Could not remove ${name} from rotation`,
         }[mode];
+    const message = error ? `${haProxyMessage}\n${error}` : haProxyMessage;
+
+    return { title, message };
   }
 }
