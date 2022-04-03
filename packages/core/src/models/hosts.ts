@@ -9,6 +9,7 @@ export interface IHost<Populated = true> {
   location: Populated extends true ? ILocation : Types.ObjectId;
   ip?: string;
   fqdn?: string;
+  url?: string;
 }
 
 export const hostsSchema = new Schema<IHost>(
@@ -18,6 +19,7 @@ export const hostsSchema = new Schema<IHost>(
     location: { type: Schema.Types.ObjectId, ref: "Locations", required: true },
     ip: { type: String, unique: true, sparse: true },
     fqdn: { type: String, unique: true, sparse: true },
+    url: { type: String, unique: true, sparse: true },
   },
   { timestamps: true },
 );
