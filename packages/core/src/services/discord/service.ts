@@ -55,8 +55,8 @@ export class Service {
     }
   }
 
-  public async addWebhookForFrontendNode(): Promise<void> {
-    const categoryName = "NODE-NANNY-FRONTEND-ALERT ";
+  public async addWebhookForFrontendNodes(): Promise<void> {
+    const categoryName = "NODE-NANNY-FRONTEND-ALERT";
     const channelName = "frontend-alert";
 
     const server = await this.initServer();
