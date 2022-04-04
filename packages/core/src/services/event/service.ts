@@ -8,7 +8,7 @@ import {
   IRedisEventParams,
   IToggleServerParams,
 } from "./types";
-import { s } from "../../utils";
+import { s, is } from "../../utils";
 
 import { Service as BaseService } from "../base-service/base-service";
 
@@ -256,14 +256,16 @@ export class Service extends BaseService {
         }`
       : "";
     const serverCountStr =
-      !downDispatchers?.length && serverCount && serverCount >= 0
-        ? `${serverCount} nodes ${s(serverCount)} online for backend ${backend}`
+      !downDispatchers?.length && !!serverCount && serverCount >= 0
+        ? `${serverCount} node${s(serverCount)} ${is(
+            serverCount,
+          )} online for backend ${backend}`
         : "";
     const downDispatchersStr = downDispatchers?.length
       ? [
-          `${downDispatchers.length} dispatcher${s(downDispatchers.length)} ${
-            downDispatchers.length === 1 ? "is" : "are"
-          } down:`,
+          `${downDispatchers.length} dispatcher${s(downDispatchers.length)} ${is(
+            downDispatchers.length,
+          )} down:`,
           `${downDispatchers.join("\n")}`,
         ].join("\n")
       : "";
