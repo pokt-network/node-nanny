@@ -120,7 +120,7 @@ export class Service extends BaseService {
   async addToRotation(id: string): Promise<boolean> {
     const { backend, server, host, chain, loadBalancers } = await this.getNode(id);
 
-    await this.enableServer({ backend, server, loadBalancers });
+    await this.enableServer({ destination: backend, server, loadBalancers });
 
     return await this.alert.sendInfo({
       title: "[Added to Rotation] - Success",
@@ -132,7 +132,12 @@ export class Service extends BaseService {
   async removeFromRotation(id: string): Promise<boolean> {
     const { backend, server, host, chain, loadBalancers } = await this.getNode(id);
 
-    await this.disableServer({ backend, server, loadBalancers, manual: true });
+    await this.disableServer({
+      destination: backend,
+      server,
+      loadBalancers,
+      manual: true,
+    });
 
     return await this.alert.sendInfo({
       title: "[Removed from Rotation] - Success",
@@ -149,7 +154,7 @@ export class Service extends BaseService {
     }
 
     const result = await this.getServerStatus({
-      backend,
+      destination: backend,
       server,
       loadBalancers,
     });
