@@ -18,7 +18,7 @@ COPY . ./
 RUN pnpm install pm2 turbo -g
 RUN pnpm install -r --offline
 RUN pnpm build
-RUN node ./packages/core/dist/create-fe-alert-chan.js
+RUN node ./packages/core/dist/jobs/init-db.js
 
 EXPOSE 3000
 EXPOSE 4000
