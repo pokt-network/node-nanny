@@ -18,6 +18,7 @@ export const getTimestamp = (): string => {
 };
 
 export const s = (count: number): string => (count === 1 ? "" : "s");
+export const is = (count: number): string => (count === 1 ? "is" : "are");
 
 const colorCodes = {
   red: "\x1B[31m%s\x1B[0m",
