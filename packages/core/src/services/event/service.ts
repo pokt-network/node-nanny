@@ -24,10 +24,15 @@ export class Service extends BaseService {
 
   /* ----- Trigger Methods ----- */
   processTriggered = async (eventJson: string): Promise<void> => {
-    const { node, message, notSynced, status, conditions, title } = await this.parseEvent(
-      eventJson,
-      EAlertTypes.TRIGGER,
-    );
+    const {
+      node,
+      message,
+      notSynced,
+      status,
+      conditions,
+      title,
+      downDispatchers,
+    } = await this.parseEvent(eventJson, EAlertTypes.TRIGGER);
     const { chain, frontend } = node;
 
     await this.sendMessage(
@@ -39,8 +44,8 @@ export class Service extends BaseService {
       await this.toggleServer({ node, title, enable: false });
     }
 
-    if (this.pnf && node.dispatch && chain.type === ESupportedBlockchains["POKT-DIS"]) {
-      await this.alertPocketDispatchersAreDown(node);
+    if (this.pnf && downDispatchers?.length >= this.pnfDispatchThreshold) {
+      await this.alertPocketDispatchersAreDown(downDispatchers);
       ELoadBalancerStatus;
     }
 
@@ -56,6 +61,7 @@ export class Service extends BaseService {
       conditions,
       title,
       serverCount,
+      downDispatchers,
     } = await this.parseEvent(eventJson, EAlertTypes.RETRIGGER);
     const { backend, chain, frontend, loadBalancers, server } = node;
 
@@ -80,8 +86,8 @@ export class Service extends BaseService {
       await this.sendMessage(messageParams, status);
     }
 
-    if (this.pnf && node.dispatch && chain.type === ESupportedBlockchains["POKT-DIS"]) {
-      await this.alertPocketDispatchersAreDown(node);
+    if (this.pnf && downDispatchers?.length >= this.pnfDispatchThreshold) {
+      await this.alertPocketDispatchersAreDown(downDispatchers);
     }
 
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
@@ -134,9 +140,22 @@ export class Service extends BaseService {
     const { conditions, id, status, sendWarning } = event;
 
     const node = await this.getNode(id);
-    const { backend, loadBalancers } = node;
-    const serverCount = await this.getServerCount({ backend, loadBalancers });
-    const { message, statusStr } = this.getAlertMessage(event, alertType, serverCount);
+    const { chain, backend, loadBalancers, dispatch } = node;
+    const serverCount = !dispatch
+      ? await this.getServerCount({ backend, loadBalancers })
+      : null;
+    const downDispatchers =
+      this.pnf && dispatch && chain.name === ESupportedBlockchains["POKT-DIS"]
+        ? await this.getDownDispatchers(node)
+        : null;
+
+    const { message, statusStr } = this.getAlertMessage(
+      event,
+      alertType,
+      serverCount,
+      downDispatchers,
+      backend,
+    );
 
     const parsedEvent: IRedisEventParams = {
       title: `[${alertType}] - ${statusStr}`,
@@ -149,6 +168,7 @@ export class Service extends BaseService {
       serverCount,
     };
     if (sendWarning) parsedEvent.warningMessage = this.getWarningMessage(event);
+    if (downDispatchers?.length) parsedEvent.downDispatchers = downDispatchers;
     return parsedEvent;
   }
 
@@ -172,34 +192,38 @@ export class Service extends BaseService {
         : await this.disableServer({ backend, server, loadBalancers });
 
       const { title, message } = this.getRotationMessage(node, enable, "success");
-      await this.alert.sendSuccess({ title, message, chain: chain.name });
+      await this.alert.sendInfo({ title, message, chain: chain.name });
     } catch (error) {
       const { title, message } = this.getRotationMessage(node, enable, "error", error);
       await this.alert.sendError({ title, message, chain: chain.name });
     }
   }
 
-  private async alertPocketDispatchersAreDown(node: INode): Promise<void> {
-    const downDispatchers = await this.checkPocketDispatchPeers(node);
-    const dispatchUrls = downDispatchers.map(({ url }) => `${url}\n`);
+  private async getDownDispatchers({ chain }: INode): Promise<string[]> {
+    const downDispatchNodes = await NodesModel.find({
+      dispatch: true,
+      chain: chain.id as any,
+      status: { $ne: EErrorStatus.OK },
+      conditions: { $ne: EErrorConditions.HEALTHY },
+    })
+      .populate({ path: "host", populate: "location" })
+      .exec();
 
-    if (downDispatchers?.length >= this.pnfDispatchThreshold) {
-      await this.alert.createPagerDutyIncident({
-        title: "ALERT - Dispatchers are down!",
-        details: [
-          `${downDispatchers.length} dispatchers are down!`,
-          `Down Dispatchers: ${dispatchUrls}`,
-        ].join("\n"),
-      });
+    if (downDispatchNodes?.length) {
+      return downDispatchNodes.map(
+        ({ name, host }) =>
+          `Node: ${name} / Host: ${host.name} / Location: ${host.location.name}`,
+      );
     }
   }
 
-  private async checkPocketDispatchPeers({ chain }: INode): Promise<INode[]> {
-    return NodesModel.find({
-      dispatch: true,
-      chain: chain.id,
-      status: { $ne: EErrorStatus.OK },
-      conditions: { $ne: EErrorConditions.HEALTHY },
+  private async alertPocketDispatchersAreDown(downDispatchers: string[]): Promise<void> {
+    await this.alert.createPagerDutyIncident({
+      title: "ALERT - Dispatchers are down!",
+      details: [
+        `${downDispatchers.length} dispatchers are down!`,
+        `Down Dispatchers\n${downDispatchers.join("\n")}`,
+      ].join("\n"),
     });
   }
 
@@ -208,6 +232,8 @@ export class Service extends BaseService {
     { count, conditions, name, ethSyncing, height, details }: IRedisEvent,
     alertType: EAlertTypes,
     serverCount: number,
+    downDispatchers: string[] = null,
+    backend?: string,
   ): { message: string; statusStr: string } {
     const badOracle = details?.badOracles;
     const noOracle = details?.noOracle;
@@ -226,11 +252,21 @@ export class Service extends BaseService {
       ? `Height: ${
           typeof height === "number"
             ? height
-            : `Internal: ${height.internalHeight} /External: ${height.externalHeight}/ Delta: ${height.delta}`
+            : `Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
         }`
       : "";
     const serverCountStr =
-      serverCount >= 0 ? `${serverCount} server${s(serverCount)} online` : "";
+      !downDispatchers?.length && serverCount && serverCount >= 0
+        ? `${serverCount} nodes ${s(serverCount)} online for backend ${backend}`
+        : "";
+    const downDispatchersStr = downDispatchers?.length
+      ? [
+          `${downDispatchers.length} dispatcher${s(downDispatchers.length)} ${
+            downDispatchers.length === 1 ? "is" : "are"
+          } down:`,
+          `${downDispatchers.join("\n")}`,
+        ].join("\n")
+      : "";
 
     return {
       message: [
@@ -240,6 +276,7 @@ export class Service extends BaseService {
         ethSyncStr,
         heightStr,
         serverCountStr,
+        downDispatchersStr,
       ]
         .filter(Boolean)
         .join("\n"),
@@ -272,7 +309,7 @@ export class Service extends BaseService {
     const title = enable
       ? {
           success: `[Added] - Successfully added ${name} to rotation`,
-          error: `[Error] -Could not add ${name} to rotation`,
+          error: `[Error] - Could not add ${name} to rotation`,
         }[mode]
       : {
           success: `[Removed] - Successfully removed ${name} from rotation`,
