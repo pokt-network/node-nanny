@@ -232,8 +232,8 @@ export class Service extends BaseService {
     { count, conditions, name, ethSyncing, height, details }: IRedisEvent,
     alertType: EAlertTypes,
     serverCount: number,
+    backend: string,
     downDispatchers: string[] = null,
-    backend?: string,
   ): { message: string; statusStr: string } {
     const badOracle = details?.badOracles;
     const noOracle = details?.noOracle;
@@ -257,9 +257,9 @@ export class Service extends BaseService {
       : "";
     const serverCountStr =
       !downDispatchers?.length && !!serverCount && serverCount >= 0
-        ? `${serverCount} node${s(serverCount)} ${is(
-            serverCount,
-          )} online for backend ${backend}`
+        ? `${serverCount} node${s(serverCount)} ${is(serverCount)} online${
+            backend ? ` for backend ${backend}` : ""
+          }`
         : "";
     const downDispatchersStr = downDispatchers?.length
       ? [
