@@ -29,7 +29,6 @@ export class Service extends BaseService {
       message,
       notSynced,
       status,
-      conditions,
       title,
       downDispatchers,
     } = await this.parseEvent(eventJson, EAlertTypes.TRIGGER);
@@ -48,8 +47,6 @@ export class Service extends BaseService {
       await this.alertPocketDispatchersAreDown(downDispatchers);
       ELoadBalancerStatus;
     }
-
-    await NodesModel.updateOne({ _id: node.id }, { status, conditions });
   };
 
   processRetriggered = async (eventJson: string): Promise<void> => {
@@ -58,7 +55,6 @@ export class Service extends BaseService {
       message,
       notSynced,
       status,
-      conditions,
       title,
       serverCount,
       downDispatchers,
@@ -89,8 +85,6 @@ export class Service extends BaseService {
     if (this.pnf && downDispatchers?.length >= this.pnfDispatchThreshold) {
       await this.alertPocketDispatchersAreDown(downDispatchers);
     }
-
-    await NodesModel.updateOne({ _id: node.id }, { status, conditions });
   };
 
   processResolved = async (eventJson: string): Promise<void> => {
@@ -99,7 +93,6 @@ export class Service extends BaseService {
       message,
       healthy,
       status,
-      conditions,
       title,
       warningMessage,
     } = await this.parseEvent(eventJson, EAlertTypes.RESOLVED);
@@ -127,8 +120,6 @@ export class Service extends BaseService {
         await this.toggleServer({ node, title, enable: true });
       }
     }
-
-    await NodesModel.updateOne({ _id: node.id }, { status, conditions });
   };
 
   /* ----- Private Methods ----- */
@@ -140,7 +131,9 @@ export class Service extends BaseService {
     const { conditions, id, status, sendWarning } = event;
 
     const node = await this.getNode(id);
+    await NodesModel.updateOne({ _id: node.id }, { status, conditions });
     const { chain, backend, loadBalancers, dispatch } = node;
+
     const serverCount = !dispatch
       ? await this.getServerCount({ backend, loadBalancers })
       : null;
@@ -164,7 +157,6 @@ export class Service extends BaseService {
       healthy: conditions === EErrorConditions.HEALTHY,
       notSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
       status,
-      conditions,
       serverCount,
     };
     if (sendWarning) parsedEvent.warningMessage = this.getWarningMessage(event);
