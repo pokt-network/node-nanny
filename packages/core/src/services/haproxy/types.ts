@@ -1,5 +1,5 @@
 export interface IHAProxyParams {
-  backend: string;
   destination: string;
+  domain: string;
   server?: string;
 }
