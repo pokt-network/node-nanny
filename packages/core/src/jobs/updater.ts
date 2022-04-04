@@ -3,29 +3,10 @@ import { connect, disconnect } from "../db";
 import { ChainsModel, OraclesModel, IChain, IOracle } from "../models";
 import { getTimestamp } from "../utils";
 
-/* TEMP */
-interface IChainProd {
-  chain: string;
-  name: string;
-  type: string;
-  variance: number;
-}
-
-interface IOracleProd {
-  chain: string;
-  urls: string[];
-}
-
 interface IChainsAndOraclesResponse {
-  chains: IChainProd[];
-  oracles: IOracleProd[];
+  chains: IChain[];
+  oracles: IOracle[];
 }
-/* TEMP */
-
-// interface IChainsAndOraclesResponse {
-//   chains: IChain[];
-//   oracles: IOracle[];
-// }
 
 (async () => {
   await connect();
@@ -33,7 +14,7 @@ interface IChainsAndOraclesResponse {
   const {
     data: { chains, oracles },
   } = await axios.get<IChainsAndOraclesResponse>(
-    "https://h459tvbr1d.execute-api.us-east-2.amazonaws.com/update",
+    "https://k69ggmt3u3.execute-api.us-east-2.amazonaws.com/update",
   );
 
   console.log(
@@ -52,9 +33,7 @@ interface IChainsAndOraclesResponse {
         const chainInput = {
           type: chain.type,
           name: chain.name,
-          // TEMP. Change to variance when prod DB migrated
-          allowance: chain.variance,
-          // TEMP. Change to variance when prod DB migrated
+          allowance: chain.allowance,
         };
         await ChainsModel.create(chainInput);
       }
