@@ -191,10 +191,24 @@ export class Service extends BaseService {
         ? await this.enableServer({ backend, server, loadBalancers })
         : await this.disableServer({ backend, server, loadBalancers });
 
-      const { title, message } = this.getRotationMessage(node, enable, "success");
+      const serverCount = !node.dispatch
+        ? await this.getServerCount({ backend, loadBalancers })
+        : null;
+      const { title, message } = this.getRotationMessage(
+        node,
+        enable,
+        "success",
+        serverCount,
+      );
       await this.alert.sendInfo({ title, message, chain: chain.name });
     } catch (error) {
-      const { title, message } = this.getRotationMessage(node, enable, "error", error);
+      const { title, message } = this.getRotationMessage(
+        node,
+        enable,
+        "error",
+        null,
+        error,
+      );
       await this.alert.sendError({ title, message, chain: chain.name });
     }
   }
@@ -258,7 +272,7 @@ export class Service extends BaseService {
     const serverCountStr =
       !downDispatchers?.length && !!serverCount && serverCount >= 0
         ? `${serverCount} node${s(serverCount)} ${is(serverCount)} online${
-            backend ? ` for backend ${backend}` : ""
+            backend ? ` for backend ${backend}.` : ""
           }`
         : "";
     const downDispatchersStr = downDispatchers?.length
@@ -304,6 +318,7 @@ export class Service extends BaseService {
     { backend, chain, host, loadBalancers }: INode,
     enable: boolean,
     mode: "success" | "error",
+    serverCount: number,
     error?: any,
   ): { title: string; message: string } {
     const name = `${host.name}/${chain.name}`;
@@ -317,7 +332,13 @@ export class Service extends BaseService {
           success: `[Removed] - Successfully removed ${name} from rotation`,
           error: `[Error] - Could not remove ${name} from rotation`,
         }[mode];
-    const message = error ? `${haProxyMessage}\n${error}` : haProxyMessage;
+    const serverCountStr =
+      !!serverCount && serverCount >= 0
+        ? `${serverCount} node${s(serverCount)} ${is(serverCount)} online${
+            backend ? ` for backend ${backend}.` : ""
+          }`
+        : "";
+    const message = [haProxyMessage, serverCountStr, error].filter(Boolean).join("\n");
 
     return { title, message };
   }
