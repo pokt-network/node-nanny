@@ -128,14 +128,14 @@ export class Service extends BaseService {
     alertType: EAlertTypes,
   ): Promise<IRedisEventParams> {
     const event: IRedisEvent = JSON.parse(eventJson);
-    const { conditions, id, status, sendWarning } = event;
+    const { conditions, id, status } = event;
 
     const node = await this.getNode(id);
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
-    const { chain, backend, loadBalancers, dispatch } = node;
+    const { chain, backend, frontend, loadBalancers, dispatch } = node;
 
     const serverCount = !dispatch
-      ? await this.getServerCount({ backend, loadBalancers })
+      ? await this.getServerCount({ backend: frontend || backend, loadBalancers })
       : null;
     const downDispatchers =
       this.pnf && dispatch && chain.name === ESupportedBlockchains["POKT-DIS"]
@@ -146,6 +146,7 @@ export class Service extends BaseService {
       event,
       alertType,
       serverCount,
+      frontend,
       backend,
       downDispatchers,
     );
@@ -159,7 +160,6 @@ export class Service extends BaseService {
       status,
       serverCount,
     };
-    if (sendWarning) parsedEvent.warningMessage = this.getWarningMessage(event);
     if (downDispatchers?.length) parsedEvent.downDispatchers = downDispatchers;
     return parsedEvent;
   }
@@ -238,10 +238,11 @@ export class Service extends BaseService {
     { count, conditions, name, ethSyncing, height, details }: IRedisEvent,
     alertType: EAlertTypes,
     serverCount: number,
+    frontend: string,
     backend: string,
     downDispatchers: string[] = null,
   ): { message: string; statusStr: string } {
-    const badOracle = details?.badOracles;
+    const badOracles = details?.badOracles;
     const noOracle = details?.noOracle;
 
     const statusStr = `${name} is ${conditions}.`;
@@ -249,10 +250,6 @@ export class Service extends BaseService {
       alertType !== EAlertTypes.RESOLVED
         ? `This event has occurred ${count} time${s(count)} since first occurrence.`
         : "";
-    const badOracleStr = badOracle ? "Warning: Bad Oracle for node." : "";
-    const noOracleStr = noOracle
-      ? `Warning: No Oracle for node. Node has ${details?.numPeers} peers.`
-      : "";
     const ethSyncStr = ethSyncing ? `ETH Syncing: ${JSON.stringify(ethSyncing)}` : "";
     const heightStr = height
       ? `Height: ${
@@ -261,12 +258,16 @@ export class Service extends BaseService {
             : `Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
         }`
       : "";
-    const serverCountStr =
-      !downDispatchers?.length && !!serverCount && serverCount >= 0
+    let serverCountStr =
+      (!downDispatchers?.length ?? serverCount) && serverCount >= 0
         ? `${serverCount} node${s(serverCount)} ${is(serverCount)} online${
-            backend ? ` for backend ${backend}.` : ""
+            frontend || backend
+              ? ` for ${frontend ? "frontend" : "backend"} ${frontend || backend}.`
+              : ""
           }`
         : "";
+    if (serverCount === 1) serverCountStr = `ONLY ${serverCountStr.toUpperCase()}`;
+    if (serverCount === 0) serverCountStr = `NO ${serverCountStr.toUpperCase()}!!`;
     const downDispatchersStr = downDispatchers?.length
       ? [
           `${downDispatchers.length} dispatcher${s(downDispatchers.length)} ${is(
@@ -275,35 +276,27 @@ export class Service extends BaseService {
           `${downDispatchers.join("\n")}`,
         ].join("\n")
       : "";
+    const badOracleStr = badOracles?.length
+      ? `\nWarning: Bad Oracle${s(badOracles.length)}: ${badOracles}`
+      : "";
+    const noOracleStr = noOracle
+      ? `\nWarning: No Oracle for node. Node has ${details?.numPeers} peers.`
+      : "";
 
     return {
       message: [
         countStr,
-        badOracleStr,
-        noOracleStr,
         ethSyncStr,
         heightStr,
         serverCountStr,
         downDispatchersStr,
+        badOracleStr,
+        noOracleStr,
       ]
         .filter(Boolean)
         .join("\n"),
       statusStr,
     };
-  }
-
-  private getWarningMessage({ details }: IRedisEvent): string {
-    const badOracles = details?.badOracles;
-    const noOracle = details?.noOracle;
-
-    const bOracleStr = badOracles
-      ? `Bad Oracle${s(badOracles.length)}: ${badOracles}`
-      : "";
-    const noOracleStr = noOracle
-      ? `Warning: No Oracle for node. Node has ${details?.numPeers} peers.`
-      : "";
-
-    return [bOracleStr, noOracleStr].filter(Boolean).join("\n");
   }
 
   private getRotationMessage(
