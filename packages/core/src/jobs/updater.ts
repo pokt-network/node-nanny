@@ -1,22 +1,29 @@
 import axios from "axios";
 import { connect, disconnect } from "../db";
-import { ChainsModel, OraclesModel, IChain, IOracle } from "../models";
+import { ChainsModel, OraclesModel, IChain, IOracle, WebhookModel } from "../models";
 import { getTimestamp } from "../utils";
+import { DiscordService } from "../services";
 
 interface IChainsAndOraclesResponse {
   chains: IChain[];
   oracles: IOracle[];
 }
 
+/* ----- Script Runs Every Hour ----- */
 (async () => {
   await connect();
 
+  /* ---- 1) Add Frontend Alert Webhook if Doesn't Exist ---- */
+  if (!(await WebhookModel.exists({ chain: "FRONTEND_ALERT" }))) {
+    await new DiscordService().addWebhookForFrontendNodes();
+  }
   const {
     data: { chains, oracles },
   } = await axios.get<IChainsAndOraclesResponse>(
     "https://k69ggmt3u3.execute-api.us-east-2.amazonaws.com/update",
   );
 
+  /* ---- 2) Sync Chains and Oracles from Node Nanny Internal DB ---- */
   console.log(
     `Running updater at ${getTimestamp()}.\nChecking ${chains.length} chains and ${
       oracles.length
