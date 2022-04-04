@@ -24,7 +24,7 @@ export class Service {
 
   /* ----- Toggle Server Methods ----- */
   async enableServer({
-    backend,
+    destination,
     server,
     loadBalancers,
   }: IRotationParams): Promise<boolean> {
@@ -32,43 +32,43 @@ export class Service {
       const loadBalancerResponse = await Promise.all(
         loadBalancers.map(({ fqdn, ip }) =>
           this.haProxy.enableServer({
-            backend,
+            destination,
             server,
-            destination: this.getLoadBalancerIP(fqdn || ip),
+            domain: this.getLoadBalancerDomain(fqdn || ip),
           }),
         ),
       );
 
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
-      const message = `Could not add ${backend}/${server} to rotation. ${error}`;
+      const message = `Could not add ${destination}/${server} to rotation. ${error}`;
       colorLog(message, "red");
-      await this.alert.sendErrorChannel({ title: backend, message });
+      await this.alert.sendErrorChannel({ title: destination, message });
       throw new Error(message);
     }
   }
 
   async disableServer({
-    backend,
+    destination,
     server,
     loadBalancers,
     manual = false,
   }: IRotationParams): Promise<boolean> {
     try {
-      const serverCount = await this.getServerCount({ backend, loadBalancers });
+      const serverCount = await this.getServerCount({ destination, loadBalancers });
       if (!manual) {
         if (serverCount <= 1) {
           const message = this.getErrorMessage(server, "count", serverCount);
           colorLog(message, "red");
-          await this.alert.sendErrorChannel({ title: backend, message });
+          await this.alert.sendErrorChannel({ title: destination, message });
           throw new Error(message);
         }
 
-        const status = await this.getServerStatus({ backend, server, loadBalancers });
+        const status = await this.getServerStatus({ destination, server, loadBalancers });
         if (status === ELoadBalancerStatus.OFFLINE) {
           const message = this.getErrorMessage(server, "offline");
           colorLog(message, "red");
-          await this.alert.sendErrorChannel({ title: backend, message });
+          await this.alert.sendErrorChannel({ title: destination, message });
           throw new Error(message);
         }
       }
@@ -76,24 +76,24 @@ export class Service {
       const loadBalancerResponse = await Promise.all(
         loadBalancers.map(({ fqdn, ip }) =>
           this.haProxy.disableServer({
-            backend,
+            destination,
             server,
-            destination: this.getLoadBalancerIP(fqdn || ip),
+            domain: this.getLoadBalancerDomain(fqdn || ip),
           }),
         ),
       );
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
-      const message = `Could not remove ${backend}/${server} from rotation. ${error}`;
+      const message = `Could not remove ${destination}/${server} from rotation. ${error}`;
       colorLog(message, "red");
-      await this.alert.sendErrorChannel({ title: backend, message });
+      await this.alert.sendErrorChannel({ title: destination, message });
       throw new Error(message);
     }
   }
 
   /** Ensures that the Load Balancer's IP is replaced with locahost when running in test mode.
    * This prevents the automation from taking production nodes out of protation. */
-  private getLoadBalancerIP(ip: string): string {
+  private getLoadBalancerDomain(ip: string): string {
     if (process.env.MONITOR_TEST === "1") {
       return "ec2-3-145-99-143.us-east-2.compute.amazonaws.com";
     }
@@ -101,28 +101,41 @@ export class Service {
   }
 
   /* ----- Server Check Methods ----- */
-  async getServerCount({ backend, loadBalancers }: IRotationParams): Promise<number> {
+  async getServerCount({
+    destination,
+    loadBalancers,
+    frontendUrl,
+  }: IRotationParams): Promise<number> {
     const results: number[] = [];
-    for await (const { fqdn, ip } of loadBalancers) {
+    if (frontendUrl) {
+      const domain = frontendUrl.split("//")[1].split(":")[0];
       try {
-        const count = await this.haProxy.getServerCount({
-          backend,
-          destination: this.getLoadBalancerIP(fqdn || ip),
-        });
-        results.push(count);
+        return await this.haProxy.getServerCount({ destination, domain });
       } catch (error) {
-        throw `Could not get backend status.\nIP: ${ip} Backend: ${backend} ${error}`;
+        throw `Could not get frontend count.\nURL: ${domain} Frontend: ${destination} ${error}`;
       }
-    }
+    } else {
+      for await (const { fqdn, ip } of loadBalancers) {
+        try {
+          const count = await this.haProxy.getServerCount({
+            destination,
+            domain: this.getLoadBalancerDomain(fqdn || ip),
+          });
+          results.push(count);
+        } catch (error) {
+          throw `Could not get backend count.\nIP: ${ip} Backend: ${destination} ${error}`;
+        }
+      }
 
-    if (results.every((count) => count === results[0])) {
-      return results[0];
+      if (results.every((count) => count === results[0])) {
+        return results[0];
+      }
     }
     return -1;
   }
 
   async getServerStatus({
-    backend,
+    destination,
     server,
     loadBalancers,
   }: IRotationParams): Promise<ELoadBalancerStatus> {
@@ -131,13 +144,13 @@ export class Service {
     for (const { fqdn, ip } of loadBalancers) {
       try {
         const status = await this.haProxy.getServerStatus({
-          backend,
+          destination,
           server,
-          destination: this.getLoadBalancerIP(fqdn || ip),
+          domain: this.getLoadBalancerDomain(fqdn || ip),
         });
         results.push(status);
       } catch (error) {
-        throw `Could not get backend status.\nIP: ${ip} Backend: ${backend} ${error}`;
+        throw `Could not get backend status.\nIP: ${ip} Backend: ${destination} ${error}`;
       }
     }
 
@@ -151,10 +164,10 @@ export class Service {
   }
 
   /* ----- Message String Methods ----- */
-  getHAProxyMessage({ backend, loadBalancers }: IRotationParams): string {
+  getHAProxyMessage({ destination, loadBalancers }: IRotationParams): string {
     if (process.env.MONITOR_TEST === "1") return "";
     const urls = loadBalancers
-      .map(({ ip, url }) => `http://${url || ip}:8050/stats?scope=${backend}`)
+      .map(({ ip, url }) => `http://${url || ip}:8050/stats?scope=${destination}`)
       .join("\n");
     return `HAProxy Status\n${urls}`;
   }
