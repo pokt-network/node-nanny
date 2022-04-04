@@ -74,7 +74,11 @@ export class Service extends BaseService {
         serverCount >= 2 ? EErrorStatus.WARNING : EErrorStatus.ERROR,
       );
 
-      const onlineStatus = await this.getServerStatus({ backend, server, loadBalancers });
+      const onlineStatus = await this.getServerStatus({
+        destination: backend,
+        server,
+        loadBalancers,
+      });
       if (serverCount >= 2 && onlineStatus === ELoadBalancerStatus.ONLINE) {
         await this.toggleServer({ node, title, enable: false });
       }
@@ -115,7 +119,11 @@ export class Service extends BaseService {
     }
 
     if (!frontend && healthy) {
-      const onlineStatus = await this.getServerStatus({ backend, server, loadBalancers });
+      const onlineStatus = await this.getServerStatus({
+        destination: backend,
+        server,
+        loadBalancers,
+      });
       if (onlineStatus === ELoadBalancerStatus.OFFLINE) {
         await this.toggleServer({ node, title, enable: true });
       }
@@ -132,10 +140,14 @@ export class Service extends BaseService {
 
     const node = await this.getNode(id);
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
-    const { chain, backend, frontend, loadBalancers, dispatch } = node;
+    const { chain, backend, frontend, loadBalancers, dispatch, url } = node;
 
     const serverCount = !dispatch
-      ? await this.getServerCount({ backend: frontend || backend, loadBalancers })
+      ? await this.getServerCount({
+          destination: frontend || backend,
+          loadBalancers,
+          frontendUrl: frontend ? url : null,
+        })
       : null;
     const downDispatchers =
       this.pnf && dispatch && chain.name === ESupportedBlockchains["POKT-DIS"]
@@ -180,11 +192,11 @@ export class Service extends BaseService {
 
     try {
       enable /* Enable or Disable Server */
-        ? await this.enableServer({ backend, server, loadBalancers })
-        : await this.disableServer({ backend, server, loadBalancers });
+        ? await this.enableServer({ destination: backend, server, loadBalancers })
+        : await this.disableServer({ destination: backend, server, loadBalancers });
 
       const serverCount = !node.dispatch
-        ? await this.getServerCount({ backend, loadBalancers })
+        ? await this.getServerCount({ destination: backend, loadBalancers })
         : null;
       const { title, message } = this.getRotationMessage(
         node,
@@ -242,7 +254,7 @@ export class Service extends BaseService {
     backend: string,
     downDispatchers: string[] = null,
   ): { message: string; statusStr: string } {
-    const badOracles = details?.badOracles;
+    const badOracles = details?.badOracles?.join("\n");
     const noOracle = details?.noOracle;
 
     const statusStr = `${name} is ${conditions}.`;
@@ -252,7 +264,7 @@ export class Service extends BaseService {
         : "";
     const ethSyncStr = ethSyncing ? `ETH Syncing: ${JSON.stringify(ethSyncing)}` : "";
     const heightStr = height
-      ? `Height: ${
+      ? `Height - ${
           typeof height === "number"
             ? height
             : `Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
@@ -277,10 +289,10 @@ export class Service extends BaseService {
         ].join("\n")
       : "";
     const badOracleStr = badOracles?.length
-      ? `\nWarning: Bad Oracle${s(badOracles.length)}: ${badOracles}`
+      ? `\nWarning - Bad Oracle${s(badOracles.length)}\n${badOracles}`
       : "";
     const noOracleStr = noOracle
-      ? `\nWarning: No Oracle for node. Node has ${details?.numPeers} peers.`
+      ? `\nWarning - No Oracle for node. Node has ${details?.numPeers} peers.`
       : "";
 
     return {
@@ -307,7 +319,10 @@ export class Service extends BaseService {
     error?: any,
   ): { title: string; message: string } {
     const name = `${host.name}/${chain.name}`;
-    const haProxyMessage = this.getHAProxyMessage({ backend, loadBalancers });
+    const haProxyMessage = this.getHAProxyMessage({
+      destination: backend,
+      loadBalancers,
+    });
     const title = enable
       ? {
           success: `[Added] - Successfully added ${name} to rotation`,
