@@ -30,7 +30,6 @@ export interface IRedisEventParams {
   healthy: boolean;
   notSynced: boolean;
   status: HealthTypes.EErrorStatus;
-  conditions: HealthTypes.EErrorConditions;
   serverCount: number;
   warningMessage?: string;
   downDispatchers?: string[];
