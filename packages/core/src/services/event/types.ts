@@ -33,6 +33,7 @@ export interface IRedisEventParams {
   conditions: HealthTypes.EErrorConditions;
   serverCount: number;
   warningMessage?: string;
+  downDispatchers?: string[];
 }
 
 export enum PocketTypes {
