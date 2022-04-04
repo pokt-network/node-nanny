@@ -1,6 +1,6 @@
 import { EErrorConditions, EErrorStatus, ESupportedBlockchains } from "../health/types";
 import { INode, NodesModel } from "../../models";
-import { AlertTypes, HealthTypes } from "../../types";
+import { AlertTypes } from "../../types";
 import {
   EAlertTypes,
   ELoadBalancerStatus,
