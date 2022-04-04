@@ -153,8 +153,8 @@ export class Service extends BaseService {
       event,
       alertType,
       serverCount,
-      downDispatchers,
       backend,
+      downDispatchers,
     );
 
     const parsedEvent: IRedisEventParams = {
