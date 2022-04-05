@@ -3,8 +3,8 @@ services:
   nn_backend:
     image: pocketfoundation/node-nanny:latest
     container_name: nn_backend
-    expose:
-      - "4000"
+    ports:
+      - "4000:4000"
     hostname: nn_backend
     depends_on:
       - nn_db
@@ -13,6 +13,8 @@ services:
       REDIS_HOST: nn_redis
       BACKEND_HOST: nn_backend
       FRONTEND_HOST: nn_frontend
+      PORT: "3000"
+      API_PORT: "4000"
 
       DISCORD_SERVER_ID: ${DISCORD_SERVER_ID:?Discord Server ID not set.}
       DISCORD_TOKEN: ${DISCORD_TOKEN:?Discord token not set.}
@@ -21,20 +23,19 @@ services:
       ALERT_TRIGGER_THRESHOLD: ${ALERT_TRIGGER_THRESHOLD:-6}
       ALERT_RETRIGGER_THRESHOLD: ${ALERT_RETRIGGER_THRESHOLD:-20}
       MONITOR_LOGGER: ${MONITOR_LOGGER:-mongodb}
-      PORT: ${UI_PORT:-3001}
-      API_PORT: ${API_PORT:-4000}
 
   nn_frontend:
     image: pocketfoundation/node-nanny-ui:latest
     container_name: nn_frontend
     ports:
-      - "${UI_PORT:-3001}:${UI_PORT:-3000}"
+      - "3000:3000"
     hostname: nn_frontend
     environment:
       REDIS_HOST: nn_redis
-      BACKEND_HOST: ${UI_HOST:-nn_backend}
-      PORT: ${UI_PORT:-3001}
-      API_PORT: ${API_PORT:-4000}
+      BACKEND_HOST: nn_backend
+      FRONTEND_HOST: nn_frontend
+      PORT: "3000"
+      API_PORT: "4000"
 
   nn_db:
     image: mongo:latest
@@ -45,7 +46,7 @@ services:
     volumes:
       - ${MONGO_DB_PATH:-~/data/db}:/data/db
     ports:
-      - 27017:27017
+      - "27017:27017"
 
   nn_redis:
     image: "redis:latest"
