@@ -8,7 +8,3 @@ apps:
   - script: ./packages/core/dist/jobs/updater.js
     name: updater
     restart_delay: 3600000
-  - script: npm
-    name: ui
-    cwd: ./packages/ui
-    args: start

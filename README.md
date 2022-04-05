@@ -62,9 +62,9 @@ Then create a `docker-compose.yml` file with the following contents:
 ```
 version: "3.7"
 services:
-  nn_stack:
+  nn_backend:
     image: pocketfoundation/node-nanny:latest
-    container_name: nn_stack
+    container_name: nn_backend
     ports:
       - "${UI_PORT:-3001}:${UI_PORT:-3001}"
       - "${API_PORT:-4000}:${API_PORT:-4000}"
@@ -74,7 +74,7 @@ services:
       - nn_redis
     environment:
       REDIS_HOST: nn_redis
-      HOSTNAME: nn_host
+      BACKEND_HOST: nn_host
       MONITOR_LOGGER: mongodb
       API_PORT: 4000
 
