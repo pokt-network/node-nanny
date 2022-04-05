@@ -171,7 +171,7 @@ export class Service {
     /* Check for required number of Oracles and/or Peers */
     let referenceUrls: IReferenceURL[];
     const { healthyOracles, badOracles } = await this.getOracles(chain);
-    if (healthyOracles.length >= 3) {
+    if (healthyOracles.length >= 2) {
       referenceUrls = healthyOracles;
     } else {
       const healthyPeers = await this.getPeers(chain, node.id);
@@ -375,7 +375,7 @@ export class Service {
     const readings = resolved
       .filter((reading) => reading.result)
       .map(({ result }) => hexToDec(result));
-    return readings.sort()[0];
+    return readings.sort((a, b) => b - a)[0];
   }
 
   private async getEthSyncing(
