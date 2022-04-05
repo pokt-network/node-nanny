@@ -32,14 +32,14 @@ export class Service extends BaseService {
       title,
       downDispatchers,
     } = await this.parseEvent(eventJson, EAlertTypes.TRIGGER);
-    const { chain, frontend } = node;
+    const { chain, backend, frontend } = node;
 
     await this.sendMessage(
       { title, message, chain: chain.name, frontend: Boolean(frontend) },
       status,
     );
 
-    if (!frontend && notSynced) {
+    if (backend && !frontend && notSynced) {
       await this.toggleServer({ node, title, enable: false });
     }
 
@@ -79,7 +79,7 @@ export class Service extends BaseService {
         server,
         loadBalancers,
       });
-      if (serverCount >= 2 && onlineStatus === ELoadBalancerStatus.ONLINE) {
+      if (backend && serverCount >= 2 && onlineStatus === ELoadBalancerStatus.ONLINE) {
         await this.toggleServer({ node, title, enable: false });
       }
     } else {
@@ -124,7 +124,7 @@ export class Service extends BaseService {
         server,
         loadBalancers,
       });
-      if (onlineStatus === ELoadBalancerStatus.OFFLINE) {
+      if (backend && onlineStatus === ELoadBalancerStatus.OFFLINE) {
         await this.toggleServer({ node, title, enable: true });
       }
     }
@@ -279,7 +279,6 @@ export class Service extends BaseService {
           }`
         : "";
     if (serverCount === 1) serverCountStr = `ONLY ${serverCountStr.toUpperCase()}`;
-    if (serverCount === 0) serverCountStr = `NO ${serverCountStr.toUpperCase()}!!`;
     const downDispatchersStr = downDispatchers?.length
       ? [
           `${downDispatchers.length} dispatcher${s(downDispatchers.length)} ${is(
@@ -333,7 +332,7 @@ export class Service extends BaseService {
           error: `[Error] - Could not remove ${name} from rotation`,
         }[mode];
     const serverCountStr =
-      !!serverCount && serverCount >= 0
+      serverCount && serverCount >= 0
         ? `${serverCount} node${s(serverCount)} ${is(serverCount)} online${
             backend ? ` for backend ${backend}.` : ""
           }`
