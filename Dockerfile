@@ -13,10 +13,10 @@ RUN apt-get install nodejs -y
 RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm
 
 COPY ./ .
-
-RUN pnpm install pm2 turbo typescript -g
-RUN pnpm install 
 RUN rm -rf ./packages/ui
+
+RUN pnpm install pm2 turbo -g
+RUN pnpm install 
 RUN pnpm build
 
 EXPOSE 4000

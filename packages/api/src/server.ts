@@ -14,12 +14,13 @@ import typeDefs from "./schema";
   const frontendHost = process.env.FRONTEND_HOST || "localhost";
   const port = process.env.API_PORT || 4000;
   const uiPort = process.env.PORT || 3000;
-  // const cors = {
-  //   origin: `http://${frontendHost}:${uiPort}`,
-  //   credentials: true,
-  // };
+  const cors = {
+    origin: "*",
+    // origin: `http://${frontendHost}:${uiPort}`,
+    credentials: true,
+  };
 
-  await new ApolloServer({ typeDefs, resolvers }).listen({
+  await new ApolloServer({ typeDefs, resolvers, cors }).listen({
     frontendHost,
     port,
   });
