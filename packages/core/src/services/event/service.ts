@@ -279,7 +279,6 @@ export class Service extends BaseService {
           }`
         : "";
     if (serverCount === 1) serverCountStr = `ONLY ${serverCountStr.toUpperCase()}`;
-    if (serverCount === 0) serverCountStr = `NO ${serverCountStr.toUpperCase()}!!`;
     const downDispatchersStr = downDispatchers?.length
       ? [
           `${downDispatchers.length} dispatcher${s(downDispatchers.length)} ${is(
