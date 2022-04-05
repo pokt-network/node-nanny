@@ -1,19 +1,22 @@
 FROM ubuntu:20.04
 
-WORKDIR /usr/src/node-nanny
+WORKDIR /usr/src/node-nanny-backend
 
-RUN apt-get update
-RUN apt-get -y install git curl gnupg nodejs netcat
+RUN apt-get update 
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    git \
+    netcat
 RUN curl -sL https://deb.nodesource.com/setup_16.x  | bash -
+RUN apt-get install nodejs -y
 RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm
 
-COPY ./pnpm-*.yaml ./
+COPY ./ .
 
-RUN pnpm fetch
-
-COPY . ./
 RUN pnpm install pm2 turbo typescript -g
-RUN pnpm install -r --offline
+RUN pnpm install 
+RUN rm -rf ./packages/ui
 RUN pnpm build
 
 EXPOSE 4000
