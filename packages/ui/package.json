@@ -33,6 +33,7 @@
   },
   "scripts": {
     "start": "export SKIP_PREFLIGHT_CHECK=true && react-scripts start",
+    "serve": "pnpm build && pm2 serve build 3000 -spa",
     "build": "export SKIP_PREFLIGHT_CHECK=true && react-scripts build",
     "build:clean": "rm -rf ./build",
     "test": "react-scripts test",
