@@ -10,40 +10,54 @@ services:
       - nn_db
       - nn_redis
     environment:
+      # Hardcoded Docker Compose vars
       REDIS_HOST: nn_redis
-      BACKEND_HOST: nn_backend
-      FRONTEND_HOST: nn_frontend
-      PORT: "3000"
-      API_PORT: "4000"
 
+      # Required Environment Variables
       DISCORD_SERVER_ID: ${DISCORD_SERVER_ID:?Discord Server ID not set.}
       DISCORD_TOKEN: ${DISCORD_TOKEN:?Discord token not set.}
 
-      MONGO_URI: "mongodb://${MONGO_USER:-root}:${MONGO_PASSWORD:-rootpassword}@nn_db:27017/${MONGO_DB_NAME:-local}?authSource=admin"
+      # Optional Environment Variables
       ALERT_TRIGGER_THRESHOLD: ${ALERT_TRIGGER_THRESHOLD:-6}
       ALERT_RETRIGGER_THRESHOLD: ${ALERT_RETRIGGER_THRESHOLD:-20}
       MONITOR_LOGGER: ${MONITOR_LOGGER:-mongodb}
+
+      # If you wish to host your database outside the Docker Compose replace this
+      # variable with your connection string and remove the `nn_db` service below
+      MONGO_URI: "mongodb://${MONGO_USER:-root}:${MONGO_PASSWORD:-rootpassword}@nn_db:27017/${MONGO_DB_NAME:-local}?authSource=admin"
+
+      # TO RUN IN TEST MODE ENABLE THIS VAR
+      # MONITOR_TEST: "1"
+
+      # PNF INTERNAL ONLY
+      PNF: "1"
+      PNF_DISPATCH_THRESHOLD: "5"
+      DD_API_KEY: ${DD_API_KEY}
+      PAGER_DUTY_API_KEY: ${PAGER_DUTY_API_KEY}
 
   nn_frontend:
     image: pocketfoundation/node-nanny-ui:latest
     container_name: nn_frontend
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     hostname: nn_frontend
+    depends_on:
+      - nn_backend
+      - nn_db
+      - nn_redis
     environment:
-      REDIS_HOST: nn_redis
-      BACKEND_HOST: nn_backend
-      FRONTEND_HOST: nn_frontend
-      PORT: "3000"
-      API_PORT: "4000"
+      REACT_APP_BACKEND_HOST: ${BACKEND_HOST}
 
   nn_db:
     image: mongo:latest
     container_name: nn_db
     environment:
+      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME:-local}
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-root}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-rootpassword}
     volumes:
+      # Set MONGO_DB_PATH to the local path where you want to store your data
+      # Defaults to `/data/db`
       - ${MONGO_DB_PATH:-~/data/db}:/data/db
     ports:
       - "27017:27017"
