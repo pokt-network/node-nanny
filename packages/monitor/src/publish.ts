@@ -6,24 +6,25 @@ interface IMonitorEvent {
   message: HealthTypes.IHealthResponse;
   id: string;
 }
+
 export class Publish {
-  private map: Map<string, number>;
   private threshold: number;
   private redis: Redis.Redis;
   private retriggerThreshold: number;
+  private map: Map<string, number>;
 
   constructor(nodes: INode[]) {
-    this.map = this.initPublish(nodes);
     this.redis = new Redis({ host: process.env.REDIS_HOST });
     this.threshold = Number(process.env.ALERT_TRIGGER_THRESHOLD || 6);
-    this.retriggerThreshold = Number(process.env.ALERT_RETRIGGER_THRESHOLD || 20);
+    this.retriggerThreshold = Number(process.env.ALERT_RETRIGGER_THRESHOLD || 60);
+    this.map = this.initPublish(nodes);
   }
 
   private initPublish(nodes: INode[]): Map<string, number> {
     const map = new Map<string, number>();
     nodes.forEach(({ id, status: prevStatus }) => {
       if (prevStatus === HealthTypes.EErrorStatus.ERROR) {
-        map.set(id.toString(), 1);
+        map.set(id.toString(), this.threshold);
       }
     });
     return map;
