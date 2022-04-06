@@ -68,7 +68,7 @@ export function HostsCSV({ locationsData: { locations }, refetchHosts }: NodesCS
   }, [error]);
 
   const submitCSV = () => {
-    if (hosts) {
+    if (!hostsError && !backendError && hosts) {
       submit({ variables: { hosts } });
     }
   };
@@ -90,6 +90,8 @@ export function HostsCSV({ locationsData: { locations }, refetchHosts }: NodesCS
     Object.keys(schema).filter((key) => !schema[key]?.(object[key]));
 
   const parseHostsCsv = (hostsData: ICSVHost[]) => {
+    setHostsError("");
+    setBackendError("");
     const hostsWithRequiredFields = hostsData.filter((host) =>
       ["name", "location"].every((key) => Object.keys(host).includes(key)),
     );
@@ -116,6 +118,7 @@ export function HostsCSV({ locationsData: { locations }, refetchHosts }: NodesCS
 
     if (invalidHosts.length) {
       setHostsError(invalidHosts.join("\n"));
+      setHosts(parsedHosts);
     } else {
       setHosts(parsedHosts);
     }
@@ -157,7 +160,12 @@ export function HostsCSV({ locationsData: { locations }, refetchHosts }: NodesCS
                 type={`Adding ${hosts.length} Host${hosts.length === 1 ? "" : "s"}`}
                 rows={hosts}
               />
-              <Button style={{ marginTop: 8 }} onClick={submitCSV} variant="outlined">
+              <Button
+                disabled={Boolean(!hosts || hostsError || backendError)}
+                style={{ marginTop: 8 }}
+                onClick={submitCSV}
+                variant="outlined"
+              >
                 {loading ? (
                   <CircularProgress size={20} />
                 ) : (
