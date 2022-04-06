@@ -1,11 +1,11 @@
-import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client";
 import { IPaginatedLogs } from "../types";
 
-const backendHost = process.env.BACKEND_HOST || "localhost";
-const apiPort = process.env.API_PORT || 4000;
+const hostname = process.env.REACT_APP_BACKEND_HOST || window.location.hostname;
+const uri = `http://${hostname}:4000`;
 
 export default new ApolloClient({
-  uri: `http://${backendHost}:${apiPort}`,
+  link: createHttpLink({ uri, credentials: "include" }),
   cache: new InMemoryCache({
     addTypename: true,
     typePolicies: {
