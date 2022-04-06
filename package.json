@@ -6,16 +6,22 @@
   "license": "MIT",
   "scripts": {
     "build": "turbo run build",
+    "build:install": "pnpm i && pnpm build",
     "build:clean": "turbo run build:clean",
     "build:fresh": "turbo run build:clean && turbo run build",
     "docker:start:init": "docker-compose build && docker-compuse up -d",
-    "docker:start": "docker-compose up nn_stack -d",
-    "docker:stop": "docker stop nn_stack",
-    "docker:rebuild": "docker-compose build --no-cache",
-    "docker:terminal": "docker exec -it nn_stack /bin/bash",
-    "docker:monitor": "docker exec -it nn_stack pm2 log monitor",
-    "docker:console": "docker exec -it nn_stack pm2 monit",
-    "docker:push:latest": "pnpm i && pnpm build && docker build -f ./Dockerfile --no-cache --tag pocketfoundation/node-nanny:latest . && docker push pocketfoundation/node-nanny:latest",
+    "docker:start": "docker-compose up -d",
+    "docker:stop": "docker-compose down",
+    "docker:build:backend": "pnpm build:install && docker build -f ./Dockerfile --no-cache --tag pocketfoundation/node-nanny:latest .",
+    "docker:build:frontend": "pnpm build:install && docker build -f ./DockerfileUI --no-cache --tag pocketfoundation/node-nanny-ui:latest .",
+    "docker:build:all": "pnpm docker:build:backend && pnpm docker:build:frontend",
+    "docker:push:backend": "pnpm docker:build:backend && docker push pocketfoundation/node-nanny:latest",
+    "docker:push:frontend": "pnpm docker:build:frontend && docker push pocketfoundation/node-nanny-ui:latest",
+    "docker:push:all": "pnpm docker:build:all && docker push pocketfoundation/node-nanny:latest && docker push pocketfoundation/node-nanny-ui:latest",
+    "docker:terminal": "docker exec -it nn_backend /bin/bash",
+    "docker:monitor": "docker exec -it nn_backend pm2 log monitor",
+    "docker:event": "docker exec -it nn_backend pm2 log event",
+    "docker:console": "docker exec -it nn_backend pm2 monit",
     "monitor": "pm2 log monitor",
     "console": "pm2 monit"
   },
@@ -24,5 +30,8 @@
     "turbo": "1.1.3",
     "typescript": "4.5.5"
   },
-  "packageManager": "pnpm@6.32.3"
+  "packageManager": "pnpm@6.32.3",
+  "dependencies": {
+    "@pnpm/make-dedicated-lockfile": "^0.3.0"
+  }
 }
