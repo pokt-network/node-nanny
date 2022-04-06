@@ -45,6 +45,7 @@ export enum AlertColor {
   SUCCESS = 3066993,
   WARNING = 16776960,
   INFO = 3447003,
+  RETRIGGER = 15105570,
 }
 
 export type ISendAlert = ({ title, message, chain }: IAlertParams) => Promise<boolean>;
