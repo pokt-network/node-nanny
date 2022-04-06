@@ -16,7 +16,7 @@ export class App {
     this.log = new Log();
     this.health = new Health();
     this.publish = new Publish();
-    this.interval = Number(process.env.MONITOR_INTERVAL || 30000);
+    this.interval = Number(process.env.MONITOR_INTERVAL || 10000);
   }
 
   /** Runs a health check on all non-muted nodes in the inventory DB at a set interval.
