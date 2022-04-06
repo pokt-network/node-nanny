@@ -3,20 +3,25 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@pokt-foundation/node-nanny-core": "0.1.0",
+    "ioredis": "^4.28.1"
+  },
+  "dependenciesMeta": {
+    "@pokt-foundation/node-nanny-core": {
+      "injected": true
+    }
+  },
+  "devDependencies": {
+    "@types/ioredis": "^4.28.8"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b .",
     "build:clean": "tsc --build --clean && rm -rf ./dist",
     "build:watch": "tsc -b -w ."
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@pokt-foundation/node-nanny-core": "workspace:^0.1.0",
-    "ioredis": "^4.28.1"
-  },
-  "devDependencies": {
-    "@types/ioredis": "^4.28.8"
   }
 }

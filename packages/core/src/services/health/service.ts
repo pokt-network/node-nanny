@@ -141,7 +141,7 @@ export class Service {
     { harmony }: IEVMHealthCheckOptions = { harmony: false },
   ): Promise<IHealthResponse> => {
     const name = this.getNodeNameForHealthCheck(node);
-    const { chain, url, host, id, port, basicAuth } = node;
+    const { chain, url, host, port, basicAuth } = node;
     const { allowance } = chain;
 
     let healthResponse: IHealthResponse = {
@@ -446,7 +446,7 @@ export class Service {
     );
     const [highest] = pocketHeight
       .map(({ height }) => height)
-      .sort()
+      .sort((a, b) => b - a)
       .slice(-1);
     const { height } = await this.getPocketHeight(url);
     const notSynched = Number(highest) - Number(height) > allowance;
