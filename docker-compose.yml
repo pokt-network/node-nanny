@@ -27,7 +27,7 @@ services:
       MONGO_URI: "mongodb://${MONGO_USER:-root}:${MONGO_PASSWORD:-rootpassword}@nn_db:27017/${MONGO_DB_NAME:-local}?authSource=admin"
 
       # TO RUN IN TEST MODE ENABLE THIS VAR
-      # MONITOR_TEST: "1"
+      MONITOR_TEST: "1"
 
       # PNF INTERNAL ONLY
       PNF: "1"
