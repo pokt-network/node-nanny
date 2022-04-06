@@ -1,14 +1,9 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./src",
     "rootDir": "src",
     "outDir": "dist",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,
@@ -16,9 +11,19 @@
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["@types/jest"],
+    "target": "ES2020",
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+    "resolveJsonModule": true
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

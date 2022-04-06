@@ -58,6 +58,8 @@ export function NodesCSV({
   const [nodesError, setNodesError] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
 
+  console.log({ chains });
+
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
@@ -75,7 +77,7 @@ export function NodesCSV({
   }, [error]);
 
   const submitCSV = () => {
-    if (nodes) {
+    if (!nodesError && !backendError && nodes) {
       submit({ variables: { nodes } });
     }
   };
@@ -108,6 +110,8 @@ export function NodesCSV({
     Object.keys(schema).filter((key) => !schema[key](object[key]));
 
   const parseNodesCSV = (nodesData: ICSVNode[]) => {
+    setBackendError("");
+    setNodesError("");
     const nodesWithRequiredFields = nodesData.filter((node) =>
       Object.keys(schema).every((key) => Object.keys(node).includes(key)),
     );
@@ -134,6 +138,7 @@ export function NodesCSV({
 
     if (invalidNodes.length) {
       setNodesError(invalidNodes.join("\n"));
+      setNodes(parsedNodes);
     } else {
       setNodes(parsedNodes);
     }
@@ -175,7 +180,12 @@ export function NodesCSV({
                 type={`Adding ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`}
                 rows={nodes}
               />
-              <Button style={{ marginTop: 8 }} onClick={submitCSV} variant="outlined">
+              <Button
+                disabled={Boolean(!nodes || nodesError || backendError)}
+                style={{ marginTop: 8 }}
+                onClick={submitCSV}
+                variant="outlined"
+              >
                 {loading ? (
                   <CircularProgress size={20} />
                 ) : (
