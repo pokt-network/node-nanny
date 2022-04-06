@@ -139,7 +139,7 @@ export class Service extends BaseService {
     const { conditions, id, status } = event;
 
     const node = await this.getNode(id);
-    await NodesModel.updateOne({ _id: node.id }, { status, conditions });
+    await NodesModel.updateOne({ _id: node.id }, { status, conditions })
     const { chain, backend, frontend, loadBalancers, dispatch, url } = node;
 
     const serverCount = !dispatch
