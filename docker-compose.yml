@@ -22,12 +22,7 @@ services:
       ALERT_RETRIGGER_THRESHOLD: ${ALERT_RETRIGGER_THRESHOLD:-20}
       MONITOR_LOGGER: ${MONITOR_LOGGER:-mongodb}
 
-      # If you wish to host your database outside the Docker Compose replace this
-      # variable with your connection string and remove the `nn_db` service below
       MONGO_URI: "mongodb://${MONGO_USER:-root}:${MONGO_PASSWORD:-rootpassword}@nn_db:27017/${MONGO_DB_NAME:-local}?authSource=admin"
-
-      # TO RUN IN TEST MODE ENABLE THIS VAR
-      MONITOR_TEST: "1"
 
       # PNF INTERNAL ONLY
       PNF: "1"
@@ -39,14 +34,12 @@ services:
     image: pocketfoundation/node-nanny-ui:latest
     container_name: nn_frontend
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      - "3000:3000"
     hostname: nn_frontend
     depends_on:
       - nn_backend
       - nn_db
       - nn_redis
-    environment:
-      REACT_APP_BACKEND_HOST: ${BACKEND_HOST}
 
   nn_db:
     image: mongo:latest
@@ -56,9 +49,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-root}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-rootpassword}
     volumes:
-      # Set MONGO_DB_PATH to the local path where you want to store your data
-      # Defaults to `/data/db`
-      - ${MONGO_DB_PATH:-~/data/db}:/data/db
+      - ~/data/db:/data/db
     ports:
       - "27017:27017"
 
