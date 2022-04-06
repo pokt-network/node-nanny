@@ -274,14 +274,14 @@ export class Service extends BaseService {
       (!downDispatchers ?? serverCount) && serverCount >= 0
         ? `${serverCount} node${s(serverCount)} ${is(serverCount)} online${
             frontend || backend
-              ? ` for ${frontend ? "frontend" : "backend"} ${frontend || backend}.`
+              ? ` for ${frontend ? "frontend" : "backend"} ${frontend || backend}`
               : ""
           }`
         : "";
-    if (serverCount === 1) serverCountStr = `ONLY ${serverCountStr.toUpperCase()}`;
+    if (serverCount <= 1) serverCountStr = `${serverCountStr.toUpperCase()}`;
     const downDispatchersStr = downDispatchers?.length
       ? [
-          `${downDispatchers.length} dispatcher${s(downDispatchers.length)} ${is(
+          `\n${downDispatchers.length} dispatcher${s(downDispatchers.length)} ${is(
             downDispatchers.length,
           )} down:`,
           `${downDispatchers.join("\n")}`,
