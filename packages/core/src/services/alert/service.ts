@@ -55,12 +55,15 @@ export class Service {
     }
   };
 
-  sendInfo = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
+  sendInfo = async (
+    { title, message, chain, frontend }: AlertTypes.IAlertParams,
+    color?: AlertColor,
+  ) => {
     colorLog(`${title}\n${message}`, "blue");
     try {
       return await this.sendDiscordMessage({
         title,
-        color: AlertColor.INFO,
+        color: color || AlertColor.INFO,
         channel: await this.getWebhookUrl(chain.toUpperCase(), frontend),
         fields: [{ name: "Info", value: message }],
       });
