@@ -1,3 +1,4 @@
+import { AlertColor } from "../alert/types";
 import { EErrorConditions, EErrorStatus, ESupportedBlockchains } from "../health/types";
 import { INode, NodesModel } from "../../models";
 import { AlertTypes } from "../../types";
@@ -54,7 +55,6 @@ export class Service extends BaseService {
       node,
       message,
       notSynced,
-      status,
       title,
       serverCount,
       downDispatchers,
@@ -68,12 +68,9 @@ export class Service extends BaseService {
       frontend: Boolean(frontend),
     };
 
-    if (!frontend && notSynced) {
-      await this.sendMessage(
-        messageParams,
-        serverCount >= 2 ? EErrorStatus.WARNING : EErrorStatus.ERROR,
-      );
+    await this.sendMessage(messageParams, EErrorStatus.INFO, AlertColor.RETRIGGER);
 
+    if (!frontend && notSynced) {
       const onlineStatus = await this.getServerStatus({
         destination: backend,
         server,
@@ -82,8 +79,6 @@ export class Service extends BaseService {
       if (backend && serverCount >= 2 && onlineStatus === ELoadBalancerStatus.ONLINE) {
         await this.toggleServer({ node, title, enable: false });
       }
-    } else {
-      await this.sendMessage(messageParams, status);
     }
 
     if (this.pnf && downDispatchers?.length >= this.pnfDispatchThreshold) {
@@ -139,7 +134,7 @@ export class Service extends BaseService {
     const { conditions, id, status } = event;
 
     const node = await this.getNode(id);
-    await NodesModel.updateOne({ _id: node.id }, { status, conditions })
+    await NodesModel.updateOne({ _id: node.id }, { status, conditions });
     const { chain, backend, frontend, loadBalancers, dispatch, url } = node;
 
     const serverCount = !dispatch
@@ -179,11 +174,13 @@ export class Service extends BaseService {
   private async sendMessage(
     params: AlertTypes.IAlertParams,
     status: EErrorStatus,
+    color?: AlertColor,
   ): Promise<void> {
     await {
       [EErrorStatus.OK]: () => this.alert.sendSuccess(params),
       [EErrorStatus.WARNING]: () => this.alert.sendWarn(params),
       [EErrorStatus.ERROR]: () => this.alert.sendError(params),
+      [EErrorStatus.INFO]: () => this.alert.sendInfo(params, color),
     }[status]();
   }
 
