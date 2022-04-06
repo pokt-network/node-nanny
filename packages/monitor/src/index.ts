@@ -9,13 +9,11 @@ import { Publish } from "./publish";
 export class App {
   private log: Log;
   private health: Health;
-  private publish: Publish;
   private interval: number;
 
   constructor() {
     this.log = new Log();
     this.health = new Health();
-    this.publish = new Publish();
     this.interval = Number(process.env.MONITOR_INTERVAL || 10000);
   }
 
@@ -23,11 +21,11 @@ export class App {
    * Events are published to REDIS and logs written to MongoDB. */
   async main() {
     await connect();
-
     const nodes = await NodesModel.find({ muted: false })
       .populate("host")
       .populate("chain")
       .exec();
+    const publish = new Publish(nodes);
 
     const mode = process.env.MONITOR_TEST === "1" ? "TEST" : "PRODUCTION";
     const secs = this.interval / 1000;
@@ -35,8 +33,9 @@ export class App {
 
     /* ----- Start Node Monitoring Interval ----- */
     console.log(`📺 Monitor running. Monitoring ${nodes.length} node${s(nodes.length)}`);
+
     for await (const node of nodes) {
-      const { id, host, name } = node;
+      const { id, host, name, status: prevStatus } = node;
       const ddLogGroupName = `${host.name}/${name}`;
       const logger = this.log.init(id, ddLogGroupName);
 
@@ -54,7 +53,7 @@ export class App {
         }
 
         /* Publish event to Redis */
-        await this.publish.evaluate({ message: healthResponse, id });
+        await publish.evaluate({ message: healthResponse, id });
 
         /* Log to MongoDB or Datadog */
         const level = status === HealthTypes.EErrorStatus.ERROR ? "error" : "info";
