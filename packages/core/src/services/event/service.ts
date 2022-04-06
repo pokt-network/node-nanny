@@ -171,8 +171,8 @@ export class Service extends BaseService {
       notSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
       status,
       serverCount,
+      downDispatchers,
     };
-    if (downDispatchers?.length) parsedEvent.downDispatchers = downDispatchers;
     return parsedEvent;
   }
 
@@ -227,12 +227,12 @@ export class Service extends BaseService {
       .populate({ path: "host", populate: "location" })
       .exec();
 
-    if (downDispatchNodes?.length) {
-      return downDispatchNodes.map(
-        ({ name, host }) =>
-          `Node: ${name} / Host: ${host.name} / Location: ${host.location.name}`,
-      );
-    }
+    return downDispatchNodes?.length
+      ? downDispatchNodes.map(
+          ({ name, host }) =>
+            `Node: ${name} / Host: ${host.name} / Location: ${host.location.name}`,
+        )
+      : [];
   }
 
   private async alertPocketDispatchersAreDown(downDispatchers: string[]): Promise<void> {
@@ -271,17 +271,17 @@ export class Service extends BaseService {
         }`
       : "";
     let serverCountStr =
-      (!downDispatchers?.length ?? serverCount) && serverCount >= 0
+      (!downDispatchers ?? serverCount) && serverCount >= 0
         ? `${serverCount} node${s(serverCount)} ${is(serverCount)} online${
             frontend || backend
-              ? ` for ${frontend ? "frontend" : "backend"} ${frontend || backend}.`
+              ? ` for ${frontend ? "frontend" : "backend"} ${frontend || backend}`
               : ""
           }`
         : "";
-    if (serverCount === 1) serverCountStr = `ONLY ${serverCountStr.toUpperCase()}`;
+    if (serverCount <= 1) serverCountStr = `${serverCountStr.toUpperCase()}`;
     const downDispatchersStr = downDispatchers?.length
       ? [
-          `${downDispatchers.length} dispatcher${s(downDispatchers.length)} ${is(
+          `\n${downDispatchers.length} dispatcher${s(downDispatchers.length)} ${is(
             downDispatchers.length,
           )} down:`,
           `${downDispatchers.join("\n")}`,
