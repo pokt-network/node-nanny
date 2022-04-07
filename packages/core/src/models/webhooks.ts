@@ -1,4 +1,5 @@
 import { Schema, model, Model, Types } from "mongoose";
+import { ELocation } from "./locations";
 
 export interface IWebhook {
   id: Types.ObjectId;
@@ -11,7 +12,7 @@ const webhookSchema = new Schema<IWebhook>(
   {
     chain: { type: String, required: true },
     url: { type: String, required: true, unique: true },
-    location: { type: String, required: true },
+    location: { type: String, required: true, enum: Object.values(ELocation) },
   },
   { timestamps: true },
 );
