@@ -44,8 +44,8 @@ const resolvers = {
   },
 
   Mutation: {
-    createHost: async (_, host) => {
-      return await HostsModel.create(host);
+    createHost: async (_, { input }) => {
+      return await new AutomationService().createHost(input);
     },
     createNode: async (_, { input }) => {
       return await new AutomationService().createNode(input);
@@ -55,6 +55,20 @@ const resolvers = {
     },
     createHostsCSV: async (_, { hosts }) => {
       return await new AutomationService().createHostsCSV(hosts);
+    },
+
+    updateHost: async (_, { update }) => {
+      return await new AutomationService().updateHost(update);
+    },
+    updateNode: async (_, { update }) => {
+      return await new AutomationService().updateNode(update);
+    },
+
+    deleteHost: async (_, { id }) => {
+      return await new AutomationService().deleteHost(id);
+    },
+    deleteNode: async (_, { id }) => {
+      return await new AutomationService().deleteNode(id);
     },
 
     muteMonitor: async (_, { id }) => {
