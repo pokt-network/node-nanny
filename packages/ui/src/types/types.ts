@@ -39,6 +39,23 @@ export type IHostCsvInput = {
   name: Scalars['String'];
 };
 
+export type IHostInput = {
+  fqdn?: InputMaybe<Scalars['String']>;
+  ip?: InputMaybe<Scalars['String']>;
+  loadBalancer: Scalars['Boolean'];
+  location: Scalars['ID'];
+  name: Scalars['String'];
+};
+
+export type IHostUpdate = {
+  fqdn?: InputMaybe<Scalars['String']>;
+  id: Scalars['ID'];
+  ip?: InputMaybe<Scalars['String']>;
+  loadBalancer?: InputMaybe<Scalars['Boolean']>;
+  location?: InputMaybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']>;
+};
+
 export type ILocation = {
   id: Scalars['ID'];
   name: Scalars['String'];
@@ -57,28 +74,19 @@ export type IMutation = {
   createHostsCSV: Array<Maybe<IHost>>;
   createNode?: Maybe<INode>;
   createNodesCSV: Array<Maybe<INode>>;
-  deleteChain?: Maybe<IChain>;
   deleteHost?: Maybe<IHost>;
   deleteNode?: Maybe<INode>;
-  deleteOracle?: Maybe<IOracle>;
   disableHaProxyServer: Scalars['Boolean'];
   enableHaProxyServer: Scalars['Boolean'];
   muteMonitor: INode;
   unmuteMonitor: INode;
-  updateChain?: Maybe<IChain>;
   updateHost?: Maybe<IHost>;
   updateNode?: Maybe<INode>;
-  updateNodeInRotation?: Maybe<Scalars['String']>;
-  updateOracle?: Maybe<IOracle>;
 };
 
 
 export type IMutationCreateHostArgs = {
-  fqdn?: InputMaybe<Scalars['String']>;
-  ip?: InputMaybe<Scalars['String']>;
-  loadBalancer: Scalars['Boolean'];
-  location: Scalars['String'];
-  name: Scalars['String'];
+  input: IHostInput;
 };
 
 
@@ -88,7 +96,7 @@ export type IMutationCreateHostsCsvArgs = {
 
 
 export type IMutationCreateNodeArgs = {
-  input?: InputMaybe<INodeInput>;
+  input: INodeInput;
 };
 
 
@@ -97,23 +105,13 @@ export type IMutationCreateNodesCsvArgs = {
 };
 
 
-export type IMutationDeleteChainArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-};
-
-
 export type IMutationDeleteHostArgs = {
-  id?: InputMaybe<Scalars['ID']>;
+  id: Scalars['ID'];
 };
 
 
 export type IMutationDeleteNodeArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-};
-
-
-export type IMutationDeleteOracleArgs = {
-  id?: InputMaybe<Scalars['ID']>;
+  id: Scalars['ID'];
 };
 
 
@@ -137,33 +135,13 @@ export type IMutationUnmuteMonitorArgs = {
 };
 
 
-export type IMutationUpdateChainArgs = {
-  name?: InputMaybe<Scalars['String']>;
-  type?: InputMaybe<Scalars['String']>;
-};
-
-
 export type IMutationUpdateHostArgs = {
-  ip?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
+  update: IHostUpdate;
 };
 
 
 export type IMutationUpdateNodeArgs = {
-  input?: InputMaybe<INodeInput>;
-};
-
-
-export type IMutationUpdateNodeInRotationArgs = {
-  action?: InputMaybe<Scalars['String']>;
-  id?: InputMaybe<Scalars['ID']>;
-};
-
-
-export type IMutationUpdateOracleArgs = {
-  action?: InputMaybe<Scalars['String']>;
-  id?: InputMaybe<Scalars['ID']>;
-  url?: InputMaybe<Scalars['String']>;
+  update: INodeUpdate;
 };
 
 export type INode = {
@@ -204,6 +182,19 @@ export type INodeInput = {
   loadBalancers: Array<Scalars['ID']>;
   name: Scalars['String'];
   port: Scalars['Int'];
+  server?: InputMaybe<Scalars['String']>;
+};
+
+export type INodeUpdate = {
+  backend?: InputMaybe<Scalars['String']>;
+  chain?: InputMaybe<Scalars['ID']>;
+  frontend?: InputMaybe<Scalars['String']>;
+  haProxy?: InputMaybe<Scalars['Boolean']>;
+  host?: InputMaybe<Scalars['ID']>;
+  id: Scalars['ID'];
+  loadBalancers?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  name?: InputMaybe<Scalars['String']>;
+  port?: InputMaybe<Scalars['Int']>;
   server?: InputMaybe<Scalars['String']>;
 };
 
@@ -276,8 +267,8 @@ export type IWebhook = {
 };
 
 export type ICreateHostMutationVariables = Exact<{
-  location: Scalars['String'];
   name: Scalars['String'];
+  location: Scalars['ID'];
   loadBalancer: Scalars['Boolean'];
   ip?: InputMaybe<Scalars['String']>;
   fqdn?: InputMaybe<Scalars['String']>;
@@ -285,6 +276,13 @@ export type ICreateHostMutationVariables = Exact<{
 
 
 export type ICreateHostMutation = { createHost?: { name: string, ip?: string | null, loadBalancer: boolean } | null };
+
+export type ICreateHostsCsvMutationVariables = Exact<{
+  hosts: Array<IHostCsvInput> | IHostCsvInput;
+}>;
+
+
+export type ICreateHostsCsvMutation = { createHostsCSV: Array<{ id: string } | null> };
 
 export type ICreateNodeMutationVariables = Exact<{
   chain: Scalars['ID'];
@@ -307,26 +305,33 @@ export type ICreateNodesCsvMutationVariables = Exact<{
 
 export type ICreateNodesCsvMutation = { createNodesCSV: Array<{ id: string } | null> };
 
-export type ICreateHostsCsvMutationVariables = Exact<{
-  hosts: Array<IHostCsvInput> | IHostCsvInput;
+export type IUpdateHostMutationVariables = Exact<{
+  update: IHostUpdate;
 }>;
 
 
-export type ICreateHostsCsvMutation = { createHostsCSV: Array<{ id: string } | null> };
+export type IUpdateHostMutation = { updateHost?: { id: string } | null };
 
-export type IEnableHaProxyServerMutationVariables = Exact<{
+export type IUpdateNodeMutationVariables = Exact<{
+  update: INodeUpdate;
+}>;
+
+
+export type IUpdateNodeMutation = { updateNode?: { id: string } | null };
+
+export type IDeleteHostMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type IEnableHaProxyServerMutation = { enableHaProxyServer: boolean };
+export type IDeleteHostMutation = { deleteHost?: { id: string } | null };
 
-export type IDisableHaProxyServerMutationVariables = Exact<{
+export type IDeleteNodeMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type IDisableHaProxyServerMutation = { disableHaProxyServer: boolean };
+export type IDeleteNodeMutation = { deleteNode?: { id: string } | null };
 
 export type IMuteMonitorMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -341,6 +346,20 @@ export type IUnmuteMonitorMutationVariables = Exact<{
 
 
 export type IUnmuteMonitorMutation = { unmuteMonitor: { id: string, muted: boolean } };
+
+export type IEnableHaProxyServerMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type IEnableHaProxyServerMutation = { enableHaProxyServer: boolean };
+
+export type IDisableHaProxyServerMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type IDisableHaProxyServerMutation = { disableHaProxyServer: boolean };
 
 export type IChainsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -404,13 +423,9 @@ export type IGetNodeStatusQuery = { haProxyStatus: number };
 
 
 export const CreateHostDocument = gql`
-    mutation CreateHost($location: String!, $name: String!, $loadBalancer: Boolean!, $ip: String, $fqdn: String) {
+    mutation CreateHost($name: String!, $location: ID!, $loadBalancer: Boolean!, $ip: String, $fqdn: String) {
   createHost(
-    location: $location
-    name: $name
-    ip: $ip
-    fqdn: $fqdn
-    loadBalancer: $loadBalancer
+    input: {name: $name, location: $location, loadBalancer: $loadBalancer, ip: $ip, fqdn: $fqdn}
   ) {
     name
     ip
@@ -433,8 +448,8 @@ export type ICreateHostMutationFn = Apollo.MutationFunction<ICreateHostMutation,
  * @example
  * const [createHostMutation, { data, loading, error }] = useCreateHostMutation({
  *   variables: {
- *      location: // value for 'location'
  *      name: // value for 'name'
+ *      location: // value for 'location'
  *      loadBalancer: // value for 'loadBalancer'
  *      ip: // value for 'ip'
  *      fqdn: // value for 'fqdn'
@@ -448,6 +463,39 @@ export function useCreateHostMutation(baseOptions?: Apollo.MutationHookOptions<I
 export type CreateHostMutationHookResult = ReturnType<typeof useCreateHostMutation>;
 export type CreateHostMutationResult = Apollo.MutationResult<ICreateHostMutation>;
 export type CreateHostMutationOptions = Apollo.BaseMutationOptions<ICreateHostMutation, ICreateHostMutationVariables>;
+export const CreateHostsCsvDocument = gql`
+    mutation CreateHostsCSV($hosts: [HostCSVInput!]!) {
+  createHostsCSV(hosts: $hosts) {
+    id
+  }
+}
+    `;
+export type ICreateHostsCsvMutationFn = Apollo.MutationFunction<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>;
+
+/**
+ * __useCreateHostsCsvMutation__
+ *
+ * To run a mutation, you first call `useCreateHostsCsvMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateHostsCsvMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createHostsCsvMutation, { data, loading, error }] = useCreateHostsCsvMutation({
+ *   variables: {
+ *      hosts: // value for 'hosts'
+ *   },
+ * });
+ */
+export function useCreateHostsCsvMutation(baseOptions?: Apollo.MutationHookOptions<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>(CreateHostsCsvDocument, options);
+      }
+export type CreateHostsCsvMutationHookResult = ReturnType<typeof useCreateHostsCsvMutation>;
+export type CreateHostsCsvMutationResult = Apollo.MutationResult<ICreateHostsCsvMutation>;
+export type CreateHostsCsvMutationOptions = Apollo.BaseMutationOptions<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>;
 export const CreateNodeDocument = gql`
     mutation CreateNode($chain: ID!, $host: ID!, $port: Int!, $name: String!, $loadBalancers: [ID!]!, $haProxy: Boolean!, $backend: String, $server: String) {
   createNode(
@@ -524,101 +572,138 @@ export function useCreateNodesCsvMutation(baseOptions?: Apollo.MutationHookOptio
 export type CreateNodesCsvMutationHookResult = ReturnType<typeof useCreateNodesCsvMutation>;
 export type CreateNodesCsvMutationResult = Apollo.MutationResult<ICreateNodesCsvMutation>;
 export type CreateNodesCsvMutationOptions = Apollo.BaseMutationOptions<ICreateNodesCsvMutation, ICreateNodesCsvMutationVariables>;
-export const CreateHostsCsvDocument = gql`
-    mutation CreateHostsCSV($hosts: [HostCSVInput!]!) {
-  createHostsCSV(hosts: $hosts) {
+export const UpdateHostDocument = gql`
+    mutation UpdateHost($update: HostUpdate!) {
+  updateHost(update: $update) {
     id
   }
 }
     `;
-export type ICreateHostsCsvMutationFn = Apollo.MutationFunction<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>;
+export type IUpdateHostMutationFn = Apollo.MutationFunction<IUpdateHostMutation, IUpdateHostMutationVariables>;
 
 /**
- * __useCreateHostsCsvMutation__
+ * __useUpdateHostMutation__
  *
- * To run a mutation, you first call `useCreateHostsCsvMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateHostsCsvMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useUpdateHostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateHostMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [createHostsCsvMutation, { data, loading, error }] = useCreateHostsCsvMutation({
+ * const [updateHostMutation, { data, loading, error }] = useUpdateHostMutation({
  *   variables: {
- *      hosts: // value for 'hosts'
+ *      update: // value for 'update'
  *   },
  * });
  */
-export function useCreateHostsCsvMutation(baseOptions?: Apollo.MutationHookOptions<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>) {
+export function useUpdateHostMutation(baseOptions?: Apollo.MutationHookOptions<IUpdateHostMutation, IUpdateHostMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>(CreateHostsCsvDocument, options);
+        return Apollo.useMutation<IUpdateHostMutation, IUpdateHostMutationVariables>(UpdateHostDocument, options);
       }
-export type CreateHostsCsvMutationHookResult = ReturnType<typeof useCreateHostsCsvMutation>;
-export type CreateHostsCsvMutationResult = Apollo.MutationResult<ICreateHostsCsvMutation>;
-export type CreateHostsCsvMutationOptions = Apollo.BaseMutationOptions<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>;
-export const EnableHaProxyServerDocument = gql`
-    mutation EnableHaProxyServer($id: ID!) {
-  enableHaProxyServer(id: $id)
+export type UpdateHostMutationHookResult = ReturnType<typeof useUpdateHostMutation>;
+export type UpdateHostMutationResult = Apollo.MutationResult<IUpdateHostMutation>;
+export type UpdateHostMutationOptions = Apollo.BaseMutationOptions<IUpdateHostMutation, IUpdateHostMutationVariables>;
+export const UpdateNodeDocument = gql`
+    mutation UpdateNode($update: NodeUpdate!) {
+  updateNode(update: $update) {
+    id
+  }
 }
     `;
-export type IEnableHaProxyServerMutationFn = Apollo.MutationFunction<IEnableHaProxyServerMutation, IEnableHaProxyServerMutationVariables>;
+export type IUpdateNodeMutationFn = Apollo.MutationFunction<IUpdateNodeMutation, IUpdateNodeMutationVariables>;
 
 /**
- * __useEnableHaProxyServerMutation__
+ * __useUpdateNodeMutation__
  *
- * To run a mutation, you first call `useEnableHaProxyServerMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useEnableHaProxyServerMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useUpdateNodeMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateNodeMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [enableHaProxyServerMutation, { data, loading, error }] = useEnableHaProxyServerMutation({
+ * const [updateNodeMutation, { data, loading, error }] = useUpdateNodeMutation({
+ *   variables: {
+ *      update: // value for 'update'
+ *   },
+ * });
+ */
+export function useUpdateNodeMutation(baseOptions?: Apollo.MutationHookOptions<IUpdateNodeMutation, IUpdateNodeMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<IUpdateNodeMutation, IUpdateNodeMutationVariables>(UpdateNodeDocument, options);
+      }
+export type UpdateNodeMutationHookResult = ReturnType<typeof useUpdateNodeMutation>;
+export type UpdateNodeMutationResult = Apollo.MutationResult<IUpdateNodeMutation>;
+export type UpdateNodeMutationOptions = Apollo.BaseMutationOptions<IUpdateNodeMutation, IUpdateNodeMutationVariables>;
+export const DeleteHostDocument = gql`
+    mutation DeleteHost($id: ID!) {
+  deleteHost(id: $id) {
+    id
+  }
+}
+    `;
+export type IDeleteHostMutationFn = Apollo.MutationFunction<IDeleteHostMutation, IDeleteHostMutationVariables>;
+
+/**
+ * __useDeleteHostMutation__
+ *
+ * To run a mutation, you first call `useDeleteHostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteHostMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteHostMutation, { data, loading, error }] = useDeleteHostMutation({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useEnableHaProxyServerMutation(baseOptions?: Apollo.MutationHookOptions<IEnableHaProxyServerMutation, IEnableHaProxyServerMutationVariables>) {
+export function useDeleteHostMutation(baseOptions?: Apollo.MutationHookOptions<IDeleteHostMutation, IDeleteHostMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<IEnableHaProxyServerMutation, IEnableHaProxyServerMutationVariables>(EnableHaProxyServerDocument, options);
+        return Apollo.useMutation<IDeleteHostMutation, IDeleteHostMutationVariables>(DeleteHostDocument, options);
       }
-export type EnableHaProxyServerMutationHookResult = ReturnType<typeof useEnableHaProxyServerMutation>;
-export type EnableHaProxyServerMutationResult = Apollo.MutationResult<IEnableHaProxyServerMutation>;
-export type EnableHaProxyServerMutationOptions = Apollo.BaseMutationOptions<IEnableHaProxyServerMutation, IEnableHaProxyServerMutationVariables>;
-export const DisableHaProxyServerDocument = gql`
-    mutation DisableHaProxyServer($id: ID!) {
-  disableHaProxyServer(id: $id)
+export type DeleteHostMutationHookResult = ReturnType<typeof useDeleteHostMutation>;
+export type DeleteHostMutationResult = Apollo.MutationResult<IDeleteHostMutation>;
+export type DeleteHostMutationOptions = Apollo.BaseMutationOptions<IDeleteHostMutation, IDeleteHostMutationVariables>;
+export const DeleteNodeDocument = gql`
+    mutation DeleteNode($id: ID!) {
+  deleteNode(id: $id) {
+    id
+  }
 }
     `;
-export type IDisableHaProxyServerMutationFn = Apollo.MutationFunction<IDisableHaProxyServerMutation, IDisableHaProxyServerMutationVariables>;
+export type IDeleteNodeMutationFn = Apollo.MutationFunction<IDeleteNodeMutation, IDeleteNodeMutationVariables>;
 
 /**
- * __useDisableHaProxyServerMutation__
+ * __useDeleteNodeMutation__
  *
- * To run a mutation, you first call `useDisableHaProxyServerMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useDisableHaProxyServerMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useDeleteNodeMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteNodeMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [disableHaProxyServerMutation, { data, loading, error }] = useDisableHaProxyServerMutation({
+ * const [deleteNodeMutation, { data, loading, error }] = useDeleteNodeMutation({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useDisableHaProxyServerMutation(baseOptions?: Apollo.MutationHookOptions<IDisableHaProxyServerMutation, IDisableHaProxyServerMutationVariables>) {
+export function useDeleteNodeMutation(baseOptions?: Apollo.MutationHookOptions<IDeleteNodeMutation, IDeleteNodeMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<IDisableHaProxyServerMutation, IDisableHaProxyServerMutationVariables>(DisableHaProxyServerDocument, options);
+        return Apollo.useMutation<IDeleteNodeMutation, IDeleteNodeMutationVariables>(DeleteNodeDocument, options);
       }
-export type DisableHaProxyServerMutationHookResult = ReturnType<typeof useDisableHaProxyServerMutation>;
-export type DisableHaProxyServerMutationResult = Apollo.MutationResult<IDisableHaProxyServerMutation>;
-export type DisableHaProxyServerMutationOptions = Apollo.BaseMutationOptions<IDisableHaProxyServerMutation, IDisableHaProxyServerMutationVariables>;
+export type DeleteNodeMutationHookResult = ReturnType<typeof useDeleteNodeMutation>;
+export type DeleteNodeMutationResult = Apollo.MutationResult<IDeleteNodeMutation>;
+export type DeleteNodeMutationOptions = Apollo.BaseMutationOptions<IDeleteNodeMutation, IDeleteNodeMutationVariables>;
 export const MuteMonitorDocument = gql`
     mutation MuteMonitor($id: ID!) {
   muteMonitor(id: $id) {
@@ -687,6 +772,68 @@ export function useUnmuteMonitorMutation(baseOptions?: Apollo.MutationHookOption
 export type UnmuteMonitorMutationHookResult = ReturnType<typeof useUnmuteMonitorMutation>;
 export type UnmuteMonitorMutationResult = Apollo.MutationResult<IUnmuteMonitorMutation>;
 export type UnmuteMonitorMutationOptions = Apollo.BaseMutationOptions<IUnmuteMonitorMutation, IUnmuteMonitorMutationVariables>;
+export const EnableHaProxyServerDocument = gql`
+    mutation EnableHaProxyServer($id: ID!) {
+  enableHaProxyServer(id: $id)
+}
+    `;
+export type IEnableHaProxyServerMutationFn = Apollo.MutationFunction<IEnableHaProxyServerMutation, IEnableHaProxyServerMutationVariables>;
+
+/**
+ * __useEnableHaProxyServerMutation__
+ *
+ * To run a mutation, you first call `useEnableHaProxyServerMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useEnableHaProxyServerMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [enableHaProxyServerMutation, { data, loading, error }] = useEnableHaProxyServerMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useEnableHaProxyServerMutation(baseOptions?: Apollo.MutationHookOptions<IEnableHaProxyServerMutation, IEnableHaProxyServerMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<IEnableHaProxyServerMutation, IEnableHaProxyServerMutationVariables>(EnableHaProxyServerDocument, options);
+      }
+export type EnableHaProxyServerMutationHookResult = ReturnType<typeof useEnableHaProxyServerMutation>;
+export type EnableHaProxyServerMutationResult = Apollo.MutationResult<IEnableHaProxyServerMutation>;
+export type EnableHaProxyServerMutationOptions = Apollo.BaseMutationOptions<IEnableHaProxyServerMutation, IEnableHaProxyServerMutationVariables>;
+export const DisableHaProxyServerDocument = gql`
+    mutation DisableHaProxyServer($id: ID!) {
+  disableHaProxyServer(id: $id)
+}
+    `;
+export type IDisableHaProxyServerMutationFn = Apollo.MutationFunction<IDisableHaProxyServerMutation, IDisableHaProxyServerMutationVariables>;
+
+/**
+ * __useDisableHaProxyServerMutation__
+ *
+ * To run a mutation, you first call `useDisableHaProxyServerMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDisableHaProxyServerMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [disableHaProxyServerMutation, { data, loading, error }] = useDisableHaProxyServerMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDisableHaProxyServerMutation(baseOptions?: Apollo.MutationHookOptions<IDisableHaProxyServerMutation, IDisableHaProxyServerMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<IDisableHaProxyServerMutation, IDisableHaProxyServerMutationVariables>(DisableHaProxyServerDocument, options);
+      }
+export type DisableHaProxyServerMutationHookResult = ReturnType<typeof useDisableHaProxyServerMutation>;
+export type DisableHaProxyServerMutationResult = Apollo.MutationResult<IDisableHaProxyServerMutation>;
+export type DisableHaProxyServerMutationOptions = Apollo.BaseMutationOptions<IDisableHaProxyServerMutation, IDisableHaProxyServerMutationVariables>;
 export const ChainsDocument = gql`
     query Chains {
   chains {

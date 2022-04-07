@@ -89,6 +89,14 @@ const typeDefs = gql`
     server: String
   }
 
+  input HostInput {
+    name: String!
+    location: ID!
+    loadBalancer: Boolean!
+    ip: String
+    fqdn: String
+  }
+
   input NodeCSVInput {
     chain: String!
     host: String!
@@ -106,6 +114,28 @@ const typeDefs = gql`
     loadBalancer: Boolean
     fqdn: String
     ip: String
+  }
+
+  input NodeUpdate {
+    id: ID!
+    chain: ID
+    host: ID
+    name: String
+    loadBalancers: [ID]
+    port: Int
+    haProxy: Boolean
+    backend: String
+    frontend: String
+    server: String
+  }
+
+  input HostUpdate {
+    id: ID!
+    name: String
+    location: ID
+    loadBalancer: Boolean
+    ip: String
+    fqdn: String
   }
 
   # Resolvers
@@ -131,27 +161,16 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    createHost(
-      location: String!
-      name: String!
-      ip: String
-      fqdn: String
-      loadBalancer: Boolean!
-    ): Host
-    createNode(input: NodeInput): Node
-    createNodesCSV(nodes: [NodeCSVInput!]!): [Node]!
+    createHost(input: HostInput!): Host
     createHostsCSV(hosts: [HostCSVInput!]!): [Host]!
+    createNode(input: NodeInput!): Node
+    createNodesCSV(nodes: [NodeCSVInput!]!): [Node]!
 
-    updateNode(input: NodeInput): Node
-    updateHost(name: String, ip: String): Host
-    updateOracle(id: ID, action: String, url: String): Oracle
-    updateChain(name: String, type: String): Chain
-    updateNodeInRotation(id: ID, action: String): String
+    updateHost(update: HostUpdate!): Host
+    updateNode(update: NodeUpdate!): Node
 
-    deleteNode(id: ID): Node
-    deleteHost(id: ID): Host
-    deleteOracle(id: ID): Oracle
-    deleteChain(id: ID): Chain
+    deleteHost(id: ID!): Host
+    deleteNode(id: ID!): Node
 
     muteMonitor(id: ID!): Node!
     unmuteMonitor(id: ID!): Node!
