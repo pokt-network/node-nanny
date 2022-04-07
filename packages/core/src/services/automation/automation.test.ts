@@ -1,20 +1,18 @@
 import mongoose from "mongoose";
-import { NodesModel, ChainsModel, HostsModel, LocationsModel } from "../../models";
+import {
+  NodesModel,
+  ChainsModel,
+  HostsModel,
+  LocationsModel,
+  IChain,
+  ILocation,
+  IHost,
+  INode,
+} from "../../models";
 import { Service } from "./service";
 
 const automationService = new Service();
-
-beforeAll(async () => {
-  await mongoose.connect(global.__MONGO_URI__);
-});
-
-afterAll(async () => {
-  await ChainsModel.deleteMany({});
-  await LocationsModel.deleteMany({});
-  await HostsModel.deleteMany({});
-  await NodesModel.deleteMany({});
-  await mongoose.disconnect();
-});
+let chain: IChain, location: ILocation, host: IHost, node: INode;
 
 const createMocks = async () => {
   const mockChain = { name: "TST", type: "TST", allowance: 5 };
@@ -42,6 +40,19 @@ const createMocks = async () => {
   const node = await NodesModel.create(mockNode);
   return { chain, location, host, node };
 };
+
+beforeAll(async () => {
+  await mongoose.connect(global.__MONGO_URI__);
+  ({ chain, location, host, node } = await createMocks());
+});
+
+afterAll(async () => {
+  await ChainsModel.deleteMany({});
+  await LocationsModel.deleteMany({});
+  await HostsModel.deleteMany({});
+  await NodesModel.deleteMany({});
+  await mongoose.disconnect();
+});
 
 const nodeIds = ["622faff77d73779113cb8012", "622fb03e7d73779113cb8049"];
 describe("Automation Service Tests", () => {
@@ -72,25 +83,64 @@ describe("Automation Service Tests", () => {
   describe("Node Tests", () => {
     describe("Update Node Tests", () => {
       test("Should update one single node", async () => {
-        const { node } = await createMocks();
-
-        const newFields = {
-          id: node.id,
-          name: "test/testy123-2a",
+        const update = {
+          id: node.id.toString(),
+          name: "test/testy123/2a",
           server: "2c",
           port: 5678,
           backend: null,
         };
 
-        const updatedNode = await automationService.updateNode(newFields);
+        const updatedNode = await automationService.updateNode(update);
 
-        expect(updatedNode.name).toEqual(newFields.name);
-        expect(updatedNode.server).toEqual(newFields.server);
-        expect(updatedNode.port).toEqual(newFields.port);
+        expect(updatedNode.name).toEqual(update.name);
+        expect(updatedNode.server).toEqual(update.server);
+        expect(updatedNode.port).toEqual(update.port);
         expect(updatedNode.url).toEqual(
-          node.url.replace(String(node.port), String(newFields.port)),
+          node.url.replace(String(node.port), String(update.port)),
         );
-        expect(updatedNode.backend).toEqual(node.backend);
+        expect(updatedNode.backend).toEqual(null);
+      });
+    });
+
+    describe("Delete Node Tests", () => {
+      test("Should delete one single node", async () => {
+        const nodeExists = !!(await NodesModel.exists({ _id: node.id }));
+        await automationService.deleteNode(node.id.toString());
+        const nodeDeleted = !(await NodesModel.exists({ _id: node.id }));
+
+        expect(nodeExists).toEqual(true);
+        expect(nodeDeleted).toEqual(true);
+      });
+    });
+  });
+
+  describe("Host Tests", () => {
+    describe("Update Host Tests", () => {
+      test("Should update one single host", async () => {
+        const update = {
+          id: host.id.toString(),
+          name: "test/testicule-2c",
+          loadBalancer: true,
+          ip: "86.75.30.9",
+        };
+
+        const updatedHost = await automationService.updateHost(update);
+
+        expect(updatedHost.name).toEqual(update.name);
+        expect(updatedHost.loadBalancer).toEqual(update.loadBalancer);
+        expect(updatedHost.ip).toEqual(update.ip);
+      });
+    });
+
+    describe("Delete Host Tests", () => {
+      test("Should delete one single host", async () => {
+        const hostExists = !!(await HostsModel.exists({ _id: host.id }));
+        await automationService.deleteHost(host.id.toString());
+        const hostDeleted = !(await HostsModel.exists({ _id: node.id }));
+
+        expect(hostExists).toEqual(true);
+        expect(hostDeleted).toEqual(true);
       });
     });
   });
