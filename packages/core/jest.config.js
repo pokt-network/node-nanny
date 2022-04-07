@@ -5,4 +5,6 @@ module.exports = {
   verbose: true,
   testTimeout: 100000000,
   transform: tsjPreset.transform,
+  transformIgnorePatterns: ["^.+\\.js$"],
+  testMatch: ["**/?(*.)+(spec|test).ts?(x)"],
 };
