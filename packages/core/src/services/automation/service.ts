@@ -21,6 +21,7 @@ import {
   INodeInput,
   INodeCsvInput,
   INodeLogParams,
+  INodeUpdate,
 } from "./types";
 import { Service as BaseService } from "../base-service/base-service";
 
@@ -114,6 +115,22 @@ export class Service extends BaseService {
     if (endDate) query.$and.push({ timestamp: { $lte: new Date(endDate) } });
 
     return await LogsModel.paginate(query, { page, limit, sort: { timestamp: -1 } });
+  }
+
+  public async updateNode(update: INodeUpdate): Promise<INode> {
+    const { id } = update;
+    delete update.id;
+    const sanitizedUpdate: any = {};
+    Object.entries(update).forEach(([key, value]) => {
+      if (value) sanitizedUpdate[key] = value;
+    });
+    if (sanitizedUpdate.port) {
+      const { url, port } = await NodesModel.findOne({ _id: id });
+      sanitizedUpdate.url = url.replace(String(port), String(sanitizedUpdate.port));
+    }
+
+    await NodesModel.updateOne({ _id: id }, { ...sanitizedUpdate });
+    return await this.getNode(id);
   }
 
   /* ---- Rotation Methods ----- */

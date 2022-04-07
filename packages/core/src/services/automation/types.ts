@@ -32,6 +32,19 @@ export interface IHostInput {
   fqdn?: string;
 }
 
+export interface INodeUpdate {
+  id: string;
+  chain?: Types.ObjectId;
+  host?: Types.ObjectId;
+  name?: string;
+  loadBalancers?: Types.ObjectId[];
+  port?: number;
+  haProxy?: boolean;
+  backend?: string;
+  frontend?: string;
+  server?: string;
+}
+
 export interface IHostCsvInput {
   name: string;
   location: ELocation;
