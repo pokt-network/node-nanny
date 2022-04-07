@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 
 import { LogTable } from "components";
-import { ILogsQuery, IParsedLog, useLogsQuery, useNodesQuery } from "types";
+import { useLogsQuery, useNodesQuery } from "types";
 
 import LogsChart from "./LogsChart";
 
@@ -113,7 +113,7 @@ export function Logs() {
   useEffect(() => {
     setLogsLoading(true);
     refetch();
-  }, [nodes]);
+  }, [refetch]);
 
   const handleTimePeriodChange = ({ target }: SelectChangeEvent<string>) => {
     const { value } = target;
