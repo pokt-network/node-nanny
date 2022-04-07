@@ -1,20 +1,27 @@
 mutation CreateHost(
-  $location: String!
   $name: String!
+  $location: ID!
   $loadBalancer: Boolean!
   $ip: String
   $fqdn: String
 ) {
   createHost(
-    location: $location
-    name: $name
-    ip: $ip
-    fqdn: $fqdn
-    loadBalancer: $loadBalancer
+    input: {
+      name: $name
+      location: $location
+      loadBalancer: $loadBalancer
+      ip: $ip
+      fqdn: $fqdn
+    }
   ) {
     name
     ip
     loadBalancer
+  }
+}
+mutation CreateHostsCSV($hosts: [HostCSVInput!]!) {
+  createHostsCSV(hosts: $hosts) {
+    id
   }
 }
 
@@ -44,25 +51,32 @@ mutation CreateNode(
     url
   }
 }
-
 mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
   createNodesCSV(nodes: $nodes) {
     id
   }
 }
 
-mutation CreateHostsCSV($hosts: [HostCSVInput!]!) {
-  createHostsCSV(hosts: $hosts) {
+mutation UpdateHost($update: HostUpdate!) {
+  updateHost(update: $update) {
+    id
+  }
+}
+mutation UpdateNode($update: NodeUpdate!) {
+  updateNode(update: $update) {
     id
   }
 }
 
-mutation EnableHaProxyServer($id: ID!) {
-  enableHaProxyServer(id: $id)
+mutation DeleteHost($id: ID!) {
+  deleteHost(id: $id) {
+    id
+  }
 }
-
-mutation DisableHaProxyServer($id: ID!) {
-  disableHaProxyServer(id: $id)
+mutation DeleteNode($id: ID!) {
+  deleteNode(id: $id) {
+    id
+  }
 }
 
 mutation MuteMonitor($id: ID!) {
@@ -71,10 +85,15 @@ mutation MuteMonitor($id: ID!) {
     muted
   }
 }
-
 mutation UnmuteMonitor($id: ID!) {
   unmuteMonitor(id: $id) {
     id
     muted
   }
+}
+mutation EnableHaProxyServer($id: ID!) {
+  enableHaProxyServer(id: $id)
+}
+mutation DisableHaProxyServer($id: ID!) {
+  disableHaProxyServer(id: $id)
 }
