@@ -32,19 +32,6 @@ export interface IHostInput {
   fqdn?: string;
 }
 
-export interface INodeUpdate {
-  id: string;
-  chain?: Types.ObjectId;
-  host?: Types.ObjectId;
-  name?: string;
-  loadBalancers?: Types.ObjectId[];
-  port?: number;
-  haProxy?: boolean;
-  backend?: string;
-  frontend?: string;
-  server?: string;
-}
-
 export interface IHostCsvInput {
   name: string;
   location: ELocation;
@@ -59,4 +46,26 @@ export interface INodeLogParams {
   limit: number;
   startDate?: string;
   endDate?: string;
+}
+
+export interface INodeUpdate {
+  id: string;
+  chain?: string;
+  host?: string;
+  name?: string;
+  loadBalancers?: string[];
+  port?: number;
+  haProxy?: boolean;
+  backend?: string;
+  frontend?: string;
+  server?: string;
+}
+
+export interface IHostUpdate {
+  id: string;
+  name?: string;
+  location?: string;
+  loadBalancer?: boolean;
+  ip?: string;
+  fqdn?: string;
 }
