@@ -6,30 +6,30 @@ import ListItemText from "@mui/material/ListItemText";
 import PeopleIcon from "@mui/icons-material/StorageSharp";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import LayersIcon from "@mui/icons-material/ComputerSharp";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export const Nav = () => {
-  let history = useHistory();
+  const navigate = useNavigate();
   return (
     <div>
       <Divider />
       <List>
         <div>
-          <ListItem button onClick={() => history.push("/logs")}>
+          <ListItem button onClick={() => navigate("/logs")}>
             <ListItemIcon>
               <BarChartIcon />
             </ListItemIcon>
             <ListItemText primary="Logs" />
           </ListItem>
 
-          <ListItem button onClick={() => history.push("/hosts")}>
+          <ListItem button onClick={() => navigate("/hosts")}>
             <ListItemIcon>
               <PeopleIcon />
             </ListItemIcon>
             <ListItemText primary="Hosts" />
           </ListItem>
 
-          <ListItem button onClick={() => history.push("/nodes")}>
+          <ListItem button onClick={() => navigate("/nodes")}>
             <ListItemIcon>
               <LayersIcon />
             </ListItemIcon>
