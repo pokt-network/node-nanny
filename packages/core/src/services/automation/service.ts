@@ -18,6 +18,7 @@ import {
 import {
   IHostInput,
   IHostCsvInput,
+  IHostUpdate,
   INodeInput,
   INodeCsvInput,
   INodeLogParams,
@@ -122,8 +123,9 @@ export class Service extends BaseService {
     delete update.id;
     const sanitizedUpdate: any = {};
     Object.entries(update).forEach(([key, value]) => {
-      if (value) sanitizedUpdate[key] = value;
+      if (value !== undefined) sanitizedUpdate[key] = value;
     });
+
     if (sanitizedUpdate.port) {
       const { url, port } = await NodesModel.findOne({ _id: id });
       sanitizedUpdate.url = url.replace(String(port), String(sanitizedUpdate.port));
@@ -131,6 +133,30 @@ export class Service extends BaseService {
 
     await NodesModel.updateOne({ _id: id }, { ...sanitizedUpdate });
     return await this.getNode(id);
+  }
+
+  public async updateHost(update: IHostUpdate): Promise<IHost> {
+    const { id } = update;
+    delete update.id;
+    const sanitizedUpdate: any = {};
+    Object.entries(update).forEach(([key, value]) => {
+      if (value !== undefined) sanitizedUpdate[key] = value;
+    });
+
+    await HostsModel.updateOne({ _id: id }, { ...sanitizedUpdate });
+    return await HostsModel.findOne({ _id: id }).populate("location").exec();
+  }
+
+  public async deleteNode(id: string): Promise<INode> {
+    const node = await this.getNode(id);
+    await NodesModel.deleteOne({ _id: id });
+    return node;
+  }
+
+  public async deleteHost(id: string): Promise<IHost> {
+    const host = await HostsModel.findOne({ _id: id }).populate("location").exec();
+    await HostsModel.deleteOne({ _id: id });
+    return host;
   }
 
   /* ---- Rotation Methods ----- */
