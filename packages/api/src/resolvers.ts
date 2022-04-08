@@ -6,7 +6,10 @@ import {
   LocationsModel,
   WebhookModel,
 } from "@pokt-foundation/node-nanny-core/dist/models";
-import { Automation as AutomationService } from "@pokt-foundation/node-nanny-core/dist/services";
+import {
+  Automation as AutomationService,
+  Log as LogService,
+} from "@pokt-foundation/node-nanny-core/dist/services";
 
 const resolvers = {
   Query: {
@@ -17,26 +20,23 @@ const resolvers = {
     },
     locations: async () => await LocationsModel.find({}).exec(),
     node: async (_, { id }) =>
-      await NodesModel.find({ _id: id })
+      await NodesModel.findOne({ _id: id })
         .populate("chain")
         .populate({ path: "host", populate: "location" })
+        .populate("loadBalancers")
         .exec(),
-    nodes: async () =>
-      await NodesModel.find({})
+    nodes: async () => {
+      return await NodesModel.find({})
         .populate("chain")
         .populate({ path: "host", populate: "location" })
-        .exec(),
+        .populate("loadBalancers")
+        .exec();
+    },
     oracles: async () => await OraclesModel.find({}).populate("chain").exec(),
     webhooks: async () => await WebhookModel.find({}).exec(),
 
-    logs: async (_, { nodeIds, page, limit, startDate, endDate }) =>
-      await new AutomationService().getLogsForNode({
-        nodeIds,
-        page,
-        limit,
-        startDate,
-        endDate,
-      }),
+    logs: async (_, { input }) => await new LogService().getLogsForNodes(input),
+    logsForChart: async (_, { input }) => await new LogService().getLogsForChart(input),
 
     getHaProxyStatus: async (_, { id }) => {
       return await new AutomationService().getHaProxyStatus(id);
@@ -44,8 +44,8 @@ const resolvers = {
   },
 
   Mutation: {
-    createHost: async (_, host) => {
-      return await HostsModel.create(host);
+    createHost: async (_, { input }) => {
+      return await new AutomationService().createHost(input);
     },
     createNode: async (_, { input }) => {
       return await new AutomationService().createNode(input);
@@ -55,6 +55,20 @@ const resolvers = {
     },
     createHostsCSV: async (_, { hosts }) => {
       return await new AutomationService().createHostsCSV(hosts);
+    },
+
+    updateHost: async (_, { update }) => {
+      return await new AutomationService().updateHost(update);
+    },
+    updateNode: async (_, { update }) => {
+      return await new AutomationService().updateNode(update);
+    },
+
+    deleteHost: async (_, { id }) => {
+      return await new AutomationService().deleteHost(id);
+    },
+    deleteNode: async (_, { id }) => {
+      return await new AutomationService().deleteNode(id);
     },
 
     muteMonitor: async (_, { id }) => {
@@ -68,12 +82,6 @@ const resolvers = {
     },
     disableHaProxyServer: async (_, { id }) => {
       return await new AutomationService().removeFromRotation(id);
-    },
-  },
-
-  Host: {
-    location(host: any) {
-      return host.location?.name;
     },
   },
 };
