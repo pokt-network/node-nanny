@@ -358,7 +358,7 @@ export type IChainsQuery = { chains: Array<{ id: string, name: string, type: str
 export type IHostsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IHostsQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, loadBalancer: boolean, location: { id: string, name: string } }> };
+export type IHostsQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, fqdn?: string | null, loadBalancer: boolean, location: { id: string, name: string } }> };
 
 export type ILocationsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -851,6 +851,7 @@ export const HostsDocument = gql`
     id
     name
     ip
+    fqdn
     loadBalancer
     location {
       id
