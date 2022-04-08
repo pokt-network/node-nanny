@@ -12,6 +12,7 @@ services:
     environment:
       # Hardcoded Docker Compose vars
       REDIS_HOST: nn_redis
+      MONITOR_LOGGER: mongodb
 
       # Required Environment Variables
       DISCORD_SERVER_ID: ${DISCORD_SERVER_ID:?Discord Server ID not set.}
@@ -20,7 +21,6 @@ services:
       # Optional Environment Variables
       ALERT_TRIGGER_THRESHOLD: ${ALERT_TRIGGER_THRESHOLD}
       ALERT_RETRIGGER_THRESHOLD: ${ALERT_RETRIGGER_THRESHOLD}
-      MONITOR_LOGGER: ${MONITOR_LOGGER:-mongodb}
 
       MONGO_URI: "mongodb://${MONGO_USER:?Mongo user not set.}:${MONGO_PASSWORD:?Mongo password not set.}@nn_db:27017/${MONGO_DATABASE:?Mongo database name not set.}?authSource=admin"
 

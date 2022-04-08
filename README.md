@@ -47,8 +47,7 @@ On your chosen host, you will have to set the following environment variables in
 #### Optional Variables
 
 - **ALERT_TRIGGER_THRESHOLD** - The number of times a health check should fail before triggering. **Defaults to `6`**
-- **ALERT_RETRIGGER_THRESHOLD** - The number of times a health check should fail before retriggering. **Defaults to `local`**
-- **MONITOR_LOGGER** - The number of times a health check should fail before retriggering. **Defaults to `local`**
+- **ALERT_RETRIGGER_THRESHOLD** - The number of times a health check should fail before retriggering. **Defaults to `60`**
 - **FRONTEND_PORT** - The port the React UI will run on. **Defaults to `3000`**
 - **BACKEND_HOST** - If the backend is hosted on a different host than the UI, this variable will need to be set to the hostname.
 
