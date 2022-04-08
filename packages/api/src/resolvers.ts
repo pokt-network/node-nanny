@@ -33,7 +33,7 @@ const resolvers = {
     webhooks: async () => await WebhookModel.find({}).exec(),
 
     logs: async (_, { nodeIds, page, limit, startDate, endDate }) =>
-      await new AutomationService().getLogsForNode({
+      await new AutomationService().getLogsForNodes({
         nodeIds,
         page,
         limit,

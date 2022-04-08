@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 
 import { LogTable } from "components";
-import { useLogsQuery, useNodesQuery } from "types";
+import { INode, useLogsQuery, useNodesQuery } from "types";
 
 import LogsChart from "./LogsChart";
 
@@ -126,10 +126,12 @@ export function Logs() {
     setNodes(typeof value === "string" ? value.split(",") : value);
   };
 
+  const getNodeNameForHealthCheck = ({ host, name }: INode): string => {
+    return `${host.name}/${name}`;
+  };
+
   if (nodesLoading) return <>Loading...</>;
   if (nodesError || logsError) return <>Error! ${(nodesError || logsError)?.message}</>;
-
-  if (logsData) console.log("LOGS DATA HERE!!!", { logsData });
 
   return (
     <div
@@ -151,14 +153,14 @@ export function Logs() {
           input={<OutlinedInput label="Nodes" />}
           renderValue={(selected) => {
             return selected
-              .map((id) => nodesData?.nodes!.find(({ id: node }) => node === id)!.backend)
+              .map((id) => nodesData?.nodes!.find(({ id: node }) => node === id)!.name)
               .join(", ");
           }}
         >
-          {nodesData?.nodes.map(({ port, backend, id, server }) => (
-            <MenuItem key={id} value={id}>
-              <Checkbox checked={nodes.indexOf(id!) > -1} />
-              <ListItemText primary={`${backend}/${port}/${server}`} />
+          {nodesData?.nodes.map((node) => (
+            <MenuItem key={node.id} value={node.id}>
+              <Checkbox checked={nodes.indexOf(node.id!) > -1} />
+              <ListItemText primary={getNodeNameForHealthCheck(node as INode)} />
             </MenuItem>
           ))}
         </Select>
