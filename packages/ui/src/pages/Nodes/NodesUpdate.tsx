@@ -45,15 +45,13 @@ export function NodesUpdate({ selectedNode, formData, refetchNodes }: NodesUpdat
 
   useEffect(() => {
     if (formData && selectedNode) {
-      const chain = formData!.chains!.find(
-        ({ name }) => name === selectedNode.chain.name,
-      )!.id;
-      const host = formData!.hosts!.find(
-        ({ name }) => name === selectedNode.host.name,
-      )!.id;
-      const loadBalancers = formData!
-        .loadBalancers!.filter(({ name }) => selectedNode.loadBalancers.includes(name))
-        .map(({ name }) => name);
+      const chain =
+        formData!.chains!.find(({ name }) => name === selectedNode.chain.name)?.id || "";
+      const host =
+        formData!.hosts!.find(({ name }) => name === selectedNode.host.name)?.id || "";
+      const loadBalancers = formData!.loadBalancers
+        ?.filter(({ name }) => selectedNode.loadBalancers.includes(name))
+        .map(({ id }) => id);
       setChain(chain);
       setHost(host);
       setLoadBalancers(loadBalancers);
@@ -188,12 +186,11 @@ export function NodesUpdate({ selectedNode, formData, refetchNodes }: NodesUpdat
                 onChange={handleLoadBalancerChange}
                 input={<OutlinedInput label="Load Balancers" />}
                 renderValue={(selected) => {
-                  return selected
-                    .map(
-                      (id) =>
-                        formData?.loadBalancers!.find(({ id: lb }) => lb === id)!.name,
-                    )
-                    .join(", ");
+                  const lbs = selected.map(
+                    (id) =>
+                      formData?.loadBalancers?.find(({ id: lb }) => lb === id)?.name,
+                  );
+                  return lbs?.join(", ") || null;
                 }}
               >
                 {formData?.loadBalancers.map(({ name, id }) => (

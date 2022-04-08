@@ -12,6 +12,7 @@ query Hosts {
     id
     name
     ip
+    fqdn
     loadBalancer
     location {
       id
