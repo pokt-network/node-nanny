@@ -183,6 +183,7 @@ export function Table({
                       {Object.entries(row)
                         .filter(([key]) => key !== "id" && key !== "__typename")
                         .map(([_, value], i) => {
+                          if (value === null) value = "--";
                           return (
                             <TableCell
                               key={`${value as any}-${i}`}
