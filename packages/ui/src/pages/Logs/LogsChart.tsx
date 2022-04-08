@@ -46,10 +46,10 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
   }, [logPeriod, submit, getQueryVars]);
 
   useEffect(() => {
-    const secondInterval = setInterval(() => {
+    const refetchInterval = setInterval(() => {
       submit({ variables: { input: getQueryVars() } });
     }, 15000);
-    return () => clearInterval(secondInterval);
+    return () => clearInterval(refetchInterval);
   }, [submit, getQueryVars]);
 
   const { labels, errors, oks } = logData.reduce(
