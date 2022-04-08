@@ -146,7 +146,7 @@ export function LogTable({
 
   const loadMore = useCallback(() => {
     loadItems();
-  }, [rows]);
+  }, [loadItems]);
 
   const scrollListener = useCallback(() => {
     let bottom = tableEl.current.scrollHeight - tableEl.current.clientHeight;

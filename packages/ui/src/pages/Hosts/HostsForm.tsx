@@ -53,7 +53,7 @@ export function HostsForm({ refetchHosts }: HostsFormProps) {
   return (
     <>
       <div>
-        <Paper style={{ width: "200%", padding: 10 }} variant="outlined">
+        <Paper style={{ width: "100%", padding: 10 }} variant="outlined">
           <FormControl fullWidth>
             <Select value={location} onChange={handleLocationChange}>
               {data?.locations.map(({ id, name }) => (
@@ -94,7 +94,9 @@ export function HostsForm({ refetchHosts }: HostsFormProps) {
               }}
               variant="outlined"
               onClick={() => {
-                submit({ variables: { location, name, ip, fqdn, loadBalancer } });
+                submit({
+                  variables: { input: { location, name, ip, fqdn, loadBalancer } },
+                });
                 setLocation("");
                 setName("");
                 setIP("");

@@ -1,68 +1,48 @@
-mutation CreateHost(
-  $location: String!
-  $name: String!
-  $loadBalancer: Boolean!
-  $ip: String
-  $fqdn: String
-) {
-  createHost(
-    location: $location
-    name: $name
-    ip: $ip
-    fqdn: $fqdn
-    loadBalancer: $loadBalancer
-  ) {
+mutation CreateHost($input: HostInput!) {
+  createHost(input: $input) {
     name
     ip
     loadBalancer
   }
 }
-
-mutation CreateNode(
-  $chain: ID!
-  $host: ID!
-  $port: Int!
-  $name: String!
-  $loadBalancers: [ID!]!
-  $haProxy: Boolean!
-  $backend: String
-  $server: String
-) {
-  createNode(
-    input: {
-      chain: $chain
-      host: $host
-      name: $name
-      port: $port
-      loadBalancers: $loadBalancers
-      haProxy: $haProxy
-      backend: $backend
-      server: $server
-    }
-  ) {
-    id
-    url
-  }
-}
-
-mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
-  createNodesCSV(nodes: $nodes) {
-    id
-  }
-}
-
 mutation CreateHostsCSV($hosts: [HostCSVInput!]!) {
   createHostsCSV(hosts: $hosts) {
     id
   }
 }
 
-mutation EnableHaProxyServer($id: ID!) {
-  enableHaProxyServer(id: $id)
+mutation CreateNode($input: NodeInput!) {
+  createNode(input: $input) {
+    id
+    url
+  }
+}
+mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
+  createNodesCSV(nodes: $nodes) {
+    id
+  }
 }
 
-mutation DisableHaProxyServer($id: ID!) {
-  disableHaProxyServer(id: $id)
+mutation UpdateHost($update: HostUpdate!) {
+  updateHost(update: $update) {
+    id
+  }
+}
+mutation UpdateNode($update: NodeUpdate!) {
+  updateNode(update: $update) {
+    id
+  }
+}
+
+mutation DeleteHost($id: ID!) {
+  deleteHost(id: $id) {
+    id
+  }
+}
+mutation DeleteNode($id: ID!) {
+  deleteNode(id: $id) {
+    id
+  }
 }
 
 mutation MuteMonitor($id: ID!) {
@@ -71,10 +51,15 @@ mutation MuteMonitor($id: ID!) {
     muted
   }
 }
-
 mutation UnmuteMonitor($id: ID!) {
   unmuteMonitor(id: $id) {
     id
     muted
   }
+}
+mutation EnableHaProxyServer($id: ID!) {
+  enableHaProxyServer(id: $id)
+}
+mutation DisableHaProxyServer($id: ID!) {
+  disableHaProxyServer(id: $id)
 }
