@@ -13,7 +13,7 @@ const typeDefs = gql`
     id: ID!
     name: String!
     loadBalancer: Boolean!
-    location: String!
+    location: Location!
     ip: String
     fqdn: String
   }
@@ -54,7 +54,7 @@ const typeDefs = gql`
     muted: Boolean!
     status: String!
     conditions: String!
-    loadBalancers: [ID!]
+    loadBalancers: [Host!]
     backend: String
     frontend: String
     server: String
