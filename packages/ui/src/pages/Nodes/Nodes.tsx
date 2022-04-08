@@ -73,7 +73,12 @@ export function Nodes() {
           type="Nodes"
           paginate
           searchable
-          rows={data.nodes}
+          rows={data.nodes.map((node) => ({
+            ...node,
+            chain: node.chain.name,
+            host: node.host.name,
+            loadBalancers: node.loadBalancers?.map(({ name }) => name),
+          }))}
           selectedRow={selectedNode?.id}
           onSelectRow={setSelectedNode}
         />

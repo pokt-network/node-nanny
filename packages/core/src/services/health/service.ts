@@ -450,13 +450,14 @@ export class Service {
       .slice(-1);
     const { height } = await this.getPocketHeight(url);
     const notSynched = Number(highest) - Number(height) > allowance;
+    const delta = Math.abs(Number(highest) - Number(height));
 
     if (Math.sign(Number(highest) - Number(height) + allowance) === -1) {
       return {
         name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
-        delta: Number(highest) - Number(height),
+        delta,
         referenceNodeUrls: referenceNodeUrls.map((url) => `${url}\n`),
         highest,
         height,
@@ -474,22 +475,14 @@ export class Service {
         name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.NOT_SYNCHRONIZED,
-        height: {
-          internalHeight: height,
-          externalHeight: highest,
-          delta: Number(highest) - Number(height),
-        },
+        height: { internalHeight: height, externalHeight: highest, delta },
       };
     }
     return {
       name,
       status: EErrorStatus.OK,
       conditions: EErrorConditions.HEALTHY,
-      height: {
-        internalHeight: height,
-        externalHeight: highest,
-        delta: Number(highest) - Number(height),
-      },
+      height: { internalHeight: height, externalHeight: highest, delta },
     };
   };
 
