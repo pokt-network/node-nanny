@@ -112,7 +112,7 @@ export class Service extends BaseService {
     }
   }
 
-  public async getLogsForNode({
+  public async getLogsForNodes({
     nodeIds,
     startDate,
     endDate,
