@@ -507,28 +507,20 @@ export class Service {
         { $sample: { size: 40 } },
       ])
     ).map(({ url, basicAuth }) => ({ url, auth: basicAuth }));
+    const healthyUrls = await this.checkPocketUrlHealth(pocketNodeUrls);
 
-    const { healthyUrls } = await this.checkPoktUrlHealth(pocketNodeUrls);
-    return healthyUrls?.map(({ url }) => url) || [];
+    return healthyUrls;
   }
 
-  private async checkPoktUrlHealth(
-    urls: IReferenceURL[],
-  ): Promise<{ healthyUrls: IReferenceURL[]; badUrls: IReferenceURL[] }> {
-    const healthyUrls: IReferenceURL[] = [];
-    const badUrls: IReferenceURL[] = [];
-
-    let index = 0;
+  private async checkPocketUrlHealth(urls: IReferenceURL[]): Promise<string[]> {
+    const healthyUrls: string[] = [];
     for await (const { url, auth } of urls) {
-      index++;
-      if (index > 20) break;
-
-      Boolean((await this.getPocketHeight(url))?.height)
-        ? healthyUrls.push({ url, auth })
-        : badUrls.push({ url, auth });
+      if ((await this.getPocketHeight(url, auth))?.height) {
+        healthyUrls.push(url);
+      }
+      if (healthyUrls.length >= 20) break;
     }
-
-    return { healthyUrls, badUrls };
+    return healthyUrls;
   }
 
   /* ----- Solana ----- */
