@@ -43,7 +43,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?Mongo user not set.}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Mongo password not set.}
     volumes:
-      - ~/data/db:/data/db
+      - /data/db:/data/db
     ports:
       - "27017:27017"
 
