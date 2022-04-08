@@ -1,16 +1,12 @@
 import { EC2 } from "aws-sdk";
 import { exec } from "child_process";
-import { FilterQuery } from "mongoose";
 
 import { Service as DiscordService } from "../discord";
 import { ELoadBalancerStatus } from "../event/types";
 import {
-  LogsModel,
   NodesModel,
   IHost,
-  ILog,
   INode,
-  IPaginatedLogs,
   ChainsModel,
   HostsModel,
   LocationsModel,
@@ -21,7 +17,6 @@ import {
   IHostUpdate,
   INodeInput,
   INodeCsvInput,
-  INodeLogParams,
   INodeUpdate,
 } from "./types";
 import { Service as BaseService } from "../base-service/base-service";
@@ -110,20 +105,6 @@ export class Service extends BaseService {
     } catch (error) {
       throw new Error(`Node CSV creation error: ${error}`);
     }
-  }
-
-  public async getLogsForNodes({
-    nodeIds,
-    startDate,
-    endDate,
-    page,
-    limit,
-  }: INodeLogParams): Promise<IPaginatedLogs> {
-    const query: FilterQuery<ILog> = { $and: [{ label: { $in: nodeIds } }] };
-    if (startDate) query.$and.push({ timestamp: { $gte: new Date(startDate) } });
-    if (endDate) query.$and.push({ timestamp: { $lte: new Date(endDate) } });
-
-    return await LogsModel.paginate(query, { page, limit, sort: { timestamp: -1 } });
   }
 
   public async updateHost(update: IHostUpdate, restart = true): Promise<IHost> {
