@@ -1,16 +1,12 @@
 import { EC2 } from "aws-sdk";
 import { exec } from "child_process";
-import { FilterQuery } from "mongoose";
 
 import { Service as DiscordService } from "../discord";
 import { ELoadBalancerStatus } from "../event/types";
 import {
-  LogsModel,
   NodesModel,
   IHost,
-  ILog,
   INode,
-  IPaginatedLogs,
   ChainsModel,
   HostsModel,
   LocationsModel,
@@ -18,9 +14,10 @@ import {
 import {
   IHostInput,
   IHostCsvInput,
+  IHostUpdate,
   INodeInput,
   INodeCsvInput,
-  INodeLogParams,
+  INodeUpdate,
 } from "./types";
 import { Service as BaseService } from "../base-service/base-service";
 
@@ -33,6 +30,36 @@ export class Service extends BaseService {
   }
 
   /* ----- CRUD Methods ----- */
+  public async createHost(hostInput: IHostInput, restart = true): Promise<IHost> {
+    const host = await HostsModel.create(hostInput);
+    if (restart) await this.restartMonitor();
+    return host;
+  }
+
+  public async createHostsCSV(hosts: IHostCsvInput[]): Promise<IHost[]> {
+    try {
+      const createdHosts: IHost[] = [];
+      for await (let hostInput of hosts) {
+        const hostInputObj: IHostInput = {
+          name: hostInput.name,
+          loadBalancer: Boolean(hostInput.loadBalancer),
+          location: (await LocationsModel.findOne({ name: hostInput.location }))._id,
+        };
+        if (hostInput.ip) hostInputObj.ip = hostInput.ip;
+        if (hostInput.fqdn) hostInputObj.fqdn = hostInput.fqdn;
+
+        const host = await HostsModel.create(hostInputObj);
+        createdHosts.push(host);
+      }
+
+      await this.restartMonitor();
+
+      return createdHosts;
+    } catch (error) {
+      throw new Error(`Host CSV creation error: ${error}`);
+    }
+  }
+
   public async createNode(nodeInput: INodeInput, restart = true): Promise<INode> {
     let id: string;
 
@@ -80,40 +107,55 @@ export class Service extends BaseService {
     }
   }
 
-  public async createHostsCSV(hosts: IHostCsvInput[]): Promise<IHost[]> {
-    try {
-      const createdHosts: IHost[] = [];
-      for await (let hostInput of hosts) {
-        const hostInputObj: IHostInput = {
-          name: hostInput.name,
-          loadBalancer: Boolean(hostInput.loadBalancer),
-          location: (await LocationsModel.findOne({ name: hostInput.location }))._id,
-        };
-        if (hostInput.ip) hostInputObj.ip = hostInput.ip;
-        if (hostInput.fqdn) hostInputObj.fqdn = hostInput.fqdn;
+  public async updateHost(update: IHostUpdate, restart = true): Promise<IHost> {
+    const { id } = update;
+    delete update.id;
+    const sanitizedUpdate: any = {};
+    Object.entries(update).forEach(([key, value]) => {
+      if (value !== undefined) sanitizedUpdate[key] = value;
+    });
 
-        const host = await HostsModel.create(hostInputObj);
-        createdHosts.push(host);
-      }
+    await HostsModel.updateOne({ _id: id }, { ...sanitizedUpdate });
+    if (restart) await this.restartMonitor();
 
-      return createdHosts;
-    } catch (error) {
-      throw new Error(`Host CSV creation error: ${error}`);
-    }
+    return await HostsModel.findOne({ _id: id }).populate("location").exec();
   }
 
-  public async getLogsForNode({
-    nodeIds,
-    startDate,
-    endDate,
-    page,
-    limit,
-  }: INodeLogParams): Promise<IPaginatedLogs> {
-    const query: FilterQuery<ILog> = { $and: [{ label: { $in: nodeIds } }] };
-    if (startDate) query.$and.push({ timestamp: { $gte: new Date(startDate) } });
-    if (endDate) query.$and.push({ timestamp: { $lte: new Date(endDate) } });
+  public async updateNode(update: INodeUpdate, restart = true): Promise<INode> {
+    const { id } = update;
+    delete update.id;
+    const sanitizedUpdate: any = {};
+    Object.entries(update).forEach(([key, value]) => {
+      if (value !== undefined) sanitizedUpdate[key] = value;
+    });
 
-    return await LogsModel.paginate(query, { page, limit, sort: { timestamp: -1 } });
+    if (sanitizedUpdate.port) {
+      const { url, port } = await NodesModel.findOne({ _id: id });
+      sanitizedUpdate.url = url.replace(String(port), String(sanitizedUpdate.port));
+    }
+
+    await NodesModel.updateOne({ _id: id }, { ...sanitizedUpdate });
+    if (restart) await this.restartMonitor();
+
+    return await this.getNode(id);
+  }
+
+  public async deleteHost(id: string, restart = true): Promise<IHost> {
+    const host = await HostsModel.findOne({ _id: id }).populate("location").exec();
+
+    await HostsModel.deleteOne({ _id: id });
+    if (restart) await this.restartMonitor();
+
+    return host;
+  }
+
+  public async deleteNode(id: string, restart = true): Promise<INode> {
+    const node = await this.getNode(id);
+
+    await NodesModel.deleteOne({ _id: id });
+    if (restart) await this.restartMonitor();
+
+    return node;
   }
 
   /* ---- Rotation Methods ----- */
