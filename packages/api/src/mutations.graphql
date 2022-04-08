@@ -1,19 +1,5 @@
-mutation CreateHost(
-  $name: String!
-  $location: ID!
-  $loadBalancer: Boolean!
-  $ip: String
-  $fqdn: String
-) {
-  createHost(
-    input: {
-      name: $name
-      location: $location
-      loadBalancer: $loadBalancer
-      ip: $ip
-      fqdn: $fqdn
-    }
-  ) {
+mutation CreateHost($input: HostInput!) {
+  createHost(input: $input) {
     name
     ip
     loadBalancer
@@ -25,28 +11,8 @@ mutation CreateHostsCSV($hosts: [HostCSVInput!]!) {
   }
 }
 
-mutation CreateNode(
-  $chain: ID!
-  $host: ID!
-  $port: Int!
-  $name: String!
-  $loadBalancers: [ID!]!
-  $haProxy: Boolean!
-  $backend: String
-  $server: String
-) {
-  createNode(
-    input: {
-      chain: $chain
-      host: $host
-      name: $name
-      port: $port
-      loadBalancers: $loadBalancers
-      haProxy: $haProxy
-      backend: $backend
-      server: $server
-    }
-  ) {
+mutation CreateNode($input: NodeInput!) {
+  createNode(input: $input) {
     id
     url
   }

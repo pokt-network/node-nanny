@@ -27,7 +27,7 @@ export type IHost = {
   id: Scalars['ID'];
   ip?: Maybe<Scalars['String']>;
   loadBalancer: Scalars['Boolean'];
-  location: Scalars['String'];
+  location: ILocation;
   name: Scalars['String'];
 };
 
@@ -153,7 +153,7 @@ export type INode = {
   haProxy?: Maybe<Scalars['Boolean']>;
   host: IHost;
   id: Scalars['ID'];
-  loadBalancers?: Maybe<Array<Scalars['ID']>>;
+  loadBalancers?: Maybe<Array<IHost>>;
   muted: Scalars['Boolean'];
   name: Scalars['String'];
   port: Scalars['Int'];
@@ -267,11 +267,7 @@ export type IWebhook = {
 };
 
 export type ICreateHostMutationVariables = Exact<{
-  name: Scalars['String'];
-  location: Scalars['ID'];
-  loadBalancer: Scalars['Boolean'];
-  ip?: InputMaybe<Scalars['String']>;
-  fqdn?: InputMaybe<Scalars['String']>;
+  input: IHostInput;
 }>;
 
 
@@ -285,14 +281,7 @@ export type ICreateHostsCsvMutationVariables = Exact<{
 export type ICreateHostsCsvMutation = { createHostsCSV: Array<{ id: string } | null> };
 
 export type ICreateNodeMutationVariables = Exact<{
-  chain: Scalars['ID'];
-  host: Scalars['ID'];
-  port: Scalars['Int'];
-  name: Scalars['String'];
-  loadBalancers: Array<Scalars['ID']> | Scalars['ID'];
-  haProxy: Scalars['Boolean'];
-  backend?: InputMaybe<Scalars['String']>;
-  server?: InputMaybe<Scalars['String']>;
+  input: INodeInput;
 }>;
 
 
@@ -369,7 +358,7 @@ export type IChainsQuery = { chains: Array<{ id: string, name: string, type: str
 export type IHostsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IHostsQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, loadBalancer: boolean, location: string }> };
+export type IHostsQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, loadBalancer: boolean, location: { id: string, name: string } }> };
 
 export type ILocationsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -381,12 +370,12 @@ export type INodeQueryVariables = Exact<{
 }>;
 
 
-export type INodeQuery = { node: { id: string, backend?: string | null, port: number, name: string, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, status: string, conditions: string, loadBalancers?: Array<string> | null } };
+export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, haProxy?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } } };
 
 export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, port: number, name: string, server?: string | null, url: string, ssl?: boolean | null, muted: boolean, status: string, conditions: string, loadBalancers?: Array<string> | null }> };
+export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, haProxy?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } }> };
 
 export type ILogsQueryVariables = Exact<{
   nodeIds: Array<Scalars['ID']> | Scalars['ID'];
@@ -412,7 +401,7 @@ export type IWebhooksQuery = { webhooks: Array<{ id: string, location: string, c
 export type IGetHostsChainsAndLoadBalancersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, location: string }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string }> };
+export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, location: { id: string, name: string } }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string }> };
 
 export type IGetNodeStatusQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -423,10 +412,8 @@ export type IGetNodeStatusQuery = { haProxyStatus: number };
 
 
 export const CreateHostDocument = gql`
-    mutation CreateHost($name: String!, $location: ID!, $loadBalancer: Boolean!, $ip: String, $fqdn: String) {
-  createHost(
-    input: {name: $name, location: $location, loadBalancer: $loadBalancer, ip: $ip, fqdn: $fqdn}
-  ) {
+    mutation CreateHost($input: HostInput!) {
+  createHost(input: $input) {
     name
     ip
     loadBalancer
@@ -448,11 +435,7 @@ export type ICreateHostMutationFn = Apollo.MutationFunction<ICreateHostMutation,
  * @example
  * const [createHostMutation, { data, loading, error }] = useCreateHostMutation({
  *   variables: {
- *      name: // value for 'name'
- *      location: // value for 'location'
- *      loadBalancer: // value for 'loadBalancer'
- *      ip: // value for 'ip'
- *      fqdn: // value for 'fqdn'
+ *      input: // value for 'input'
  *   },
  * });
  */
@@ -497,10 +480,8 @@ export type CreateHostsCsvMutationHookResult = ReturnType<typeof useCreateHostsC
 export type CreateHostsCsvMutationResult = Apollo.MutationResult<ICreateHostsCsvMutation>;
 export type CreateHostsCsvMutationOptions = Apollo.BaseMutationOptions<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>;
 export const CreateNodeDocument = gql`
-    mutation CreateNode($chain: ID!, $host: ID!, $port: Int!, $name: String!, $loadBalancers: [ID!]!, $haProxy: Boolean!, $backend: String, $server: String) {
-  createNode(
-    input: {chain: $chain, host: $host, name: $name, port: $port, loadBalancers: $loadBalancers, haProxy: $haProxy, backend: $backend, server: $server}
-  ) {
+    mutation CreateNode($input: NodeInput!) {
+  createNode(input: $input) {
     id
     url
   }
@@ -521,14 +502,7 @@ export type ICreateNodeMutationFn = Apollo.MutationFunction<ICreateNodeMutation,
  * @example
  * const [createNodeMutation, { data, loading, error }] = useCreateNodeMutation({
  *   variables: {
- *      chain: // value for 'chain'
- *      host: // value for 'host'
- *      port: // value for 'port'
- *      name: // value for 'name'
- *      loadBalancers: // value for 'loadBalancers'
- *      haProxy: // value for 'haProxy'
- *      backend: // value for 'backend'
- *      server: // value for 'server'
+ *      input: // value for 'input'
  *   },
  * });
  */
@@ -878,7 +852,10 @@ export const HostsDocument = gql`
     name
     ip
     loadBalancer
-    location
+    location {
+      id
+      name
+    }
   }
 }
     `;
@@ -949,15 +926,29 @@ export const NodeDocument = gql`
   node(id: $id) {
     id
     backend
+    frontend
     port
     name
     server
     url
-    ssl
     muted
     status
     conditions
-    loadBalancers
+    loadBalancers {
+      id
+      name
+    }
+    haProxy
+    dispatch
+    chain {
+      id
+      name
+      type
+    }
+    host {
+      id
+      name
+    }
   }
 }
     `;
@@ -994,15 +985,29 @@ export const NodesDocument = gql`
   nodes {
     id
     backend
+    frontend
     port
     name
     server
     url
-    ssl
     muted
     status
     conditions
-    loadBalancers
+    loadBalancers {
+      id
+      name
+    }
+    haProxy
+    dispatch
+    chain {
+      id
+      name
+      type
+    }
+    host {
+      id
+      name
+    }
   }
 }
     `;
@@ -1165,7 +1170,10 @@ export const GetHostsChainsAndLoadBalancersDocument = gql`
     id
     name
     ip
-    location
+    location {
+      id
+      name
+    }
   }
   chains {
     id

@@ -17,15 +17,18 @@ const resolvers = {
     },
     locations: async () => await LocationsModel.find({}).exec(),
     node: async (_, { id }) =>
-      await NodesModel.find({ _id: id })
+      await NodesModel.findOne({ _id: id })
         .populate("chain")
         .populate({ path: "host", populate: "location" })
+        .populate("loadBalancers")
         .exec(),
-    nodes: async () =>
-      await NodesModel.find({})
+    nodes: async () => {
+      return await NodesModel.find({})
         .populate("chain")
         .populate({ path: "host", populate: "location" })
-        .exec(),
+        .populate("loadBalancers")
+        .exec();
+    },
     oracles: async () => await OraclesModel.find({}).populate("chain").exec(),
     webhooks: async () => await WebhookModel.find({}).exec(),
 
@@ -82,12 +85,6 @@ const resolvers = {
     },
     disableHaProxyServer: async (_, { id }) => {
       return await new AutomationService().removeFromRotation(id);
-    },
-  },
-
-  Host: {
-    location(host: any) {
-      return host.location?.name;
     },
   },
 };

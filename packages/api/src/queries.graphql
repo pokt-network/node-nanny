@@ -13,7 +13,10 @@ query Hosts {
     name
     ip
     loadBalancer
-    location
+    location {
+      id
+      name
+    }
   }
 }
 
@@ -28,15 +31,29 @@ query Node($id: ID!) {
   node(id: $id) {
     id
     backend
+    frontend
     port
     name
     server
     url
-    ssl
     muted
     status
     conditions
-    loadBalancers
+    loadBalancers {
+      id
+      name
+    }
+    haProxy
+    dispatch
+    chain {
+      id
+      name
+      type
+    }
+    host {
+      id
+      name
+    }
   }
 }
 
@@ -44,15 +61,29 @@ query Nodes {
   nodes {
     id
     backend
+    frontend
     port
     name
     server
     url
-    ssl
     muted
     status
     conditions
-    loadBalancers
+    loadBalancers {
+      id
+      name
+    }
+    haProxy
+    dispatch
+    chain {
+      id
+      name
+      type
+    }
+    host {
+      id
+      name
+    }
   }
 }
 
@@ -104,7 +135,10 @@ query GetHostsChainsAndLoadBalancers {
     id
     name
     ip
-    location
+    location {
+      id
+      name
+    }
   }
   chains {
     id
