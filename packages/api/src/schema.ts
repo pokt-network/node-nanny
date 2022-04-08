@@ -31,6 +31,12 @@ const typeDefs = gql`
     label: ID!
   }
 
+  type LogForChart {
+    timestamp: String!
+    ok: Int!
+    error: Int!
+  }
+
   type PaginatedLogs {
     docs: [Log!]!
     totalDocs: Int!
@@ -138,6 +144,21 @@ const typeDefs = gql`
     fqdn: String
   }
 
+  input LogParams {
+    nodeIds: [ID!]!
+    page: Int!
+    limit: Int!
+    startDate: String
+    endDate: String
+  }
+
+  input LogChartParams {
+    startDate: String!
+    endDate: String!
+    increment: Int!
+    nodeIds: [ID!]
+  }
+
   # Resolvers
   type Query {
     chains: [Chain!]!
@@ -148,13 +169,8 @@ const typeDefs = gql`
     oracles: [Oracle!]!
     webhooks: [Webhook!]!
 
-    logs(
-      nodeIds: [ID!]!
-      page: Int!
-      limit: Int!
-      startDate: String
-      endDate: String
-    ): PaginatedLogs!
+    logs(input: LogParams!): PaginatedLogs!
+    logsForChart(input: LogChartParams!): [LogForChart!]!
 
     getHaProxyStatus(id: ID!): Int!
     nodeStatus(id: String): String!

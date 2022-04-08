@@ -69,6 +69,27 @@ export type ILog = {
   timestamp: Scalars['String'];
 };
 
+export type ILogChartParams = {
+  endDate: Scalars['String'];
+  increment: Scalars['Int'];
+  nodeIds?: InputMaybe<Array<Scalars['ID']>>;
+  startDate: Scalars['String'];
+};
+
+export type ILogForChart = {
+  error: Scalars['Int'];
+  ok: Scalars['Int'];
+  timestamp: Scalars['String'];
+};
+
+export type ILogParams = {
+  endDate?: InputMaybe<Scalars['String']>;
+  limit: Scalars['Int'];
+  nodeIds: Array<Scalars['ID']>;
+  page: Scalars['Int'];
+  startDate?: InputMaybe<Scalars['String']>;
+};
+
 export type IMutation = {
   createHost?: Maybe<IHost>;
   createHostsCSV: Array<Maybe<IHost>>;
@@ -223,6 +244,7 @@ export type IQuery = {
   hosts: Array<IHost>;
   locations: Array<ILocation>;
   logs: IPaginatedLogs;
+  logsForChart: Array<ILogForChart>;
   node: INode;
   nodeStatus: Scalars['String'];
   nodes: Array<INode>;
@@ -242,11 +264,12 @@ export type IQueryHostsArgs = {
 
 
 export type IQueryLogsArgs = {
-  endDate?: InputMaybe<Scalars['String']>;
-  limit: Scalars['Int'];
-  nodeIds: Array<Scalars['ID']>;
-  page: Scalars['Int'];
-  startDate?: InputMaybe<Scalars['String']>;
+  input: ILogParams;
+};
+
+
+export type IQueryLogsForChartArgs = {
+  input: ILogChartParams;
 };
 
 
@@ -378,15 +401,18 @@ export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, haProxy?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } }> };
 
 export type ILogsQueryVariables = Exact<{
-  nodeIds: Array<Scalars['ID']> | Scalars['ID'];
-  page: Scalars['Int'];
-  limit: Scalars['Int'];
-  startDate?: InputMaybe<Scalars['String']>;
-  endDate?: InputMaybe<Scalars['String']>;
+  input: ILogParams;
 }>;
 
 
 export type ILogsQuery = { logs: { totalDocs: number, page: number, hasPrevPage: boolean, hasNextPage: boolean, docs: Array<{ message: string, level: string, timestamp: string }> } };
+
+export type ILogsForChartQueryVariables = Exact<{
+  input: ILogChartParams;
+}>;
+
+
+export type ILogsForChartQuery = { logsForChart: Array<{ timestamp: string, ok: number, error: number }> };
 
 export type IOraclesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1040,14 +1066,8 @@ export type NodesQueryHookResult = ReturnType<typeof useNodesQuery>;
 export type NodesLazyQueryHookResult = ReturnType<typeof useNodesLazyQuery>;
 export type NodesQueryResult = Apollo.QueryResult<INodesQuery, INodesQueryVariables>;
 export const LogsDocument = gql`
-    query Logs($nodeIds: [ID!]!, $page: Int!, $limit: Int!, $startDate: String, $endDate: String) {
-  logs(
-    nodeIds: $nodeIds
-    page: $page
-    limit: $limit
-    startDate: $startDate
-    endDate: $endDate
-  ) {
+    query Logs($input: LogParams!) {
+  logs(input: $input) {
     docs {
       message
       level
@@ -1073,11 +1093,7 @@ export const LogsDocument = gql`
  * @example
  * const { data, loading, error } = useLogsQuery({
  *   variables: {
- *      nodeIds: // value for 'nodeIds'
- *      page: // value for 'page'
- *      limit: // value for 'limit'
- *      startDate: // value for 'startDate'
- *      endDate: // value for 'endDate'
+ *      input: // value for 'input'
  *   },
  * });
  */
@@ -1092,6 +1108,43 @@ export function useLogsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ILogs
 export type LogsQueryHookResult = ReturnType<typeof useLogsQuery>;
 export type LogsLazyQueryHookResult = ReturnType<typeof useLogsLazyQuery>;
 export type LogsQueryResult = Apollo.QueryResult<ILogsQuery, ILogsQueryVariables>;
+export const LogsForChartDocument = gql`
+    query LogsForChart($input: LogChartParams!) {
+  logsForChart(input: $input) {
+    timestamp
+    ok
+    error
+  }
+}
+    `;
+
+/**
+ * __useLogsForChartQuery__
+ *
+ * To run a query within a React component, call `useLogsForChartQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLogsForChartQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLogsForChartQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useLogsForChartQuery(baseOptions: Apollo.QueryHookOptions<ILogsForChartQuery, ILogsForChartQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ILogsForChartQuery, ILogsForChartQueryVariables>(LogsForChartDocument, options);
+      }
+export function useLogsForChartLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ILogsForChartQuery, ILogsForChartQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ILogsForChartQuery, ILogsForChartQueryVariables>(LogsForChartDocument, options);
+        }
+export type LogsForChartQueryHookResult = ReturnType<typeof useLogsForChartQuery>;
+export type LogsForChartLazyQueryHookResult = ReturnType<typeof useLogsForChartLazyQuery>;
+export type LogsForChartQueryResult = Apollo.QueryResult<ILogsForChartQuery, ILogsForChartQueryVariables>;
 export const OraclesDocument = gql`
     query Oracles {
   oracles {
