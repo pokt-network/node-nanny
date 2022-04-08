@@ -34,20 +34,18 @@ Permissions
 
 ### 2. Set Environment Variables
 
-On your chosen host, you will have to configure the environment variables in your shell environment. Add the following variables to your shell configuration file (`.bashrc` or `.zshrc`).
-
-- ex. **export DISCORD_SERVER_ID="3r34fub78fjf239fhdsfs"**
+On your chosen host, you will have to set the following environment variables in either a `.env` file in same location as your `docker-compose.yml` file or in your shell environment.
 
 #### Required Variables
 
 - **DISCORD_SERVER_ID** - The server ID for the server you wish to receive alerts in.
 - **DISCORD_TOKEN** - The secret token for your server's bot application.
+- **MONGO_USER** - The user that will be used for your inventory database.
+- **MONGO_PASSWORD** - The password that will be used for your inventory database.
+- **MONGO_DB_NAME** - The name of the inventory database.
 
 #### Optional Variables
 
-- **MONGO_USER** - The user that will be used for your inventory database. **Defaults to `root`**
-- **MONGO_PASSWORD** - The password that will be used for your inventory database. **Defaults to `rootpassword`**
-- **MONGO_DB_NAME** - The name of the inventory database. **Defaults to `local`**
 - **ALERT_TRIGGER_THRESHOLD** - The number of times a health check should fail before triggering. **Defaults to `6`**
 - **ALERT_RETRIGGER_THRESHOLD** - The number of times a health check should fail before retriggering. **Defaults to `local`**
 - **MONITOR_LOGGER** - The number of times a health check should fail before retriggering. **Defaults to `local`**
@@ -81,39 +79,32 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN:?Discord token not set.}
 
       # Optional Environment Variables
-      ALERT_TRIGGER_THRESHOLD: ${ALERT_TRIGGER_THRESHOLD:-6}
-      ALERT_RETRIGGER_THRESHOLD: ${ALERT_RETRIGGER_THRESHOLD:-20}
+      ALERT_TRIGGER_THRESHOLD: ${ALERT_TRIGGER_THRESHOLD}
+      ALERT_RETRIGGER_THRESHOLD: ${ALERT_RETRIGGER_THRESHOLD}
       MONITOR_LOGGER: ${MONITOR_LOGGER:-mongodb}
 
-      # If you wish to host your database outside the Docker Compose replace this
-      # variable with your connection string and remove the `nn_db` service below
-      MONGO_URI: "mongodb://${MONGO_USER:-root}:${MONGO_PASSWORD:-rootpassword}@nn_db:27017/${MONGO_DB_NAME:-local}?authSource=admin"
+      MONGO_URI: "mongodb://${MONGO_USER:?Mongo user not set.}:${MONGO_PASSWORD:?Mongo password not set.}@nn_db:27017/${MONGO_DB_NAME:?Mongo database name not set.}?authSource=admin"
 
   nn_frontend:
     image: pocketfoundation/node-nanny-ui:latest
     container_name: nn_frontend
     ports:
-      - "${API_PORT:-3000}:3000"
+      - "3000:3000"
     hostname: nn_frontend
     depends_on:
       - nn_backend
       - nn_db
       - nn_redis
-    environment:
-      # Required if the backend is hosted on a separate host from the UI
-      REACT_APP_BACKEND_HOST: ${BACKEND_HOST}
 
   nn_db:
     image: mongo:latest
     container_name: nn_db
     environment:
-      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME:-local}
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-root}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-rootpassword}
+      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME:?Mongo database name not set.}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?Mongo user not set.}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Mongo password not set.}
     volumes:
-      # Set MONGO_DB_PATH to the local path where you want to store your data
-      # Defaults to `/data/db`
-      - ${MONGO_DB_PATH:-~/data/db}:/data/db
+      - /data/db:/data/db
     ports:
       - "27017:27017"
 
@@ -124,6 +115,6 @@ services:
 
 Set the `nn_db.volumes` property to the path you would like to store your inventory DB and logs.
 
-Then, run `docker-compose up -d` from the same directory as this file. This will pull down the latest None Nannyimage, as well as setup the DB and redis containers and start everything up. You are now ready to start adding inventory data.
+Then, run `docker-compose up -d` from the same directory as this file. This will pull down the latest Node Nanny images, as well as setup the MongoDB and Redis containers and start everything up. You are now ready to start adding inventory data.
 
 ## Adding Data
