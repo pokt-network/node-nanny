@@ -40,10 +40,24 @@ export interface IHostCsvInput {
   fqdn?: string;
 }
 
-export interface INodeLogParams {
-  nodeIds: string[];
-  page: number;
-  limit: number;
-  startDate?: string;
-  endDate?: string;
+export interface INodeUpdate {
+  id: string;
+  chain?: string;
+  host?: string;
+  name?: string;
+  loadBalancers?: string[];
+  port?: number;
+  haProxy?: boolean;
+  backend?: string;
+  frontend?: string;
+  server?: string;
+}
+
+export interface IHostUpdate {
+  id: string;
+  name?: string;
+  location?: string;
+  loadBalancer?: boolean;
+  ip?: string;
+  fqdn?: string;
 }

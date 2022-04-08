@@ -80,7 +80,7 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
   return (
     <>
       <div style={{ display: "flex", flexDirection: "column" }}>
-        <Paper style={{ width: "200%", padding: 10 }} variant="outlined">
+        <Paper style={{ width: "100%", padding: 10 }} variant="outlined">
           <Typography align="center" variant="h6" gutterBottom>
             Add New Node
           </Typography>
@@ -197,14 +197,16 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
             onClick={() => {
               submit({
                 variables: {
-                  backend,
-                  chain,
-                  haProxy,
-                  host,
-                  name,
-                  port,
-                  server,
-                  loadBalancers,
+                  input: {
+                    backend,
+                    chain,
+                    haProxy,
+                    host,
+                    name,
+                    port,
+                    server,
+                    loadBalancers,
+                  },
                 },
               });
             }}
