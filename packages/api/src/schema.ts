@@ -13,7 +13,7 @@ const typeDefs = gql`
     id: ID!
     name: String!
     loadBalancer: Boolean!
-    location: String!
+    location: Location!
     ip: String
     fqdn: String
   }
@@ -29,6 +29,12 @@ const typeDefs = gql`
     level: String!
     message: String!
     label: ID!
+  }
+
+  type LogForChart {
+    timestamp: String!
+    ok: Int!
+    error: Int!
   }
 
   type PaginatedLogs {
@@ -54,7 +60,7 @@ const typeDefs = gql`
     muted: Boolean!
     status: String!
     conditions: String!
-    loadBalancers: [ID!]
+    loadBalancers: [Host!]
     backend: String
     frontend: String
     server: String
@@ -89,6 +95,14 @@ const typeDefs = gql`
     server: String
   }
 
+  input HostInput {
+    name: String!
+    location: ID!
+    loadBalancer: Boolean!
+    ip: String
+    fqdn: String
+  }
+
   input NodeCSVInput {
     chain: String!
     host: String!
@@ -108,6 +122,43 @@ const typeDefs = gql`
     ip: String
   }
 
+  input NodeUpdate {
+    id: ID!
+    chain: ID
+    host: ID
+    name: String
+    loadBalancers: [ID]
+    port: Int
+    haProxy: Boolean
+    backend: String
+    frontend: String
+    server: String
+  }
+
+  input HostUpdate {
+    id: ID!
+    name: String
+    location: ID
+    loadBalancer: Boolean
+    ip: String
+    fqdn: String
+  }
+
+  input LogParams {
+    nodeIds: [ID!]!
+    page: Int!
+    limit: Int!
+    startDate: String
+    endDate: String
+  }
+
+  input LogChartParams {
+    startDate: String!
+    endDate: String!
+    increment: Int!
+    nodeIds: [ID!]
+  }
+
   # Resolvers
   type Query {
     chains: [Chain!]!
@@ -118,40 +169,24 @@ const typeDefs = gql`
     oracles: [Oracle!]!
     webhooks: [Webhook!]!
 
-    logs(
-      nodeIds: [ID!]!
-      page: Int!
-      limit: Int!
-      startDate: String
-      endDate: String
-    ): PaginatedLogs!
+    logs(input: LogParams!): PaginatedLogs!
+    logsForChart(input: LogChartParams!): [LogForChart!]!
 
     getHaProxyStatus(id: ID!): Int!
     nodeStatus(id: String): String!
   }
 
   type Mutation {
-    createHost(
-      location: String!
-      name: String!
-      ip: String
-      fqdn: String
-      loadBalancer: Boolean!
-    ): Host
-    createNode(input: NodeInput): Node
-    createNodesCSV(nodes: [NodeCSVInput!]!): [Node]!
+    createHost(input: HostInput!): Host
     createHostsCSV(hosts: [HostCSVInput!]!): [Host]!
+    createNode(input: NodeInput!): Node
+    createNodesCSV(nodes: [NodeCSVInput!]!): [Node]!
 
-    updateNode(input: NodeInput): Node
-    updateHost(name: String, ip: String): Host
-    updateOracle(id: ID, action: String, url: String): Oracle
-    updateChain(name: String, type: String): Chain
-    updateNodeInRotation(id: ID, action: String): String
+    updateHost(update: HostUpdate!): Host
+    updateNode(update: NodeUpdate!): Node
 
-    deleteNode(id: ID): Node
-    deleteHost(id: ID): Host
-    deleteOracle(id: ID): Oracle
-    deleteChain(id: ID): Chain
+    deleteHost(id: ID!): Host
+    deleteNode(id: ID!): Node
 
     muteMonitor(id: ID!): Node!
     unmuteMonitor(id: ID!): Node!

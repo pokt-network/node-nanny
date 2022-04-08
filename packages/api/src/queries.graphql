@@ -12,8 +12,12 @@ query Hosts {
     id
     name
     ip
+    fqdn
     loadBalancer
-    location
+    location {
+      id
+      name
+    }
   }
 }
 
@@ -28,15 +32,29 @@ query Node($id: ID!) {
   node(id: $id) {
     id
     backend
+    frontend
     port
     name
     server
     url
-    ssl
     muted
     status
     conditions
-    loadBalancers
+    loadBalancers {
+      id
+      name
+    }
+    haProxy
+    dispatch
+    chain {
+      id
+      name
+      type
+    }
+    host {
+      id
+      name
+    }
   }
 }
 
@@ -44,32 +62,34 @@ query Nodes {
   nodes {
     id
     backend
+    frontend
     port
     name
     server
     url
-    ssl
     muted
     status
     conditions
-    loadBalancers
+    loadBalancers {
+      id
+      name
+    }
+    haProxy
+    dispatch
+    chain {
+      id
+      name
+      type
+    }
+    host {
+      id
+      name
+    }
   }
 }
 
-query Logs(
-  $nodeIds: [ID!]!
-  $page: Int!
-  $limit: Int!
-  $startDate: String
-  $endDate: String
-) {
-  logs(
-    nodeIds: $nodeIds
-    page: $page
-    limit: $limit
-    startDate: $startDate
-    endDate: $endDate
-  ) {
+query Logs($input: LogParams!) {
+  logs(input: $input) {
     docs {
       message
       level
@@ -79,6 +99,14 @@ query Logs(
     page
     hasPrevPage
     hasNextPage
+  }
+}
+
+query LogsForChart($input: LogChartParams!) {
+  logsForChart(input: $input) {
+    timestamp
+    ok
+    error
   }
 }
 
@@ -104,7 +132,10 @@ query GetHostsChainsAndLoadBalancers {
     id
     name
     ip
-    location
+    location {
+      id
+      name
+    }
   }
   chains {
     id

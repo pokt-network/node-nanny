@@ -76,7 +76,9 @@ export class Service {
       });
 
       const { url } = await channel.createWebhook(`${channelName}-alert`);
-      await WebhookModel.create({ chain: "FRONTEND_ALERT", location: "n/a", url });
+      if (!(await WebhookModel.exists({ chain: "FRONTEND_ALERT" }))) {
+        await WebhookModel.create({ chain: "FRONTEND_ALERT", location: "n/a", url });
+      }
     }
   }
 
