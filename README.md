@@ -79,8 +79,8 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN:?Discord token not set.}
 
       # Optional Environment Variables
-      ALERT_TRIGGER_THRESHOLD: ${ALERT_TRIGGER_THRESHOLD:-6}
-      ALERT_RETRIGGER_THRESHOLD: ${ALERT_RETRIGGER_THRESHOLD:-20}
+      ALERT_TRIGGER_THRESHOLD: ${ALERT_TRIGGER_THRESHOLD}
+      ALERT_RETRIGGER_THRESHOLD: ${ALERT_RETRIGGER_THRESHOLD}
       MONITOR_LOGGER: ${MONITOR_LOGGER:-mongodb}
 
       MONGO_URI: "mongodb://${MONGO_USER:?Mongo user not set.}:${MONGO_PASSWORD:?Mongo password not set.}@nn_db:27017/${MONGO_DB_NAME:?Mongo database name not set.}?authSource=admin"
@@ -104,7 +104,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?Mongo user not set.}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Mongo password not set.}
     volumes:
-      - ~/data/db:/data/db
+      - /data/db:/data/db
     ports:
       - "27017:27017"
 
