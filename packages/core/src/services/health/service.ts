@@ -444,19 +444,17 @@ export class Service {
     const pocketHeight = await Promise.all(
       referenceNodeUrls.map((url) => this.getPocketHeight(url)),
     );
-    const [highest] = pocketHeight
-      .map(({ height }) => height)
-      .sort((a, b) => b - a)
-      .slice(-1);
+    const [highest] = pocketHeight.map(({ height }) => height).sort((a, b) => b - a);
     const { height } = await this.getPocketHeight(url);
     const notSynched = Number(highest) - Number(height) > allowance;
+    const delta = Math.abs(Number(highest) - Number(height));
 
     if (Math.sign(Number(highest) - Number(height) + allowance) === -1) {
       return {
         name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
-        delta: Number(highest) - Number(height),
+        delta,
         referenceNodeUrls: referenceNodeUrls.map((url) => `${url}\n`),
         highest,
         height,
@@ -474,22 +472,14 @@ export class Service {
         name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.NOT_SYNCHRONIZED,
-        height: {
-          internalHeight: height,
-          externalHeight: highest,
-          delta: Number(highest) - Number(height),
-        },
+        height: { internalHeight: height, externalHeight: highest, delta },
       };
     }
     return {
       name,
       status: EErrorStatus.OK,
       conditions: EErrorConditions.HEALTHY,
-      height: {
-        internalHeight: height,
-        externalHeight: highest,
-        delta: Number(highest) - Number(height),
-      },
+      height: { internalHeight: height, externalHeight: highest, delta },
     };
   };
 
@@ -511,19 +501,26 @@ export class Service {
       await ChainsModel.find({ type: ESupportedBlockchainTypes.POKT })
     ).map(({ _id }) => _id);
 
-    const referenceNodes = await NodesModel.aggregate<INode>([
-      {
-        $match: {
-          chain: { $in: pocketChainIds },
-          _id: { $ne: nodeId },
-          status: EErrorStatus.OK,
-          conditions: EErrorConditions.HEALTHY,
-        },
-      },
-      { $sample: { size: 20 } },
-    ]);
+    const pocketNodeUrls = (
+      await NodesModel.aggregate<INode>([
+        { $match: { chain: { $in: pocketChainIds }, _id: { $ne: nodeId } } },
+        { $sample: { size: 40 } },
+      ])
+    ).map(({ url, basicAuth }) => ({ url, auth: basicAuth }));
+    const healthyUrls = await this.checkPocketUrlHealth(pocketNodeUrls);
 
-    return referenceNodes?.map(({ url }) => url) || [];
+    return healthyUrls;
+  }
+
+  private async checkPocketUrlHealth(urls: IReferenceURL[]): Promise<string[]> {
+    const healthyUrls: string[] = [];
+    for await (const { url, auth } of urls) {
+      if ((await this.getPocketHeight(url, auth))?.height) {
+        healthyUrls.push(url);
+      }
+      if (healthyUrls.length >= 20) break;
+    }
+    return healthyUrls;
   }
 
   /* ----- Solana ----- */
