@@ -1,3 +1,4 @@
+import { memo, useEffect, useMemo } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -8,8 +9,9 @@ import {
 import dayjs from "dayjs";
 import { Bar } from "react-chartjs-2";
 
-import { ILogsQuery } from "types";
-import { ITimePeriod } from "./Logs";
+import { useLogsForChartLazyQuery } from "types";
+import { ITimePeriod, timePeriods } from "./periods";
+import { deepEqual } from "../../utils";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
@@ -19,24 +21,77 @@ export const options = {
 };
 
 interface LogsChartProps {
-  logs: ILogsQuery["logs"]["docs"];
   logPeriod: ITimePeriod;
 }
 
-export default function LogsChart({ logs, logPeriod }: LogsChartProps) {
-  const timePeriod = Date.now() - (Date.now() - logPeriod.timePeriod);
-  const increments = Math.floor(timePeriod / logPeriod.resolution);
-  console.log({ increments });
-  const labels = [...Array(increments)].map((_, i, a) =>
-    dayjs(Date.now() - (a.length - i) * logPeriod.resolution).format(logPeriod.format),
+function LogsChart({ logPeriod }: LogsChartProps) {
+  const { format, increment, numPeriods, timePeriod } = logPeriod;
+  const endDate = useMemo(() => dayjs().toISOString(), []);
+  const startDate = useMemo(
+    () => dayjs().subtract(numPeriods, timePeriod).toISOString(),
+    [numPeriods, timePeriod],
   );
 
+  const [submit, { data: logsData, error, loading }] = useLogsForChartLazyQuery({
+    variables: {
+      input: { startDate, endDate, increment },
+      // input: {
+      //   startDate: "2022-04-04T22:15:34.612+00:00",
+      //   endDate: "2022-04-08T15:02:52.660+00:00",
+      //   increment: 60000,
+      // },
+    },
+  });
+
+  useEffect(() => {
+    submit();
+  }, [logPeriod, submit]);
+
+  console.log({ logsData });
+
+  // const labels =
+  //   logsData?.logsForChart?.map(({ timestamp }) => dayjs(timestamp).format(format)) || [];
+  const { labels, errors, oks } = logsData?.logsForChart?.reduce(
+    (arrays: { labels: string[]; errors: number[]; oks: number[] }, entry) => {
+      return {
+        labels: [...arrays.labels, dayjs(entry.timestamp).format(format)],
+        errors: [...arrays.errors, entry.error],
+        oks: [...arrays.oks, entry.ok],
+      };
+    },
+    { labels: [], errors: [], oks: [] },
+  ) || { labels: [], errors: [], oks: [] };
+
+  const options: any = {
+    scales: {
+      xAxes: [
+        {
+          stacked: true,
+        },
+      ],
+      yAxes: [
+        {
+          stacked: true,
+        },
+      ],
+    },
+  };
+
+  const arbitraryStackKey = "stack1";
   const data = {
     labels,
     datasets: [
       {
-        data: labels.map(() => 1),
-        backgroundColor: "rgba(255, 99, 132, 0.5)",
+        stack: arbitraryStackKey,
+        data: oks,
+        backgroundColor: "rgba(63,203,226,1)",
+        hoverBackgroundColor: "rgba(46,185,235,1)",
+      },
+      {
+        stack: arbitraryStackKey,
+        data: errors,
+        backgroundColor: "rgba(163,103,126,1)",
+        hoverBackgroundColor: "rgba(140,85,100,1)",
       },
     ],
   };
@@ -47,3 +102,5 @@ export default function LogsChart({ logs, logPeriod }: LogsChartProps) {
     </div>
   );
 }
+
+export default memo(LogsChart, deepEqual);

@@ -504,19 +504,32 @@ export class Service {
       await ChainsModel.find({ type: ESupportedBlockchainTypes.POKT })
     ).map(({ _id }) => _id);
 
-    const referenceNodes = await NodesModel.aggregate<INode>([
-      {
-        $match: {
-          chain: { $in: pocketChainIds },
-          _id: { $ne: nodeId },
-          status: EErrorStatus.OK,
-          conditions: EErrorConditions.HEALTHY,
-        },
-      },
-      { $sample: { size: 20 } },
-    ]);
+    const pocketNodeUrls = (
+      await NodesModel.find({ chain: { $in: pocketChainIds }, _id: { $ne: nodeId } })
+    ).map(({ url, basicAuth }) => ({ url, auth: basicAuth }));
 
-    return referenceNodes?.map(({ url }) => url) || [];
+    const { healthyUrls } = await this.checkPoktUrlHealth(pocketNodeUrls);
+
+    return healthyUrls?.map(({ url }) => url) || [];
+  }
+
+  private async checkPoktUrlHealth(
+    urls: IReferenceURL[],
+  ): Promise<{ healthyUrls: IReferenceURL[]; badUrls: IReferenceURL[] }> {
+    const healthyUrls: IReferenceURL[] = [];
+    const badUrls: IReferenceURL[] = [];
+
+    let index = 0;
+    for await (const { url, auth } of urls) {
+      index++;
+      if (index > 20) break;
+
+      Boolean((await this.getPocketHeight(url))?.height)
+        ? healthyUrls.push({ url, auth })
+        : badUrls.push({ url, auth });
+    }
+
+    return { healthyUrls, badUrls };
   }
 
   /* ----- Solana ----- */

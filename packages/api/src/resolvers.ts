@@ -6,7 +6,10 @@ import {
   LocationsModel,
   WebhookModel,
 } from "@pokt-foundation/node-nanny-core/dist/models";
-import { Automation as AutomationService } from "@pokt-foundation/node-nanny-core/dist/services";
+import {
+  Automation as AutomationService,
+  Log as LogService,
+} from "@pokt-foundation/node-nanny-core/dist/services";
 
 const resolvers = {
   Query: {
@@ -32,14 +35,8 @@ const resolvers = {
     oracles: async () => await OraclesModel.find({}).populate("chain").exec(),
     webhooks: async () => await WebhookModel.find({}).exec(),
 
-    logs: async (_, { nodeIds, page, limit, startDate, endDate }) =>
-      await new AutomationService().getLogsForNodes({
-        nodeIds,
-        page,
-        limit,
-        startDate,
-        endDate,
-      }),
+    logs: async (_, { input }) => await new LogService().getLogsForNodes(input),
+    logsForChart: async (_, { input }) => await new LogService().getLogsForChart(input),
 
     getHaProxyStatus: async (_, { id }) => {
       return await new AutomationService().getHaProxyStatus(id);
