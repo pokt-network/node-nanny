@@ -444,10 +444,7 @@ export class Service {
     const pocketHeight = await Promise.all(
       referenceNodeUrls.map((url) => this.getPocketHeight(url)),
     );
-    const [highest] = pocketHeight
-      .map(({ height }) => height)
-      .sort((a, b) => b - a)
-      .slice(-1);
+    const [highest] = pocketHeight.map(({ height }) => height).sort((a, b) => b - a);
     const { height } = await this.getPocketHeight(url);
     const notSynched = Number(highest) - Number(height) > allowance;
     const delta = Math.abs(Number(highest) - Number(height));
@@ -505,11 +502,13 @@ export class Service {
     ).map(({ _id }) => _id);
 
     const pocketNodeUrls = (
-      await NodesModel.find({ chain: { $in: pocketChainIds }, _id: { $ne: nodeId } })
+      await NodesModel.aggregate<INode>([
+        { $match: { chain: { $in: pocketChainIds }, _id: { $ne: nodeId } } },
+        { $sample: { size: 40 } },
+      ])
     ).map(({ url, basicAuth }) => ({ url, auth: basicAuth }));
 
     const { healthyUrls } = await this.checkPoktUrlHealth(pocketNodeUrls);
-
     return healthyUrls?.map(({ url }) => url) || [];
   }
 
