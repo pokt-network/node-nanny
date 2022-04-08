@@ -6,6 +6,8 @@ import { INode, useGetHostsChainsAndLoadBalancersQuery, useNodesQuery } from "ty
 import { NodesCSV } from "./NodesCSV";
 import { NodesForm } from "./NodesForm";
 import { NodeStatus } from "./NodeStatus";
+import { NodesUpdate } from "./NodesUpdate";
+import { NodesDelete } from "./NodesDelete";
 
 export function Nodes() {
   const [selectedNode, setSelectedNode] = useState<INode | undefined>(undefined);
@@ -33,16 +35,39 @@ export function Nodes() {
         <div
           style={{
             display: "flex",
-            justifyContent: "space-between",
-            width: "60%",
-            marginBottom: "16px",
+            justifyContent: "center",
           }}
         >
-          <NodesForm formData={formData} refetchNodes={refetch} />
-          {selectedNode && (
-            <NodeStatus selectedNode={selectedNode} setSelectedNode={setSelectedNode} />
-          )}
-          <NodesCSV formData={formData} refetchNodes={refetch} />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              flexDirection: "column",
+              marginBottom: "16px",
+              marginRight: "32px",
+              width: "600px",
+            }}
+          >
+            <NodesForm formData={formData} refetchNodes={refetch} />
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: 8,
+              }}
+            >
+              <NodesCSV formData={formData} refetchNodes={refetch} />
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <NodesUpdate
+                  selectedNode={selectedNode}
+                  formData={formData}
+                  refetchNodes={refetch}
+                />
+                <NodesDelete selectedNode={selectedNode} refetchNodes={refetch} />
+              </div>
+            </div>
+          </div>
+          <NodeStatus selectedNode={selectedNode} setSelectedNode={setSelectedNode} />
         </div>
         <Table
           type="Nodes"
