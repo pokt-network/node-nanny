@@ -1,7 +1,8 @@
 import axios, { AxiosInstance } from "axios";
+import { FilterQuery } from "mongoose";
 import { api as pagerDutyApi } from "@pagerduty/pdjs";
 
-import { WebhookModel } from "../../models";
+import { WebhookModel, IWebhook } from "../../models";
 import { AlertTypes } from "../../types";
 import { colorLog } from "../../utils";
 import {
@@ -41,13 +42,19 @@ export class Service {
     }
   };
 
-  sendError = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
+  sendError = async ({
+    title,
+    message,
+    chain,
+    location,
+    frontend,
+  }: AlertTypes.IAlertParams) => {
     colorLog(`${title}\n${message}`, "red");
     try {
       return await this.sendDiscordMessage({
         title,
         color: AlertColor.ERROR,
-        channel: await this.getWebhookUrl(chain.toUpperCase(), frontend),
+        channel: await this.getWebhookUrl(chain.toUpperCase(), location, frontend),
         fields: [{ name: "Error", value: message }],
       });
     } catch (error) {
@@ -56,7 +63,7 @@ export class Service {
   };
 
   sendInfo = async (
-    { title, message, chain, frontend }: AlertTypes.IAlertParams,
+    { title, message, chain, location, frontend }: AlertTypes.IAlertParams,
     color?: AlertColor,
   ) => {
     colorLog(`${title}\n${message}`, "blue");
@@ -64,7 +71,7 @@ export class Service {
       return await this.sendDiscordMessage({
         title,
         color: color || AlertColor.INFO,
-        channel: await this.getWebhookUrl(chain.toUpperCase(), frontend),
+        channel: await this.getWebhookUrl(chain.toUpperCase(), location, frontend),
         fields: [{ name: "Info", value: message }],
       });
     } catch (error) {
@@ -72,13 +79,19 @@ export class Service {
     }
   };
 
-  sendWarn = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
+  sendWarn = async ({
+    title,
+    message,
+    chain,
+    location,
+    frontend,
+  }: AlertTypes.IAlertParams) => {
     colorLog(`${title}\n${message}`, "yellow");
     try {
       return await this.sendDiscordMessage({
         title,
         color: AlertColor.WARNING,
-        channel: await this.getWebhookUrl(chain.toUpperCase(), frontend),
+        channel: await this.getWebhookUrl(chain.toUpperCase(), location, frontend),
         fields: [{ name: "Warning", value: message }],
       });
     } catch (error) {
@@ -86,13 +99,19 @@ export class Service {
     }
   };
 
-  sendSuccess = async ({ title, message, chain, frontend }: AlertTypes.IAlertParams) => {
+  sendSuccess = async ({
+    title,
+    message,
+    chain,
+    location,
+    frontend,
+  }: AlertTypes.IAlertParams) => {
     try {
       colorLog(`${title}\n${message}`, "green");
       return await this.sendDiscordMessage({
         title,
         color: AlertColor.SUCCESS,
-        channel: await this.getWebhookUrl(chain.toUpperCase(), frontend),
+        channel: await this.getWebhookUrl(chain.toUpperCase(), location, frontend),
         fields: [{ name: "Success", value: message }],
       });
     } catch (error) {
@@ -116,10 +135,14 @@ export class Service {
     }
   }
 
-  private async getWebhookUrl(chain: string, frontend = false): Promise<string> {
-    const { url } = await WebhookModel.findOne({
-      chain: frontend ? "FRONTEND_ALERT" : chain,
-    });
+  private async getWebhookUrl(
+    chain: string,
+    location: string,
+    frontend = false,
+  ): Promise<string> {
+    const query: FilterQuery<IWebhook> = { chain: frontend ? "FRONTEND_ALERT" : chain };
+    if (!frontend && location) query.location = location;
+    const { url } = await WebhookModel.findOne(query);
 
     return url;
   }
