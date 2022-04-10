@@ -19,7 +19,7 @@ export class Service extends BaseService {
 
   constructor() {
     super();
-    this.pnf = Boolean(process.env.PNF === "1");
+    this.pnf = process.env.PNF === "1";
     this.pnfDispatchThreshold = Number(process.env.PNF_DISPATCH_THRESHOLD || 5);
   }
 

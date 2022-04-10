@@ -4,6 +4,7 @@ export interface IOracle {
   id: Types.ObjectId;
   chain: string;
   urls: string[];
+  createdAt: string;
 }
 
 const oracleSchema = new Schema<IOracle>(
