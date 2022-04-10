@@ -5,6 +5,7 @@ export interface IChain {
   name: string;
   type: string;
   allowance?: number;
+  createdAt: string
 }
 
 export const chainSchema = new Schema<IChain>(
