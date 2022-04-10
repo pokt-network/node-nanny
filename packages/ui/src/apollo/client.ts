@@ -3,7 +3,6 @@ import { IPaginatedLogs } from "../types";
 
 const hostname = process.env.REACT_APP_BACKEND_HOST || window.location.hostname;
 const uri = `http://${hostname}:4000`;
-console.log({ uri });
 
 export default new ApolloClient({
   link: createHttpLink({ uri, credentials: "include" }),
