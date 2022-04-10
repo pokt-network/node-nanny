@@ -56,10 +56,12 @@ export class Service {
   }
 
   public async addWebhookForFrontendNodes(): Promise<void> {
+    console.log("FIRING HERE!!");
     const categoryName = "NODE-NANNY-FRONTEND-ALERT";
     const channelName = "frontend-alert";
 
     const server = await this.initServer();
+    console.log("SERVER HERE", { server });
     const allChannels = await server.channels.fetch();
     const categories = allChannels.filter(({ type }) => type === "GUILD_CATEGORY");
     const channels = allChannels.filter(({ type }) => type === "GUILD_TEXT");
