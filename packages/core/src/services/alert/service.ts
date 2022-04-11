@@ -35,7 +35,7 @@ export class Service {
           process.env.MONITOR_TEST === "1"
             ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST
             : AlertTypes.Webhooks.WEBHOOK_ERRORS,
-        fields: [{ name: "Error", value: message }],
+        fields: [{ name: "Error", value: this.trimMessage(message) }],
       });
     } catch (error) {
       console.error(error?.message);
@@ -55,7 +55,7 @@ export class Service {
         title,
         color: AlertColor.ERROR,
         channel: await this.getWebhookUrl(chain.toUpperCase(), location, frontend),
-        fields: [{ name: "Error", value: message }],
+        fields: [{ name: "Error", value: this.trimMessage(message) }],
       });
     } catch (error) {
       console.error(error?.message);
@@ -66,13 +66,12 @@ export class Service {
     { title, message, chain, location, frontend }: AlertTypes.IAlertParams,
     color?: AlertColor,
   ) => {
-    colorLog(`${title}\n${message}`, "blue");
     try {
       return await this.sendDiscordMessage({
         title,
         color: color || AlertColor.INFO,
         channel: await this.getWebhookUrl(chain.toUpperCase(), location, frontend),
-        fields: [{ name: "Info", value: message }],
+        fields: [{ name: "Info", value: this.trimMessage(message) }],
       });
     } catch (error) {
       console.error(error?.message);
@@ -92,7 +91,7 @@ export class Service {
         title,
         color: AlertColor.WARNING,
         channel: await this.getWebhookUrl(chain.toUpperCase(), location, frontend),
-        fields: [{ name: "Warning", value: message }],
+        fields: [{ name: "Warning", value: this.trimMessage(message) }],
       });
     } catch (error) {
       console.error(error?.message);
@@ -112,7 +111,7 @@ export class Service {
         title,
         color: AlertColor.SUCCESS,
         channel: await this.getWebhookUrl(chain.toUpperCase(), location, frontend),
-        fields: [{ name: "Success", value: message }],
+        fields: [{ name: "Success", value: this.trimMessage(message) }],
       });
     } catch (error) {
       console.error(error?.message);
@@ -145,13 +144,23 @@ export class Service {
     if (frontend) {
       query = { chain: "FRONTEND_ALERT" };
     } else if (process.env.PNF === "1" && chain === "POKT-DIS") {
-      query = { chain, location: "DISPATCH" };
+      query = { chain };
     } else {
       query = { chain, location };
     }
 
     const { url } = await WebhookModel.findOne(query);
     return url;
+  }
+
+  private trimMessage(message: string): string {
+    if (message.length >= 1950) {
+      const trimmedDisclaimer =
+        "...\nMessage trimmed to not exceed Discord's character limit.";
+      return message.substring(0, 1950 - trimmedDisclaimer.length) + trimmedDisclaimer;
+    } else {
+      return message;
+    }
   }
 
   /* ----- Pager Duty Alert ----- */
