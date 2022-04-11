@@ -15,15 +15,15 @@ interface IChainsAndOraclesResponse {
   await connect();
 
   /* ---- 1) Get newest local Chain and Oracle records' timestamps ---- */
-  const [{ createdAt: latestChain }] = await ChainsModel.find()
-    .sort({ createdAt: -1 })
+  const [{ updatedAt: latestChain }] = await ChainsModel.find()
+    .sort({ updatedAt: -1 })
     .limit(1)
-    .select("createdAt")
+    .select("updatedAt")
     .exec();
-  const [{ createdAt: latestOracle }] = await OraclesModel.find()
-    .sort({ createdAt: -1 })
+  const [{ updatedAt: latestOracle }] = await OraclesModel.find()
+    .sort({ updatedAt: -1 })
     .limit(1)
-    .select("createdAt")
+    .select("updatedAt")
     .exec();
 
   /* ---- 2) Fetch any newer remote Chain and Oracle records from Infrastructure Support Lambda ---- */
@@ -44,16 +44,13 @@ interface IChainsAndOraclesResponse {
     /* ---- 3) Add newer Chains and Oracles to local database ---- */
     if (chains?.length) {
       for await (const chain of chains) {
-        const { name } = chain;
+        const { name, type, allowance } = chain;
 
         try {
-          if (!(await ChainsModel.exists({ name }))) {
-            const chainInput = {
-              type: chain.type,
-              name: chain.name,
-              allowance: chain.allowance,
-            };
-            await ChainsModel.create(chainInput);
+          if (await ChainsModel.exists({ name })) {
+            await ChainsModel.updateOne({ name }, { name, type, allowance });
+          } else {
+            await ChainsModel.create({ name, type, allowance });
           }
         } catch (error) {
           console.error(`Error updating Chains. Chain: ${name} ${error}`);
@@ -64,11 +61,13 @@ interface IChainsAndOraclesResponse {
 
     if (oracles?.length) {
       for await (const oracle of oracles) {
-        const { chain } = oracle;
+        const { chain, urls } = oracle;
 
         try {
-          if (!(await OraclesModel.exists({ chain }))) {
-            await OraclesModel.create(oracle);
+          if (await OraclesModel.exists({ chain })) {
+            await OraclesModel.updateOne({ chain }, { chain, urls });
+          } else {
+            await OraclesModel.create({ chain, urls });
           }
         } catch (error) {
           console.error(`Error updating Oracles. Chain: ${chain} ${error}`);
