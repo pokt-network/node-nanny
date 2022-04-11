@@ -45,7 +45,6 @@ export function Logs() {
 
   const handleNodesChange = ({ target }: SelectChangeEvent<typeof nodes>) => {
     const { value } = target;
-    console.log({ value });
     setNodes(typeof value === "string" ? value.split(",") : value);
   };
 

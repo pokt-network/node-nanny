@@ -240,8 +240,8 @@ export class Service extends BaseService {
 
     return downDispatchNodes?.length
       ? downDispatchNodes.map(
-          ({ name, host }) =>
-            `Node: ${name} / Host: ${host.name} / Location: ${host.location.name}`,
+          ({ name, host, conditions }) =>
+            `${name.replace("POKT-DIS/", "")} / ${host.location.name} - ${conditions}`,
         )
       : [];
   }
