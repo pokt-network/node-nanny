@@ -75,19 +75,20 @@ export function HostsCSV({ locationsData: { locations }, refetchHosts }: NodesCS
 
   const validLocations = locations.map(({ name }) => name);
   const schema = {
-    name: (value: string) => !!value && typeof value === "string",
-    loadBalancer: (value: string) =>
-      typeof JSON.parse(value) === "boolean" || !JSON.parse(value),
-    location: (value: string) => validLocations.includes(value.toUpperCase()),
-    // ip: (value: string) =>
-    //   /'\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b'/.test(value),
-    // fqdn: (value: string) =>
+    name: (name: string) => !!name && typeof name === "string",
+    loadBalancer: (loadBalancer: string) =>
+      typeof JSON.parse(loadBalancer) === "boolean" || !JSON.parse(loadBalancer),
+    location: (location: string) => validLocations.includes(location.toUpperCase()),
+    // DEV NOTE -> Fix Regex to validate IP is valid IP and FQDN is valid domain name.
+    // ip: (ip: string) =>
+    //   /'\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b'/.test(ip),
+    // fqdn: (fqdn: string) =>
     //   /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/.test(
-    //     value,
+    //     fqdn,
     //   ),
   };
-  const validate = (object: any, schema: { [key: string]: (value: string) => boolean }) =>
-    Object.keys(schema).filter((key) => !schema[key]?.(object[key]));
+  const validate = (host: any, schema: { [key: string]: (value: string) => boolean }) =>
+    Object.keys(schema).filter((key) => !schema[key]?.(host[key]));
 
   const parseHostsCsv = (hostsData: ICSVHost[]) => {
     setHostsError("");
@@ -101,6 +102,11 @@ export function HostsCSV({ locationsData: { locations }, refetchHosts }: NodesCS
       const invalidFields = validate(host, schema);
       if (invalidFields.length) {
         invalidHosts.push(`[${host.name}]: ${invalidFields.join(", ")}`);
+      }
+      if (!host.fqdn && !host.ip) {
+        invalidHosts.push(
+          `[${host.name}]: Host must have either an IP or a FQDN, but not both.`,
+        );
       }
       if (host.fqdn && host.ip) {
         invalidHosts.push(`[${host.name}]: Host may only have FQDN or IP, not both.`);
