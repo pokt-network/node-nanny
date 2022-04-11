@@ -431,8 +431,8 @@ export class Service {
       };
     }
 
-    const referenceNodeUrls = await this.getPocketReferenceNodeUrls(id);
-    if (!referenceNodeUrls?.length) {
+    const refNodeUrls = await this.getPocketRefNodeUrls(id);
+    if (!refNodeUrls?.length) {
       return {
         name,
         status: EErrorStatus.ERROR,
@@ -440,46 +440,55 @@ export class Service {
       };
     }
 
-    // Get highest block height from reference nodes
-    const pocketHeight = await Promise.all(
-      referenceNodeUrls.map((url) => this.getPocketHeight(url)),
+    /* Get highest block height from reference nodes */
+    const pocketRefHeights = await Promise.all(
+      refNodeUrls.map((url) => this.getPocketHeight(url)),
     );
-    const [highest] = pocketHeight.map(({ height }) => height).sort((a, b) => b - a);
-    const { height } = await this.getPocketHeight(url);
-    const notSynched = Number(highest) - Number(height) > allowance;
-    const delta = Math.abs(Number(highest) - Number(height));
+    const [highestRefHeight] = pocketRefHeights
+      .map(({ height }) => height)
+      .sort((a, b) => b - a);
+    const peerHeight = Number(highestRefHeight);
 
-    if (Math.sign(Number(highest) - Number(height) + allowance) === -1) {
+    /* Get node's block height */
+    const nodeHeight = Number((await this.getPocketHeight(url)).height);
+
+    /* Compare highest ref height with node's height */
+    const difference = peerHeight - nodeHeight;
+    const notSynced = difference > allowance;
+    const nodeIsAheadOfPeer = difference + allowance < 0;
+    const delta = Math.abs(peerHeight - nodeHeight);
+
+    if (nodeIsAheadOfPeer) {
       return {
         name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
         delta,
-        referenceNodeUrls: referenceNodeUrls.map((url) => `${url}\n`),
-        highest,
-        height,
+        refNodeUrls: refNodeUrls.map((url) => `${url}\n`),
+        highest: peerHeight,
+        height: nodeHeight,
       };
     }
-    if (height === 0) {
+    if (nodeHeight === 0) {
       return {
         name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.NO_RESPONSE,
       };
     }
-    if (notSynched) {
+    if (notSynced) {
       return {
         name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.NOT_SYNCHRONIZED,
-        height: { internalHeight: height, externalHeight: highest, delta },
+        height: { internalHeight: nodeHeight, externalHeight: peerHeight, delta },
       };
     }
     return {
       name,
       status: EErrorStatus.OK,
       conditions: EErrorConditions.HEALTHY,
-      height: { internalHeight: height, externalHeight: highest, delta },
+      height: { internalHeight: nodeHeight, externalHeight: peerHeight, delta },
     };
   };
 
@@ -496,30 +505,24 @@ export class Service {
     }
   }
 
-  private async getPocketReferenceNodeUrls(nodeId: Types.ObjectId): Promise<string[]> {
+  private async getPocketRefNodeUrls(nodeId: Types.ObjectId): Promise<string[]> {
     const pocketChainIds = (
       await ChainsModel.find({ type: ESupportedBlockchainTypes.POKT })
     ).map(({ _id }) => _id);
 
-    const pocketNodeUrls = (
+    const healthyUrls = (
       await NodesModel.aggregate<INode>([
-        { $match: { chain: { $in: pocketChainIds }, _id: { $ne: nodeId } } },
-        { $sample: { size: 40 } },
+        {
+          $match: {
+            chain: { $in: pocketChainIds },
+            _id: { $ne: nodeId },
+            conditions: EErrorConditions.HEALTHY,
+          },
+        },
+        { $sample: { size: 20 } },
       ])
-    ).map(({ url, basicAuth }) => ({ url, auth: basicAuth }));
-    const healthyUrls = await this.checkPocketUrlHealth(pocketNodeUrls);
+    ).map(({ url }) => url);
 
-    return healthyUrls;
-  }
-
-  private async checkPocketUrlHealth(urls: IReferenceURL[]): Promise<string[]> {
-    const healthyUrls: string[] = [];
-    for await (const { url, auth } of urls) {
-      if ((await this.getPocketHeight(url, auth))?.height) {
-        healthyUrls.push(url);
-      }
-      if (healthyUrls.length >= 20) break;
-    }
     return healthyUrls;
   }
 
