@@ -4,6 +4,7 @@ export interface IChain {
   id: Types.ObjectId;
   name: string;
   type: string;
+  updatedAt: string;
   allowance?: number;
 }
 

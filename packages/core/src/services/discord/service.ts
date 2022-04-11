@@ -31,6 +31,11 @@ export class Service {
   public async addWebhookForNode({ chain, host }: INode): Promise<void> {
     const { name } = chain;
     const { location } = host;
+
+    if (await WebhookModel.exists({ chain: name, location: location.name })) {
+      return;
+    }
+
     const categoryName = `NODE-NANNY-${location.name}`;
     const channelName = `${name}-${location.name}`.toLowerCase();
 
