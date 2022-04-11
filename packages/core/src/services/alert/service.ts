@@ -140,11 +140,17 @@ export class Service {
     location: string,
     frontend = false,
   ): Promise<string> {
-    const query: FilterQuery<IWebhook> = frontend
-      ? { chain: "FRONTEND_ALERT" }
-      : { chain, location };
-    const { url } = await WebhookModel.findOne(query);
+    let query: FilterQuery<IWebhook>;
 
+    if (frontend) {
+      query = { chain: "FRONTEND_ALERT" };
+    } else if (process.env.PNF === "1" && chain === "POKT-DIS") {
+      query = { chain, location: "DISPATCH" };
+    } else {
+      query = { chain, location };
+    }
+
+    const { url } = await WebhookModel.findOne(query);
     return url;
   }
 
