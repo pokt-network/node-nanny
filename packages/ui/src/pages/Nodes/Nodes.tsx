@@ -9,6 +9,8 @@ import { NodeStatus } from "./NodeStatus";
 import { NodesUpdate } from "./NodesUpdate";
 import { NodesDelete } from "./NodesDelete";
 
+interface INodeRow {}
+
 export function Nodes() {
   const [selectedNode, setSelectedNode] = useState<INode | undefined>(undefined);
   const { data, error, loading, refetch } = useNodesQuery();
@@ -64,12 +66,13 @@ export function Nodes() {
           type="Nodes"
           paginate
           searchable
-          rows={data.nodes.map((node) => ({
+          rows={data.nodes}
+          mapDisplay={(node) => ({
             ...node,
             chain: node.chain.name,
             host: node.host.name,
             loadBalancers: node.loadBalancers?.map(({ name }) => name),
-          }))}
+          })}
           selectedRow={selectedNode?.id}
           onSelectRow={setSelectedNode}
         />
