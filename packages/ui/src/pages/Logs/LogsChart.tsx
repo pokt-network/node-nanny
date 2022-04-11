@@ -62,13 +62,9 @@ function LogsChart({ logPeriod }: LogsChartProps) {
     { labels: [], errors: [], oks: [] },
   ) || { labels: [], errors: [], oks: [] };
 
-  const options: any = {
+  const options = {
     scales: {
-      xAxes: [
-        {
-          stacked: true,
-        },
-      ],
+      xAxes: [{ stacked: true }],
       yAxes: [
         {
           stacked: true,
@@ -98,7 +94,7 @@ function LogsChart({ logPeriod }: LogsChartProps) {
 
   return (
     <div style={{ height: "200px", width: "100%" }}>
-      <Bar options={options} data={data} />
+      <Bar data={data} />
     </div>
   );
 }
