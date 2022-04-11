@@ -32,12 +32,7 @@ export function Nodes() {
           margin: "16px",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
+        <div style={{ display: "flex", justifyContent: "center" }}>
           <div
             style={{
               display: "flex",
@@ -50,11 +45,7 @@ export function Nodes() {
           >
             <NodesForm formData={formData} refetchNodes={refetch} />
             <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: 8,
-              }}
+              style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}
             >
               <NodesCSV formData={formData} refetchNodes={refetch} />
               <div style={{ display: "flex", justifyContent: "space-between" }}>
