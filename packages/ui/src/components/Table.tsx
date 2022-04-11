@@ -87,6 +87,7 @@ interface TableProps {
   selectedRow?: string;
   type?: string;
   onSelectRow?: Dispatch<SetStateAction<any>>;
+  mapDisplay?: (args: any) => any;
 }
 
 export function Table({
@@ -98,6 +99,7 @@ export function Table({
   selectedRow,
   type,
   onSelectRow,
+  mapDisplay,
 }: TableProps) {
   const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState("");
@@ -123,6 +125,8 @@ export function Table({
   };
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+
+  const displayRows = mapDisplay ? rows.map(mapDisplay) : rows;
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -155,7 +159,7 @@ export function Table({
               rowCount={rows.length}
             />
             <TableBody>
-              {rows
+              {displayRows
                 .slice()
 
                 .filter(
@@ -188,7 +192,17 @@ export function Table({
                             <TableCell
                               key={`${value as any}-${i}`}
                               align={!i ? "left" : "right"}
-                              onClick={() => onSelectRow?.(row)}
+                              onClick={() => {
+                                console.log(
+                                  "HI HEY HELLO",
+                                  rows.find((rowsData: any) => rowsData.id === row.id),
+                                );
+                                onSelectRow?.(
+                                  mapDisplay
+                                    ? rows.find((rowsData: any) => rowsData.id === row.id)
+                                    : row,
+                                );
+                              }}
                             >
                               {Array.isArray(value) ? value.join(", ") : String(value)}
                             </TableCell>
