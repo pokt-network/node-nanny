@@ -18,7 +18,7 @@ import {
   INodesQuery,
   useCreateNodesCsvMutation,
 } from "types";
-import { parseBackendError } from "utils";
+import { parseBackendError, s } from "utils";
 
 const style = {
   position: "absolute" as "absolute",
@@ -58,8 +58,6 @@ export function NodesCSV({
   const [nodes, setNodes] = useState<INodeCsvInput[] | undefined>(undefined);
   const [nodesError, setNodesError] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
-
-  console.log({ chains });
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -116,8 +114,23 @@ export function NodesCSV({
   const parseNodesCSV = (nodesData: ICSVNode[]) => {
     setBackendError("");
     setNodesError("");
+    const requiredFields = Object.keys(schema);
+    const nodesMissingRequiredFields = nodesData.filter(
+      (node) => !requiredFields.every((key) => Object.keys(node).includes(key)),
+    );
+    if (nodesMissingRequiredFields?.length) {
+      const headers = Object.keys(nodesData[0]);
+      const missingHeaders = requiredFields.filter((field) => !headers.includes(field));
+      setNodesError(
+        `CSV is missing the following required header${s(
+          missingHeaders.length,
+        )}: ${missingHeaders.join(", ")}`,
+      );
+      return;
+    }
+
     const nodesWithRequiredFields = nodesData.filter((node) =>
-      Object.keys(schema).every((key) => Object.keys(node).includes(key)),
+      requiredFields.every((key) => Object.keys(node).includes(key)),
     );
 
     const invalidNodes: any = [];
@@ -125,11 +138,15 @@ export function NodesCSV({
       const invalidFields = validate(node, schema);
       if (node.https.toLowerCase() === "true" && hostsWithFqdn.includes(node.host)) {
         invalidFields.push(
-          "Selected Host does not have an FQDN; HTTPS is not allowed without an FQDN.",
+          `[${node.host}/${node.chain}]: Host does not have an FQDN; HTTPS is not allowed without an FQDN.`,
         );
       }
       if (invalidFields.length) {
-        invalidNodes.push(`[${node.host}/${node.chain}]: ${invalidFields.join(", ")}`);
+        invalidNodes.push(
+          `Invalid Field${s(invalidFields.length)}: [${node.host}/${
+            node.chain
+          }]: ${invalidFields.join(", ")}`,
+        );
       }
       return {
         ...node,
@@ -169,12 +186,15 @@ export function NodesCSV({
           <Typography id="modal-modal-title" variant="h6" component="h2">
             Upload Nodes CSV
           </Typography>
-          <CSVReader onFileLoaded={parseNodesCSV} parserOptions={{ header: true }} />
+          <CSVReader
+            onFileLoaded={parseNodesCSV}
+            parserOptions={{ header: true, skipEmptyLines: true }}
+          />
           {nodesError && (
             <Alert severity="error">
               <AlertTitle>
-                Warning: Invalid fields detected. Please correct the following fields
-                before attempting to upload Nodes CSV.
+                Warning: There were one or more issues with your CSV format. Please
+                correct the following issues before attempting to create nodes via CSV.
               </AlertTitle>
               {nodesError}
             </Alert>
