@@ -149,11 +149,13 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
                 onChange={handleHttpsChange}
                 disabled={!hostHasFqdn}
               />
-              <Typography>
-                {hostHasFqdn
-                  ? "Selected host has an FQDN; HTTPS may be enabled."
-                  : "Selected host does not have an FQDN; HTTPS is disabled."}
-              </Typography>
+              {host && (
+                <Typography>
+                  {hostHasFqdn
+                    ? "Selected host has an FQDN; HTTPS may be enabled."
+                    : "Selected host does not have an FQDN; HTTPS is disabled."}
+                </Typography>
+              )}
             </div>
           </div>
           <div style={{ marginTop: "10px" }} />
