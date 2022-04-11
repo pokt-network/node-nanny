@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { ApolloQueryResult } from "@apollo/client";
 import {
   Button,
@@ -30,6 +30,8 @@ interface HostsFormProps {
 export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
   const [chain, setChain] = useState("");
   const [host, setHost] = useState("");
+  const [https, setHttps] = useState(false);
+  const [hostHasFqdn, setHostHasFqdn] = useState(false);
   const [loadBalancers, setLoadBalancers] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [port, setPort] = useState(0);
@@ -42,12 +44,27 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
     onError: (error) => console.log({ error }),
   });
 
+  useEffect(() => {
+    if (formData?.hosts && host) {
+      const hostHasFqdn = Boolean(formData.hosts.find(({ id }) => id === host)?.fqdn);
+      console.log({ host, hostHasFqdn });
+      if (!hostHasFqdn) {
+        setHttps(false);
+      }
+      setHostHasFqdn(hostHasFqdn);
+    }
+  }, [host, formData]);
+
   const handleChainChange = (event: SelectChangeEvent<typeof chain>) => {
     setChain(event.target.value);
   };
 
   const handleHostChange = (event: SelectChangeEvent<typeof host>) => {
     setHost(event.target.value);
+  };
+
+  const handleHttpsChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setHttps(event.target.checked);
   };
 
   const handleLoadBalancerChange = ({
@@ -110,11 +127,35 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
             >
               {formData?.hosts.map(({ name, id, location }) => (
                 <MenuItem key={id} value={id}>
-                  {`${name} - ${location}`}
+                  {`${name} - ${location.name}`}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
+          <div
+            style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+          >
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+              }}
+            >
+              HTTPS
+              <Switch
+                checked={https}
+                onChange={handleHttpsChange}
+                disabled={!hostHasFqdn}
+              />
+              <Typography>
+                {hostHasFqdn
+                  ? "Selected host has an FQDN; HTTPS may be enabled."
+                  : "Selected host does not have an FQDN; HTTPS is disabled."}
+              </Typography>
+            </div>
+          </div>
           <div style={{ marginTop: "10px" }} />
           <FormControl fullWidth>
             <InputLabel id="lb-label">Load Balancers</InputLabel>
@@ -181,7 +222,14 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
           <div
             style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
           >
-            <div>
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+              }}
+            >
               HAproxy
               <Switch checked={haProxy} onChange={handleHaproxyChange} />
             </div>
@@ -198,14 +246,15 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
               submit({
                 variables: {
                   input: {
-                    backend,
+                    https,
                     chain,
                     haProxy,
                     host,
                     name,
                     port,
-                    server,
                     loadBalancers,
+                    backend,
+                    server,
                   },
                 },
               });

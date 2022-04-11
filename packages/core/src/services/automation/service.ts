@@ -31,7 +31,14 @@ export class Service extends BaseService {
 
   /* ----- CRUD Methods ----- */
   public async createHost(hostInput: IHostInput, restart = true): Promise<IHost> {
-    const host = await HostsModel.create(hostInput);
+    const hostFields: IHostInput = {
+      name: hostInput.name,
+      location: hostInput.location,
+      loadBalancer: hostInput.loadBalancer,
+    };
+    if (hostInput.fqdn) hostFields.fqdn = hostInput.fqdn;
+    if (hostInput.ip) hostFields.ip = hostInput.ip;
+    const host = await HostsModel.create(hostFields);
     if (restart) await this.restartMonitor();
     return host;
   }
@@ -62,13 +69,17 @@ export class Service extends BaseService {
 
   public async createNode(nodeInput: INodeInput, restart = true): Promise<INode> {
     let id: string;
+    const { https, ...rest } = nodeInput;
+    const { fqdn, ip } = await HostsModel.findOne({ _id: nodeInput.host });
+
+    if (https && !fqdn) {
+      throw new Error(`Node cannot use https with a host that does not have a FQDN.`);
+    }
+
+    const url = `http${https ? "s" : ""}://${fqdn || ip}:${nodeInput.port}`;
 
     try {
-      const { fqdn, ip } = await HostsModel.findOne({ _id: nodeInput.host });
-      const { port } = nodeInput;
-      const url = fqdn ? `https://${fqdn}:${port}` : `http://${ip}:${port}`;
-
-      ({ id } = await NodesModel.create({ ...nodeInput, url }));
+      ({ id } = await NodesModel.create({ ...rest, url }));
 
       const node = await this.getNode(id);
 
@@ -88,6 +99,7 @@ export class Service extends BaseService {
       for await (const nodeInput of nodes) {
         const nodeInputWithIds: INodeInput = {
           ...nodeInput,
+          https: Boolean(nodeInput.https),
           chain: (await ChainsModel.findOne({ name: nodeInput.chain }))._id,
           host: (await HostsModel.findOne({ name: nodeInput.host }))._id,
           loadBalancers: (
@@ -230,51 +242,5 @@ export class Service extends BaseService {
     } catch (error) {
       console.log("Cannot restart monitor, monitor not running.");
     }
-  }
-
-  async getInstanceDetails(awsInstanceId: string) {
-    try {
-      const details = await this.ec2
-        .describeInstances({
-          InstanceIds: [awsInstanceId],
-        })
-        .promise();
-
-      const instance = details.Reservations[0].Instances[0];
-      const {
-        PrivateDnsName: internalHostName,
-        PrivateIpAddress: ip,
-        PublicDnsName: externalHostName,
-      } = instance;
-
-      const { Value: name } = instance.Tags.find(({ Key }) => Key === "Name");
-
-      return {
-        name,
-        ip,
-        internalHostName,
-        externalHostName,
-        awsInstanceId,
-        hostType: "AWS",
-      };
-    } catch (error) {
-      return false;
-    }
-  }
-
-  async findAndStoreAWSHost({
-    awsInstanceId,
-    loadBalancer,
-  }: {
-    awsInstanceId: string;
-    loadBalancer: boolean;
-  }) {
-    const instance = await this.getInstanceDetails(awsInstanceId);
-    if (instance) {
-      const data = Object.assign(instance, { loadBalancer });
-      return await HostsModel.create(data);
-    }
-
-    throw new Error(`could not create host ${awsInstanceId}`);
   }
 }
