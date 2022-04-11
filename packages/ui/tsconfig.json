@@ -23,7 +23,8 @@
     "experimentalDecorators": true,
     "jsx": "react-jsx",
     "moduleResolution": "node",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "noImplicitAny": false
   },
   "include": ["src"]
 }
