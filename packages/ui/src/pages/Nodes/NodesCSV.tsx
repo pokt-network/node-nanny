@@ -33,6 +33,7 @@ const style = {
 };
 
 interface ICSVNode {
+  https: string;
   chain: string;
   haProxy: string;
   host: string;
@@ -84,30 +85,33 @@ export function NodesCSV({
 
   const validChains = chains.map(({ name }) => name);
   const validHosts = hosts.map(({ name }) => name);
+  const hostsWithFqdn = hosts.filter(({ fqdn }) => Boolean(fqdn)).map(({ name }) => name);
   const validLoadBalancers = loadBalancers.map(({ name }) => name);
   const schema = {
-    chain: (value: string) => validChains.includes(value.toUpperCase()),
-    host: (value: string) => validHosts.includes(value.toLowerCase()),
-    name: (value: string) => !!value,
-    haProxy: (value: string) =>
-      value.toLowerCase() === "true" || value.toLowerCase() === "false",
-    loadBalancers: (value: string) =>
-      value
+    chain: (chain: string) => validChains.includes(chain.toUpperCase()),
+    host: (host: string) => validHosts.includes(host.toLowerCase()),
+    https: (https: string) =>
+      https.toLowerCase() === "false" || https.toLowerCase() === "true",
+    name: (name: string) => !!name,
+    haProxy: (haProxy: string) =>
+      haProxy.toLowerCase() === "true" || haProxy.toLowerCase() === "false",
+    loadBalancers: (loadBalancers: string) =>
+      loadBalancers
         .toLowerCase()
         .split(",")
         .map((lb) => lb.trim())
         .every((lb: string) => validLoadBalancers.includes(lb)),
-    port: (value: string) =>
+    port: (port: string) =>
       /^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/.test(
-        value,
+        port,
       ),
-    url: (value: string) =>
+    url: (url: string) =>
       /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/.test(
-        value,
+        url,
       ),
   };
-  const validate = (object: any, schema: { [key: string]: (value: string) => boolean }) =>
-    Object.keys(schema).filter((key) => !schema[key](object[key]));
+  const validate = (node: any, schema: { [key: string]: (value: string) => boolean }) =>
+    Object.keys(schema).filter((key) => !schema[key](node[key]));
 
   const parseNodesCSV = (nodesData: ICSVNode[]) => {
     setBackendError("");
@@ -119,11 +123,17 @@ export function NodesCSV({
     const invalidNodes: any = [];
     const parsedNodes = nodesWithRequiredFields.map((node) => {
       const invalidFields = validate(node, schema);
+      if (node.https.toLowerCase() === "true" && hostsWithFqdn.includes(node.host)) {
+        invalidFields.push(
+          "Selected Host does not have an FQDN; HTTPS is not allowed without an FQDN.",
+        );
+      }
       if (invalidFields.length) {
         invalidNodes.push(`[${node.host}/${node.chain}]: ${invalidFields.join(", ")}`);
       }
       return {
         ...node,
+        https: Boolean(node.https),
         chain: node.chain.toUpperCase(),
         host: node.host.toLowerCase(),
         name: node.name,
