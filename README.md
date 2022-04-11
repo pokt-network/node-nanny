@@ -42,13 +42,12 @@ On your chosen host, you will have to set the following environment variables in
 - **DISCORD_TOKEN** - The secret token for your server's bot application.
 - **MONGO_USER** - The user that will be used for your inventory database.
 - **MONGO_PASSWORD** - The password that will be used for your inventory database.
-- **MONGO_DB_NAME** - The name of the inventory database.
+- **MONGO_DATABASE** - The name of the inventory database.
 
 #### Optional Variables
 
 - **ALERT_TRIGGER_THRESHOLD** - The number of times a health check should fail before triggering. **Defaults to `6`**
-- **ALERT_RETRIGGER_THRESHOLD** - The number of times a health check should fail before retriggering. **Defaults to `local`**
-- **MONITOR_LOGGER** - The number of times a health check should fail before retriggering. **Defaults to `local`**
+- **ALERT_RETRIGGER_THRESHOLD** - The number of times a health check should fail before retriggering. **Defaults to `60`**
 - **FRONTEND_PORT** - The port the React UI will run on. **Defaults to `3000`**
 - **BACKEND_HOST** - If the backend is hosted on a different host than the UI, this variable will need to be set to the hostname.
 
@@ -79,11 +78,11 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN:?Discord token not set.}
 
       # Optional Environment Variables
-      ALERT_TRIGGER_THRESHOLD: ${ALERT_TRIGGER_THRESHOLD:-6}
-      ALERT_RETRIGGER_THRESHOLD: ${ALERT_RETRIGGER_THRESHOLD:-20}
+      ALERT_TRIGGER_THRESHOLD: ${ALERT_TRIGGER_THRESHOLD}
+      ALERT_RETRIGGER_THRESHOLD: ${ALERT_RETRIGGER_THRESHOLD}
       MONITOR_LOGGER: ${MONITOR_LOGGER:-mongodb}
 
-      MONGO_URI: "mongodb://${MONGO_USER:?Mongo user not set.}:${MONGO_PASSWORD:?Mongo password not set.}@nn_db:27017/${MONGO_DB_NAME:?Mongo database name not set.}?authSource=admin"
+      MONGO_URI: "mongodb://${MONGO_USER:?Mongo user not set.}:${MONGO_PASSWORD:?Mongo password not set.}@nn_db:27017/${MONGO_DATABASE:?Mongo database name not set.}?authSource=admin"
 
   nn_frontend:
     image: pocketfoundation/node-nanny-ui:latest
@@ -100,11 +99,11 @@ services:
     image: mongo:latest
     container_name: nn_db
     environment:
-      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME:?Mongo database name not set.}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:?Mongo database name not set.}
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?Mongo user not set.}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Mongo password not set.}
     volumes:
-      - ~/data/db:/data/db
+      - /data/db:/data/db
     ports:
       - "27017:27017"
 

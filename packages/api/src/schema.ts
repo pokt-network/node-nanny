@@ -85,6 +85,7 @@ const typeDefs = gql`
 
   # Inputs
   input NodeInput {
+    https: Boolean!
     chain: ID!
     host: ID!
     name: String!
@@ -104,6 +105,7 @@ const typeDefs = gql`
   }
 
   input NodeCSVInput {
+    https: Boolean!
     chain: String!
     host: String!
     name: String!
