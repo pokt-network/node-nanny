@@ -189,6 +189,7 @@ export type INodeCsvInput = {
   chain: Scalars['String'];
   haProxy: Scalars['Boolean'];
   host: Scalars['String'];
+  https: Scalars['Boolean'];
   loadBalancers: Array<Scalars['String']>;
   name: Scalars['String'];
   port: Scalars['Int'];
@@ -200,6 +201,7 @@ export type INodeInput = {
   chain: Scalars['ID'];
   haProxy: Scalars['Boolean'];
   host: Scalars['ID'];
+  https: Scalars['Boolean'];
   loadBalancers: Array<Scalars['ID']>;
   name: Scalars['String'];
   port: Scalars['Int'];
@@ -427,7 +429,7 @@ export type IWebhooksQuery = { webhooks: Array<{ id: string, location: string, c
 export type IGetHostsChainsAndLoadBalancersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, location: { id: string, name: string } }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string }> };
+export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, fqdn?: string | null, ip?: string | null, location: { id: string, name: string } }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string }> };
 
 export type IGetNodeStatusQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -1223,7 +1225,9 @@ export const GetHostsChainsAndLoadBalancersDocument = gql`
   hosts {
     id
     name
+    fqdn
     ip
+    fqdn
     location {
       id
       name

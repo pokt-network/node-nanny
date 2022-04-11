@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useState, useEffect } from "react";
 import { ApolloQueryResult } from "@apollo/client";
 import {
   Paper,
@@ -21,11 +21,29 @@ export function HostsForm({ refetchHosts }: HostsFormProps) {
   const [location, setLocation] = useState("NL");
   const [name, setName] = useState("");
   const [ip, setIP] = useState("");
+  const [ipDisabled, setIPDisabled] = useState(false);
   const [fqdn, setFQDN] = useState("");
+  const [fqdnDisabled, setFQDNDisabled] = useState(false);
   const [loadBalancer, setLoadBalancer] = useState(false);
 
   const { data, error, loading } = useLocationsQuery();
   const [submit] = useCreateHostMutation({ onCompleted: () => refetchHosts() });
+
+  useEffect(() => {
+    if (fqdn) {
+      setIPDisabled(true);
+    } else {
+      setIPDisabled(false);
+    }
+  }, [fqdn]);
+
+  useEffect(() => {
+    if (ip) {
+      setFQDNDisabled(true);
+    } else {
+      setFQDNDisabled(false);
+    }
+  }, [ip]);
 
   const handleLocationChange = (event: SelectChangeEvent<typeof location>) => {
     setLocation(event.target.value);
@@ -73,6 +91,7 @@ export function HostsForm({ refetchHosts }: HostsFormProps) {
               onChange={handleIPChange}
               label="Host IP"
               variant="outlined"
+              disabled={ipDisabled}
             />
             <div style={{ marginTop: "10px" }} />
             <TextField
@@ -80,6 +99,7 @@ export function HostsForm({ refetchHosts }: HostsFormProps) {
               onChange={handleFQDNChange}
               label="Host FQDN"
               variant="outlined"
+              disabled={fqdnDisabled}
             />
             <div>
               Load Balancer
@@ -95,7 +115,15 @@ export function HostsForm({ refetchHosts }: HostsFormProps) {
               variant="outlined"
               onClick={() => {
                 submit({
-                  variables: { input: { location, name, ip, fqdn, loadBalancer } },
+                  variables: {
+                    input: {
+                      location,
+                      name,
+                      ip: ipDisabled ? "" : ip,
+                      fqdn: fqdnDisabled ? "" : fqdn,
+                      loadBalancer,
+                    },
+                  },
                 });
                 setLocation("");
                 setName("");
