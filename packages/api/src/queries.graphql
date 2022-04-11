@@ -131,6 +131,7 @@ query GetHostsChainsAndLoadBalancers {
   hosts {
     id
     name
+    fqdn
     ip
     fqdn
     location {

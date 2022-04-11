@@ -19,7 +19,7 @@ export class Service extends BaseService {
 
   constructor() {
     super();
-    this.pnf = Boolean(process.env.PNF === "1");
+    this.pnf = process.env.PNF === "1";
     this.pnfDispatchThreshold = Number(process.env.PNF_DISPATCH_THRESHOLD || 5);
   }
 
@@ -33,10 +33,16 @@ export class Service extends BaseService {
       title,
       downDispatchers,
     } = await this.parseEvent(eventJson, EAlertTypes.TRIGGER);
-    const { chain, backend, frontend } = node;
+    const { chain, host, backend, frontend } = node;
 
     await this.sendMessage(
-      { title, message, chain: chain.name, frontend: Boolean(frontend) },
+      {
+        title,
+        message,
+        chain: chain.name,
+        location: host.location.name,
+        frontend: Boolean(frontend),
+      },
       status,
     );
 
@@ -59,12 +65,13 @@ export class Service extends BaseService {
       serverCount,
       downDispatchers,
     } = await this.parseEvent(eventJson, EAlertTypes.RETRIGGER);
-    const { backend, chain, frontend, loadBalancers, server } = node;
+    const { backend, chain, host, frontend, loadBalancers, server } = node;
 
     const messageParams = {
       title,
       message,
       chain: chain.name,
+      location: host.location.name,
       frontend: Boolean(frontend),
     };
 
@@ -95,10 +102,16 @@ export class Service extends BaseService {
       title,
       warningMessage,
     } = await this.parseEvent(eventJson, EAlertTypes.RESOLVED);
-    const { chain, frontend, backend, server, loadBalancers } = node;
+    const { chain, host, frontend, backend, server, loadBalancers } = node;
 
     await this.sendMessage(
-      { title, message, chain: chain.name, frontend: Boolean(frontend) },
+      {
+        title,
+        message,
+        chain: chain.name,
+        location: host.location.name,
+        frontend: Boolean(frontend),
+      },
       status,
     );
     if (warningMessage && !frontend) {
@@ -107,6 +120,7 @@ export class Service extends BaseService {
           title: "Warning",
           message: warningMessage,
           chain: chain.name,
+          location: host.location.name,
           frontend: Boolean(frontend),
         },
         EErrorStatus.WARNING,

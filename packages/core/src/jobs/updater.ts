@@ -2,7 +2,6 @@ import axios from "axios";
 import { connect, disconnect } from "../db";
 import { ChainsModel, OraclesModel, IChain, IOracle, WebhookModel } from "../models";
 import { getTimestamp } from "../utils";
-import { DiscordService } from "../services";
 
 interface IChainsAndOraclesResponse {
   chains: IChain[];
@@ -11,57 +10,70 @@ interface IChainsAndOraclesResponse {
 
 /* ----- Script Runs Every Hour ----- */
 (async () => {
+  if (process.env.PNF === "1") return;
+
   await connect();
 
-  /* ---- 1) Add Frontend Alert Webhook if Doesn't Exist ---- */
-  if (!(await WebhookModel.exists({ chain: "FRONTEND_ALERT" }))) {
-    await new DiscordService().addWebhookForFrontendNodes();
-  }
+  /* ---- 1) Get newest local Chain and Oracle records' timestamps ---- */
+  const [{ updatedAt: latestChain }] = await ChainsModel.find()
+    .sort({ updatedAt: -1 })
+    .limit(1)
+    .select("updatedAt")
+    .exec();
+  const [{ updatedAt: latestOracle }] = await OraclesModel.find()
+    .sort({ updatedAt: -1 })
+    .limit(1)
+    .select("updatedAt")
+    .exec();
+
+  /* ---- 2) Fetch any newer remote Chain and Oracle records from Infrastructure Support Lambda ---- */
   const {
     data: { chains, oracles },
-  } = await axios.get<IChainsAndOraclesResponse>(
+  } = await axios.post<IChainsAndOraclesResponse>(
     "https://k69ggmt3u3.execute-api.us-east-2.amazonaws.com/update",
+    { latestChain, latestOracle },
   );
 
-  /* ---- 2) Sync Chains and Oracles from Node Nanny Internal DB ---- */
-  console.log(
-    `Running updater at ${getTimestamp()}.\nChecking ${chains.length} chains and ${
-      oracles.length
-    } oracles ...`,
-  );
+  if (chains?.length || oracles?.length) {
+    console.log(
+      `Running updater at ${getTimestamp()}.\nFound ${chains.length} newer chains and ${
+        oracles.length
+      } newer oracles ...`,
+    );
 
-  const existingChains = (await ChainsModel.find()).map(({ name }) => name);
+    /* ---- 3) Add newer Chains and Oracles to local database ---- */
+    if (chains?.length) {
+      for await (const chain of chains) {
+        const { name, type, allowance } = chain;
 
-  for await (const chain of chains) {
-    const { name } = chain;
-
-    try {
-      if (!existingChains.includes(name)) {
-        const chainInput = {
-          type: chain.type,
-          name: chain.name,
-          allowance: chain.allowance,
-        };
-        await ChainsModel.create(chainInput);
+        try {
+          if (await ChainsModel.exists({ name })) {
+            await ChainsModel.updateOne({ name }, { name, type, allowance });
+          } else {
+            await ChainsModel.create({ name, type, allowance });
+          }
+        } catch (error) {
+          console.error(`Error updating Chains. Chain: ${name} ${error}`);
+          continue;
+        }
       }
-    } catch (error) {
-      console.error(`Error updating Chains. Chain: ${name} ${error}`);
-      continue;
     }
-  }
 
-  const existingOracles = (await OraclesModel.find()).map(({ chain }) => chain);
+    if (oracles?.length) {
+      for await (const oracle of oracles) {
+        const { chain, urls } = oracle;
 
-  for await (const oracle of oracles) {
-    const { chain } = oracle;
-
-    try {
-      if (!existingOracles.includes(chain)) {
-        await OraclesModel.create(oracle);
+        try {
+          if (await OraclesModel.exists({ chain })) {
+            await OraclesModel.updateOne({ chain }, { chain, urls });
+          } else {
+            await OraclesModel.create({ chain, urls });
+          }
+        } catch (error) {
+          console.error(`Error updating Oracles. Chain: ${chain} ${error}`);
+          continue;
+        }
       }
-    } catch (error) {
-      console.error(`Error updating Oracles. Chain: ${chain} ${error}`);
-      continue;
     }
   }
 
