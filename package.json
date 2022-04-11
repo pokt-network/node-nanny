@@ -9,7 +9,7 @@
     "build:install": "pnpm i && pnpm build",
     "build:clean": "turbo run build:clean",
     "build:fresh": "turbo run build:clean && turbo run build",
-    "dev:front": "pm2 start process.yml --only api && pnpm start --filter=@pokt-foundation/node-nanny-ui",
+    "dev:front": "pnpm build:install && pm2 start process.yml --only api && pnpm start --filter=@pokt-foundation/node-nanny-ui",
     "docker:start:init": "docker-compose build && docker-compuse up -d",
     "docker:dev:start": "docker-compose up -d",
     "docker:dev:stop": "docker-compose down",
