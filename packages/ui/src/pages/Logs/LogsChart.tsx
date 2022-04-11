@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,8 +9,8 @@ import {
 import dayjs from "dayjs";
 import { Bar } from "react-chartjs-2";
 
-import { useLogsForChartLazyQuery } from "types";
-import { ITimePeriod, timePeriods } from "./periods";
+import { useLogsForChartLazyQuery, ILogsForChartQuery } from "types";
+import { ITimePeriod } from "./periods";
 import { deepEqual } from "../../utils";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
@@ -22,36 +22,37 @@ export const options = {
 
 interface LogsChartProps {
   logPeriod: ITimePeriod;
+  nodeIds: string[];
 }
 
-function LogsChart({ logPeriod }: LogsChartProps) {
+function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
   const { format, increment, numPeriods, timePeriod } = logPeriod;
-  const endDate = useMemo(() => dayjs().toISOString(), []);
-  const startDate = useMemo(
-    () => dayjs().subtract(numPeriods, timePeriod).toISOString(),
-    [numPeriods, timePeriod],
-  );
+  const [logData, setLogData] = useState<ILogsForChartQuery["logsForChart"]>([]);
 
-  const [submit, { data: logsData, error, loading }] = useLogsForChartLazyQuery({
-    variables: {
-      input: { startDate, endDate, increment },
-      // input: {
-      //   startDate: "2022-04-04T22:15:34.612+00:00",
-      //   endDate: "2022-04-08T15:02:52.660+00:00",
-      //   increment: 60000,
-      // },
-    },
+  const getQueryVars = useCallback(() => {
+    const endDate = dayjs().toISOString();
+    const startDate = dayjs().subtract(numPeriods, timePeriod).toISOString();
+    const queryVars: any = { startDate, endDate, increment };
+    if (nodeIds?.length) queryVars.nodeIds = nodeIds;
+    return queryVars;
+  }, [numPeriods, timePeriod, increment, nodeIds]);
+
+  const [submit, { error }] = useLogsForChartLazyQuery({
+    onCompleted: ({ logsForChart }) => setLogData(logsForChart),
   });
 
   useEffect(() => {
-    submit();
-  }, [logPeriod, submit]);
+    submit({ variables: { input: getQueryVars() } });
+  }, [logPeriod, submit, getQueryVars]);
 
-  console.log({ logsData });
+  useEffect(() => {
+    const refetchInterval = setInterval(() => {
+      submit({ variables: { input: getQueryVars() } });
+    }, 15000);
+    return () => clearInterval(refetchInterval);
+  }, [submit, getQueryVars]);
 
-  // const labels =
-  //   logsData?.logsForChart?.map(({ timestamp }) => dayjs(timestamp).format(format)) || [];
-  const { labels, errors, oks } = logsData?.logsForChart?.reduce(
+  const { labels, errors, oks } = logData.reduce(
     (arrays: { labels: string[]; errors: number[]; oks: number[] }, entry) => {
       return {
         labels: [...arrays.labels, dayjs(entry.timestamp).format(format)],
@@ -62,18 +63,7 @@ function LogsChart({ logPeriod }: LogsChartProps) {
     { labels: [], errors: [], oks: [] },
   ) || { labels: [], errors: [], oks: [] };
 
-  const options = {
-    scales: {
-      xAxes: [{ stacked: true }],
-      yAxes: [
-        {
-          stacked: true,
-        },
-      ],
-    },
-  };
-
-  const arbitraryStackKey = "stack1";
+  const arbitraryStackKey = "stack";
   const data = {
     labels,
     datasets: [
@@ -91,10 +81,18 @@ function LogsChart({ logPeriod }: LogsChartProps) {
       },
     ],
   };
+  const options: any = {
+    animation: {
+      duration: 0,
+    },
+    maintainAspectRatio: false,
+  };
+
+  if (error) return <>Error! ${error.message}</>;
 
   return (
     <div style={{ height: "200px", width: "100%" }}>
-      <Bar data={data} />
+      <Bar data={data} options={options} height="200px" width="100"></Bar>
     </div>
   );
 }
