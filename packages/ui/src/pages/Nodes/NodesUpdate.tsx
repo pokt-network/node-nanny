@@ -45,16 +45,9 @@ export function NodesUpdate({ selectedNode, formData, refetchNodes }: NodesUpdat
 
   useEffect(() => {
     if (formData && selectedNode) {
-      const chain =
-        formData!.chains!.find(({ name }) => name === selectedNode.chain.name)?.id || "";
-      const host =
-        formData!.hosts!.find(({ name }) => name === selectedNode.host.name)?.id || "";
-      const loadBalancers = formData!.loadBalancers
-        ?.filter(({ name }) => selectedNode.loadBalancers.includes(name))
-        .map(({ id }) => id);
-      setChain(chain);
-      setHost(host);
-      setLoadBalancers(loadBalancers);
+      setChain(selectedNode.chain.id);
+      setHost(selectedNode.host.id);
+      setLoadBalancers(selectedNode.loadBalancers.map(({ id }) => id));
       setName(selectedNode.name);
       setPort(selectedNode.port);
       setBackend(selectedNode.backend);
@@ -171,7 +164,7 @@ export function NodesUpdate({ selectedNode, formData, refetchNodes }: NodesUpdat
               >
                 {formData?.hosts.map(({ name, id, location }) => (
                   <MenuItem key={id} value={id}>
-                    {`${name} - ${location}`}
+                    {`${name} - ${location.name}`}
                   </MenuItem>
                 ))}
               </Select>
