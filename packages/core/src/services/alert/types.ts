@@ -54,5 +54,6 @@ export interface IAlertParams {
   title: string;
   message: string;
   chain?: string;
+  location?: string;
   frontend?: boolean;
 }

@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 
 import { LogTable } from "components";
-import { INode, useLogsQuery, useLogsForChartQuery, useNodesQuery } from "types";
+import { INode, useLogsQuery, useNodesQuery } from "types";
 import { ITimePeriod, timePeriods } from "./periods";
 
 import LogsChart from "./LogsChart";
@@ -22,21 +22,21 @@ export function Logs() {
   const [logsLoading, setLogsLoading] = useState(false);
 
   const { data: nodesData, error: nodesError, loading: nodesLoading } = useNodesQuery();
-  // const {
-  //   data: logsData,
-  //   error: logsError,
-  //   fetchMore,
-  //   refetch,
-  // } = useLogsQuery({
-  //   variables: { input: { nodeIds: nodes, page: 1, limit: 100 } },
-  //   onCompleted: () => setLogsLoading(false),
-  //   onError: () => setLogsLoading(false),
-  // });
+  const {
+    data: logsData,
+    error: logsError,
+    fetchMore,
+    refetch,
+  } = useLogsQuery({
+    variables: { input: { nodeIds: nodes, page: 1, limit: 100 } },
+    onCompleted: () => setLogsLoading(false),
+    onError: () => setLogsLoading(false),
+  });
 
-  // useEffect(() => {
-  //   setLogsLoading(true);
-  //   refetch();
-  // }, [refetch]);
+  useEffect(() => {
+    setLogsLoading(true);
+    refetch();
+  }, [refetch]);
 
   const handleTimePeriodChange = ({ target }: SelectChangeEvent<string>) => {
     const { value } = target;
@@ -53,9 +53,15 @@ export function Logs() {
     return `${host.name}/${name}`;
   };
 
-  // if (nodesLoading) return <>Loading...</>;
-  // if (nodesError || logsError) return <>Error! ${(nodesError || logsError)?.message}</>;
+  if (nodesLoading) return <>Loading...</>;
+  if (nodesError || logsError) return <>Error! ${(nodesError || logsError)?.message}</>;
 
+  const sortedNodes =
+    nodesData?.nodes
+      ?.slice()
+      .sort(({ chain: chainA }, { chain: chainB }) =>
+        chainA.name.localeCompare(chainB.name),
+      ) || [];
   return (
     <div
       style={{
@@ -76,11 +82,11 @@ export function Logs() {
           input={<OutlinedInput label="Nodes" />}
           renderValue={(selected) => {
             return selected
-              .map((id) => nodesData?.nodes!.find(({ id: node }) => node === id)!.name)
+              .map((id) => sortedNodes.find(({ id: node }) => node === id)!.name)
               .join(", ");
           }}
         >
-          {nodesData?.nodes.map((node) => (
+          {sortedNodes.map((node) => (
             <MenuItem key={node.id} value={node.id}>
               <Checkbox checked={nodes.indexOf(node.id!) > -1} />
               <ListItemText primary={getNodeNameForHealthCheck(node as INode)} />
@@ -105,9 +111,9 @@ export function Logs() {
         </Select>
       </FormControl>
       <div style={{ marginTop: "10px" }} />
-      <LogsChart logPeriod={logPeriod} />
+      <LogsChart logPeriod={logPeriod} nodeIds={nodes} />
       <div style={{ marginTop: "10px" }} />
-      {/* {logsData && (
+      {logsData && (
         <LogTable
           type={`Showing ${logsData.logs.docs.length} log entries for ${nodes.length} Nodes.`}
           searchable
@@ -122,7 +128,7 @@ export function Logs() {
             }
           }}
         />
-      )} */}
+      )}
     </div>
   );
 }
