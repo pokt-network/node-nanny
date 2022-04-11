@@ -150,7 +150,7 @@ export function NodesCSV({
       }
       return {
         ...node,
-        https: Boolean(node.https),
+        https: Boolean(node.https.toLowerCase()),
         chain: node.chain.toUpperCase(),
         host: node.host.toLowerCase(),
         name: node.name,
