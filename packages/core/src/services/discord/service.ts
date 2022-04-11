@@ -31,6 +31,11 @@ export class Service {
   public async addWebhookForNode({ chain, host }: INode): Promise<void> {
     const { name } = chain;
     const { location } = host;
+
+    if (await WebhookModel.exists({ chain: name, location: location.name })) {
+      return;
+    }
+
     const categoryName = `NODE-NANNY-${location.name}`;
     const channelName = `${name}-${location.name}`.toLowerCase();
 
@@ -56,12 +61,10 @@ export class Service {
   }
 
   public async addWebhookForFrontendNodes(): Promise<void> {
-    console.log("FIRING HERE!!");
     const categoryName = "NODE-NANNY-FRONTEND-ALERT";
     const channelName = "frontend-alert";
 
     const server = await this.initServer();
-    console.log("SERVER HERE", { server });
     const allChannels = await server.channels.fetch();
     const categories = allChannels.filter(({ type }) => type === "GUILD_CATEGORY");
     const channels = allChannels.filter(({ type }) => type === "GUILD_TEXT");
