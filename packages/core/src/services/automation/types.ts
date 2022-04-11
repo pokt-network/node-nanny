@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
-import { ELocation } from "../../models/locations";
 
 export interface INodeInput {
+  https: boolean;
   chain: Types.ObjectId;
   host: Types.ObjectId;
   name: string;
@@ -14,6 +14,7 @@ export interface INodeInput {
 }
 
 export interface INodeCsvInput {
+  https: string;
   chain: string;
   host: string;
   name: string;
@@ -34,7 +35,7 @@ export interface IHostInput {
 
 export interface IHostCsvInput {
   name: string;
-  location: ELocation;
+  location: string;
   loadBalancer?: boolean;
   ip?: string;
   fqdn?: string;

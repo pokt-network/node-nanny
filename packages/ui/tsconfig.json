@@ -12,7 +12,7 @@
     "module": "esnext",
     "isolatedModules": true,
     "noEmit": true,
-    "types": ["@types/jest"],
+    "types": ["@types/jest", "node"],
     "target": "ES2020",
     "skipLibCheck": true,
     "declaration": true,
