@@ -55,7 +55,6 @@ export function Hosts() {
             marginBottom: "16px",
           }}
         >
-          {/* <div style={{ width: "100%", marginBottom: 32 }}> */}
           <div
             style={{
               display: "flex",
@@ -76,7 +75,6 @@ export function Hosts() {
             locations={locationsData?.locations}
             refetchHosts={refetch}
           />
-          {/* </div> */}
         </div>
         <Table
           type="Hosts"
