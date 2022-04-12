@@ -1,8 +1,11 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { ApolloQueryResult } from "@apollo/client";
 import {
+  Alert,
+  AlertTitle,
   Button,
   Checkbox,
+  CircularProgress,
   FormControl,
   InputLabel,
   ListItemText,
@@ -17,17 +20,27 @@ import {
 } from "@mui/material";
 
 import {
+  INode,
   INodesQuery,
   IGetHostsChainsAndLoadBalancersQuery,
   useCreateNodeMutation,
+  useUpdateNodeMutation,
 } from "types";
+import { ModalHelper } from "utils";
 
-interface HostsFormProps {
+export interface NodesFormProps {
   formData: IGetHostsChainsAndLoadBalancersQuery;
   refetchNodes: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
+  selectedNode?: INode;
+  update?: boolean;
 }
 
-export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
+export function NodesForm({
+  formData,
+  refetchNodes,
+  update,
+  selectedNode,
+}: NodesFormProps) {
   const [chain, setChain] = useState("");
   const [host, setHost] = useState("");
   const [https, setHttps] = useState(false);
@@ -39,15 +52,84 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
   const [server, setServer] = useState("");
   const [haProxy, setHaproxy] = useState(true);
 
-  const [submit] = useCreateNodeMutation({
-    onCompleted: () => refetchNodes(),
-    onError: (error) => console.log({ error }),
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const input = {
+    https,
+    chain,
+    haProxy,
+    host,
+    name,
+    port,
+    loadBalancers,
+    backend,
+    server,
+  };
+
+  const [submitCreate] = useCreateNodeMutation({
+    variables: { input },
+    onCompleted: () => {
+      resetForm();
+      refetchNodes();
+      ModalHelper.close();
+      setLoading(false);
+    },
+    onError: (error) => {
+      setError(error.message);
+      setLoading(false);
+    },
   });
+
+  const [submitUpdate] = useUpdateNodeMutation({
+    variables: { update: { id: selectedNode?.id, ...input } },
+    onCompleted: () => {
+      resetForm();
+      refetchNodes();
+      ModalHelper.close();
+      setLoading(false);
+    },
+    onError: (error) => {
+      setError(error.message);
+      setLoading(false);
+    },
+  });
+
+  const handleSubmit = () => {
+    setError("");
+    setLoading(true);
+    update ? submitUpdate() : submitCreate();
+  };
+
+  const resetForm = () => {
+    refetchNodes();
+    setChain("");
+    setHost("");
+    setLoadBalancers([]);
+    setName("");
+    setPort(0);
+    setBackend("");
+    setServer("");
+    setHaproxy(false);
+  };
+
+  useEffect(() => {
+    if (update && selectedNode) {
+      setChain(selectedNode.chain.id);
+      setHost(selectedNode.host.id);
+      setHttps(selectedNode.url.includes("https"));
+      setLoadBalancers(selectedNode.loadBalancers.map(({ id }) => id));
+      setName(selectedNode.name);
+      setPort(selectedNode.port);
+      setBackend(selectedNode.backend);
+      setServer(selectedNode.server);
+      setHaproxy(selectedNode.haProxy);
+    }
+  }, [update, selectedNode]);
 
   useEffect(() => {
     if (formData?.hosts && host) {
       const hostHasFqdn = Boolean(formData.hosts.find(({ id }) => id === host)?.fqdn);
-      console.log({ host, hostHasFqdn });
       if (!hostHasFqdn) {
         setHttps(false);
       }
@@ -97,9 +179,9 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
   return (
     <>
       <div style={{ display: "flex", flexDirection: "column" }}>
-        <Paper style={{ width: "100%", padding: 10 }} variant="outlined">
+        <Paper style={{ width: 700, padding: 32 }} variant="outlined">
           <Typography align="center" variant="h6" gutterBottom>
-            Add New Node
+            {`${update ? "Update" : "Add New"} Node`}
           </Typography>
           <FormControl fullWidth>
             <InputLabel id="chain-label">Chain</InputLabel>
@@ -242,28 +324,23 @@ export function NodesForm({ formData, refetchNodes }: HostsFormProps) {
             style={{
               display: "flex",
               justifyContent: "center",
+              height: 40,
             }}
             variant="outlined"
-            onClick={() => {
-              submit({
-                variables: {
-                  input: {
-                    https,
-                    chain,
-                    haProxy,
-                    host,
-                    name,
-                    port,
-                    loadBalancers,
-                    backend,
-                    server,
-                  },
-                },
-              });
-            }}
+            onClick={() => handleSubmit()}
           >
-            Submit
+            {loading ? (
+              <CircularProgress size={20} />
+            ) : (
+              `${update ? "Update" : "Create"} Node`
+            )}
           </Button>
+          {error && (
+            <Alert severity="error">
+              <AlertTitle>{`Error ${update ? "Updating" : "Creating"} Node`}</AlertTitle>
+              {error}
+            </Alert>
+          )}
         </Paper>
       </div>
     </>

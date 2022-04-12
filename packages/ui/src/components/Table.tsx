@@ -193,10 +193,6 @@ export function Table({
                               key={`${value as any}-${i}`}
                               align={!i ? "left" : "right"}
                               onClick={() => {
-                                console.log(
-                                  "HI HEY HELLO",
-                                  rows.find((rowsData: any) => rowsData.id === row.id),
-                                );
                                 onSelectRow?.(
                                   mapDisplay
                                     ? rows.find((rowsData: any) => rowsData.id === row.id)
