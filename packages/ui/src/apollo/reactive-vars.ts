@@ -1,7 +1,7 @@
 import { makeVar } from "@apollo/client";
-import { ModalState } from "../components/modals/RootModal";
+import { IModalState } from "../components/modals/RootModal";
 
-const modalStateInitialValue: ModalState = {
+const modalStateInitialValue: IModalState = {
   modalType: undefined,
   modalProps: undefined,
   modalOptions: undefined,

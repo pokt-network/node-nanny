@@ -2,18 +2,10 @@ import { useState } from "react";
 import { Button } from "@mui/material";
 
 import { Table } from "components";
-import {
-  INode,
-  useDeleteNodeMutation,
-  useGetHostsChainsAndLoadBalancersQuery,
-  useNodesQuery,
-} from "types";
+import { INode, useGetHostsChainsAndLoadBalancersQuery, useNodesQuery } from "types";
 import { ModalHelper } from "utils";
 
-import { NodesCSV } from "./NodesCSV";
-import { NodesForm } from "./NodesForm";
 import { NodeStatus } from "./NodeStatus";
-import { NodesUpdate } from "./NodesUpdate";
 
 export function Nodes() {
   const [selectedNode, setSelectedNode] = useState<INode | undefined>(undefined);
@@ -23,20 +15,18 @@ export function Nodes() {
     error: formError,
     loading: formLoading,
   } = useGetHostsChainsAndLoadBalancersQuery();
-  const [submit] = useDeleteNodeMutation({
-    onCompleted: () => {
-      refetch();
-      ModalHelper.close();
-    },
-  });
 
-  const handleOpenDeleteModal = () => {
+  const handleOpenCreateNodeModal = () => {
     ModalHelper.open({
-      modalType: "confirmation",
-      modalProps: {
-        handleOk: () => submit({ variables: { id: selectedNode!.id! } }),
-        promptText: `Are you sure you wish to delete node ${selectedNode?.name}?`,
-      },
+      modalType: "nodesForm",
+      modalProps: { formData, refetchNodes: refetch },
+    });
+  };
+
+  const handleOpenUploadNodeCSVModal = () => {
+    ModalHelper.open({
+      modalType: "nodesCsv",
+      modalProps: { formData, refetchNodes: refetch },
     });
   };
 
@@ -58,35 +48,34 @@ export function Nodes() {
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
               flexDirection: "column",
-              marginBottom: "16px",
-              marginRight: "32px",
-              width: "600px",
+              justifyContent: "space-between",
             }}
           >
-            <NodesForm formData={formData} refetchNodes={refetch} />
             <div
-              style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: 8,
+                marginBottom: 16,
+              }}
             >
-              <NodesCSV formData={formData} refetchNodes={refetch} />
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <NodesUpdate
-                  selectedNode={selectedNode}
-                  formData={formData}
-                  refetchNodes={refetch}
-                />
-                <Button
-                  onClick={handleOpenDeleteModal}
-                  disabled={!selectedNode}
-                  variant="outlined"
-                >
-                  Delete Node
-                </Button>
-              </div>
+              <Button onClick={handleOpenCreateNodeModal} variant="outlined">
+                Create Node
+              </Button>
+              <Button onClick={handleOpenUploadNodeCSVModal} variant="outlined">
+                Upload CSV
+              </Button>
+            </div>
+            <div style={{ width: "100%", marginBottom: 32 }}>
+              <NodeStatus
+                selectedNode={selectedNode}
+                formData={formData}
+                setSelectedNode={setSelectedNode}
+                refetchNodes={refetch}
+              />
             </div>
           </div>
-          <NodeStatus selectedNode={selectedNode} setSelectedNode={setSelectedNode} />
         </div>
         <Table
           type="Nodes"
