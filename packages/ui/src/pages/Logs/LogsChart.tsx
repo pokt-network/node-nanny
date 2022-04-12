@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useState } from "react";
+import { Typography } from "@mui/material";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,7 +12,7 @@ import { Bar } from "react-chartjs-2";
 
 import { useLogsForChartLazyQuery, ILogsForChartQuery } from "types";
 import { ITimePeriod } from "./periods";
-import { deepEqual } from "../../utils";
+import { deepEqual, s } from "../../utils";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
@@ -68,12 +69,14 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
     labels,
     datasets: [
       {
+        label: "Healthy",
         stack: arbitraryStackKey,
         data: oks,
         backgroundColor: "rgba(63,203,226,1)",
         hoverBackgroundColor: "rgba(46,185,235,1)",
       },
       {
+        label: "Error",
         stack: arbitraryStackKey,
         data: errors,
         backgroundColor: "rgba(163,103,126,1)",
@@ -82,16 +85,27 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
     ],
   };
   const options: any = {
-    animation: {
-      duration: 0,
-    },
+    animation: { duration: 0 },
     maintainAspectRatio: false,
   };
 
   if (error) return <>Error! ${error.message}</>;
 
   return (
-    <div style={{ height: "200px", width: "100%" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        height: "200px",
+        width: "100%",
+        marginBottom: 32,
+      }}
+    >
+      <Typography>
+        Logs for{" "}
+        {!nodeIds?.length ? "all nodes" : `${nodeIds?.length} node${s(nodeIds?.length)}`}
+      </Typography>
       <Bar data={data} options={options} height="200px" width="100"></Bar>
     </div>
   );
