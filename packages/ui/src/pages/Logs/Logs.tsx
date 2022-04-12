@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import {
+  Alert,
+  AlertTitle,
   Checkbox,
   FormControl,
   InputLabel,
+  LinearProgress,
   ListItemText,
   MenuItem,
   OutlinedInput,
@@ -11,7 +14,7 @@ import {
 } from "@mui/material";
 
 import { LogTable } from "components";
-import { INode, useLogsQuery, useNodesQuery } from "types";
+import { INode, useLogsLazyQuery, useNodesQuery } from "types";
 import { s } from "utils";
 import { ITimePeriod, timePeriods } from "./periods";
 
@@ -23,21 +26,18 @@ export function Logs() {
   const [logsLoading, setLogsLoading] = useState(false);
 
   const { data: nodesData, error: nodesError, loading: nodesLoading } = useNodesQuery();
-  const {
-    data: logsData,
-    error: logsError,
-    fetchMore,
-    refetch,
-  } = useLogsQuery({
+  const [submit, { data: logsData, error: logsError, fetchMore }] = useLogsLazyQuery({
     variables: { input: { nodeIds: nodes, page: 1, limit: 100 } },
     onCompleted: () => setLogsLoading(false),
     onError: () => setLogsLoading(false),
   });
 
   useEffect(() => {
-    setLogsLoading(true);
-    refetch();
-  }, [refetch]);
+    if (nodes?.length) {
+      setLogsLoading(true);
+      submit();
+    }
+  }, [nodes, submit]);
 
   const handleTimePeriodChange = ({ target }: SelectChangeEvent<string>) => {
     const { value } = target;
@@ -53,10 +53,16 @@ export function Logs() {
     return `${host.name}/${name}`;
   };
 
-  console.log({ logsData });
-
-  if (nodesLoading) return <>Loading...</>;
-  if (nodesError || logsError) return <>Error! ${(nodesError || logsError)?.message}</>;
+  if (nodesLoading) return <LinearProgress />;
+  if (nodesError || logsError)
+    return (
+      <>
+        <Alert severity="error">
+          <AlertTitle>{"Error fetching data: "}</AlertTitle>
+          {(nodesError || logsError).message}
+        </Alert>
+      </>
+    );
 
   const sortedNodes =
     nodesData?.nodes
@@ -115,24 +121,26 @@ export function Logs() {
       <div style={{ marginTop: "10px" }} />
       <LogsChart logPeriod={logPeriod} nodeIds={nodes} />
       <div style={{ marginTop: "10px" }} />
-      {logsData && (
-        <LogTable
-          type={`Showing ${logsData.logs.docs.length} log entries for ${
-            nodes.length
-          } Node${s(nodes.length)}.`}
-          searchable
-          rows={logsData.logs.docs}
-          loading={logsLoading}
-          loadItems={() => {
-            if (logsData.logs.hasNextPage) {
-              setLogsLoading(true);
-              fetchMore({
-                variables: { page: logsData.logs.docs.length / 100 + 1 },
-              });
-            }
-          }}
-        />
-      )}
+      <LogTable
+        type={
+          !nodes.length || !logsData
+            ? "Select nodes to view logs"
+            : `Showing ${logsData?.logs.docs.length} log entries for ${
+                nodes.length
+              } Node${s(nodes.length)}`
+        }
+        searchable
+        rows={logsData?.logs.docs}
+        loading={logsLoading}
+        loadItems={() => {
+          if (logsData.logs.hasNextPage) {
+            setLogsLoading(true);
+            fetchMore({
+              variables: { page: logsData.logs.docs.length / 100 + 1 },
+            });
+          }
+        }}
+      />
     </div>
   );
 }

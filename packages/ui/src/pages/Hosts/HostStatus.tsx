@@ -7,10 +7,16 @@ import { ModalHelper } from "utils";
 interface IHostStatusProps {
   selectedHost: IHost | undefined;
   locations: ILocation[];
+  hostNames: string[];
   refetchHosts: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>;
 }
 
-export function HostStatus({ selectedHost, refetchHosts, locations }: IHostStatusProps) {
+export function HostStatus({
+  selectedHost,
+  locations,
+  hostNames,
+  refetchHosts,
+}: IHostStatusProps) {
   const { fqdn, ip, loadBalancer, location, name } = selectedHost || {
     fqdn: "",
     ip: "",
@@ -29,7 +35,13 @@ export function HostStatus({ selectedHost, refetchHosts, locations }: IHostStatu
   const handleOpenUpdateHostModal = () => {
     ModalHelper.open({
       modalType: "hostsForm",
-      modalProps: { refetchHosts, locations, update: true, selectedHost },
+      modalProps: {
+        update: true,
+        selectedHost,
+        locations,
+        hostNames,
+        refetchHosts,
+      },
     });
   };
 
@@ -42,8 +54,6 @@ export function HostStatus({ selectedHost, refetchHosts, locations }: IHostStatu
       },
     });
   };
-
-  console.log(selectedHost);
 
   return (
     <>
