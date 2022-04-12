@@ -17,7 +17,7 @@ import {
   INodesQuery,
   useCreateNodesCsvMutation,
 } from "types";
-import { ModalHelper, parseBackendError, s } from "utils";
+import { ModalHelper, parseBackendError, regexTest, s } from "utils";
 
 const style = {
   position: "absolute" as "absolute",
@@ -81,8 +81,8 @@ export function NodesCSV({
   const hostsWithFqdn = hosts.filter(({ fqdn }) => Boolean(fqdn)).map(({ name }) => name);
   const validLoadBalancers = loadBalancers.map(({ name }) => name);
   const schema = {
-    chain: (chain: string) => validChains.includes(chain.toUpperCase()),
-    host: (host: string) => validHosts.includes(host.toLowerCase()),
+    chain: (chain: string) => !!chain && validChains.includes(chain.toUpperCase()),
+    host: (host: string) => !!host && validHosts.includes(host.toLowerCase()),
     https: (https: string) =>
       https.toLowerCase() === "false" || https.toLowerCase() === "true",
     name: (name: string) => !!name,
@@ -94,14 +94,8 @@ export function NodesCSV({
         .split(",")
         .map((lb) => lb.trim())
         .every((lb: string) => validLoadBalancers.includes(lb)),
-    port: (port: string) =>
-      /^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/.test(
-        port,
-      ),
-    url: (url: string) =>
-      /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/.test(
-        url,
-      ),
+    port: (port: string) => regexTest(port, "port"),
+    url: (url: string) => regexTest(url, "url"),
   };
   const validate = (node: any, schema: { [key: string]: (value: string) => boolean }) =>
     Object.keys(schema).filter((key) => !schema[key](node[key]));
@@ -200,7 +194,7 @@ export function NodesCSV({
               disabled={Boolean(!nodes || nodesError || backendError)}
               style={{ marginTop: 8 }}
               onClick={submitCSV}
-              variant="outlined"
+              variant="contained"
             >
               {loading ? (
                 <CircularProgress size={20} />
