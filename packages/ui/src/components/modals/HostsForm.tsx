@@ -25,7 +25,7 @@ import {
   useCreateHostMutation,
   useUpdateHostMutation,
 } from "types";
-import { ModalHelper } from "utils";
+import { ModalHelper, regexTest } from "utils";
 
 interface HostsFormProps {
   locations: ILocation[];
@@ -59,6 +59,9 @@ export function HostsForm({
       errors.ip = "Either IP or FQDN is required";
       errors.fqdn = "Either IP or FQDN is required";
     }
+    if (values.ip && !regexTest(values.ip, "ip")) errors.ip = "Not a valid IP";
+    if (values.fqdn && !regexTest(values.fqdn, "fqdn")) errors.fqdn = "Not a valid FQDN";
+
     return errors;
   };
   const { values, errors, handleChange, handleSubmit, setFieldValue, resetForm } =
@@ -194,7 +197,7 @@ export function HostsForm({
               <Button
                 onClick={ModalHelper.close}
                 style={{ height: 40, width: 150 }}
-                variant="outlined"
+                variant="contained"
               >
                 Cancel
               </Button>
@@ -206,7 +209,7 @@ export function HostsForm({
                   height: 40,
                   width: 150,
                 }}
-                variant="outlined"
+                variant="contained"
                 onClick={handleSubmit as any}
               >
                 {loading ? (
