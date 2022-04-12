@@ -198,6 +198,7 @@ export function HostsForm({
                 onClick={ModalHelper.close}
                 style={{ height: 40, width: 150 }}
                 variant="contained"
+                color="error"
               >
                 Cancel
               </Button>
@@ -210,6 +211,7 @@ export function HostsForm({
                   width: 150,
                 }}
                 variant="contained"
+                color="success"
                 onClick={handleSubmit as any}
               >
                 {loading ? (
