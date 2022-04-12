@@ -5,33 +5,39 @@ import { modalStateVar } from "apollo";
 import { ModalHelper } from "utils";
 
 import { ConfirmationModal } from "./ConfirmationModal";
+import { HostsCSV } from "./HostsCSV";
+import { HostsForm } from "./HostsForm";
+import { NodesCSV } from "./NodesCSV";
+import { NodesForm } from "./NodesForm";
 
-export type ModalTypes = "confirmation";
+export type IModalTypes =
+  | "confirmation"
+  | "hostsCsv"
+  | "hostsForm"
+  | "nodesCsv"
+  | "nodesForm";
 
-export interface ModalProps {
-  handleOk: any;
-  promptText: string;
-}
-
-export interface ModalState {
-  modalType: ModalTypes;
-  modalProps?: ModalProps;
+export interface IModalState {
+  modalType: IModalTypes;
+  modalProps?: any;
   modalOptions?: {
     onClose?: any;
     disableBackdropClick?: boolean;
   };
 }
 
-const MODAL_TYPES: {
-  [key: string]: (modalProps: ModalProps) => JSX.Element;
-} = {
+const MODAL_TYPES = {
   confirmation: ConfirmationModal,
+  hostsCsv: HostsCSV,
+  hostsForm: HostsForm,
+  nodesCsv: NodesCSV,
+  nodesForm: NodesForm,
 };
 
 export function RootModal() {
   const modalState = useReactiveVar(modalStateVar);
 
-  const modalType: ModalTypes = modalState?.modalType;
+  const modalType: IModalTypes = modalState?.modalType;
 
   const modalProps = modalState.modalProps;
 
@@ -43,6 +49,7 @@ export function RootModal() {
 
   const open: boolean = !!modalType;
   const SpecifiedModal = MODAL_TYPES[modalType];
+
   return (
     <Modal
       aria-labelledby={`${modalType}-modal`}
@@ -54,7 +61,6 @@ export function RootModal() {
         onClose && onClose();
       }}
       closeAfterTransition
-      //   BackdropComponent={Backdrop}
       BackdropProps={{ timeout: 500 }}
       style={{
         display: "flex",
