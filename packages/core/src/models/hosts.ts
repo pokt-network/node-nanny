@@ -9,6 +9,8 @@ export interface IHost<Populated = true> {
   location: Populated extends true ? ILocation : Types.ObjectId;
   ip?: string;
   fqdn?: string;
+  /** URL field is optional, it represents the host's public URL.
+  Only used in the `getHAProxyMessage` to display HAProxy stats page URL. */
   url?: string;
 }
 

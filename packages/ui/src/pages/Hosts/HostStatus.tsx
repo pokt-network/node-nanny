@@ -74,7 +74,7 @@ export function HostStatus({
             {(fqdn || ip) && (
               <Typography>{`${fqdn ? "FQDN" : "IP"}: ${fqdn || ip}`}</Typography>
             )}
-            <Typography>Load Balancer: {loadBalancer}</Typography>
+            <Typography>Load Balancer: {String(loadBalancer)}</Typography>
             <Typography>Location: {location?.name}</Typography>
           </Paper>
           <div
@@ -87,14 +87,15 @@ export function HostStatus({
             <Button
               onClick={handleOpenUpdateHostModal}
               disabled={!selectedHost}
-              variant="outlined"
+              variant="contained"
             >
               Update Host
             </Button>
             <Button
               onClick={handleOpenDeleteModal}
               disabled={!selectedHost}
-              variant="outlined"
+              variant="contained"
+              color="error"
             >
               Delete Host
             </Button>

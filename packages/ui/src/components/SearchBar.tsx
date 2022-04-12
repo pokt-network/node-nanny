@@ -26,7 +26,12 @@ export default function SearchBar({ value, handleChange, type, sx }: ISearchBarP
           </InputAdornment>
         }
         endAdornment={
-          value && <HighlightOffIcon sx={{ cursor: "pointer" }} onClick={() => handleChange("")} />
+          value && (
+            <HighlightOffIcon
+              sx={{ cursor: "pointer" }}
+              onClick={() => handleChange("")}
+            />
+          )
         }
         label={searchText}
       />
