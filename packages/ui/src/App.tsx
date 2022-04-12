@@ -13,7 +13,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 
 import { Route, Routes } from "react-router-dom";
 import { Home, Hosts, Logs, Nodes } from "./pages";
-import { Nav } from "./components";
+import { Nav, RootModal } from "./components";
 
 const drawerWidth: number = 240;
 
@@ -75,6 +75,7 @@ function DashboardContent() {
 
   return (
     <ThemeProvider theme={mdTheme}>
+      <RootModal />
       <Box sx={{ display: "flex" }}>
         <CssBaseline />
         <AppBar position="absolute" open={open}>
