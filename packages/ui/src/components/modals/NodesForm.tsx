@@ -1,5 +1,6 @@
-import { ChangeEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ApolloQueryResult } from "@apollo/client";
+import { useFormik, FormikErrors } from "formik";
 import {
   Alert,
   AlertTitle,
@@ -7,13 +8,13 @@ import {
   Checkbox,
   CircularProgress,
   FormControl,
+  FormHelperText,
   InputLabel,
   ListItemText,
   MenuItem,
   OutlinedInput,
   Paper,
   Select,
-  SelectChangeEvent,
   Switch,
   TextField,
   Typography,
@@ -21,6 +22,7 @@ import {
 
 import {
   INode,
+  INodeInput,
   INodesQuery,
   IGetHostsChainsAndLoadBalancersQuery,
   useCreateNodeMutation,
@@ -30,45 +32,70 @@ import { ModalHelper } from "utils";
 
 export interface NodesFormProps {
   formData: IGetHostsChainsAndLoadBalancersQuery;
-  refetchNodes: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
+  nodeNames: string[];
+  hostPortCombos: string[];
   selectedNode?: INode;
   update?: boolean;
+  refetchNodes: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
 }
 
 export function NodesForm({
   formData,
+  nodeNames,
+  hostPortCombos,
   refetchNodes,
-  update,
   selectedNode,
+  update,
 }: NodesFormProps) {
-  const [chain, setChain] = useState("");
-  const [host, setHost] = useState("");
   const [https, setHttps] = useState(false);
   const [hostHasFqdn, setHostHasFqdn] = useState(false);
-  const [loadBalancers, setLoadBalancers] = useState<string[]>([]);
-  const [name, setName] = useState("");
-  const [port, setPort] = useState(0);
-  const [backend, setBackend] = useState("");
-  const [server, setServer] = useState("");
-  const [haProxy, setHaproxy] = useState(true);
-
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [backendError, setBackendError] = useState("");
 
-  const input = {
-    https,
-    chain,
-    haProxy,
-    host,
-    name,
-    port,
-    loadBalancers,
-    backend,
-    server,
+  if (update && selectedNode) {
+    nodeNames = nodeNames.filter((name) => name !== selectedNode.name);
+    hostPortCombos = hostPortCombos.filter(
+      (combo) => combo !== `${selectedNode.host.id}/${selectedNode.port}`,
+    );
+  }
+  const validate = (values: INodeInput): FormikErrors<INodeInput> => {
+    const errors: FormikErrors<INodeInput> = {};
+    if (!values.chain) errors.chain = "Chain is required";
+    if (!values.host) errors.host = "Host is required";
+    if (https && !hostHasFqdn) {
+      errors.host = "Host does not have an FQDN so HTTPS cannot be enabled";
+    }
+    if (!values.name) errors.name = "Name is required";
+    if (nodeNames.includes(values.name)) errors.name = "Name is already taken";
+    if (!values.port) errors.port = "Port is required";
+    if (hostPortCombos.includes(`${values.host}/${values.port}`)) {
+      errors.port = "Host/port combination is already taken";
+    }
+    return errors;
   };
+  const { values, errors, handleChange, handleSubmit, setFieldValue, resetForm } =
+    useFormik({
+      initialValues: {
+        https: false,
+        chain: "",
+        haProxy: false,
+        host: "",
+        name: "",
+        port: undefined,
+        loadBalancers: [],
+        backend: "",
+        server: "",
+      },
+      validate,
+      validateOnChange: false,
+      onSubmit: async () => {
+        setLoading(true);
+        update ? submitUpdate() : submitCreate();
+      },
+    });
 
   const [submitCreate] = useCreateNodeMutation({
-    variables: { input },
+    variables: { input: values },
     onCompleted: () => {
       resetForm();
       refetchNodes();
@@ -76,13 +103,13 @@ export function NodesForm({
       setLoading(false);
     },
     onError: (error) => {
-      setError(error.message);
+      setBackendError(error.message);
       setLoading(false);
     },
   });
 
   const [submitUpdate] = useUpdateNodeMutation({
-    variables: { update: { id: selectedNode?.id, ...input } },
+    variables: { update: { id: selectedNode?.id, ...values } },
     onCompleted: () => {
       resetForm();
       refetchNodes();
@@ -90,91 +117,37 @@ export function NodesForm({
       setLoading(false);
     },
     onError: (error) => {
-      setError(error.message);
+      setBackendError(error.message);
       setLoading(false);
     },
   });
 
-  const handleSubmit = () => {
-    setError("");
-    setLoading(true);
-    update ? submitUpdate() : submitCreate();
-  };
-
-  const resetForm = () => {
-    refetchNodes();
-    setChain("");
-    setHost("");
-    setLoadBalancers([]);
-    setName("");
-    setPort(0);
-    setBackend("");
-    setServer("");
-    setHaproxy(false);
-  };
-
   useEffect(() => {
     if (update && selectedNode) {
-      setChain(selectedNode.chain.id);
-      setHost(selectedNode.host.id);
-      setHttps(selectedNode.url.includes("https"));
-      setLoadBalancers(selectedNode.loadBalancers.map(({ id }) => id));
-      setName(selectedNode.name);
-      setPort(selectedNode.port);
-      setBackend(selectedNode.backend);
-      setServer(selectedNode.server);
-      setHaproxy(selectedNode.haProxy);
+      setFieldValue("chain", selectedNode.chain.id);
+      setFieldValue("host", selectedNode.host.id);
+      setFieldValue("url", selectedNode.url.includes("https"));
+      setFieldValue(
+        "loadBalancers",
+        selectedNode.loadBalancers.map(({ id }) => id),
+      );
+      setFieldValue("name", selectedNode.name);
+      setFieldValue("port", selectedNode.port);
+      setFieldValue("backend", selectedNode.backend);
+      setFieldValue("server", selectedNode.server);
+      setFieldValue("haProxy", selectedNode.haProxy);
     }
-  }, [update, selectedNode]);
+  }, [update, selectedNode, setFieldValue]);
 
   useEffect(() => {
-    if (formData?.hosts && host) {
-      const hostHasFqdn = Boolean(formData.hosts.find(({ id }) => id === host)?.fqdn);
-      if (!hostHasFqdn) {
-        setHttps(false);
-      }
+    if (formData?.hosts && values.host) {
+      const hostHasFqdn = Boolean(
+        formData.hosts.find(({ id }) => id === values.host)?.fqdn,
+      );
+      if (!hostHasFqdn) setHttps(false);
       setHostHasFqdn(hostHasFqdn);
     }
-  }, [host, formData]);
-
-  const handleChainChange = (event: SelectChangeEvent<typeof chain>) => {
-    setChain(event.target.value);
-  };
-
-  const handleHostChange = (event: SelectChangeEvent<typeof host>) => {
-    setHost(event.target.value);
-  };
-
-  const handleHttpsChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setHttps(event.target.checked);
-  };
-
-  const handleLoadBalancerChange = ({
-    target,
-  }: SelectChangeEvent<typeof loadBalancers>) => {
-    const { value } = target;
-    setLoadBalancers(typeof value === "string" ? value.split(",") : value);
-  };
-
-  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setName(event.target.value);
-  };
-
-  const handlePortChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setPort(Number(event.target.value));
-  };
-
-  const handleBackendChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setBackend(event.target.value);
-  };
-
-  const handleServerChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setServer(event.target.value);
-  };
-
-  const handleHaproxyChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setHaproxy(event.target.checked);
-  };
+  }, [values.host, formData]);
 
   return (
     <>
@@ -183,13 +156,14 @@ export function NodesForm({
           <Typography align="center" variant="h6" gutterBottom>
             {`${update ? "Update" : "Add New"} Node`}
           </Typography>
-          <FormControl fullWidth>
+          <FormControl fullWidth error={!!errors.chain}>
             <InputLabel id="chain-label">Chain</InputLabel>
             <Select
+              name="chain"
               labelId="chain-label"
-              value={chain}
+              value={values.chain}
               label="Chain"
-              onChange={handleChainChange}
+              onChange={handleChange}
             >
               {formData?.chains.map(({ name, id }) => (
                 <MenuItem key={id} value={id}>
@@ -197,15 +171,17 @@ export function NodesForm({
                 </MenuItem>
               ))}
             </Select>
+            {!!errors.chain && <FormHelperText>{errors.chain}</FormHelperText>}
           </FormControl>
           <div style={{ marginTop: "10px" }} />
-          <FormControl fullWidth>
+          <FormControl fullWidth error={!!errors.host}>
             <InputLabel id="host-label">Host</InputLabel>
             <Select
+              name="host"
               labelId="host-label"
-              value={host}
+              value={values.host}
               label="Host"
-              onChange={handleHostChange}
+              onChange={handleChange}
             >
               {formData?.hosts.map(({ name, id, location }) => (
                 <MenuItem key={id} value={id}>
@@ -213,6 +189,7 @@ export function NodesForm({
                 </MenuItem>
               ))}
             </Select>
+            {!!errors.host && <FormHelperText>{errors.host}</FormHelperText>}
           </FormControl>
           <div
             style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
@@ -227,11 +204,12 @@ export function NodesForm({
             >
               HTTPS
               <Switch
+                name="https"
                 checked={https}
-                onChange={handleHttpsChange}
+                onChange={handleChange}
                 disabled={!hostHasFqdn}
               />
-              {host && (
+              {values.host && (
                 <Typography>
                   {hostHasFqdn
                     ? "Selected host has an FQDN; HTTPS may be enabled."
@@ -242,12 +220,37 @@ export function NodesForm({
           </div>
           <div style={{ marginTop: "10px" }} />
           <FormControl fullWidth>
+            <TextField
+              name="name"
+              value={values.name}
+              onChange={handleChange}
+              label="Name"
+              variant="outlined"
+              error={!!errors.name}
+              helperText={errors.name}
+            />
+          </FormControl>
+          <div style={{ marginTop: "10px" }} />
+          <FormControl fullWidth>
+            <TextField
+              name="port"
+              value={values.port}
+              onChange={handleChange}
+              label="Port"
+              variant="outlined"
+              error={!!errors.port}
+              helperText={errors.port}
+            />
+          </FormControl>
+          <div style={{ marginTop: "10px" }} />
+          <FormControl fullWidth>
             <InputLabel id="lb-label">Load Balancers</InputLabel>
             <Select
+              name="loadBalancers"
               multiple
               labelId="lb-label"
-              value={loadBalancers}
-              onChange={handleLoadBalancerChange}
+              value={values.loadBalancers}
+              onChange={handleChange}
               input={<OutlinedInput label="Load Balancers" />}
               renderValue={(selected) => {
                 return selected
@@ -260,7 +263,7 @@ export function NodesForm({
             >
               {formData?.loadBalancers.map(({ name, id }) => (
                 <MenuItem key={id} value={id}>
-                  <Checkbox checked={loadBalancers.indexOf(id!) > -1} />
+                  <Checkbox checked={values.loadBalancers.indexOf(id!) > -1} />
                   <ListItemText primary={name} />
                 </MenuItem>
               ))}
@@ -269,26 +272,9 @@ export function NodesForm({
           <div style={{ marginTop: "10px" }} />
           <FormControl fullWidth>
             <TextField
-              value={name}
-              onChange={handleNameChange}
-              label="Name"
-              variant="outlined"
-            />
-          </FormControl>
-          <div style={{ marginTop: "10px" }} />
-          <FormControl fullWidth>
-            <TextField
-              value={port}
-              onChange={handlePortChange}
-              label="Port"
-              variant="outlined"
-            />
-          </FormControl>
-          <div style={{ marginTop: "10px" }} />
-          <FormControl fullWidth>
-            <TextField
-              value={backend}
-              onChange={handleBackendChange}
+              name="backend"
+              value={values.backend}
+              onChange={handleChange}
               label="Backend"
               variant="outlined"
             />
@@ -297,8 +283,9 @@ export function NodesForm({
           <div style={{ marginTop: "10px" }} />
           <FormControl fullWidth>
             <TextField
-              value={server}
-              onChange={handleServerChange}
+              name="server"
+              value={values.server}
+              onChange={handleChange}
               label="Server"
               variant="outlined"
             />
@@ -315,30 +302,39 @@ export function NodesForm({
               }}
             >
               HAproxy
-              <Switch checked={haProxy} onChange={handleHaproxyChange} />
+              <Switch name="haProxy" checked={values.haProxy} onChange={handleChange} />
             </div>
           </div>
-
-          <Button
-            fullWidth
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              height: 40,
-            }}
-            variant="outlined"
-            onClick={() => handleSubmit()}
-          >
-            {loading ? (
-              <CircularProgress size={20} />
-            ) : (
-              `${update ? "Update" : "Create"} Node`
-            )}
-          </Button>
-          {error && (
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <Button
+              onClick={ModalHelper.close}
+              style={{ height: 40, width: 150 }}
+              variant="outlined"
+            >
+              Cancel
+            </Button>
+            <Button
+              fullWidth
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                height: 40,
+                width: 150,
+              }}
+              variant="outlined"
+              onClick={handleSubmit as any}
+            >
+              {loading ? (
+                <CircularProgress size={20} />
+              ) : (
+                `${update ? "Update" : "Create"} Node`
+              )}
+            </Button>
+          </div>
+          {backendError && (
             <Alert severity="error">
               <AlertTitle>{`Error ${update ? "Updating" : "Creating"} Node`}</AlertTitle>
-              {error}
+              {backendError}
             </Alert>
           )}
         </Paper>

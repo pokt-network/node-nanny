@@ -1,15 +1,17 @@
-import { ChangeEvent, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ApolloQueryResult } from "@apollo/client";
+import { useFormik, FormikErrors } from "formik";
 import {
   Alert,
   AlertTitle,
   Button,
   CircularProgress,
   FormControl,
+  FormHelperText,
+  InputLabel,
   MenuItem,
   Paper,
   Select,
-  SelectChangeEvent,
   Switch,
   TextField,
   Typography,
@@ -17,6 +19,7 @@ import {
 
 import {
   IHost,
+  IHostInput,
   IHostsQuery,
   ILocation,
   useCreateHostMutation,
@@ -25,124 +28,103 @@ import {
 import { ModalHelper } from "utils";
 
 interface HostsFormProps {
-  refetchHosts: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>;
   locations: ILocation[];
+  hostNames: string[];
+  refetchHosts: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>;
   selectedHost?: IHost;
   update?: boolean;
 }
 
 export function HostsForm({
-  refetchHosts,
   locations,
+  hostNames,
+  refetchHosts,
   selectedHost,
   update,
 }: HostsFormProps) {
-  const [location, setLocation] = useState("NL");
-  const [name, setName] = useState("");
-  const [ip, setIP] = useState("");
   const [ipDisabled, setIPDisabled] = useState(false);
-  const [fqdn, setFQDN] = useState("");
   const [fqdnDisabled, setFQDNDisabled] = useState(false);
-  const [loadBalancer, setLoadBalancer] = useState(false);
-
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [backendError, setBackendError] = useState("");
 
-  const input = {
-    location,
-    name,
-    ip: ipDisabled ? "" : ip,
-    fqdn: fqdnDisabled ? "" : fqdn,
-    loadBalancer,
+  if (update && selectedHost) {
+    hostNames = hostNames.filter((name) => name !== selectedHost.name);
+  }
+  const validate = (values: IHostInput): FormikErrors<IHostInput> => {
+    const errors: FormikErrors<IHostInput> = {};
+    if (!values.location) errors.location = "Location is required";
+    if (!values.name) errors.name = "Name is required";
+    if (hostNames.includes(values.name)) errors.name = "Name is already taken";
+    if (!values.ip && !values.fqdn) {
+      errors.ip = "Either IP or FQDN is required";
+      errors.fqdn = "Either IP or FQDN is required";
+    }
+    return errors;
   };
+  const { values, errors, handleChange, handleSubmit, setFieldValue, resetForm } =
+    useFormik({
+      initialValues: { location: "", name: "", ip: "", fqdn: "", loadBalancer: false },
+      validate,
+      validateOnChange: false,
+      onSubmit: async () => {
+        setLoading(true);
+        update ? submitUpdate() : submitCreate();
+      },
+    });
 
   const [submitCreate] = useCreateHostMutation({
-    variables: { input },
+    variables: { input: values },
     onCompleted: () => {
       resetForm();
       refetchHosts();
       ModalHelper.close();
       setLoading(false);
     },
-    onError: (error) => {
-      setError(error.message);
+    onError: (backendError) => {
+      setBackendError(backendError.message);
       setLoading(false);
     },
   });
 
   const [submitUpdate] = useUpdateHostMutation({
-    variables: { update: { id: selectedHost?.id, ...input } },
+    variables: { update: { id: selectedHost?.id, ...values } },
     onCompleted: () => {
       resetForm();
       refetchHosts();
       ModalHelper.close();
       setLoading(false);
     },
-    onError: (error) => {
-      setError(error.message);
+    onError: (backendError) => {
+      setBackendError(backendError.message);
       setLoading(false);
     },
   });
 
   useEffect(() => {
     if (update && selectedHost) {
-      setLocation(selectedHost.location.id);
-      setName(selectedHost.name);
-      setIP(selectedHost.ip!);
-      setFQDN(selectedHost.fqdn!);
-      setLoadBalancer(selectedHost.loadBalancer);
+      setFieldValue("location", selectedHost.location.id);
+      setFieldValue("name", selectedHost.name);
+      setFieldValue("ip", selectedHost.ip);
+      setFieldValue("fqdn", selectedHost.fqdn);
+      setFieldValue("loadBalancer", selectedHost.loadBalancer);
     }
-  }, [update, selectedHost]);
-
-  const handleSubmit = () => {
-    setError("");
-    setLoading(true);
-    update ? submitUpdate() : submitCreate();
-  };
-
-  const resetForm = () => {
-    setLocation("");
-    setName("");
-    setIP("");
-    setFQDN("");
-    setLoadBalancer(false);
-  };
+  }, [update, selectedHost, setFieldValue]);
 
   useEffect(() => {
-    if (fqdn) {
+    if (values.fqdn) {
       setIPDisabled(true);
     } else {
       setIPDisabled(false);
     }
-  }, [fqdn]);
+  }, [values.fqdn]);
 
   useEffect(() => {
-    if (ip) {
+    if (values.ip) {
       setFQDNDisabled(true);
     } else {
       setFQDNDisabled(false);
     }
-  }, [ip]);
-
-  const handleLocationChange = (event: SelectChangeEvent<typeof location>) => {
-    setLocation(event.target.value);
-  };
-
-  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setName(event.target.value);
-  };
-
-  const handleIPChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setIP(event.target.value);
-  };
-
-  const handleFQDNChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setFQDN(event.target.value);
-  };
-
-  const handleLBChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setLoadBalancer(event.target.checked);
-  };
+  }, [values.ip]);
 
   return (
     <>
@@ -151,65 +133,96 @@ export function HostsForm({
           <Typography align="center" variant="h6" gutterBottom>
             {`${update ? "Update" : "Add New"} Host`}
           </Typography>
-          <FormControl fullWidth>
-            <Select value={location} onChange={handleLocationChange}>
+          <FormControl fullWidth error={!!errors.location}>
+            <InputLabel id="location-label">Location</InputLabel>
+            <Select
+              name="location"
+              labelId="location-label"
+              value={values.location}
+              label="Location"
+              onChange={handleChange}
+            >
               {locations?.map(({ id, name }) => (
                 <MenuItem value={id}>{name}</MenuItem>
               ))}
             </Select>
+            {!!errors.location && <FormHelperText>{errors.location}</FormHelperText>}
+          </FormControl>
+          <FormControl fullWidth>
             <div style={{ marginTop: "10px" }} />
             <TextField
-              value={name}
-              onChange={handleNameChange}
+              name="name"
+              value={values.name}
+              onChange={handleChange}
               label="Host Name"
               variant="outlined"
+              error={!!errors.name}
+              helperText={errors.name}
             />
             <div style={{ marginTop: "10px" }} />
             <TextField
-              value={ip}
-              onChange={handleIPChange}
+              name="ip"
+              value={values.ip}
+              onChange={handleChange}
               label="Host IP"
               variant="outlined"
               disabled={ipDisabled}
+              error={!!errors.ip}
+              helperText={errors.ip}
             />
             <div style={{ marginTop: "10px" }} />
             <TextField
-              value={fqdn}
-              onChange={handleFQDNChange}
+              name="fqdn"
+              value={values.fqdn}
+              onChange={handleChange}
               label="Host FQDN"
               variant="outlined"
               disabled={fqdnDisabled}
+              error={!!errors.fqdn}
+              helperText={errors.fqdn}
             />
             <div>
               Load Balancer
-              <Switch checked={loadBalancer} onChange={handleLBChange} />
+              <Switch
+                name="loadBalancer"
+                checked={values.loadBalancer}
+                onChange={handleChange}
+              />
             </div>
 
-            <Button
-              fullWidth
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                height: 40,
-              }}
-              variant="outlined"
-              onClick={handleSubmit}
-            >
-              {loading ? (
-                <CircularProgress size={20} />
-              ) : (
-                `${update ? "Update" : "Create"} Host`
-              )}
-            </Button>
-            {error && (
-              <Alert severity="error">
-                <AlertTitle>{`Error ${
-                  update ? "Updating" : "Creating"
-                } Host`}</AlertTitle>
-                {error}
-              </Alert>
-            )}
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <Button
+                onClick={ModalHelper.close}
+                style={{ height: 40, width: 150 }}
+                variant="outlined"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  height: 40,
+                  width: 150,
+                }}
+                variant="outlined"
+                onClick={handleSubmit as any}
+              >
+                {loading ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  `${update ? "Update" : "Create"} Host`
+                )}
+              </Button>
+            </div>
           </FormControl>
+          {backendError && (
+            <Alert severity="error">
+              <AlertTitle>{`Error ${update ? "Updating" : "Creating"} Host`}</AlertTitle>
+              {backendError}
+            </Alert>
+          )}
         </Paper>
       </div>
     </>
