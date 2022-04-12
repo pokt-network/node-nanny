@@ -32,6 +32,8 @@ interface NodesUpdateProps {
 export function NodesUpdate({ selectedNode, formData, refetchNodes }: NodesUpdateProps) {
   const [chain, setChain] = useState("");
   const [host, setHost] = useState("");
+  const [https, setHttps] = useState(false);
+  const [hostHasFqdn, setHostHasFqdn] = useState(false);
   const [loadBalancers, setLoadBalancers] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [port, setPort] = useState(0);
@@ -47,6 +49,7 @@ export function NodesUpdate({ selectedNode, formData, refetchNodes }: NodesUpdat
     if (formData && selectedNode) {
       setChain(selectedNode.chain.id);
       setHost(selectedNode.host.id);
+      setHttps(selectedNode.url.includes("https"));
       setLoadBalancers(selectedNode.loadBalancers.map(({ id }) => id));
       setName(selectedNode.name);
       setPort(selectedNode.port);
@@ -72,12 +75,28 @@ export function NodesUpdate({ selectedNode, formData, refetchNodes }: NodesUpdat
     onError: (error) => console.log({ error }),
   });
 
+  useEffect(() => {
+    if (formData?.hosts && host) {
+      const hostHasFqdn = Boolean(formData.hosts.find(({ id }) => id === host)?.fqdn);
+      if (!hostHasFqdn) {
+        setHttps(false);
+      } else {
+        setHttps(selectedNode.url.includes("https"));
+      }
+      setHostHasFqdn(hostHasFqdn);
+    }
+  }, [host, formData, selectedNode]);
+
   const handleChainChange = (event: SelectChangeEvent<typeof chain>) => {
     setChain(event.target.value);
   };
 
   const handleHostChange = (event: SelectChangeEvent<typeof host>) => {
     setHost(event.target.value);
+  };
+
+  const handleHttpsChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setHttps(event.target.checked);
   };
 
   const handleLoadBalancerChange = ({
@@ -169,6 +188,32 @@ export function NodesUpdate({ selectedNode, formData, refetchNodes }: NodesUpdat
                 ))}
               </Select>
             </FormControl>
+            <div
+              style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                }}
+              >
+                HTTPS
+                <Switch
+                  checked={https}
+                  onChange={handleHttpsChange}
+                  disabled={!hostHasFqdn}
+                />
+                {host && (
+                  <Typography>
+                    {hostHasFqdn
+                      ? "Selected host has an FQDN; HTTPS may be enabled."
+                      : "Selected host does not have an FQDN; HTTPS is disabled."}
+                  </Typography>
+                )}
+              </div>
+            </div>
             <div style={{ marginTop: "10px" }} />
             <FormControl fullWidth>
               <InputLabel id="lb-label">Load Balancers</InputLabel>
@@ -234,7 +279,14 @@ export function NodesUpdate({ selectedNode, formData, refetchNodes }: NodesUpdat
             <div
               style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
             >
-              <div>
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                }}
+              >
                 HAproxy
                 <Switch checked={haProxy} onChange={handleHaproxyChange} />
               </div>
