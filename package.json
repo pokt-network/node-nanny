@@ -9,8 +9,11 @@
     "build:install": "pnpm i && pnpm build",
     "build:clean": "turbo run build:clean",
     "build:fresh": "turbo run build:clean && turbo run build",
-    "dev:front": "pnpm build:install && pm2 start process.yml --only api && pnpm start --filter=@pokt-foundation/node-nanny-ui",
-    "dev:back": "pnpm build:install && pm2 start process.yml --only \"monitor,event-consumer\"",
+    "dev:front": "export $(cat .env-dev | xargs) && pnpm start:dev --filter=@pokt-foundation/node-nanny-api && pnpm start --filter=@pokt-foundation/node-nanny-ui",
+    "dev:back": "export $(cat .env-dev | xargs) && pnpm start:dev --filter=@pokt-foundation/node-nanny-monitor && pnpm start:dev --filter=@pokt-foundation/node-nanny-event-consumer",
+    "dev:front:windows": "(for /F \"tokens=*\" %i in (.env) do set %i) && pnpm start:dev --filter=@pokt-foundation/node-nanny-api && pnpm start --filter=@pokt-foundation/node-nanny-ui",
+    "dev:back:windows": "(for /F \"tokens=*\" %i in (.env) do set %i) && pnpm start:dev --filter=@pokt-foundation/node-nanny-monitor && pnpm start:dev --filter=@pokt-foundation/node-nanny-event-consumer",
+    "dev:stop": "pm2 kill",
     "docker:start:init": "docker-compose build && docker-compuse up -d",
     "docker:dev:start": "docker-compose up -d",
     "docker:dev:stop": "docker-compose down",
@@ -25,10 +28,14 @@
     "docker:event": "docker exec -it nn_backend pm2 log event",
     "docker:console": "docker exec -it nn_backend pm2 monit",
     "monitor": "pm2 log monitor",
-    "console": "pm2 monit"
+    "console": "pm2 monit",
+    "dev:test": "nodemon ./packages/api/src/server.ts"
   },
   "devDependencies": {
+    "@types/node": "^17.0.23",
+    "nodemon": "^2.0.15",
     "prettier": "2.5.1",
+    "ts-node": "^10.6.0",
     "turbo": "1.1.3",
     "typescript": "4.5.5"
   },
