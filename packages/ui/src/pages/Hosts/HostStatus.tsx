@@ -50,7 +50,10 @@ export function HostStatus({
       modalType: "confirmation",
       modalProps: {
         handleOk: () => submitDelete({ variables: { id: selectedHost.id } }),
-        promptText: `Are you sure you wish to delete Host ${selectedHost?.name}?`,
+        promptText: `Are you sure you wish to delete host ${selectedHost?.name}?`,
+        okText: "Delete Host",
+        okColor: "error",
+        cancelColor: "primary",
       },
     });
   };
