@@ -167,7 +167,7 @@ export class Service {
   getHAProxyMessage({ destination, loadBalancers }: IRotationParams): string {
     if (process.env.MONITOR_TEST === "1") return "";
     const urls = loadBalancers
-      .map(({ ip, url }) => `http://${url || ip}:8050/stats?scope=${destination}`)
+      .map(({ url, ip }) => `http://${url || ip}:8050/stats?scope=${destination}`)
       .join("\n");
     return `HAProxy Status\n${urls}`;
   }
