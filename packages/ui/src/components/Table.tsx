@@ -13,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import { formatHeaderCell } from "utils";
+import { formatHeaderCell, s } from "utils";
 import SearchBar from "./SearchBar";
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -133,7 +133,7 @@ export function Table({
       <Paper sx={{ width: "100%", overflow: "hidden", padding: "16px" }}>
         {type && (
           <Typography align="center" variant="h4" gutterBottom>
-            {type}
+            {`${rows?.length} ${type}${s(rows.length)}`}
           </Typography>
         )}
         {searchable && (
