@@ -279,7 +279,7 @@ export function LogTable({
                 )
                 .sort(getComparator(order, orderBy))
                 .map((row, i: number) => (
-                  <Row row={row} index={i} />
+                  <Row key={row.timestamp} row={row} index={i} />
                 ))}
             </TableBody>
           </MUITable>
