@@ -1,6 +1,14 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { ApolloQueryResult } from "@apollo/client";
-import { Button, FormControl, Paper, Typography } from "@mui/material";
+import {
+  Alert,
+  AlertTitle,
+  Button,
+  CircularProgress,
+  FormControl,
+  Paper,
+  Typography,
+} from "@mui/material";
 
 import {
   INode,
@@ -18,6 +26,8 @@ import { ModalHelper } from "utils";
 interface INodeStatusProps {
   selectedNode: INode | undefined;
   formData: IGetHostsChainsAndLoadBalancersQuery;
+  nodeNames: string[];
+  hostPortCombos: string[];
   setSelectedNode: Dispatch<SetStateAction<INode | undefined>>;
   refetchNodes: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
 }
@@ -25,6 +35,8 @@ interface INodeStatusProps {
 export function NodeStatus({
   selectedNode,
   formData,
+  nodeNames,
+  hostPortCombos,
   setSelectedNode,
   refetchNodes,
 }: INodeStatusProps) {
@@ -40,7 +52,7 @@ export function NodeStatus({
   };
   const fetchHaProxy = Boolean(!selectedNode?.dispatch && selectedNode?.haProxy);
 
-  const [haProxyButtonText, setHaProxyButtonText] = useState("No Node Selected");
+  const [haProxyButtonText, setHaProxyButtonText] = useState("Toggle HAProxy");
 
   const [getStatus, { data, error, loading }] = useGetNodeStatusLazyQuery({
     onCompleted: (data) => handleHaProxyButtonText(data.haProxyStatus),
@@ -85,7 +97,7 @@ export function NodeStatus({
   const handleHaProxyButtonText = (haProxyStatus: number) => {
     setHaProxyButtonText(
       { "-1": "No HAProxy", 0: "Disable HAProxy", 1: "Enable HAProxy" }[haProxyStatus] ||
-        "No Node Selected",
+        "Toggle HAProxy",
     );
   };
 
@@ -98,7 +110,14 @@ export function NodeStatus({
   const handleOpenUpdateNodeModal = () => {
     ModalHelper.open({
       modalType: "nodesForm",
-      modalProps: { formData, refetchNodes, update: true, selectedNode },
+      modalProps: {
+        update: true,
+        selectedNode,
+        formData,
+        nodeNames,
+        hostPortCombos,
+        refetchNodes,
+      },
     });
   };
 
@@ -112,8 +131,6 @@ export function NodeStatus({
     });
   };
 
-  if (error) return <> Error! ${error.message}</>;
-
   const { haProxyStatus } = data || { haProxyStatus: 2 };
   const haProxyStatusText =
     {
@@ -121,7 +138,11 @@ export function NodeStatus({
       "0": "OK",
       "1": "Offline",
     }[haProxyStatus] || "No HAProxy";
-  const muteStatusText = !selectedNode ? "" : muted ? "Muted" : "Not Muted";
+  const muteStatusText = !selectedNode
+    ? "No Node Selected"
+    : muted
+    ? "Muted"
+    : "Not Muted";
 
   return (
     <>
@@ -166,26 +187,33 @@ export function NodeStatus({
             <FormControl fullWidth>
               <Button
                 fullWidth
-                style={{ display: "flex", justifyContent: "center" }}
+                style={{ display: "flex", justifyContent: "center", height: 40 }}
                 variant="outlined"
                 onClick={() => handleHaProxyToggle(id, haProxyStatus)}
-                disabled={!fetchHaProxy || haProxyStatus === -1}
+                disabled={!!error || loading || !fetchHaProxy || haProxyStatus === -1}
               >
-                {loading ? "Loading..." : haProxyButtonText}
+                {loading ? (
+                  <>
+                    <CircularProgress size={20} style={{ marginRight: 8 }} />
+                    Checking HAProxy Status
+                  </>
+                ) : (
+                  haProxyButtonText
+                )}
               </Button>
               <div style={{ marginTop: "10px" }} />
               <Button
                 fullWidth
-                style={{ display: "flex", justifyContent: "center" }}
+                style={{ display: "flex", justifyContent: "center", height: 40 }}
                 variant="outlined"
                 onClick={() => handleMuteToggle(id)}
                 disabled={!selectedNode}
               >
                 {!selectedNode
-                  ? "No Node Selected"
+                  ? "Togle Monitor Alerts"
                   : muted
-                  ? "Unmute Monitor"
-                  : "Mute Monitor"}
+                  ? "Unmute Monitor Alerts"
+                  : "Mute Monitor Alerts"}
               </Button>
             </FormControl>
           </Paper>
@@ -211,6 +239,12 @@ export function NodeStatus({
               Delete Node
             </Button>
           </div>
+          {error && (
+            <Alert severity="error">
+              <AlertTitle>{"Error fetching HAProxy status"}</AlertTitle>
+              {error.message}
+            </Alert>
+          )}
         </Paper>
       </div>
     </>
