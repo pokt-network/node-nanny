@@ -50,48 +50,49 @@ export function Nodes() {
         style={{
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
+          justifyContent: "space-between",
           alignItems: "center",
           margin: "16px",
+          width: "100%",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: 8,
-                marginBottom: 16,
-              }}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: 8,
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <Button
+              style={{ marginBottom: 8, marginRight: 8, width: 150 }}
+              onClick={handleOpenCreateNodeModal}
+              variant="contained"
+              color="success"
             >
-              <Button onClick={handleOpenCreateNodeModal} variant="outlined">
-                Create Node
-              </Button>
-              <Button onClick={handleOpenUploadNodeCSVModal} variant="outlined">
-                Upload CSV
-              </Button>
-            </div>
-            <div style={{ width: "100%", marginBottom: 32 }}>
-              <NodeStatus
-                selectedNode={selectedNode}
-                formData={formData}
-                nodeNames={nodeNames}
-                hostPortCombos={hostPortCombos}
-                setSelectedNode={setSelectedNode}
-                refetchNodes={refetch}
-              />
-            </div>
+              Create Node
+            </Button>
+            <Button
+              style={{ marginBottom: 8, marginRight: 8, width: 150 }}
+              onClick={handleOpenUploadNodeCSVModal}
+              variant="contained"
+              color="success"
+            >
+              Upload CSV
+            </Button>
           </div>
+          <NodeStatus
+            selectedNode={selectedNode}
+            formData={formData}
+            nodeNames={nodeNames}
+            hostPortCombos={hostPortCombos}
+            setSelectedNode={setSelectedNode}
+            refetchNodes={refetch}
+          />
         </div>
         <Table
-          type="Nodes"
+          type="Node"
           paginate
           searchable
           rows={data.nodes}
