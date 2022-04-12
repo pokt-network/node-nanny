@@ -112,6 +112,9 @@ export function NodeStatus({
       modalType: "confirmation",
       modalProps: {
         handleOk: () => submit({ variables: { id: selectedNode!.id! } }),
+        okText: "Delete Node",
+        okColor: "error",
+        cancelColor: "primary",
         promptText: `Are you sure you wish to delete node ${selectedNode?.name}?`,
       },
     });
