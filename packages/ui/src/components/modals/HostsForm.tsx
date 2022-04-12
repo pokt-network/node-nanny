@@ -1,23 +1,42 @@
 import { ChangeEvent, useState, useEffect } from "react";
 import { ApolloQueryResult } from "@apollo/client";
 import {
+  Alert,
+  AlertTitle,
+  Button,
+  CircularProgress,
+  FormControl,
+  MenuItem,
   Paper,
   Select,
   SelectChangeEvent,
   Switch,
-  Button,
-  FormControl,
   TextField,
-  MenuItem,
+  Typography,
 } from "@mui/material";
 
-import { IHostsQuery, useCreateHostMutation, useLocationsQuery } from "types";
+import {
+  IHost,
+  IHostsQuery,
+  ILocation,
+  useCreateHostMutation,
+  useUpdateHostMutation,
+} from "types";
+import { ModalHelper } from "utils";
 
 interface HostsFormProps {
   refetchHosts: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>;
+  locations: ILocation[];
+  selectedHost?: IHost;
+  update?: boolean;
 }
 
-export function HostsForm({ refetchHosts }: HostsFormProps) {
+export function HostsForm({
+  refetchHosts,
+  locations,
+  selectedHost,
+  update,
+}: HostsFormProps) {
   const [location, setLocation] = useState("NL");
   const [name, setName] = useState("");
   const [ip, setIP] = useState("");
@@ -26,8 +45,68 @@ export function HostsForm({ refetchHosts }: HostsFormProps) {
   const [fqdnDisabled, setFQDNDisabled] = useState(false);
   const [loadBalancer, setLoadBalancer] = useState(false);
 
-  const { data, error, loading } = useLocationsQuery();
-  const [submit] = useCreateHostMutation({ onCompleted: () => refetchHosts() });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const input = {
+    location,
+    name,
+    ip: ipDisabled ? "" : ip,
+    fqdn: fqdnDisabled ? "" : fqdn,
+    loadBalancer,
+  };
+
+  const [submitCreate] = useCreateHostMutation({
+    variables: { input },
+    onCompleted: () => {
+      resetForm();
+      refetchHosts();
+      ModalHelper.close();
+      setLoading(false);
+    },
+    onError: (error) => {
+      setError(error.message);
+      setLoading(false);
+    },
+  });
+
+  const [submitUpdate] = useUpdateHostMutation({
+    variables: { update: { id: selectedHost?.id, ...input } },
+    onCompleted: () => {
+      resetForm();
+      refetchHosts();
+      ModalHelper.close();
+      setLoading(false);
+    },
+    onError: (error) => {
+      setError(error.message);
+      setLoading(false);
+    },
+  });
+
+  useEffect(() => {
+    if (update && selectedHost) {
+      setLocation(selectedHost.location.id);
+      setName(selectedHost.name);
+      setIP(selectedHost.ip!);
+      setFQDN(selectedHost.fqdn!);
+      setLoadBalancer(selectedHost.loadBalancer);
+    }
+  }, [update, selectedHost]);
+
+  const handleSubmit = () => {
+    setError("");
+    setLoading(true);
+    update ? submitUpdate() : submitCreate();
+  };
+
+  const resetForm = () => {
+    setLocation("");
+    setName("");
+    setIP("");
+    setFQDN("");
+    setLoadBalancer(false);
+  };
 
   useEffect(() => {
     if (fqdn) {
@@ -65,16 +144,16 @@ export function HostsForm({ refetchHosts }: HostsFormProps) {
     setLoadBalancer(event.target.checked);
   };
 
-  if (loading) return <>Loading...</>;
-  if (error) return <>Error! ${error.message}</>;
-
   return (
     <>
       <div>
-        <Paper style={{ width: "100%", padding: 10 }} variant="outlined">
+        <Paper style={{ width: 700, padding: 32 }} variant="outlined">
+          <Typography align="center" variant="h6" gutterBottom>
+            {`${update ? "Update" : "Add New"} Host`}
+          </Typography>
           <FormControl fullWidth>
             <Select value={location} onChange={handleLocationChange}>
-              {data?.locations.map(({ id, name }) => (
+              {locations?.map(({ id, name }) => (
                 <MenuItem value={id}>{name}</MenuItem>
               ))}
             </Select>
@@ -111,29 +190,25 @@ export function HostsForm({ refetchHosts }: HostsFormProps) {
               style={{
                 display: "flex",
                 justifyContent: "center",
+                height: 40,
               }}
               variant="outlined"
-              onClick={() => {
-                submit({
-                  variables: {
-                    input: {
-                      location,
-                      name,
-                      ip: ipDisabled ? "" : ip,
-                      fqdn: fqdnDisabled ? "" : fqdn,
-                      loadBalancer,
-                    },
-                  },
-                });
-                setLocation("");
-                setName("");
-                setIP("");
-                setFQDN("");
-                setLoadBalancer(false);
-              }}
+              onClick={handleSubmit}
             >
-              Submit
+              {loading ? (
+                <CircularProgress size={20} />
+              ) : (
+                `${update ? "Update" : "Create"} Host`
+              )}
             </Button>
+            {error && (
+              <Alert severity="error">
+                <AlertTitle>{`Error ${
+                  update ? "Updating" : "Creating"
+                } Host`}</AlertTitle>
+                {error}
+              </Alert>
+            )}
           </FormControl>
         </Paper>
       </div>
