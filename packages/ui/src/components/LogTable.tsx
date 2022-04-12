@@ -129,7 +129,7 @@ export function LogTable({
     });
   };
 
-  const parsedRows = parseLogsForTable(rows);
+  const parsedRows = parseLogsForTable(rows || []);
 
   /* ----- Sorting ----- */
   const handleRequestSort = (_event: MouseEvent<unknown>, property: any) => {
@@ -263,7 +263,7 @@ export function LogTable({
               order={order}
               orderBy={orderBy}
               onRequestSort={handleRequestSort}
-              rowCount={rows.length}
+              rowCount={rows?.length}
             />
             <TableBody>
               {parsedRows

@@ -84,10 +84,7 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
       },
     ],
   };
-  const options: any = {
-    animation: { duration: 0 },
-    maintainAspectRatio: false,
-  };
+  const options: any = { animation: { duration: 0 }, maintainAspectRatio: false };
 
   if (error) return <>Error! ${error.message}</>;
 
