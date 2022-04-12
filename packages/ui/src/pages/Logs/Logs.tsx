@@ -12,6 +12,7 @@ import {
 
 import { LogTable } from "components";
 import { INode, useLogsQuery, useNodesQuery } from "types";
+import { s } from "utils";
 import { ITimePeriod, timePeriods } from "./periods";
 
 import LogsChart from "./LogsChart";
@@ -51,6 +52,8 @@ export function Logs() {
   const getNodeNameForHealthCheck = ({ host, name }: INode): string => {
     return `${host.name}/${name}`;
   };
+
+  console.log({ logsData });
 
   if (nodesLoading) return <>Loading...</>;
   if (nodesError || logsError) return <>Error! ${(nodesError || logsError)?.message}</>;
@@ -114,7 +117,9 @@ export function Logs() {
       <div style={{ marginTop: "10px" }} />
       {logsData && (
         <LogTable
-          type={`Showing ${logsData.logs.docs.length} log entries for ${nodes.length} Nodes.`}
+          type={`Showing ${logsData.logs.docs.length} log entries for ${
+            nodes.length
+          } Node${s(nodes.length)}.`}
           searchable
           rows={logsData.logs.docs}
           loading={logsLoading}
