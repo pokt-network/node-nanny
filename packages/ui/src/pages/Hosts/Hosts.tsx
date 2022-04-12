@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "@mui/material";
+import { Alert, AlertTitle, Button, LinearProgress } from "@mui/material";
 
 import { Table } from "components";
 import { IHost, useLocationsQuery, useHostsQuery } from "types";
@@ -17,10 +17,16 @@ export function Hosts() {
     loading: locationsLoading,
   } = useLocationsQuery();
 
+  const hostNames = data?.hosts.map(({ name }) => name);
+
   const handleOpenCreateHostModal = () => {
     ModalHelper.open({
       modalType: "hostsForm",
-      modalProps: { refetchHosts: refetch, locations: locationsData?.locations },
+      modalProps: {
+        refetchHosts: refetch,
+        locations: locationsData?.locations,
+        hostNames,
+      },
     });
   };
 
@@ -31,8 +37,16 @@ export function Hosts() {
     });
   };
 
-  if (loading || locationsLoading) return <>Loading...</>;
-  if (error || locationsError) return <>Error! ${(error || locationsError)?.message}</>;
+  if (loading || locationsLoading) return <LinearProgress />;
+  if (error || locationsError)
+    return (
+      <>
+        <Alert severity="error">
+          <AlertTitle>{"Error fetching data: "}</AlertTitle>
+          {(error || locationsError).message}
+        </Alert>
+      </>
+    );
 
   if (data) {
     return (
@@ -73,6 +87,7 @@ export function Hosts() {
           <HostStatus
             selectedHost={selectedHost}
             locations={locationsData?.locations}
+            hostNames={hostNames}
             refetchHosts={refetch}
           />
         </div>
