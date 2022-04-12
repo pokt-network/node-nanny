@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "@mui/material";
+import { Alert, AlertTitle, Button, LinearProgress } from "@mui/material";
 
 import { Table } from "components";
 import { INode, useGetHostsChainsAndLoadBalancersQuery, useNodesQuery } from "types";
@@ -16,10 +16,13 @@ export function Nodes() {
     loading: formLoading,
   } = useGetHostsChainsAndLoadBalancersQuery();
 
+  const nodeNames = data?.nodes.map(({ name }) => name);
+  const hostPortCombos = data?.nodes.map(({ host, port }) => `${host.id}/${port}`);
+
   const handleOpenCreateNodeModal = () => {
     ModalHelper.open({
       modalType: "nodesForm",
-      modalProps: { formData, refetchNodes: refetch },
+      modalProps: { formData, refetchNodes: refetch, nodeNames, hostPortCombos },
     });
   };
 
@@ -30,8 +33,16 @@ export function Nodes() {
     });
   };
 
-  if ((loading || formLoading) && !selectedNode) return <>Loading...</>;
-  if (error || formError) return <>Error! ${(error || formError)?.message}</>;
+  if (loading || formLoading) return <LinearProgress />;
+  if (error || formError)
+    return (
+      <>
+        <Alert severity="error">
+          <AlertTitle>{"Error fetching data: "}</AlertTitle>
+          {(error || formError).message}
+        </Alert>
+      </>
+    );
 
   if (data && formData) {
     return (
@@ -71,6 +82,8 @@ export function Nodes() {
               <NodeStatus
                 selectedNode={selectedNode}
                 formData={formData}
+                nodeNames={nodeNames}
+                hostPortCombos={hostPortCombos}
                 setSelectedNode={setSelectedNode}
                 refetchNodes={refetch}
               />
