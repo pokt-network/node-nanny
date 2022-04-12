@@ -310,6 +310,7 @@ export function NodesForm({
               onClick={ModalHelper.close}
               style={{ height: 40, width: 150 }}
               variant="contained"
+              color="error"
             >
               Cancel
             </Button>
@@ -322,6 +323,7 @@ export function NodesForm({
                 width: 150,
               }}
               variant="contained"
+              color="success"
               onClick={handleSubmit as any}
             >
               {loading ? (
