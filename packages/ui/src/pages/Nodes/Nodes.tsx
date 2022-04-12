@@ -1,15 +1,19 @@
 import { useState } from "react";
+import { Button } from "@mui/material";
 
 import { Table } from "components";
-import { INode, useGetHostsChainsAndLoadBalancersQuery, useNodesQuery } from "types";
+import {
+  INode,
+  useDeleteNodeMutation,
+  useGetHostsChainsAndLoadBalancersQuery,
+  useNodesQuery,
+} from "types";
+import { ModalHelper } from "utils";
 
 import { NodesCSV } from "./NodesCSV";
 import { NodesForm } from "./NodesForm";
 import { NodeStatus } from "./NodeStatus";
 import { NodesUpdate } from "./NodesUpdate";
-import { NodesDelete } from "./NodesDelete";
-
-interface INodeRow {}
 
 export function Nodes() {
   const [selectedNode, setSelectedNode] = useState<INode | undefined>(undefined);
@@ -19,6 +23,22 @@ export function Nodes() {
     error: formError,
     loading: formLoading,
   } = useGetHostsChainsAndLoadBalancersQuery();
+  const [submit] = useDeleteNodeMutation({
+    onCompleted: () => {
+      refetch();
+      ModalHelper.close();
+    },
+  });
+
+  const handleOpenDeleteModal = () => {
+    ModalHelper.open({
+      modalType: "confirmation",
+      modalProps: {
+        handleOk: () => submit({ variables: { id: selectedNode!.id! } }),
+        promptText: `Are you sure you wish to delete node ${selectedNode?.name}?`,
+      },
+    });
+  };
 
   if ((loading || formLoading) && !selectedNode) return <>Loading...</>;
   if (error || formError) return <>Error! ${(error || formError)?.message}</>;
@@ -56,7 +76,13 @@ export function Nodes() {
                   formData={formData}
                   refetchNodes={refetch}
                 />
-                <NodesDelete selectedNode={selectedNode} refetchNodes={refetch} />
+                <Button
+                  onClick={handleOpenDeleteModal}
+                  disabled={!selectedNode}
+                  variant="outlined"
+                >
+                  Delete Node
+                </Button>
               </div>
             </div>
           </div>
