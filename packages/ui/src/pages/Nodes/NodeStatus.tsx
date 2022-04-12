@@ -1,23 +1,36 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { ApolloQueryResult } from "@apollo/client";
 import { Button, FormControl, Paper, Typography } from "@mui/material";
 
 import {
   INode,
+  INodesQuery,
+  useDeleteNodeMutation,
   useDisableHaProxyServerMutation,
   useEnableHaProxyServerMutation,
+  IGetHostsChainsAndLoadBalancersQuery,
   useGetNodeStatusLazyQuery,
   useMuteMonitorMutation,
   useUnmuteMonitorMutation,
 } from "types";
+import { ModalHelper } from "utils";
 
 interface INodeStatusProps {
   selectedNode: INode | undefined;
+  formData: IGetHostsChainsAndLoadBalancersQuery;
   setSelectedNode: Dispatch<SetStateAction<INode | undefined>>;
+  refetchNodes: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
 }
 
-export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) {
-  const { id, backend, frontend, port, server, url, muted } = selectedNode || {
+export function NodeStatus({
+  selectedNode,
+  formData,
+  setSelectedNode,
+  refetchNodes,
+}: INodeStatusProps) {
+  const { id, name, backend, frontend, port, server, url, muted } = selectedNode || {
     id: "",
+    name: "",
     backend: "",
     frontend: "",
     port: "",
@@ -52,6 +65,13 @@ export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) 
     },
   });
 
+  const [submit] = useDeleteNodeMutation({
+    onCompleted: () => {
+      refetchNodes();
+      ModalHelper.close();
+    },
+  });
+
   useEffect(() => {
     if (selectedNode) {
       if (fetchHaProxy) {
@@ -75,6 +95,23 @@ export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) 
   const handleMuteToggle = (id: string) =>
     muted ? unmuteMonitor({ variables: { id } }) : muteMonitor({ variables: { id } });
 
+  const handleOpenUpdateNodeModal = () => {
+    ModalHelper.open({
+      modalType: "nodesForm",
+      modalProps: { formData, refetchNodes, update: true, selectedNode },
+    });
+  };
+
+  const handleOpenDeleteModal = () => {
+    ModalHelper.open({
+      modalType: "confirmation",
+      modalProps: {
+        handleOk: () => submit({ variables: { id: selectedNode!.id! } }),
+        promptText: `Are you sure you wish to delete node ${selectedNode?.name}?`,
+      },
+    });
+  };
+
   if (error) return <> Error! ${error.message}</>;
 
   const { haProxyStatus } = data || { haProxyStatus: 2 };
@@ -85,8 +122,6 @@ export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) 
       "1": "Offline",
     }[haProxyStatus] || "No HAProxy";
   const muteStatusText = !selectedNode ? "" : muted ? "Muted" : "Not Muted";
-
-  console.log(!selectedNode?.haProxy);
 
   return (
     <>
@@ -103,6 +138,7 @@ export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) 
             {!selectedNode ? "Select Node to view Status" : "Selected Node"}
           </Typography>
           <Paper style={{ padding: 10 }} variant="outlined">
+            <Typography>Name: {name}</Typography>
             <Typography>{`${frontend ? "Frontend" : "Backend"}: ${
               (backend || frontend) ?? "None"
             }`}</Typography>
@@ -153,6 +189,28 @@ export function NodeStatus({ selectedNode, setSelectedNode }: INodeStatusProps) 
               </Button>
             </FormControl>
           </Paper>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginTop: 16,
+            }}
+          >
+            <Button
+              onClick={handleOpenUpdateNodeModal}
+              disabled={!selectedNode}
+              variant="outlined"
+            >
+              Update Node
+            </Button>
+            <Button
+              onClick={handleOpenDeleteModal}
+              disabled={!selectedNode}
+              variant="outlined"
+            >
+              Delete Node
+            </Button>
+          </div>
         </Paper>
       </div>
     </>

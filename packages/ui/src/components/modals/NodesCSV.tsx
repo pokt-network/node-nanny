@@ -7,7 +7,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  Modal,
   Typography,
 } from "@mui/material";
 
@@ -18,7 +17,7 @@ import {
   INodesQuery,
   useCreateNodesCsvMutation,
 } from "types";
-import { parseBackendError, s } from "utils";
+import { ModalHelper, parseBackendError, s } from "utils";
 
 const style = {
   position: "absolute" as "absolute",
@@ -54,18 +53,14 @@ export function NodesCSV({
   formData: { chains, hosts, loadBalancers },
   refetchNodes,
 }: NodesCSVProps) {
-  const [open, setOpen] = useState(false);
   const [nodes, setNodes] = useState<INodeCsvInput[] | undefined>(undefined);
   const [nodesError, setNodesError] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-
   const [submit, { error, loading }] = useCreateNodesCsvMutation({
     onCompleted: () => {
       refetchNodes();
-      handleClose();
+      ModalHelper.close();
     },
   });
 
@@ -173,59 +168,49 @@ export function NodesCSV({
 
   return (
     <div>
-      <Button onClick={handleOpen} variant="outlined">
-        Upload CSV
-      </Button>
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box sx={style}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            Upload Nodes CSV
-          </Typography>
-          <CSVReader
-            onFileLoaded={parseNodesCSV}
-            parserOptions={{ header: true, skipEmptyLines: true }}
-          />
-          {nodesError && (
-            <Alert severity="error">
-              <AlertTitle>
-                Warning: There were one or more issues with your CSV format. Please
-                correct the following issues before attempting to create nodes via CSV.
-              </AlertTitle>
-              {nodesError}
-            </Alert>
-          )}
-          {backendError && (
-            <Alert severity="error">
-              <AlertTitle>Backend error: {backendError}</AlertTitle>
-            </Alert>
-          )}
-          {nodes && (
-            <>
-              <Table
-                type={`Adding ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`}
-                rows={nodes}
-              />
-              <Button
-                disabled={Boolean(!nodes || nodesError || backendError)}
-                style={{ marginTop: 8 }}
-                onClick={submitCSV}
-                variant="outlined"
-              >
-                {loading ? (
-                  <CircularProgress size={20} />
-                ) : (
-                  `Add ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`
-                )}
-              </Button>
-            </>
-          )}
-        </Box>
-      </Modal>
+      <Box sx={style}>
+        <Typography id="modal-modal-title" variant="h6" component="h2">
+          Upload Nodes CSV
+        </Typography>
+        <CSVReader
+          onFileLoaded={parseNodesCSV}
+          parserOptions={{ header: true, skipEmptyLines: true }}
+        />
+        {nodesError && (
+          <Alert severity="error">
+            <AlertTitle>
+              Warning: There were one or more issues with your CSV format. Please correct
+              the following issues before attempting to create nodes via CSV.
+            </AlertTitle>
+            {nodesError}
+          </Alert>
+        )}
+        {backendError && (
+          <Alert severity="error">
+            <AlertTitle>Backend error: {backendError}</AlertTitle>
+          </Alert>
+        )}
+        {nodes && (
+          <>
+            <Table
+              type={`Adding ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`}
+              rows={nodes}
+            />
+            <Button
+              disabled={Boolean(!nodes || nodesError || backendError)}
+              style={{ marginTop: 8 }}
+              onClick={submitCSV}
+              variant="outlined"
+            >
+              {loading ? (
+                <CircularProgress size={20} />
+              ) : (
+                `Add ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`
+              )}
+            </Button>
+          </>
+        )}
+      </Box>
     </div>
   );
 }
