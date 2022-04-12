@@ -64,23 +64,25 @@ export function Hosts() {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            flexDirection: "column",
-            width: "60%",
-            marginBottom: "16px",
+            marginTop: 8,
+            marginBottom: 16,
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginTop: 8,
-              marginBottom: 16,
-            }}
-          >
-            <Button onClick={handleOpenCreateHostModal} variant="outlined">
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <Button
+              style={{ marginBottom: 8, marginRight: 8, width: 150 }}
+              onClick={handleOpenCreateHostModal}
+              variant="contained"
+              color="success"
+            >
               Create Host
             </Button>
-            <Button onClick={handleOpenUploadNodeCSVModal} variant="outlined">
+            <Button
+              style={{ marginBottom: 8, marginRight: 8, width: 150 }}
+              onClick={handleOpenUploadNodeCSVModal}
+              variant="contained"
+              color="success"
+            >
               Upload CSV
             </Button>
           </div>
@@ -92,7 +94,7 @@ export function Hosts() {
           />
         </div>
         <Table
-          type="Hosts"
+          type="Host"
           searchable
           paginate
           rows={data.hosts}

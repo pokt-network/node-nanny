@@ -5,7 +5,7 @@ import {
   AlertTitle,
   Button,
   CircularProgress,
-  FormControl,
+  Grid,
   Paper,
   Typography,
 } from "@mui/material";
@@ -52,11 +52,7 @@ export function NodeStatus({
   };
   const fetchHaProxy = Boolean(!selectedNode?.dispatch && selectedNode?.haProxy);
 
-  const [haProxyButtonText, setHaProxyButtonText] = useState("Toggle HAProxy");
-
-  const [getStatus, { data, error, loading }] = useGetNodeStatusLazyQuery({
-    onCompleted: (data) => handleHaProxyButtonText(data.haProxyStatus),
-  });
+  const [getStatus, { data, error, loading }] = useGetNodeStatusLazyQuery();
   const [enable] = useEnableHaProxyServerMutation({
     onCompleted: () => getStatus(),
   });
@@ -84,25 +80,15 @@ export function NodeStatus({
     },
   });
 
-  useEffect(() => {
-    if (selectedNode) {
-      if (fetchHaProxy) {
-        getStatus({ variables: { id: selectedNode.id } });
-      } else {
-        setHaProxyButtonText("No HAProxy");
-      }
+  const handleHaProxyButtonClick = (id: string, haProxyStatus: number) => {
+    if (!data && !error && !loading) {
+      getStatus({ variables: { id } });
+    } else {
+      haProxyStatus === 0
+        ? disable({ variables: { id } })
+        : enable({ variables: { id } });
     }
-  }, [getStatus, selectedNode, fetchHaProxy]);
-
-  const handleHaProxyButtonText = (haProxyStatus: number) => {
-    setHaProxyButtonText(
-      { "-1": "No HAProxy", 0: "Disable HAProxy", 1: "Enable HAProxy" }[haProxyStatus] ||
-        "Toggle HAProxy",
-    );
   };
-
-  const handleHaProxyToggle = (id: string, haProxyStatus: number) =>
-    haProxyStatus === 0 ? disable({ variables: { id } }) : enable({ variables: { id } });
 
   const handleMuteToggle = (id: string) =>
     muted ? unmuteMonitor({ variables: { id } }) : muteMonitor({ variables: { id } });
@@ -131,13 +117,18 @@ export function NodeStatus({
     });
   };
 
-  const { haProxyStatus } = data || { haProxyStatus: 2 };
+  const haProxyButtonDisabled = Boolean(data || error || loading || !fetchHaProxy);
   const haProxyStatusText =
     {
       "-1": "No HAProxy",
       "0": "OK",
       "1": "Offline",
-    }[haProxyStatus] || "No HAProxy";
+    }[data?.haProxyStatus] || "--";
+  const haProxyButtonText = data?.haProxyStatus
+    ? { "-1": "No HAProxy", 0: "Disable HAProxy", 1: "Enable HAProxy" }[
+        data.haProxyStatus
+      ]
+    : "Check HAProxy Status";
   const muteStatusText = !selectedNode
     ? "No Node Selected"
     : muted
@@ -146,107 +137,88 @@ export function NodeStatus({
 
   return (
     <>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Paper style={{ width: 434, padding: 10 }} variant="outlined">
-          <Typography align="center" variant="h6" gutterBottom>
-            {!selectedNode ? "Select Node to view Status" : "Selected Node"}
-          </Typography>
-          <Paper style={{ padding: 10 }} variant="outlined">
+      <Paper style={{ padding: 10 }} variant="outlined">
+        <Typography align="center" variant="h6" gutterBottom>
+          {!selectedNode ? "Select Node to view Status" : "Selected Node"}
+        </Typography>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <Paper
+            style={{ padding: 10, marginRight: 8, width: 500, height: "100%" }}
+            variant="outlined"
+          >
             <Typography>Name: {name}</Typography>
             <Typography>{`${frontend ? "Frontend" : "Backend"}: ${
               (backend || frontend) ?? "None"
             }`}</Typography>
             <Typography>Port: {port}</Typography>
             <Typography>Server: {server ?? "None"}</Typography>
-            <Typography>{url}</Typography>
+            <Typography gutterBottom>URL: {url}</Typography>
+            <div>
+              <Button
+                onClick={handleOpenUpdateNodeModal}
+                disabled={!selectedNode}
+                variant="contained"
+                style={{ marginRight: 8 }}
+              >
+                Update Node
+              </Button>
+              <Button
+                onClick={handleOpenDeleteModal}
+                disabled={!selectedNode}
+                variant="contained"
+                color="error"
+              >
+                Delete Node
+              </Button>
+            </div>
           </Paper>
-          <div style={{ marginTop: "10px" }} />
-          <Paper style={{ padding: 10 }} variant="outlined">
-            <>
-              <Typography variant="h6">HAProxy Status: {haProxyStatusText}</Typography>
-              <Typography variant="h6">Mute Status: {muteStatusText}</Typography>
-            </>
-          </Paper>
-          <div style={{ marginTop: "10px" }} />
           <Paper
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              width: "100%",
-              padding: 10,
-            }}
+            style={{ display: "flex", flexDirection: "column", padding: 10, width: 305 }}
             variant="outlined"
           >
-            <FormControl fullWidth>
-              <Button
-                fullWidth
-                style={{ display: "flex", justifyContent: "center", height: 40 }}
-                variant="outlined"
-                onClick={() => handleHaProxyToggle(id, haProxyStatus)}
-                disabled={!!error || loading || !fetchHaProxy || haProxyStatus === -1}
-              >
-                {loading ? (
-                  <>
-                    <CircularProgress size={20} style={{ marginRight: 8 }} />
-                    Checking HAProxy Status
-                  </>
-                ) : (
-                  haProxyButtonText
-                )}
-              </Button>
-              <div style={{ marginTop: "10px" }} />
-              <Button
-                fullWidth
-                style={{ display: "flex", justifyContent: "center", height: 40 }}
-                variant="outlined"
-                onClick={() => handleMuteToggle(id)}
-                disabled={!selectedNode}
-              >
-                {!selectedNode
-                  ? "Togle Monitor Alerts"
-                  : muted
-                  ? "Unmute Monitor Alerts"
-                  : "Mute Monitor Alerts"}
-              </Button>
-            </FormControl>
+            <Typography>HAProxy Status: {haProxyStatusText}</Typography>
+            <Typography gutterBottom>Mute Status: {muteStatusText}</Typography>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() => handleMuteToggle(id)}
+              disabled={!selectedNode}
+              style={{ marginBottom: 8, height: 40 }}
+              color="info"
+            >
+              {!selectedNode
+                ? "Togle Monitor Alerts"
+                : muted
+                ? "Unmute Monitor Alerts"
+                : "Mute Monitor Alerts"}
+            </Button>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() => handleHaProxyButtonClick(id, data?.haProxyStatus)}
+              disabled={haProxyButtonDisabled}
+              style={{ marginRight: 8, height: 40 }}
+              color="warning"
+            >
+              {loading ? (
+                <>
+                  <CircularProgress size={20} style={{ marginRight: 8 }} />
+                  Checking HAProxy Status
+                </>
+              ) : (
+                haProxyButtonText
+              )}
+            </Button>
           </Paper>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginTop: 16,
-            }}
-          >
-            <Button
-              onClick={handleOpenUpdateNodeModal}
-              disabled={!selectedNode}
-              variant="outlined"
-            >
-              Update Node
-            </Button>
-            <Button
-              onClick={handleOpenDeleteModal}
-              disabled={!selectedNode}
-              variant="outlined"
-            >
-              Delete Node
-            </Button>
-          </div>
-          {error && (
-            <Alert severity="error">
-              <AlertTitle>{"Error fetching HAProxy status"}</AlertTitle>
-              {error.message}
-            </Alert>
-          )}
-        </Paper>
-      </div>
+        </div>
+
+        {error && (
+          <Alert severity="error">
+            <AlertTitle>{"Error fetching HAProxy status"}</AlertTitle>
+            {error.message}
+          </Alert>
+        )}
+      </Paper>
     </>
   );
 }

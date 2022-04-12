@@ -12,7 +12,7 @@ import {
 
 import { Table } from "components";
 import { IHostCsvInput, IHostsQuery, ILocation, useCreateHostsCsvMutation } from "types";
-import { ModalHelper, parseBackendError } from "utils";
+import { ModalHelper, parseBackendError, regexTest } from "utils";
 
 const style = {
   position: "absolute" as "absolute",
@@ -69,13 +69,8 @@ export function HostsCSV({ locations, refetchHosts }: NodesCSVProps) {
     loadBalancer: (loadBalancer: string) =>
       typeof JSON.parse(loadBalancer) === "boolean" || !JSON.parse(loadBalancer),
     location: (location: string) => validLocations.includes(location.toUpperCase()),
-    // DEV NOTE -> Fix Regex to validate IP is valid IP and FQDN is valid domain name.
-    // ip: (ip: string) =>
-    //   /'\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b'/.test(ip),
-    // fqdn: (fqdn: string) =>
-    //   /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/.test(
-    //     fqdn,
-    //   ),
+    ip: (ip: string) => regexTest(ip, "ip"),
+    fqdn: (fqdn: string) => regexTest(fqdn, "fqdn"),
   };
   const validate = (host: any, schema: { [key: string]: (value: string) => boolean }) =>
     Object.keys(schema).filter((key) => !schema[key]?.(host[key]));
@@ -151,7 +146,7 @@ export function HostsCSV({ locations, refetchHosts }: NodesCSVProps) {
               disabled={Boolean(!hosts || hostsError || backendError)}
               style={{ marginTop: 8 }}
               onClick={submitCSV}
-              variant="outlined"
+              variant="contained"
             >
               {loading ? (
                 <CircularProgress size={20} />
