@@ -12,8 +12,14 @@ import {
   Chip,
   CircularProgress,
   Collapse,
+  FormControl,
   IconButton,
+  InputLabel,
+  ListItemText,
+  MenuItem,
+  OutlinedInput,
   Paper,
+  Select,
   Table as MUITable,
   TableBody,
   TableCell,
@@ -57,14 +63,21 @@ interface EnhancedTableProps {
   order: Order;
   orderBy: string;
   rowCount: number;
+  columnsOrder: string[];
 }
 
-function EnhancedTableHead({ rows, order, orderBy, onRequestSort }: EnhancedTableProps) {
+function EnhancedTableHead({
+  rows,
+  order,
+  orderBy,
+  onRequestSort,
+  columnsOrder,
+}: EnhancedTableProps) {
   const createSortHandler = (property: any) => (event: MouseEvent<unknown>) => {
     onRequestSort(event, property);
   };
   const headCells = rows.length
-    ? Object.keys(rows[0])
+    ? (getSortedColumns(rows[0], true, columnsOrder) as string[])
         .filter((value) => value !== "id" && value !== "__typename" && value !== "health")
         .map((column) => ({ id: column, label: formatHeaderCell(column) }))
     : [];
@@ -102,7 +115,26 @@ interface TableProps {
   searchable?: boolean;
   selectedRow?: string;
   type?: string;
+  filterOptions?: FilterOptions;
+  columnsOrder?: string[];
   onSelectRow?: Dispatch<SetStateAction<any>>;
+}
+
+interface FilterOptions {
+  filters: string[];
+  filterFunctions: { [filter: string]: (args: any) => boolean };
+}
+
+function getSortedColumns(row: any, header: boolean, columnsOrder: string[]) {
+  if (columnsOrder?.length) {
+    return columnsOrder.map((field) =>
+      header
+        ? Object.keys(row).find((key) => key === field)
+        : Object.entries(row).find(([key]) => key === field),
+    );
+  } else {
+    return header ? Object.keys(row) : Object.entries(row);
+  }
 }
 
 export function LogTable({
@@ -113,11 +145,14 @@ export function LogTable({
   searchable,
   selectedRow,
   type,
+  columnsOrder,
+  filterOptions,
   onSelectRow,
 }: TableProps) {
   const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState("");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filter, setFilter] = useState<string>("All");
 
   const parseLogsForTable = (logs: ILogsQuery["logs"]["docs"]): IParsedLog[] => {
     return logs.map(({ message, timestamp }) => {
@@ -130,6 +165,10 @@ export function LogTable({
   };
 
   const parsedRows = parseLogsForTable(rows || []);
+
+  const handleFiltersSelect = (event) => {
+    setFilter(event.target.value);
+  };
 
   /* ----- Sorting ----- */
   const handleRequestSort = (_event: MouseEvent<unknown>, property: any) => {
@@ -204,7 +243,7 @@ export function LogTable({
               {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
             </IconButton>
           </TableCell>
-          {Object.entries(row)
+          {getSortedColumns(row, false, columnsOrder)
             .filter(([key]) => key !== "id" && key !== "__typename" && key !== "health")
             .map(([_, value], i) => {
               return (
@@ -222,9 +261,9 @@ export function LogTable({
           <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
             <Collapse in={open} timeout="auto" unmountOnExit>
               <Box sx={{ margin: 1 }}>
-                <Typography variant="h6" gutterBottom component="div">
-                  <div>
-                    <pre>{JSON.stringify(row.health, null, 2)}</pre>
+                <Typography gutterBottom component="div" style={{ fontSize: 10 }}>
+                  <div style={{ whiteSpace: "pre-wrap", maxWidth: "90%" }}>
+                    {JSON.stringify(row.health, null, 2)}
                   </div>
                 </Typography>
               </Box>
@@ -235,6 +274,12 @@ export function LogTable({
     );
   };
 
+  const { filters, filterFunctions } = filterOptions || {};
+  const filterEnabled = Boolean(filterOptions && filters && filterFunctions);
+  if (filterEnabled && filter && filter !== "All") {
+    rows = rows.filter(filterFunctions[filter]);
+  }
+
   return (
     <Box sx={{ width: "100%" }}>
       <Paper sx={{ width: "100%", overflow: "hidden", padding: "16px" }}>
@@ -243,14 +288,35 @@ export function LogTable({
             {type}
           </Typography>
         )}
-        {searchable && (
-          <SearchBar
-            value={searchTerm}
-            handleChange={setSearchTerm}
-            type={type}
-            sx={{ marginBottom: "16px" }}
-          />
-        )}
+        <div style={{ display: "flex", marginRight: 16 }}>
+          {filterEnabled && (
+            <FormControl style={{ maxHeight: 56, width: "25%", marginRight: 16 }}>
+              <InputLabel id="lb-label">Filter</InputLabel>
+              <Select
+                name="filter"
+                labelId="filter-label"
+                value={filter}
+                onChange={handleFiltersSelect}
+                input={<OutlinedInput label="Filter" />}
+                style={{ height: 56 }}
+              >
+                {filters.map((filter) => (
+                  <MenuItem key={filter} value={filter}>
+                    <ListItemText primary={filter} />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+          {searchable && (
+            <SearchBar
+              value={searchTerm}
+              onChange={(event) => setSearchTerm((event as any).target.value)}
+              type={"Log"}
+              sx={{ marginBottom: "16px" }}
+            />
+          )}
+        </div>
         <TableContainer sx={{ maxHeight: height || 600 }} ref={tableEl}>
           <MUITable
             stickyHeader
@@ -264,6 +330,7 @@ export function LogTable({
               orderBy={orderBy}
               onRequestSort={handleRequestSort}
               rowCount={rows?.length}
+              columnsOrder={columnsOrder}
             />
             <TableBody>
               {parsedRows
