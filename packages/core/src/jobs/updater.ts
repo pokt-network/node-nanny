@@ -14,7 +14,7 @@ interface IChainsAndOraclesResponse {
 
   await connect();
 
-  /* ---- 1) Get newest local Chain and Oracle records' timestamps ---- */
+  /* ----- 1) Get newest local Chain and Oracle records' timestamps ---- */
   const [{ updatedAt: latestChain }] = await ChainsModel.find()
     .sort({ updatedAt: -1 })
     .limit(1)
@@ -26,7 +26,7 @@ interface IChainsAndOraclesResponse {
     .select("updatedAt")
     .exec();
 
-  /* ---- 2) Fetch any newer remote Chain and Oracle records from Infrastructure Support Lambda ---- */
+  /* ----- 2) Fetch any newer remote Chain and Oracle records from Infrastructure Support Lambda ---- */
   const {
     data: { chains, oracles },
   } = await axios.post<IChainsAndOraclesResponse>(
@@ -41,7 +41,7 @@ interface IChainsAndOraclesResponse {
       } newer oracles ...`,
     );
 
-    /* ---- 3) Add newer Chains and Oracles to local database ---- */
+    /* ----- 3) Add newer Chains and Oracles to local database ---- */
     if (chains?.length) {
       for await (const chain of chains) {
         const { name, type, allowance } = chain;

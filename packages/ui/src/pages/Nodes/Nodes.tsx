@@ -8,7 +8,7 @@ import { ModalHelper } from "utils";
 import { NodeStatus } from "./NodeStatus";
 
 export function Nodes() {
-  const [selectedNode, setSelectedNode] = useState<INode | undefined>(undefined);
+  const [selectedNode, setSelectedNode] = useState<INode>(undefined);
   const { data, error, loading, refetch } = useNodesQuery();
   const {
     data: formData,
@@ -16,6 +16,33 @@ export function Nodes() {
     loading: formLoading,
   } = useGetHostsChainsAndLoadBalancersQuery();
 
+  /* ----- Table Options ---- */
+  const filterOptions = {
+    filters: ["All", "Healthy", "Error", "Muted", "HAProxy"],
+    filterFunctions: {
+      Healthy: ({ status }: INode) => status === "OK",
+      Error: ({ status }: INode) => status === "ERROR",
+      Muted: ({ muted }: INode) => Boolean(muted),
+      HAProxy: ({ haProxy }: INode) => Boolean(haProxy),
+    } as any,
+  };
+  const columnsOrder = [
+    "name",
+    "chain",
+    "host",
+    "port",
+    "status",
+    "conditions",
+    "url",
+    "muted",
+  ];
+  if (process.env.REACT_APP_PNF === "1") {
+    columnsOrder.push("dispatch");
+    filterOptions.filters.push("Dispatch");
+    filterOptions.filterFunctions.Dispatch = ({ dispatch }: INode) => Boolean(dispatch);
+  }
+
+  /* ----- Modal Methods ----- */
   const nodeNames = data?.nodes.map(({ name }) => name);
   const hostPortCombos = data?.nodes.map(({ host, port }) => `${host.id}/${port}`);
 
@@ -33,8 +60,9 @@ export function Nodes() {
     });
   };
 
+  /* ----- Layout ----- */
   if (loading || formLoading) return <LinearProgress />;
-  if (error || formError)
+  if (error || formError) {
     return (
       <>
         <Alert severity="error">
@@ -43,6 +71,7 @@ export function Nodes() {
         </Alert>
       </>
     );
+  }
 
   if (data && formData) {
     return (
@@ -95,6 +124,8 @@ export function Nodes() {
           type="Node"
           paginate
           searchable
+          filterOptions={filterOptions}
+          columnsOrder={columnsOrder}
           rows={data.nodes}
           mapDisplay={(node) => ({
             ...node,

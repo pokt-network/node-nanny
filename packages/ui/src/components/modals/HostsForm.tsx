@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { ApolloQueryResult } from "@apollo/client";
 import { useFormik, FormikErrors } from "formik";
+import { ApolloQueryResult } from "@apollo/client";
 import {
   Alert,
   AlertTitle,
@@ -47,9 +47,7 @@ export function HostsForm({
   const [loading, setLoading] = useState(false);
   const [backendError, setBackendError] = useState("");
 
-  if (update && selectedHost) {
-    hostNames = hostNames.filter((name) => name !== selectedHost.name);
-  }
+  /* ----- Form Validation ----- */
   const validate = (values: IHostInput): FormikErrors<IHostInput> => {
     const errors: FormikErrors<IHostInput> = {};
     if (!values.location) errors.location = "Location is required";
@@ -75,6 +73,37 @@ export function HostsForm({
       },
     });
 
+  useEffect(() => {
+    if (values.fqdn) {
+      setIPDisabled(true);
+    } else {
+      setIPDisabled(false);
+    }
+  }, [values.fqdn]);
+
+  useEffect(() => {
+    if (values.ip) {
+      setFQDNDisabled(true);
+    } else {
+      setFQDNDisabled(false);
+    }
+  }, [values.ip]);
+
+  /* ----- Update Mode ----- */
+  if (update && selectedHost) {
+    hostNames = hostNames.filter((name) => name !== selectedHost.name);
+  }
+  useEffect(() => {
+    if (update && selectedHost) {
+      setFieldValue("location", selectedHost.location.id);
+      setFieldValue("name", selectedHost.name);
+      setFieldValue("ip", selectedHost.ip);
+      setFieldValue("fqdn", selectedHost.fqdn);
+      setFieldValue("loadBalancer", selectedHost.loadBalancer);
+    }
+  }, [update, selectedHost, setFieldValue]);
+
+  /* ----- Mutations ----- */
   const [submitCreate] = useCreateHostMutation({
     variables: { input: values },
     onCompleted: () => {
@@ -103,32 +132,7 @@ export function HostsForm({
     },
   });
 
-  useEffect(() => {
-    if (update && selectedHost) {
-      setFieldValue("location", selectedHost.location.id);
-      setFieldValue("name", selectedHost.name);
-      setFieldValue("ip", selectedHost.ip);
-      setFieldValue("fqdn", selectedHost.fqdn);
-      setFieldValue("loadBalancer", selectedHost.loadBalancer);
-    }
-  }, [update, selectedHost, setFieldValue]);
-
-  useEffect(() => {
-    if (values.fqdn) {
-      setIPDisabled(true);
-    } else {
-      setIPDisabled(false);
-    }
-  }, [values.fqdn]);
-
-  useEffect(() => {
-    if (values.ip) {
-      setFQDNDisabled(true);
-    } else {
-      setFQDNDisabled(false);
-    }
-  }, [values.ip]);
-
+  /* ----- Layout ----- */
   return (
     <>
       <div>

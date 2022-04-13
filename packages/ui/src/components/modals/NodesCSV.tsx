@@ -53,29 +53,11 @@ export function NodesCSV({
   formData: { chains, hosts, loadBalancers },
   refetchNodes,
 }: NodesCSVProps) {
-  const [nodes, setNodes] = useState<INodeCsvInput[] | undefined>(undefined);
+  const [nodes, setNodes] = useState<INodeCsvInput[]>(undefined);
   const [nodesError, setNodesError] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
 
-  const [submit, { error, loading }] = useCreateNodesCsvMutation({
-    onCompleted: () => {
-      refetchNodes();
-      ModalHelper.close();
-    },
-  });
-
-  useEffect(() => {
-    if (error) {
-      setBackendError(parseBackendError(error));
-    }
-  }, [error]);
-
-  const submitCSV = () => {
-    if (!nodesError && !backendError && nodes) {
-      submit({ variables: { nodes } });
-    }
-  };
-
+  /* ----- CSV Validation ----- */
   const validChains = chains.map(({ name }) => name);
   const validHosts = hosts.map(({ name }) => name);
   const hostsWithFqdn = hosts.filter(({ fqdn }) => Boolean(fqdn)).map(({ name }) => name);
@@ -100,6 +82,7 @@ export function NodesCSV({
   const validate = (node: any, schema: { [key: string]: (value: string) => boolean }) =>
     Object.keys(schema).filter((key) => !schema[key](node[key]));
 
+  /* ----- CSV Parsing ----- */
   const parseNodesCSV = (nodesData: ICSVNode[]) => {
     setBackendError("");
     setNodesError("");
@@ -160,6 +143,25 @@ export function NodesCSV({
     }
   };
 
+  /* ----- Submit Mutation ----- */
+  const [submit, { error, loading }] = useCreateNodesCsvMutation({
+    onCompleted: () => {
+      refetchNodes();
+      ModalHelper.close();
+    },
+  });
+
+  useEffect(() => {
+    if (error) setBackendError(parseBackendError(error));
+  }, [error]);
+
+  const submitCSV = () => {
+    if (!nodesError && !backendError && nodes) {
+      submit({ variables: { nodes } });
+    }
+  };
+
+  /* ----- Layout ----- */
   return (
     <div>
       <Box sx={style}>
