@@ -50,10 +50,15 @@ export enum AlertColor {
 
 export type ISendAlert = ({ title, message, chain }: IAlertParams) => Promise<boolean>;
 
+export interface IErrorChannelAlertParams {
+  title: string;
+  message: string;
+}
+
 export interface IAlertParams {
   title: string;
   message: string;
-  chain?: string;
-  location?: string;
+  chain: string;
+  location: string;
   frontend?: boolean;
 }
