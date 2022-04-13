@@ -41,21 +41,39 @@ interface ICSVNode {
   port: string;
   url: string;
   backend?: string;
+  frontend?: string;
   server?: string;
 }
 
 interface NodesCSVProps {
   formData: IGetHostsChainsAndLoadBalancersQuery;
+  nodeNames: string[];
+  hostPortCsvCombos: string[];
   refetchNodes: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
 }
 
 export function NodesCSV({
   formData: { chains, hosts, loadBalancers },
+  nodeNames,
+  hostPortCsvCombos,
   refetchNodes,
 }: NodesCSVProps) {
   const [nodes, setNodes] = useState<INodeCsvInput[]>(undefined);
   const [nodesError, setNodesError] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
+
+  /* ----- Table Options ---- */
+  const columnsOrder = [
+    "name",
+    "chain",
+    "host",
+    "port",
+    "url",
+    "https",
+    "server",
+    "loadBalancers",
+    "haProxy",
+  ];
 
   /* ----- CSV Validation ----- */
   const validChains = chains.map(({ name }) => name);
@@ -110,14 +128,25 @@ export function NodesCSV({
       const invalidFields = validate(node, schema);
       if (node.https.toLowerCase() === "true" && hostsWithFqdn.includes(node.host)) {
         invalidFields.push(
-          `[${node.host}/${node.chain}]: Host does not have an FQDN; HTTPS is not allowed without an FQDN.`,
+          `[${node.name}]: Host does not have an FQDN; HTTPS is not allowed without an FQDN.`,
         );
       }
       if (invalidFields.length) {
         invalidNodes.push(
-          `Invalid Field${s(invalidFields.length)}: [${node.host}/${
-            node.chain
-          }]: ${invalidFields.join(", ")}`,
+          `Invalid Field${s(invalidFields.length)}: [${node.name}]: ${invalidFields.join(
+            "\n",
+          )}`,
+        );
+      }
+      if (nodeNames.includes(node.name)) {
+        invalidNodes.push(`[${node.name}]: Node name is already taken.`);
+      }
+      if (hostPortCsvCombos.includes(`${node.host}/${node.port}`)) {
+        invalidNodes.push(`[${node.name}]: Host/port combination is already taken.`);
+      }
+      if (node.backend && node.frontend) {
+        invalidNodes.push(
+          `[${node.name}]: Node may only have backend or frontend, not both.`,
         );
       }
       return {
@@ -190,6 +219,7 @@ export function NodesCSV({
           <Table
             type={`Adding ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`}
             rows={nodes}
+            columnsOrder={columnsOrder}
           />
         )}
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
