@@ -289,9 +289,9 @@ export class Service extends BaseService {
       : "";
     let serverCountStr =
       (!downDispatchers ?? serverCount) && serverCount >= 0
-        ? `${serverCount} node${s(serverCount)} ${is(serverCount)} online${
+        ? `${serverCount} node${s(serverCount)} ${is(serverCount)} in rotation for ${
             frontend || backend
-              ? ` for ${frontend ? "frontend" : "backend"} ${frontend || backend}`
+              ? `${frontend ? "frontend" : "backend"} ${frontend || backend}`
               : ""
           }`
         : "";
@@ -350,8 +350,8 @@ export class Service extends BaseService {
         }[mode];
     const serverCountStr =
       serverCount && serverCount >= 0
-        ? `${serverCount} node${s(serverCount)} ${is(serverCount)} online${
-            backend ? ` for backend ${backend}.` : ""
+        ? `${serverCount} node${s(serverCount)} ${is(serverCount)} in rotation for ${
+            backend ? `backend ${backend}.` : ""
           }`
         : "";
     const message = [haProxyMessage, serverCountStr, error].filter(Boolean).join("\n");
