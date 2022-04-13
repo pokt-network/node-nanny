@@ -187,6 +187,7 @@ export type INode = {
 export type INodeCsvInput = {
   backend?: InputMaybe<Scalars['String']>;
   chain: Scalars['String'];
+  frontend?: InputMaybe<Scalars['String']>;
   haProxy: Scalars['Boolean'];
   host: Scalars['String'];
   https: Scalars['Boolean'];
@@ -199,6 +200,7 @@ export type INodeCsvInput = {
 export type INodeInput = {
   backend?: InputMaybe<Scalars['String']>;
   chain: Scalars['ID'];
+  frontend?: InputMaybe<Scalars['String']>;
   haProxy: Scalars['Boolean'];
   host: Scalars['ID'];
   https: Scalars['Boolean'];
