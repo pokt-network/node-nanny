@@ -187,25 +187,35 @@ export function NodesCSV({
           </Alert>
         )}
         {nodes && (
-          <>
-            <Table
-              type={`Adding ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`}
-              rows={nodes}
-            />
-            <Button
-              disabled={Boolean(!nodes || nodesError || backendError)}
-              style={{ marginTop: 8 }}
-              onClick={submitCSV}
-              variant="contained"
-            >
-              {loading ? (
-                <CircularProgress size={20} />
-              ) : (
-                `Add ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`
-              )}
-            </Button>
-          </>
+          <Table
+            type={`Adding ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`}
+            rows={nodes}
+          />
         )}
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+          <Button
+            onClick={ModalHelper.close}
+            style={{ height: 40, width: 150 }}
+            variant="contained"
+            color="error"
+          >
+            Cancel
+          </Button>
+          <Button
+            disabled={Boolean(!nodes || nodesError || backendError)}
+            style={{ marginTop: 8 }}
+            onClick={submitCSV}
+            variant="contained"
+          >
+            {loading ? (
+              <CircularProgress size={20} />
+            ) : !nodes?.length ? (
+              "No nodes"
+            ) : (
+              `Add ${nodes.length} Node${s(nodes.length)}`
+            )}
+          </Button>
+        </div>
       </Box>
     </div>
   );

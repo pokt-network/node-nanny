@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { ApolloQueryResult } from "@apollo/client";
 import {
   Alert,
@@ -40,16 +40,18 @@ export function NodeStatus({
   refetchNodes,
 }: INodeStatusProps) {
   /* ----- Display Node ----- */
-  const { id, name, backend, frontend, port, server, url, muted } = selectedNode || {
-    id: "",
-    name: "",
-    backend: "",
-    frontend: "",
-    port: "",
-    server: "",
-    url: "",
-    muted: undefined,
-  };
+  const { id, name, backend, frontend, port, server, url, muted, haProxy } =
+    selectedNode || {
+      id: "",
+      name: "",
+      backend: "",
+      frontend: "",
+      port: "",
+      server: "",
+      url: "",
+      muted: undefined,
+      haProxy: undefined,
+    };
 
   /* ----- Delete Node ----- */
   const [submit] = useDeleteNodeMutation({
@@ -92,13 +94,14 @@ export function NodeStatus({
   });
 
   useEffect(() => {
-    if (selectedNode?.haProxy) getStatus({ variables: { id: selectedNode?.id } });
-  }, [selectedNode, getStatus]);
+    if (haProxy) getStatus({ variables: { id: selectedNode?.id } });
+  }, [haProxy, selectedNode, getStatus]);
 
-  const haProxy = selectedNode?.haProxy;
-  const haProxyOnline = { "0": true, "1": false }[String(data?.haProxyStatus)];
-  const haProxyButtonEnabled =
-    !loading && !error && haProxy && typeof haProxyOnline === "boolean";
+  const haProxyOnline = { "0": true, "1": false, "-1": "n/a" }[
+    String(data?.haProxyStatus)
+  ];
+  const haProxyButtonDisabled =
+    !haProxy || loading || !!error || typeof haProxyOnline !== "boolean";
   const haProxyStatusText = haProxyOnline ? "Online" : "Offline";
   const haProxyButtonText = `${haProxyOnline ? "Disable" : "Enable"} Node`;
 
@@ -225,7 +228,7 @@ export function NodeStatus({
               fullWidth
               variant="contained"
               onClick={handleOpenRotationModal}
-              disabled={!haProxyButtonEnabled}
+              disabled={haProxyButtonDisabled}
               style={{ marginRight: 8, height: 40 }}
               color="warning"
             >
@@ -236,10 +239,10 @@ export function NodeStatus({
                 </>
               ) : error ? (
                 "Failed to fetch"
-              ) : haProxy ? (
-                haProxyButtonText
-              ) : (
+              ) : !haProxy || haProxyOnline === "n/a" ? (
                 "No HAProxy"
+              ) : (
+                haProxyButtonText
               )}
             </Button>
           </Paper>
