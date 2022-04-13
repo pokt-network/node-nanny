@@ -12,7 +12,7 @@ import {
 
 import { Table } from "components";
 import { IHostCsvInput, IHostsQuery, ILocation, useCreateHostsCsvMutation } from "types";
-import { ModalHelper, parseBackendError, regexTest } from "utils";
+import { ModalHelper, parseBackendError, regexTest, s } from "utils";
 
 const style = {
   position: "absolute" as "absolute",
@@ -141,25 +141,34 @@ export function HostsCSV({ locations, refetchHosts }: NodesCSVProps) {
           </Alert>
         )}
         {hosts && (
-          <>
-            <Table
-              type={`Adding ${hosts.length} Host${hosts.length === 1 ? "" : "s"}`}
-              rows={hosts}
-            />
-            <Button
-              disabled={Boolean(!hosts || hostsError || backendError)}
-              style={{ marginTop: 8 }}
-              onClick={submitCSV}
-              variant="contained"
-            >
-              {loading ? (
-                <CircularProgress size={20} />
-              ) : (
-                `Add ${hosts.length} Host${hosts.length === 1 ? "" : "s"}`
-              )}
-            </Button>
-          </>
+          <Table
+            type={`Adding ${hosts.length} Host${hosts.length === 1 ? "" : "s"}`}
+            rows={hosts}
+          />
         )}
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+          <Button
+            onClick={ModalHelper.close}
+            style={{ height: 40, width: 150 }}
+            variant="contained"
+            color="error"
+          >
+            Cancel
+          </Button>
+          <Button
+            disabled={Boolean(!hosts || hostsError || backendError)}
+            onClick={submitCSV}
+            variant="contained"
+          >
+            {loading ? (
+              <CircularProgress size={20} />
+            ) : !hosts?.length ? (
+              "No hosts"
+            ) : (
+              `Add ${hosts.length} Host${s(hosts.length)}`
+            )}
+          </Button>
+        </div>
       </Box>
     </div>
   );

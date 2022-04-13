@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from "react";
-import { Typography } from "@mui/material";
+import { Alert, AlertTitle, LinearProgress, Typography } from "@mui/material";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -86,25 +86,43 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
   };
   const options: any = { animation: { duration: 0 }, maintainAspectRatio: false };
 
-  if (error) return <>Error! ${error.message}</>;
+  if (error) {
+    return (
+      <>
+        <Alert severity="error">
+          <AlertTitle>{"Error fetching logs: "}</AlertTitle>
+          {error.message}
+        </Alert>
+      </>
+    );
+  }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        height: "200px",
-        width: "100%",
-        marginBottom: 32,
-      }}
-    >
-      <Typography>
-        Logs for{" "}
-        {!nodeIds?.length ? "all nodes" : `${nodeIds?.length} node${s(nodeIds?.length)}`}
-      </Typography>
-      <Bar data={data} options={options} height="200px" width="100"></Bar>
-    </div>
+    <>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          height: "200px",
+          width: "100%",
+          marginBottom: 32,
+        }}
+      >
+        <Typography>
+          Logs for{" "}
+          {!nodeIds?.length
+            ? "all nodes"
+            : `${nodeIds?.length} node${s(nodeIds?.length)}`}
+        </Typography>
+        {!error && !logData?.length && (
+          <div style={{ width: "100%" }}>
+            <LinearProgress />
+          </div>
+        )}
+        <Bar data={data} options={options} height="200px" width="100"></Bar>
+      </div>
+    </>
   );
 }
 
