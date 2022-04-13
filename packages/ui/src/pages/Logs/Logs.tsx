@@ -2,16 +2,18 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   AlertTitle,
+  Autocomplete,
   Checkbox,
   FormControl,
   InputLabel,
   LinearProgress,
-  ListItemText,
   MenuItem,
-  OutlinedInput,
   Select,
   SelectChangeEvent,
+  TextField,
 } from "@mui/material";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
 
 import { LogTable } from "components";
 import { INode, useLogsLazyQuery, useNodesQuery } from "types";
@@ -19,6 +21,9 @@ import { s } from "utils";
 import { ITimePeriod, timePeriods } from "./periods";
 
 import LogsChart from "./LogsChart";
+
+const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 export function Logs() {
   const [nodes, setNodes] = useState<string[]>([]);
@@ -32,6 +37,15 @@ export function Logs() {
     onError: () => setLogsLoading(false),
   });
 
+  const filterOptions = {
+    filters: ["All", "Healthy", "Error"],
+    filterFunctions: {
+      Healthy: ({ status }: INode) => status === "OK",
+      Error: ({ status }: INode) => status === "ERROR",
+    } as any,
+  };
+  const columnsOrder = ["name", "status", "conditions", "timestamp"];
+
   useEffect(() => {
     if (nodes?.length) {
       setLogsLoading(true);
@@ -42,11 +56,6 @@ export function Logs() {
   const handleTimePeriodChange = ({ target }: SelectChangeEvent<string>) => {
     const { value } = target;
     setLogPeriod(timePeriods.find(({ code }) => code === value)!);
-  };
-
-  const handleNodesChange = ({ target }: SelectChangeEvent<typeof nodes>) => {
-    const { value } = target;
-    setNodes(typeof value === "string" ? value.split(",") : value);
   };
 
   const getNodeNameForHealthCheck = ({ host, name }: INode): string => {
@@ -70,6 +79,7 @@ export function Logs() {
       .sort(({ chain: chainA }, { chain: chainB }) =>
         chainA.name.localeCompare(chainB.name),
       ) || [];
+
   return (
     <div
       style={{
@@ -80,28 +90,31 @@ export function Logs() {
         margin: "16px",
       }}
     >
-      <FormControl fullWidth>
-        <InputLabel id="lb-label">Select Nodes</InputLabel>
-        <Select
-          multiple
-          labelId="lb-label"
-          value={nodes}
-          onChange={handleNodesChange}
-          input={<OutlinedInput label="Nodes" />}
-          renderValue={(selected) => {
-            return selected
-              .map((id) => sortedNodes.find(({ id: node }) => node === id)!.name)
-              .join(", ");
-          }}
-        >
-          {sortedNodes.map((node) => (
-            <MenuItem key={node.id} value={node.id}>
-              <Checkbox checked={nodes.indexOf(node.id!) > -1} />
-              <ListItemText primary={getNodeNameForHealthCheck(node as INode)} />
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <Autocomplete
+        fullWidth
+        multiple
+        id="nodes-search"
+        value={nodes.map((nodeId) => sortedNodes.find(({ id }) => id === nodeId))}
+        options={sortedNodes}
+        disableCloseOnSelect
+        getOptionLabel={(node) => node.name}
+        renderOption={(props, node: any, { selected }) => (
+          <li {...props}>
+            <Checkbox
+              icon={icon}
+              checkedIcon={checkedIcon}
+              style={{ marginRight: 8 }}
+              checked={selected}
+            />
+            {getNodeNameForHealthCheck(node)}
+          </li>
+        )}
+        onChange={(_event, value: any) => setNodes(value.map(({ id }) => id))}
+        renderInput={(params) => (
+          <TextField {...params} label="Select Nodes" placeholder="Select nodes" />
+        )}
+      />
+
       <div style={{ marginTop: "10px" }} />
       <FormControl fullWidth>
         <InputLabel id="chain-label">Time Period</InputLabel>
@@ -140,6 +153,8 @@ export function Logs() {
             });
           }
         }}
+        filterOptions={filterOptions}
+        columnsOrder={columnsOrder}
       />
     </div>
   );
