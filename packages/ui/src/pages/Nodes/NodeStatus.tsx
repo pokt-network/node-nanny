@@ -5,7 +5,6 @@ import {
   AlertTitle,
   Button,
   CircularProgress,
-  Grid,
   Paper,
   Typography,
 } from "@mui/material";
@@ -80,14 +79,12 @@ export function NodeStatus({
     },
   });
 
+  useEffect(() => {
+    if (selectedNode?.haProxy) getStatus({ variables: { id: selectedNode?.id } });
+  }, [selectedNode, getStatus]);
+
   const handleHaProxyButtonClick = (id: string, haProxyStatus: number) => {
-    if (!data && !error && !loading) {
-      getStatus({ variables: { id } });
-    } else {
-      haProxyStatus === 0
-        ? disable({ variables: { id } })
-        : enable({ variables: { id } });
-    }
+    haProxyStatus === 0 ? disable({ variables: { id } }) : enable({ variables: { id } });
   };
 
   const handleMuteToggle = (id: string) =>
@@ -120,18 +117,21 @@ export function NodeStatus({
     });
   };
 
-  const haProxyButtonDisabled = Boolean(data || error || loading || !fetchHaProxy);
+  const haProxyButtonDisabled = Boolean(
+    !selectedNode?.haProxy ||
+      !data?.haProxyStatus ||
+      String(data?.haProxyStatus) === "-1",
+  );
   const haProxyStatusText =
     {
       "-1": "No HAProxy",
       "0": "OK",
       "1": "Offline",
-    }[data?.haProxyStatus] || "--";
-  const haProxyButtonText = data?.haProxyStatus
-    ? { "-1": "No HAProxy", 0: "Disable HAProxy", 1: "Enable HAProxy" }[
-        data.haProxyStatus
-      ]
-    : "Check HAProxy Status";
+    }[data?.haProxyStatus] || "No HAProxy";
+  const haProxyButtonText =
+    { "-1": "No HAProxy", 0: "Disable HAProxy", 1: "Enable HAProxy" }[
+      data?.haProxyStatus
+    ] || "No HAProxy";
   const muteStatusText = !selectedNode
     ? "No Node Selected"
     : muted
@@ -190,7 +190,7 @@ export function NodeStatus({
               color="info"
             >
               {!selectedNode
-                ? "Togle Monitor Alerts"
+                ? "Toggle Monitor Alerts"
                 : muted
                 ? "Unmute Monitor Alerts"
                 : "Mute Monitor Alerts"}
