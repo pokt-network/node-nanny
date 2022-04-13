@@ -11,7 +11,7 @@ interface ISearchBarProps {
 }
 
 export default function SearchBar({ value, handleChange, type, sx }: ISearchBarProps) {
-  const searchText = `Search${type ? ` ${type}` : ""}`;
+  const searchText = `Search${type ? ` ${type}s` : ""}`;
 
   return (
     <FormControl fullWidth sx={sx}>

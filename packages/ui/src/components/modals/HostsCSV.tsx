@@ -40,29 +40,11 @@ interface NodesCSVProps {
 }
 
 export function HostsCSV({ locations, refetchHosts }: NodesCSVProps) {
-  const [hosts, setHosts] = useState<IHostCsvInput[] | undefined>(undefined);
+  const [hosts, setHosts] = useState<IHostCsvInput[]>(undefined);
   const [hostsError, setHostsError] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
 
-  const [submit, { error, loading }] = useCreateHostsCsvMutation({
-    onCompleted: () => {
-      refetchHosts();
-      ModalHelper.close();
-    },
-  });
-
-  useEffect(() => {
-    if (error) {
-      setBackendError(parseBackendError(error));
-    }
-  }, [error]);
-
-  const submitCSV = () => {
-    if (!hostsError && !backendError && hosts) {
-      submit({ variables: { hosts } });
-    }
-  };
-
+  /* ----- CSV Validation ----- */
   const validLocations = locations.map(({ name }) => name);
   const schema = {
     name: (name: string) => !!name && typeof name === "string",
@@ -75,6 +57,7 @@ export function HostsCSV({ locations, refetchHosts }: NodesCSVProps) {
   const validate = (host: any, schema: { [key: string]: (value: string) => boolean }) =>
     Object.keys(schema).filter((key) => !schema[key]?.(host[key]));
 
+  /* ----- CSV Parsing ----- */
   const parseHostsCsv = (hostsData: ICSVHost[]) => {
     setHostsError("");
     setBackendError("");
@@ -115,6 +98,27 @@ export function HostsCSV({ locations, refetchHosts }: NodesCSVProps) {
     }
   };
 
+  /* ----- Submit Mutation ----- */
+  const [submit, { error, loading }] = useCreateHostsCsvMutation({
+    onCompleted: () => {
+      refetchHosts();
+      ModalHelper.close();
+    },
+  });
+
+  useEffect(() => {
+    if (error) {
+      setBackendError(parseBackendError(error));
+    }
+  }, [error]);
+
+  const submitCSV = () => {
+    if (!hostsError && !backendError && hosts) {
+      submit({ variables: { hosts } });
+    }
+  };
+
+  /* ----- Layout ----- */
   return (
     <div>
       <Box sx={style}>
