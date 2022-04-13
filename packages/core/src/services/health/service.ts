@@ -34,7 +34,7 @@ export class Service {
     return client;
   }
 
-  private getAxiosRequestConfig(auth: string): AxiosRequestConfig | undefined {
+  private getAxiosRequestConfig(auth: string): AxiosRequestConfig {
     if (auth) {
       const [username, password] = auth.split(":");
       return { auth: { username, password } };

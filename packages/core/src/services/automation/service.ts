@@ -170,7 +170,7 @@ export class Service extends BaseService {
     return node;
   }
 
-  /* ---- Rotation Methods ----- */
+  /* ----- Rotation Methods ----- */
   async addToRotation(id: string): Promise<boolean> {
     const { backend, server, host, chain, loadBalancers } = await this.getNode(id);
 

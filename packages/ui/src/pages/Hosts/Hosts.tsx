@@ -9,7 +9,6 @@ import { HostStatus } from "./HostStatus";
 
 export function Hosts() {
   const [selectedHost, setSelectedHost] = useState<IHost>(undefined);
-
   const { data, error, loading, refetch } = useHostsQuery();
   const {
     data: locationsData,
@@ -17,6 +16,18 @@ export function Hosts() {
     loading: locationsLoading,
   } = useLocationsQuery();
 
+  /* ----- Table Options ---- */
+  const filterOptions = {
+    filters: ["All", "Load Balancer", "IP", "FQDN"],
+    filterFunctions: {
+      "Load Balancer": ({ loadBalancer }: IHost) => Boolean(loadBalancer),
+      IP: ({ ip }: IHost) => Boolean(ip),
+      FQDN: ({ fqdn }: IHost) => Boolean(fqdn),
+    },
+  };
+  const columnsOrder = ["name", "location", "ip", "fqdn", "loadBalancer"];
+
+  /* ----- Modal Methods ----- */
   const hostNames = data?.hosts.map(({ name }) => name);
 
   const handleOpenCreateHostModal = () => {
@@ -37,6 +48,7 @@ export function Hosts() {
     });
   };
 
+  /* ----- Layout ----- */
   if (loading || locationsLoading) return <LinearProgress />;
   if (error || locationsError)
     return (
@@ -97,6 +109,8 @@ export function Hosts() {
           type="Host"
           searchable
           paginate
+          filterOptions={filterOptions}
+          columnsOrder={columnsOrder}
           rows={data.hosts}
           mapDisplay={(host) => ({ ...host, location: host.location.name })}
           selectedRow={selectedHost?.id}
