@@ -18,12 +18,13 @@ export function Nodes() {
 
   /* ----- Table Options ---- */
   const filterOptions = {
-    filters: ["All", "Healthy", "Error", "Muted", "HAProxy"],
+    filters: ["All", "Healthy", "Error", "Muted", "HAProxy", "Frontend"],
     filterFunctions: {
       Healthy: ({ status }: INode) => status === "OK",
       Error: ({ status }: INode) => status === "ERROR",
       Muted: ({ muted }: INode) => Boolean(muted),
       HAProxy: ({ haProxy }: INode) => Boolean(haProxy),
+      Frontend: ({ frontend }: INode) => Boolean(frontend),
     } as any,
   };
   const columnsOrder = [
@@ -34,17 +35,20 @@ export function Nodes() {
     "status",
     "conditions",
     "url",
+    "server",
+    "haProxy",
     "muted",
   ];
   if (process.env.REACT_APP_PNF === "1") {
-    columnsOrder.push("dispatch");
     filterOptions.filters.push("Dispatch");
     filterOptions.filterFunctions.Dispatch = ({ dispatch }: INode) => Boolean(dispatch);
+    columnsOrder.push("dispatch");
   }
 
   /* ----- Modal Methods ----- */
   const nodeNames = data?.nodes.map(({ name }) => name);
   const hostPortCombos = data?.nodes.map(({ host, port }) => `${host.id}/${port}`);
+  const hostPortCsvCombos = data?.nodes.map(({ host, port }) => `${host.name}/${port}`);
 
   const handleOpenCreateNodeModal = () => {
     ModalHelper.open({
@@ -56,7 +60,7 @@ export function Nodes() {
   const handleOpenUploadNodeCSVModal = () => {
     ModalHelper.open({
       modalType: "nodesCsv",
-      modalProps: { formData, refetchNodes: refetch },
+      modalProps: { formData, refetchNodes: refetch, nodeNames, hostPortCsvCombos },
     });
   };
 

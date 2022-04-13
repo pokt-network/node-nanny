@@ -47,6 +47,8 @@ export function NodesForm({
   selectedNode,
   update,
 }: NodesFormProps) {
+  const [backendDisabled, setBackendDisabled] = useState(false);
+  const [frontendDisabled, setFrontendDisabled] = useState(false);
   const [https, setHttps] = useState(false);
   const [hostHasFqdn, setHostHasFqdn] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -79,6 +81,7 @@ export function NodesForm({
         port: undefined,
         loadBalancers: [],
         backend: "",
+        frontend: "",
         server: "",
       },
       validate,
@@ -98,6 +101,22 @@ export function NodesForm({
       setHostHasFqdn(hostHasFqdn);
     }
   }, [values.host, formData]);
+
+  useEffect(() => {
+    if (values.backend) {
+      setFrontendDisabled(true);
+    } else {
+      setFrontendDisabled(false);
+    }
+  }, [values.backend]);
+
+  useEffect(() => {
+    if (values.frontend) {
+      setBackendDisabled(true);
+    } else {
+      setBackendDisabled(false);
+    }
+  }, [values.frontend]);
 
   /* ----- Update Mode ----- */
   if (update && selectedNode) {
@@ -280,7 +299,19 @@ export function NodesForm({
               name="backend"
               value={values.backend}
               onChange={handleChange}
+              disabled={backendDisabled}
               label="Backend"
+              variant="outlined"
+            />
+          </FormControl>
+          <div style={{ marginTop: "10px" }} />
+          <FormControl fullWidth>
+            <TextField
+              name="frontend"
+              value={values.frontend}
+              onChange={handleChange}
+              disabled={frontendDisabled}
+              label="Frontend"
               variant="outlined"
             />
           </FormControl>
