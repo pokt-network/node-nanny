@@ -94,9 +94,10 @@ export function NodeStatus({
     if (selectedNode?.haProxy) getStatus({ variables: { id: selectedNode?.id } });
   }, [selectedNode, getStatus]);
 
-  const noHaProxy = !selectedNode?.haProxy;
+  const haProxy = selectedNode?.haProxy;
   const haProxyOnline = { "0": true, "1": false }[String(data?.haProxyStatus)];
-  const haProxyButtonEnabled = !loading && !error && (haProxyOnline ?? !noHaProxy);
+  const haProxyButtonEnabled =
+    !loading && !error && haProxy && typeof haProxyOnline === "boolean";
   const haProxyStatusText = haProxyOnline ? "Online" : "Offline";
   const haProxyButtonText = `${haProxyOnline ? "Disable" : "Enable"} Node`;
 
@@ -202,7 +203,7 @@ export function NodeStatus({
             variant="outlined"
           >
             <Typography>
-              HAProxy Status: {noHaProxy ? "No HAProxy" : haProxyStatusText}
+              HAProxy Status: {haProxy ? haProxyStatusText : "No HAProxy"}
             </Typography>
             <Typography gutterBottom>Mute Status: {muteStatusText}</Typography>
             <Button
@@ -234,10 +235,10 @@ export function NodeStatus({
                 </>
               ) : error ? (
                 "Failed to fetch"
-              ) : noHaProxy ? (
-                "No HAProxy"
-              ) : (
+              ) : haProxy ? (
                 haProxyButtonText
+              ) : (
+                "No HAProxy"
               )}
             </Button>
           </Paper>
