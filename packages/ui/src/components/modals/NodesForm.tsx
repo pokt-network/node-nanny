@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { ApolloQueryResult } from "@apollo/client";
 import { useFormik, FormikErrors } from "formik";
+import { ApolloQueryResult } from "@apollo/client";
 import {
   Alert,
   AlertTitle,
@@ -52,12 +52,7 @@ export function NodesForm({
   const [loading, setLoading] = useState(false);
   const [backendError, setBackendError] = useState("");
 
-  if (update && selectedNode) {
-    nodeNames = nodeNames.filter((name) => name !== selectedNode.name);
-    hostPortCombos = hostPortCombos.filter(
-      (combo) => combo !== `${selectedNode.host.id}/${selectedNode.port}`,
-    );
-  }
+  /* ----- Form Validation ----- */
   const validate = (values: INodeInput): FormikErrors<INodeInput> => {
     const errors: FormikErrors<INodeInput> = {};
     if (!values.chain) errors.chain = "Chain is required";
@@ -94,6 +89,42 @@ export function NodesForm({
       },
     });
 
+  useEffect(() => {
+    if (formData?.hosts && values.host) {
+      const hostHasFqdn = Boolean(
+        formData.hosts.find(({ id }) => id === values.host)?.fqdn,
+      );
+      if (!hostHasFqdn) setHttps(false);
+      setHostHasFqdn(hostHasFqdn);
+    }
+  }, [values.host, formData]);
+
+  /* ----- Update Mode ----- */
+  if (update && selectedNode) {
+    nodeNames = nodeNames.filter((name) => name !== selectedNode.name);
+    hostPortCombos = hostPortCombos.filter(
+      (combo) => combo !== `${selectedNode.host.id}/${selectedNode.port}`,
+    );
+  }
+
+  useEffect(() => {
+    if (update && selectedNode) {
+      setFieldValue("chain", selectedNode.chain.id);
+      setFieldValue("host", selectedNode.host.id);
+      setFieldValue("url", selectedNode.url.includes("https"));
+      setFieldValue(
+        "loadBalancers",
+        selectedNode.loadBalancers.map(({ id }) => id),
+      );
+      setFieldValue("name", selectedNode.name);
+      setFieldValue("port", selectedNode.port);
+      setFieldValue("backend", selectedNode.backend);
+      setFieldValue("server", selectedNode.server);
+      setFieldValue("haProxy", selectedNode.haProxy);
+    }
+  }, [update, selectedNode, setFieldValue]);
+
+  /* ----- Mutations ----- */
   const [submitCreate] = useCreateNodeMutation({
     variables: { input: values },
     onCompleted: () => {
@@ -122,33 +153,7 @@ export function NodesForm({
     },
   });
 
-  useEffect(() => {
-    if (update && selectedNode) {
-      setFieldValue("chain", selectedNode.chain.id);
-      setFieldValue("host", selectedNode.host.id);
-      setFieldValue("url", selectedNode.url.includes("https"));
-      setFieldValue(
-        "loadBalancers",
-        selectedNode.loadBalancers.map(({ id }) => id),
-      );
-      setFieldValue("name", selectedNode.name);
-      setFieldValue("port", selectedNode.port);
-      setFieldValue("backend", selectedNode.backend);
-      setFieldValue("server", selectedNode.server);
-      setFieldValue("haProxy", selectedNode.haProxy);
-    }
-  }, [update, selectedNode, setFieldValue]);
-
-  useEffect(() => {
-    if (formData?.hosts && values.host) {
-      const hostHasFqdn = Boolean(
-        formData.hosts.find(({ id }) => id === values.host)?.fqdn,
-      );
-      if (!hostHasFqdn) setHttps(false);
-      setHostHasFqdn(hostHasFqdn);
-    }
-  }, [values.host, formData]);
-
+  /* ----- Layout ----- */
   return (
     <>
       <div style={{ display: "flex", flexDirection: "column" }}>
