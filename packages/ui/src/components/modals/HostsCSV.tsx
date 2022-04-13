@@ -36,13 +36,17 @@ interface ICSVHost {
 
 interface NodesCSVProps {
   locations: ILocation[];
+  hostNames: string[];
   refetchHosts: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>;
 }
 
-export function HostsCSV({ locations, refetchHosts }: NodesCSVProps) {
+export function HostsCSV({ locations, hostNames, refetchHosts }: NodesCSVProps) {
   const [hosts, setHosts] = useState<IHostCsvInput[]>(undefined);
   const [hostsError, setHostsError] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
+
+  /* ----- Table Options ---- */
+  const columnsOrder = ["name", "location", "ip", "fqdn", "loadBalancer"];
 
   /* ----- CSV Validation ----- */
   const validLocations = locations.map(({ name }) => name);
@@ -51,8 +55,8 @@ export function HostsCSV({ locations, refetchHosts }: NodesCSVProps) {
     loadBalancer: (loadBalancer: string) =>
       typeof JSON.parse(loadBalancer) === "boolean" || !JSON.parse(loadBalancer),
     location: (location: string) => validLocations.includes(location.toUpperCase()),
-    ip: (ip: string) => regexTest(ip, "ip"),
-    fqdn: (fqdn: string) => regexTest(fqdn, "fqdn"),
+    ip: (ip: string) => !ip || regexTest(ip, "ip"),
+    fqdn: (fqdn: string) => !fqdn || regexTest(fqdn, "fqdn"),
   };
   const validate = (host: any, schema: { [key: string]: (value: string) => boolean }) =>
     Object.keys(schema).filter((key) => !schema[key]?.(host[key]));
@@ -75,6 +79,9 @@ export function HostsCSV({ locations, refetchHosts }: NodesCSVProps) {
         invalidHosts.push(
           `[${host.name}]: Host must have either an IP or a FQDN, but not both.`,
         );
+      }
+      if (hostNames.includes(host.name)) {
+        invalidHosts.push(`[${host.name}]: Host name is already taken.`);
       }
       if (host.fqdn && host.ip) {
         invalidHosts.push(`[${host.name}]: Host may only have FQDN or IP, not both.`);
@@ -144,6 +151,7 @@ export function HostsCSV({ locations, refetchHosts }: NodesCSVProps) {
           <Table
             type={`Adding ${hosts.length} Host${hosts.length === 1 ? "" : "s"}`}
             rows={hosts}
+            columnsOrder={columnsOrder}
           />
         )}
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
