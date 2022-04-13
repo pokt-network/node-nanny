@@ -95,7 +95,7 @@ export function NodeStatus({
   }, [selectedNode, getStatus]);
 
   const noHaProxy = !selectedNode?.haProxy;
-  const haProxyOnline = { 0: true, 1: false }[data?.haProxyStatus];
+  const haProxyOnline = { "0": true, "1": false }[String(data?.haProxyStatus)];
   const haProxyButtonEnabled = !loading && !error && (haProxyOnline ?? !noHaProxy);
   const haProxyStatusText = haProxyOnline ? "Online" : "Offline";
   const haProxyButtonText = `${haProxyOnline ? "Disable" : "Enable"} Node`;
@@ -232,6 +232,8 @@ export function NodeStatus({
                   <CircularProgress size={20} style={{ marginRight: 8 }} />
                   Checking HAProxy Status
                 </>
+              ) : error ? (
+                "Failed to fetch"
               ) : noHaProxy ? (
                 "No HAProxy"
               ) : (
