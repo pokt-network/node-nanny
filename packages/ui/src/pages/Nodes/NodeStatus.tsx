@@ -23,11 +23,11 @@ import {
 import { ModalHelper } from "utils";
 
 interface INodeStatusProps {
-  selectedNode: INode | undefined;
+  selectedNode: INode;
   formData: IGetHostsChainsAndLoadBalancersQuery;
   nodeNames: string[];
   hostPortCombos: string[];
-  setSelectedNode: Dispatch<SetStateAction<INode | undefined>>;
+  setSelectedNode: Dispatch<SetStateAction<INode>>;
   refetchNodes: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
 }
 
@@ -39,6 +39,7 @@ export function NodeStatus({
   setSelectedNode,
   refetchNodes,
 }: INodeStatusProps) {
+  /* ----- Display Node ----- */
   const { id, name, backend, frontend, port, server, url, muted } = selectedNode || {
     id: "",
     name: "",
@@ -50,7 +51,15 @@ export function NodeStatus({
     muted: undefined,
   };
 
-  /* ---- Mute/Unmute Node ----- */
+  /* ----- Delete Node ----- */
+  const [submit] = useDeleteNodeMutation({
+    onCompleted: () => {
+      refetchNodes();
+      ModalHelper.close();
+    },
+  });
+
+  /* ----- Mute/Unmute Node ----- */
   const [muteMonitor] = useMuteMonitorMutation({
     onCompleted: ({ muteMonitor }) => {
       const { muted } = muteMonitor;
@@ -73,15 +82,7 @@ export function NodeStatus({
   const handleMuteToggle = (id: string) =>
     muted ? unmuteMonitor({ variables: { id } }) : muteMonitor({ variables: { id } });
 
-  /* ---- Delete Node ----- */
-  const [submit] = useDeleteNodeMutation({
-    onCompleted: () => {
-      refetchNodes();
-      ModalHelper.close();
-    },
-  });
-
-  /* ---- HAProxy Status ----- */
+  /* ----- HAProxy Status ----- */
   const [getStatus, { data, error, loading }] = useGetNodeStatusLazyQuery();
   const [enable] = useEnableHaProxyServerMutation({
     onCompleted: () => getStatus(),
@@ -105,7 +106,7 @@ export function NodeStatus({
     haProxyOnline ? disable({ variables: { id } }) : enable({ variables: { id } });
   };
 
-  /* ---- Modal Methods ----- */
+  /* ----- Modal Methods ----- */
   const handleOpenUpdateNodeModal = () => {
     ModalHelper.open({
       modalType: "nodesForm",

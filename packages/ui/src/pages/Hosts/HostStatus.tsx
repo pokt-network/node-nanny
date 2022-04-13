@@ -5,7 +5,7 @@ import { IHost, IHostsQuery, ILocation, useDeleteHostMutation } from "types";
 import { ModalHelper } from "utils";
 
 interface IHostStatusProps {
-  selectedHost: IHost | undefined;
+  selectedHost: IHost;
   locations: ILocation[];
   hostNames: string[];
   refetchHosts: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>;
@@ -17,6 +17,7 @@ export function HostStatus({
   hostNames,
   refetchHosts,
 }: IHostStatusProps) {
+  /* ----- Display Host ----- */
   const { fqdn, ip, loadBalancer, location, name } = selectedHost || {
     fqdn: "",
     ip: "",
@@ -25,6 +26,7 @@ export function HostStatus({
     name: "",
   };
 
+  /* ----- Delete Host ----- */
   const [submitDelete] = useDeleteHostMutation({
     onCompleted: () => {
       refetchHosts();
@@ -32,6 +34,7 @@ export function HostStatus({
     },
   });
 
+  /* ----- Modal Methods ----- */
   const handleOpenUpdateHostModal = () => {
     ModalHelper.open({
       modalType: "hostsForm",
@@ -58,6 +61,7 @@ export function HostStatus({
     });
   };
 
+  /* ----- Layout ----- */
   return (
     <>
       <div
