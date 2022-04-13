@@ -25,7 +25,7 @@ export class Service {
   }
 
   /* ----- Discord Alerts ----- */
-  sendErrorChannel = async ({ title, message }: AlertTypes.IAlertParams) => {
+  sendErrorChannel = async ({ title, message }: AlertTypes.IErrorChannelAlertParams) => {
     colorLog(`${title}\n${message}`, "red");
     try {
       return await this.sendDiscordMessage({
