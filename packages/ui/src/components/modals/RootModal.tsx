@@ -41,7 +41,7 @@ export function RootModal() {
 
   const modalProps = modalState.modalProps;
 
-  const { disableBackdropClick, onClose } = modalState?.modalOptions || {};
+  const { onClose } = modalState?.modalOptions || {};
 
   if (!modalType) {
     return null;
@@ -54,12 +54,7 @@ export function RootModal() {
     <Modal
       aria-labelledby={`${modalType}-modal`}
       open={open}
-      onClose={() => {
-        if (!disableBackdropClick) {
-          ModalHelper.close();
-        }
-        onClose && onClose();
-      }}
+      onClose={() => onClose?.()}
       closeAfterTransition
       BackdropProps={{ timeout: 500 }}
       style={{
