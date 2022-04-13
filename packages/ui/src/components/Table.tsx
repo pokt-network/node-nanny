@@ -222,7 +222,7 @@ export function Table({
           {searchable && (
             <SearchBar
               value={searchTerm}
-              handleChange={setSearchTerm}
+              onChange={(event) => setSearchTerm((event as any).target.value)}
               type={type}
               sx={{ marginBottom: "16px" }}
             />
