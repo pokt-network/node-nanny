@@ -205,7 +205,7 @@ export function NodesForm({
               HTTPS
               <Switch
                 name="https"
-                checked={https}
+                checked={values.https}
                 onChange={handleChange}
                 disabled={!hostHasFqdn}
               />

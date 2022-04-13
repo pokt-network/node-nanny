@@ -49,16 +49,8 @@ export function NodeStatus({
     url: "",
     muted: undefined,
   };
-  const fetchHaProxy = Boolean(!selectedNode?.dispatch && selectedNode?.haProxy);
 
-  const [getStatus, { data, error, loading }] = useGetNodeStatusLazyQuery();
-  const [enable] = useEnableHaProxyServerMutation({
-    onCompleted: () => getStatus(),
-  });
-  const [disable] = useDisableHaProxyServerMutation({
-    onCompleted: () => getStatus(),
-  });
-
+  /* ---- Mute/Unmute Node ----- */
   const [muteMonitor] = useMuteMonitorMutation({
     onCompleted: ({ muteMonitor }) => {
       const { muted } = muteMonitor;
@@ -72,6 +64,16 @@ export function NodeStatus({
     },
   });
 
+  const muteStatusText = !selectedNode
+    ? "No Node Selected"
+    : muted
+    ? "Muted"
+    : "Not Muted";
+
+  const handleMuteToggle = (id: string) =>
+    muted ? unmuteMonitor({ variables: { id } }) : muteMonitor({ variables: { id } });
+
+  /* ---- Delete Node ----- */
   const [submit] = useDeleteNodeMutation({
     onCompleted: () => {
       refetchNodes();
@@ -79,17 +81,30 @@ export function NodeStatus({
     },
   });
 
+  /* ---- HAProxy Status ----- */
+  const [getStatus, { data, error, loading }] = useGetNodeStatusLazyQuery();
+  const [enable] = useEnableHaProxyServerMutation({
+    onCompleted: () => getStatus(),
+  });
+  const [disable] = useDisableHaProxyServerMutation({
+    onCompleted: () => getStatus(),
+  });
+
   useEffect(() => {
     if (selectedNode?.haProxy) getStatus({ variables: { id: selectedNode?.id } });
   }, [selectedNode, getStatus]);
 
-  const handleHaProxyButtonClick = (id: string, haProxyStatus: number) => {
-    haProxyStatus === 0 ? disable({ variables: { id } }) : enable({ variables: { id } });
+  const noHaProxy = !selectedNode?.haProxy;
+  const haProxyOnline = { 0: true, 1: false }[data?.haProxyStatus];
+  const haProxyButtonEnabled = !loading && !error && (haProxyOnline ?? !noHaProxy);
+  const haProxyStatusText = haProxyOnline ? "Online" : "Offline";
+  const haProxyButtonText = `${haProxyOnline ? "Disable" : "Enable"} Node`;
+
+  const handleHaProxyButtonClick = (id: string) => {
+    haProxyOnline ? disable({ variables: { id } }) : enable({ variables: { id } });
   };
 
-  const handleMuteToggle = (id: string) =>
-    muted ? unmuteMonitor({ variables: { id } }) : muteMonitor({ variables: { id } });
-
+  /* ---- Modal Methods ----- */
   const handleOpenUpdateNodeModal = () => {
     ModalHelper.open({
       modalType: "nodesForm",
@@ -117,26 +132,33 @@ export function NodeStatus({
     });
   };
 
-  const haProxyButtonDisabled = Boolean(
-    !selectedNode?.haProxy ||
-      !data?.haProxyStatus ||
-      String(data?.haProxyStatus) === "-1",
-  );
-  const haProxyStatusText =
-    {
-      "-1": "No HAProxy",
-      "0": "OK",
-      "1": "Offline",
-    }[data?.haProxyStatus] || "No HAProxy";
-  const haProxyButtonText =
-    { "-1": "No HAProxy", 0: "Disable HAProxy", 1: "Enable HAProxy" }[
-      data?.haProxyStatus
-    ] || "No HAProxy";
-  const muteStatusText = !selectedNode
-    ? "No Node Selected"
-    : muted
-    ? "Muted"
-    : "Not Muted";
+  const handleOpenMuteModal = () => {
+    ModalHelper.open({
+      modalType: "confirmation",
+      modalProps: {
+        handleOk: () => handleMuteToggle(id),
+        okText: `${muted ? "Unmute" : "Mute"} Node`,
+        promptText: `Are you sure you wish to ${muted ? "unmute" : "mute"} node ${
+          selectedNode?.name
+        }?`,
+      },
+    });
+  };
+
+  const handleOpenRotationModal = () => {
+    ModalHelper.open({
+      modalType: "confirmation",
+      modalProps: {
+        handleOk: () => handleHaProxyButtonClick(id),
+        okText: `${haProxyOnline ? "Disable" : "Enable"} Node`,
+        okColor: "error",
+        cancelColor: "primary",
+        promptText: `Are you sure you wish to ${haProxyOnline ? "remove" : "add"} node ${
+          selectedNode?.name
+        } ${haProxyOnline ? "from" : "to"} rotation?`,
+      },
+    });
+  };
 
   return (
     <>
@@ -179,12 +201,14 @@ export function NodeStatus({
             style={{ display: "flex", flexDirection: "column", padding: 10, width: 305 }}
             variant="outlined"
           >
-            <Typography>HAProxy Status: {haProxyStatusText}</Typography>
+            <Typography>
+              HAProxy Status: {noHaProxy ? "No HAProxy" : haProxyStatusText}
+            </Typography>
             <Typography gutterBottom>Mute Status: {muteStatusText}</Typography>
             <Button
               fullWidth
               variant="contained"
-              onClick={() => handleMuteToggle(id)}
+              onClick={handleOpenMuteModal}
               disabled={!selectedNode}
               style={{ marginBottom: 8, height: 40 }}
               color="info"
@@ -198,8 +222,8 @@ export function NodeStatus({
             <Button
               fullWidth
               variant="contained"
-              onClick={() => handleHaProxyButtonClick(id, data?.haProxyStatus)}
-              disabled={haProxyButtonDisabled}
+              onClick={handleOpenRotationModal}
+              disabled={!haProxyButtonEnabled}
               style={{ marginRight: 8, height: 40 }}
               color="warning"
             >
@@ -208,6 +232,8 @@ export function NodeStatus({
                   <CircularProgress size={20} style={{ marginRight: 8 }} />
                   Checking HAProxy Status
                 </>
+              ) : noHaProxy ? (
+                "No HAProxy"
               ) : (
                 haProxyButtonText
               )}
