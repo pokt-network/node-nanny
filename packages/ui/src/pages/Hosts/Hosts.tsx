@@ -44,7 +44,11 @@ export function Hosts() {
   const handleOpenUploadNodeCSVModal = () => {
     ModalHelper.open({
       modalType: "hostsCsv",
-      modalProps: { refetchNodes: refetch, locations: locationsData?.locations },
+      modalProps: {
+        refetchNodes: refetch,
+        locations: locationsData?.locations,
+        hostNames,
+      },
     });
   };
 
