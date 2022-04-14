@@ -11,6 +11,12 @@ mutation CreateHostsCSV($hosts: [HostCSVInput!]!) {
   }
 }
 
+mutation CreateLocation($name: String!) {
+  createLocation(name: $name) {
+    name
+  }
+}
+
 mutation CreateNode($input: NodeInput!) {
   createNode(input: $input) {
     id
