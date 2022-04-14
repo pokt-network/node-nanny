@@ -1,5 +1,12 @@
-import { useState } from "react";
-import { Alert, AlertTitle, Button, LinearProgress } from "@mui/material";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  AlertTitle,
+  Button,
+  LinearProgress,
+  Paper,
+  Typography,
+} from "@mui/material";
 
 import { Table } from "components";
 import { INode, useGetHostsChainsAndLoadBalancersQuery, useNodesQuery } from "types";
@@ -15,6 +22,10 @@ export function Nodes() {
     error: formError,
     loading: formLoading,
   } = useGetHostsChainsAndLoadBalancersQuery();
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   /* ----- Table Options ---- */
   const filterOptions = {
@@ -97,24 +108,60 @@ export function Nodes() {
             marginBottom: 16,
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <Button
-              style={{ marginBottom: 8, marginRight: 8, width: 150 }}
-              onClick={handleOpenCreateNodeModal}
-              variant="contained"
-              color="success"
+          <Paper
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              width: 500,
+              height: 245,
+              padding: 10,
+              marginRight: 16,
+              marginBottom: 16,
+            }}
+            variant="outlined"
+          >
+            <Typography variant="h4" align="center">
+              Nodes Inventory
+            </Typography>
+            <div style={{ marginLeft: 8 }}>
+              <Typography>{data?.nodes.length} Nodes</Typography>
+              <Typography>
+                {data?.nodes.filter(({ status }) => status === "OK").length} Healthy
+              </Typography>
+              <Typography>
+                {data?.nodes.filter(({ status }) => status === "ERROR").length} Errored
+              </Typography>
+              <Typography>
+                {data?.nodes.filter(({ muted }) => muted).length} Muted
+              </Typography>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: 8,
+                width: "100%",
+              }}
             >
-              Create Node
-            </Button>
-            <Button
-              style={{ marginBottom: 8, marginRight: 8, width: 150 }}
-              onClick={handleOpenUploadNodeCSVModal}
-              variant="contained"
-              color="success"
-            >
-              Upload CSV
-            </Button>
-          </div>
+              <Button
+                style={{ marginBottom: 8, marginRight: 8, width: 150 }}
+                onClick={handleOpenCreateNodeModal}
+                variant="contained"
+                color="success"
+              >
+                Create Node
+              </Button>
+              <Button
+                style={{ marginBottom: 8, marginRight: 8, width: 150 }}
+                onClick={handleOpenUploadNodeCSVModal}
+                variant="contained"
+                color="success"
+              >
+                Upload CSV
+              </Button>
+            </div>
+          </Paper>
           <NodeStatus
             selectedNode={selectedNode}
             formData={formData}
