@@ -137,6 +137,7 @@ const typeDefs = gql`
     backend: String
     frontend: String
     server: String
+    https: Boolean
   }
 
   input HostUpdate {
