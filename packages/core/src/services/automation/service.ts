@@ -76,7 +76,8 @@ export class Service extends BaseService {
       throw new Error(`Node cannot use https with a host that does not have a FQDN.`);
     }
 
-    const url = `http${https ? "s" : ""}://${fqdn || ip}:${nodeInput.port}`;
+    const secure = typeof https === "boolean" && https;
+    const url = `http${secure ? "s" : ""}://${fqdn || ip}:${nodeInput.port}`;
 
     try {
       ({ id } = await NodesModel.create({ ...rest, url }));
@@ -134,16 +135,32 @@ export class Service extends BaseService {
   }
 
   public async updateNode(update: INodeUpdate, restart = true): Promise<INode> {
-    const { id } = update;
+    const { id, https } = update;
     delete update.id;
     const sanitizedUpdate: any = {};
     Object.entries(update).forEach(([key, value]) => {
       if (value !== undefined) sanitizedUpdate[key] = value;
     });
 
+    const { host, url, port } = (await NodesModel.findOne({ _id: id })) as INode<false>;
+    const newHost = sanitizedUpdate.host !== host;
+    if (newHost) {
+      const { fqdn, ip } = await HostsModel.findOne({ _id: sanitizedUpdate.host });
+      sanitizedUpdate.url = `${fqdn || ip}:${port}`;
+      console.debug("1", sanitizedUpdate.url);
+    }
     if (sanitizedUpdate.port) {
-      const { url, port } = await NodesModel.findOne({ _id: id });
-      sanitizedUpdate.url = url.replace(String(port), String(sanitizedUpdate.port));
+      sanitizedUpdate.url = (newHost ? sanitizedUpdate.url : url.split("://")[1]).replace(
+        String(port),
+        String(sanitizedUpdate.port),
+      );
+      console.debug("2", sanitizedUpdate.url);
+    }
+    if (sanitizedUpdate.url) {
+      console.debug("3", sanitizedUpdate.url);
+      const secure = typeof https === "boolean" && https;
+      sanitizedUpdate.url = `http${secure ? "s" : ""}://${sanitizedUpdate.url}`;
+      console.debug("4", sanitizedUpdate.url);
     }
 
     await NodesModel.updateOne({ _id: id }, { ...sanitizedUpdate });
