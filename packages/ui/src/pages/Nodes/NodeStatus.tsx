@@ -135,7 +135,7 @@ export function NodeStatus({
         okText: "Delete Node",
         okColor: "error",
         cancelColor: "primary",
-        promptText: `Are you sure you wish to delete node ${selectedNode?.name}?`,
+        promptText: `Are you sure you wish to remove node ${selectedNode?.name} from the inventory database?`,
       },
     });
   };
