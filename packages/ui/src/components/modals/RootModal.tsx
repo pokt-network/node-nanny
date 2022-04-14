@@ -2,7 +2,6 @@ import { useReactiveVar } from "@apollo/client";
 import { Fade, Modal } from "@mui/material";
 
 import { modalStateVar } from "apollo";
-import { ModalHelper } from "utils";
 
 import { ConfirmationModal } from "./ConfirmationModal";
 import { HostsCSV } from "./HostsCSV";

@@ -43,6 +43,7 @@ export interface IHostCsvInput {
 
 export interface INodeUpdate {
   id: string;
+  https?: boolean;
   chain?: string;
   host?: string;
   name?: string;
