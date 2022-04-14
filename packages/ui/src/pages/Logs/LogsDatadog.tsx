@@ -36,7 +36,7 @@ export default function LogsDatadog() {
           <Button
             size="large"
             variant="contained"
-            href={process.env.REACT_APP_DATA_DOG_URL}
+            href={process.env.REACT_APP_DATADOG_URL}
             target="_blank"
           >
             View Logs On Datadog
@@ -48,7 +48,7 @@ export default function LogsDatadog() {
           component="iframe"
           height="100%"
           width="100%"
-          src="https://p.datadoghq.eu/sb/4636fbae-ec9a-11eb-bd1f-da7ad0900005-253b6d80b93a86a53ce2cb901c66ed54"
+          src={process.env.REACT_APP_DATADOG_IFRAME_URL}
         />
       </div>
     </Card>
