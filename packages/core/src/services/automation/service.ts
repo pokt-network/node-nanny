@@ -1,5 +1,6 @@
 import { EC2 } from "aws-sdk";
 import { exec } from "child_process";
+import { Types, UpdateQuery } from "mongoose";
 
 import { Service as DiscordService } from "../discord";
 import { ELoadBalancerStatus } from "../event/types";
@@ -123,10 +124,25 @@ export class Service extends BaseService {
   public async updateHost(update: IHostUpdate, restart = true): Promise<IHost> {
     const { id } = update;
     delete update.id;
-    const sanitizedUpdate: any = {};
+    const sanitizedUpdate: UpdateQuery<IHost<false>> = {};
     Object.entries(update).forEach(([key, value]) => {
       if (value !== undefined) sanitizedUpdate[key] = value;
     });
+
+    const { ip, fqdn } = (await HostsModel.findOne({ _id: id })) as IHost<false>;
+    const newIp = sanitizedUpdate.ip && sanitizedUpdate.ip !== ip;
+    const newFqdn = sanitizedUpdate.fqdn && sanitizedUpdate.fqdn !== fqdn;
+
+    /* If Host IP or FQDN changes, all nodes on that host will need to be updated */
+    if ((newIp || newFqdn) && (await NodesModel.exists({ host: id }))) {
+      await this.updateNodeUrlsIfHostDomainChanges(id, sanitizedUpdate);
+    }
+    if (ip && sanitizedUpdate.fqdn) {
+      sanitizedUpdate.$unset = { ip: 1 };
+    }
+    if (fqdn && sanitizedUpdate.ip) {
+      sanitizedUpdate.$unset = { fqdn: 1 };
+    }
 
     await HostsModel.updateOne({ _id: id }, { ...sanitizedUpdate });
     if (restart) await this.restartMonitor();
@@ -134,19 +150,36 @@ export class Service extends BaseService {
     return await HostsModel.findOne({ _id: id }).populate("location").exec();
   }
 
+  private async updateNodeUrlsIfHostDomainChanges(
+    id: string,
+    update: UpdateQuery<IHost>,
+  ) {
+    const nodesForHost = NodesModel.find({ host: id });
+
+    for await (const node of nodesForHost) {
+      const [protocol] = update.ip ? ["http"] : node.url.split("://");
+      const newRootDomain = update.ip || update.fqdn;
+      const newUrl = `${protocol}://${newRootDomain}:${node.port}`;
+
+      await NodesModel.updateOne({ _id: node.id }, { url: newUrl });
+    }
+  }
+
   public async updateNode(update: INodeUpdate, restart = true): Promise<INode> {
     const { id, https } = update;
     delete update.id;
     delete update.https;
-    const sanitizedUpdate: any = {};
+    const sanitizedUpdate: UpdateQuery<INode> = {};
     Object.entries(update).forEach(([key, value]) => {
       if (value !== undefined) sanitizedUpdate[key] = value;
     });
 
     const { host, url, port } = (await NodesModel.findOne({ _id: id })) as INode<false>;
     const newHost = sanitizedUpdate.host !== host;
+
+    /* If Node's fields change, the node's URL must be updated to reflect the changes */
     if (newHost) {
-      const { fqdn, ip } = await HostsModel.findOne({ _id: sanitizedUpdate.host });
+      const { fqdn, ip } = await HostsModel.findOne({ _id: host });
       sanitizedUpdate.url = `${fqdn || ip}:${port}`;
     }
     if (sanitizedUpdate.port) {
