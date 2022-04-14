@@ -216,6 +216,7 @@ export type INodeUpdate = {
   frontend?: InputMaybe<Scalars['String']>;
   haProxy?: InputMaybe<Scalars['Boolean']>;
   host?: InputMaybe<Scalars['ID']>;
+  https?: InputMaybe<Scalars['Boolean']>;
   id: Scalars['ID'];
   loadBalancers?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   name?: InputMaybe<Scalars['String']>;
