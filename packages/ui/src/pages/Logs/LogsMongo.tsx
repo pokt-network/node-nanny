@@ -17,7 +17,6 @@ import CheckBoxIcon from "@mui/icons-material/CheckBox";
 
 import { LogTable } from "components";
 import { INode, useLogsLazyQuery, useNodesQuery } from "types";
-import { s } from "utils";
 import { ITimePeriod, timePeriods } from "./periods";
 
 import LogsChart from "./LogsChart";
@@ -37,11 +36,12 @@ export default function LogsMongo() {
     onError: () => setLogsLoading(false),
   });
 
+  console.log(logsData?.logs);
   const filterOptions = {
-    filters: ["All", "Healthy", "Error"],
+    filters: ["All", "OK", "Error"],
     filterFunctions: {
-      Healthy: ({ status }: INode) => status === "OK",
-      Error: ({ status }: INode) => status === "ERROR",
+      OK: ({ conditions }) => conditions === "HEALTHY",
+      Error: ({ status }) => status === "ERROR",
     } as any,
   };
   const columnsOrder = ["name", "status", "conditions", "timestamp"];
@@ -135,15 +135,9 @@ export default function LogsMongo() {
       <LogsChart logPeriod={logPeriod} nodeIds={nodes} />
       <div style={{ marginTop: "10px" }} />
       <LogTable
-        type={
-          !nodes.length || !logsData
-            ? "Select nodes to view logs"
-            : `Showing ${logsData?.logs.docs.length} log entries for ${
-                nodes.length
-              } Node${s(nodes.length)}`
-        }
         searchable
         rows={logsData?.logs.docs}
+        numNodes={nodes?.length}
         loading={logsLoading}
         loadItems={() => {
           if (logsData.logs.hasNextPage) {

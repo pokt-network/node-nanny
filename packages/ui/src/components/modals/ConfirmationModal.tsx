@@ -6,6 +6,7 @@ export interface ConfirmationModalProps {
   handleOk: any;
   promptText: string;
   okText?: string;
+  confirmText?: string;
   okColor?:
     | "inherit"
     | "success"
@@ -28,19 +29,30 @@ export function ConfirmationModal({
   handleOk,
   promptText,
   okText,
+  confirmText,
   okColor,
   cancelColor,
 }: ConfirmationModalProps) {
   return (
     <>
-      <Paper style={{ width: "100%", padding: 24 }} variant="outlined" color="success">
-        <Typography>{promptText}</Typography>
+      <Paper style={{ width: "100%", padding: 32 }} variant="outlined" color="success">
+        {confirmText && (
+          <Typography variant="h4" align="center" gutterBottom>
+            {confirmText}
+          </Typography>
+        )}
+        <Typography>
+          {promptText.includes("\n")
+            ? promptText
+                .split("\n")
+                .map((line) => <Typography gutterBottom>{line}</Typography>)
+            : promptText}
+        </Typography>
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             marginTop: 16,
-            padding: "0px 16px",
           }}
         >
           <Button

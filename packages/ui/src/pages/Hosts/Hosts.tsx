@@ -1,5 +1,12 @@
-import { useState } from "react";
-import { Alert, AlertTitle, Button, LinearProgress } from "@mui/material";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  AlertTitle,
+  Button,
+  LinearProgress,
+  Paper,
+  Typography,
+} from "@mui/material";
 
 import { Table } from "components";
 import { IHost, useLocationsQuery, useHostsQuery } from "types";
@@ -14,7 +21,12 @@ export function Hosts() {
     data: locationsData,
     error: locationsError,
     loading: locationsLoading,
+    refetch: refetchLocations,
   } = useLocationsQuery();
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   /* ----- Table Options ---- */
   const filterOptions = {
@@ -29,6 +41,7 @@ export function Hosts() {
 
   /* ----- Modal Methods ----- */
   const hostNames = data?.hosts.map(({ name }) => name);
+  const locationNames = locationsData?.locations.map(({ name }) => name);
 
   const handleOpenCreateHostModal = () => {
     ModalHelper.open({
@@ -49,6 +62,13 @@ export function Hosts() {
         locations: locationsData?.locations,
         hostNames,
       },
+    });
+  };
+
+  const handleOpenAddLocationModal = () => {
+    ModalHelper.open({
+      modalType: "locationsForm",
+      modalProps: { locationNames, refetchLocations },
     });
   };
 
@@ -81,27 +101,65 @@ export function Hosts() {
             display: "flex",
             justifyContent: "space-between",
             marginTop: 8,
-            marginBottom: 16,
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <Button
-              style={{ marginBottom: 8, marginRight: 8, width: 150 }}
-              onClick={handleOpenCreateHostModal}
-              variant="contained"
-              color="success"
+          <Paper
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              width: 500,
+              padding: 10,
+              marginRight: 16,
+              marginBottom: 16,
+            }}
+            variant="outlined"
+          >
+            <Typography variant="h4" align="center">
+              Hosts Inventory
+            </Typography>
+            <div style={{ marginLeft: 8 }}>
+              <Typography>{data?.hosts.length} Hosts</Typography>
+              <Typography>
+                {data?.hosts.filter(({ loadBalancer }) => loadBalancer).length} Load
+                Balancers
+              </Typography>
+              <Typography>{locationsData?.locations.length} Locations</Typography>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: 8,
+                width: "100%",
+              }}
             >
-              Create Host
-            </Button>
-            <Button
-              style={{ marginBottom: 8, marginRight: 8, width: 150 }}
-              onClick={handleOpenUploadNodeCSVModal}
-              variant="contained"
-              color="success"
-            >
-              Upload CSV
-            </Button>
-          </div>
+              <Button
+                style={{ marginRight: 8, width: 160 }}
+                onClick={handleOpenCreateHostModal}
+                variant="contained"
+                color="success"
+              >
+                Create Host
+              </Button>
+              <Button
+                style={{ marginRight: 8, width: 160 }}
+                onClick={handleOpenUploadNodeCSVModal}
+                variant="contained"
+                color="success"
+              >
+                Upload CSV
+              </Button>
+              <Button
+                style={{ marginRight: 8, width: 160 }}
+                onClick={handleOpenAddLocationModal}
+                variant="contained"
+                color="primary"
+              >
+                Add Location
+              </Button>
+            </div>
+          </Paper>
           <HostStatus
             selectedHost={selectedHost}
             locations={locationsData?.locations}

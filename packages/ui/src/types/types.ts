@@ -93,6 +93,7 @@ export type ILogParams = {
 export type IMutation = {
   createHost?: Maybe<IHost>;
   createHostsCSV: Array<Maybe<IHost>>;
+  createLocation: ILocation;
   createNode?: Maybe<INode>;
   createNodesCSV: Array<Maybe<INode>>;
   deleteHost?: Maybe<IHost>;
@@ -113,6 +114,11 @@ export type IMutationCreateHostArgs = {
 
 export type IMutationCreateHostsCsvArgs = {
   hosts: Array<IHostCsvInput>;
+};
+
+
+export type IMutationCreateLocationArgs = {
+  name: Scalars['String'];
 };
 
 
@@ -307,6 +313,13 @@ export type ICreateHostsCsvMutationVariables = Exact<{
 
 
 export type ICreateHostsCsvMutation = { createHostsCSV: Array<{ id: string } | null> };
+
+export type ICreateLocationMutationVariables = Exact<{
+  name: Scalars['String'];
+}>;
+
+
+export type ICreateLocationMutation = { createLocation: { name: string } };
 
 export type ICreateNodeMutationVariables = Exact<{
   input: INodeInput;
@@ -510,6 +523,39 @@ export function useCreateHostsCsvMutation(baseOptions?: Apollo.MutationHookOptio
 export type CreateHostsCsvMutationHookResult = ReturnType<typeof useCreateHostsCsvMutation>;
 export type CreateHostsCsvMutationResult = Apollo.MutationResult<ICreateHostsCsvMutation>;
 export type CreateHostsCsvMutationOptions = Apollo.BaseMutationOptions<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>;
+export const CreateLocationDocument = gql`
+    mutation CreateLocation($name: String!) {
+  createLocation(name: $name) {
+    name
+  }
+}
+    `;
+export type ICreateLocationMutationFn = Apollo.MutationFunction<ICreateLocationMutation, ICreateLocationMutationVariables>;
+
+/**
+ * __useCreateLocationMutation__
+ *
+ * To run a mutation, you first call `useCreateLocationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateLocationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createLocationMutation, { data, loading, error }] = useCreateLocationMutation({
+ *   variables: {
+ *      name: // value for 'name'
+ *   },
+ * });
+ */
+export function useCreateLocationMutation(baseOptions?: Apollo.MutationHookOptions<ICreateLocationMutation, ICreateLocationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ICreateLocationMutation, ICreateLocationMutationVariables>(CreateLocationDocument, options);
+      }
+export type CreateLocationMutationHookResult = ReturnType<typeof useCreateLocationMutation>;
+export type CreateLocationMutationResult = Apollo.MutationResult<ICreateLocationMutation>;
+export type CreateLocationMutationOptions = Apollo.BaseMutationOptions<ICreateLocationMutation, ICreateLocationMutationVariables>;
 export const CreateNodeDocument = gql`
     mutation CreateNode($input: NodeInput!) {
   createNode(input: $input) {
