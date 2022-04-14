@@ -21,6 +21,7 @@ import {
   useUnmuteMonitorMutation,
 } from "types";
 import { ModalHelper } from "utils";
+import text from "./text";
 
 interface INodeStatusProps {
   selectedNode: INode;
@@ -103,7 +104,9 @@ export function NodeStatus({
   const haProxyButtonDisabled =
     !haProxy || loading || !!error || typeof haProxyOnline !== "boolean";
   const haProxyStatusText = haProxyOnline ? "Online" : "Offline";
-  const haProxyButtonText = `${haProxyOnline ? "Disable" : "Enable"} Node`;
+  const haProxyButtonText = `${haProxyOnline ? "Remove" : "Add"} Node ${
+    haProxyOnline ? "from" : "to"
+  } Rotation`;
 
   const handleHaProxyButtonClick = (id: string) => {
     haProxyOnline ? disable({ variables: { id } }) : enable({ variables: { id } });
@@ -142,10 +145,12 @@ export function NodeStatus({
       modalType: "confirmation",
       modalProps: {
         handleOk: () => handleMuteToggle(id),
+        confirmText: `Confirm ${muted ? "Unmute" : "Mute"} Node`,
         okText: `${muted ? "Unmute" : "Mute"} Node`,
-        promptText: `Are you sure you wish to ${muted ? "unmute" : "mute"} node ${
-          selectedNode?.name
-        }?`,
+        promptText: (muted ? text.unmuteMonitor : text.muteMonitor).replaceAll(
+          "{selectedNode}",
+          selectedNode.name,
+        ),
       },
     });
   };
@@ -155,19 +160,19 @@ export function NodeStatus({
       modalType: "confirmation",
       modalProps: {
         handleOk: () => handleHaProxyButtonClick(id),
+        confirmText: `Confirm ${haProxyOnline ? "Disable" : "Enable"} Node`,
         okText: `${haProxyOnline ? "Disable" : "Enable"} Node`,
-        okColor: "error",
-        cancelColor: "primary",
-        promptText: `Are you sure you wish to ${haProxyOnline ? "remove" : "add"} node ${
-          selectedNode?.name
-        } ${haProxyOnline ? "from" : "to"} rotation?`,
+        promptText: (haProxyOnline
+          ? text.removeFromRotation
+          : text.addToRotation
+        ).replaceAll("{selectedNode}", selectedNode.name),
       },
     });
   };
 
   return (
     <>
-      <Paper style={{ padding: 10 }} variant="outlined">
+      <Paper style={{ padding: 10, height: 245 }} variant="outlined">
         <Typography align="center" variant="h6" gutterBottom>
           {!selectedNode ? "Select Node to view Status" : "Selected Node"}
         </Typography>
@@ -183,7 +188,7 @@ export function NodeStatus({
             <Typography>Port: {port}</Typography>
             <Typography>Server: {server ?? "None"}</Typography>
             <Typography gutterBottom>URL: {url}</Typography>
-            <div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
               <Button
                 onClick={handleOpenUpdateNodeModal}
                 disabled={!selectedNode}
@@ -219,10 +224,10 @@ export function NodeStatus({
               color="info"
             >
               {!selectedNode
-                ? "Toggle Monitor Alerts"
+                ? "Toggle Node Monitor"
                 : muted
-                ? "Unmute Monitor Alerts"
-                : "Mute Monitor Alerts"}
+                ? "Unmute Node Monitor"
+                : "Mute Node Monitor"}
             </Button>
             <Button
               fullWidth

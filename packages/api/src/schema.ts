@@ -184,6 +184,7 @@ const typeDefs = gql`
   type Mutation {
     createHost(input: HostInput!): Host
     createHostsCSV(hosts: [HostCSVInput!]!): [Host]!
+    createLocation(name: String!): Location!
     createNode(input: NodeInput!): Node
     createNodesCSV(nodes: [NodeCSVInput!]!): [Node]!
 
