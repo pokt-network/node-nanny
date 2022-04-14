@@ -57,7 +57,7 @@ export function HostStatus({
         okText: "Delete Host",
         okColor: "error",
         cancelColor: "primary",
-        error: deleteHostError.message,
+        error: deleteHostError?.message,
       },
     });
   };
