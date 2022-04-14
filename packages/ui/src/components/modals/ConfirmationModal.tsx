@@ -1,4 +1,4 @@
-import { Paper, Button, Typography } from "@mui/material";
+import { Alert, AlertTitle, Paper, Button, Typography } from "@mui/material";
 
 import { ModalHelper } from "utils";
 
@@ -23,6 +23,7 @@ export interface ConfirmationModalProps {
     | "secondary"
     | "info"
     | "warning";
+  error?: string;
 }
 
 export function ConfirmationModal({
@@ -32,6 +33,7 @@ export function ConfirmationModal({
   confirmText,
   okColor,
   cancelColor,
+  error,
 }: ConfirmationModalProps) {
   return (
     <>
@@ -66,6 +68,12 @@ export function ConfirmationModal({
             {okText || "OK"}
           </Button>
         </div>
+        {error && (
+          <Alert severity="error">
+            <AlertTitle>{"Error:"}</AlertTitle>
+            {error}
+          </Alert>
+        )}
       </Paper>
     </>
   );

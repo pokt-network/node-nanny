@@ -114,7 +114,7 @@ export function Nodes() {
               flexDirection: "column",
               justifyContent: "space-between",
               width: 500,
-              height: 245,
+              height: 250,
               padding: 10,
               marginRight: 16,
               marginBottom: 16,
