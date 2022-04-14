@@ -137,7 +137,7 @@ export function NodeStatus({
         okColor: "error",
         cancelColor: "primary",
         promptText: `Are you sure you wish to remove node ${selectedNode?.name} from the inventory database?`,
-        error: deleteNodeError,
+        error: deleteNodeError?.message,
       },
     });
   };
@@ -153,7 +153,7 @@ export function NodeStatus({
           "{selectedNode}",
           selectedNode.name,
         ),
-        error: muteMonitorError || unmuteMonitorError,
+        error: (muteMonitorError || unmuteMonitorError)?.message,
       },
     });
   };
@@ -169,7 +169,7 @@ export function NodeStatus({
           ? text.removeFromRotation
           : text.addToRotation
         ).replaceAll("{selectedNode}", selectedNode.name),
-        error: enableHaProxyError || disableHaProxyError,
+        error: (enableHaProxyError || disableHaProxyError)?.message,
       },
     });
   };
