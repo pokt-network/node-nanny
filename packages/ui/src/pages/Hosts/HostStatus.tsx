@@ -27,7 +27,7 @@ export function HostStatus({
   };
 
   /* ----- Delete Host ----- */
-  const [submitDelete] = useDeleteHostMutation({
+  const [submitDelete, { error: deleteHostError }] = useDeleteHostMutation({
     onCompleted: () => {
       refetchHosts();
       ModalHelper.close();
@@ -57,6 +57,7 @@ export function HostStatus({
         okText: "Delete Host",
         okColor: "error",
         cancelColor: "primary",
+        error: deleteHostError.message,
       },
     });
   };
