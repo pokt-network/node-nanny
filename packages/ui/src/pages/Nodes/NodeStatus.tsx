@@ -55,7 +55,7 @@ export function NodeStatus({
     };
 
   /* ----- Delete Node ----- */
-  const [submit] = useDeleteNodeMutation({
+  const [submit, { error: deleteNodeError }] = useDeleteNodeMutation({
     onCompleted: () => {
       refetchNodes();
       ModalHelper.close();
@@ -63,13 +63,13 @@ export function NodeStatus({
   });
 
   /* ----- Mute/Unmute Node ----- */
-  const [muteMonitor] = useMuteMonitorMutation({
+  const [muteMonitor, { error: muteMonitorError }] = useMuteMonitorMutation({
     onCompleted: ({ muteMonitor }) => {
       const { muted } = muteMonitor;
       setSelectedNode({ ...selectedNode!, muted });
     },
   });
-  const [unmuteMonitor] = useUnmuteMonitorMutation({
+  const [unmuteMonitor, { error: unmuteMonitorError }] = useUnmuteMonitorMutation({
     onCompleted: ({ unmuteMonitor }) => {
       const { muted } = unmuteMonitor;
       setSelectedNode({ ...selectedNode!, muted });
@@ -86,11 +86,12 @@ export function NodeStatus({
     muted ? unmuteMonitor({ variables: { id } }) : muteMonitor({ variables: { id } });
 
   /* ----- HAProxy Status ----- */
-  const [getStatus, { data, error, loading }] = useGetNodeStatusLazyQuery();
-  const [enable] = useEnableHaProxyServerMutation({
+  const [getStatus, { data, error: getHaProxyStatusError, loading }] =
+    useGetNodeStatusLazyQuery();
+  const [enable, { error: enableHaProxyError }] = useEnableHaProxyServerMutation({
     onCompleted: () => getStatus(),
   });
-  const [disable] = useDisableHaProxyServerMutation({
+  const [disable, { error: disableHaProxyError }] = useDisableHaProxyServerMutation({
     onCompleted: () => getStatus(),
   });
 
@@ -102,7 +103,7 @@ export function NodeStatus({
     String(data?.haProxyStatus)
   ];
   const haProxyButtonDisabled =
-    !haProxy || loading || !!error || typeof haProxyOnline !== "boolean";
+    !haProxy || loading || !!getHaProxyStatusError || typeof haProxyOnline !== "boolean";
   const haProxyStatusText = haProxyOnline ? "Online" : "Offline";
   const haProxyButtonText = `${haProxyOnline ? "Remove" : "Add"} Node ${
     haProxyOnline ? "from" : "to"
@@ -136,6 +137,7 @@ export function NodeStatus({
         okColor: "error",
         cancelColor: "primary",
         promptText: `Are you sure you wish to remove node ${selectedNode?.name} from the inventory database?`,
+        error: deleteNodeError,
       },
     });
   };
@@ -151,6 +153,7 @@ export function NodeStatus({
           "{selectedNode}",
           selectedNode.name,
         ),
+        error: muteMonitorError || unmuteMonitorError,
       },
     });
   };
@@ -166,13 +169,14 @@ export function NodeStatus({
           ? text.removeFromRotation
           : text.addToRotation
         ).replaceAll("{selectedNode}", selectedNode.name),
+        error: enableHaProxyError || disableHaProxyError,
       },
     });
   };
 
   return (
     <>
-      <Paper style={{ padding: 10, height: 245 }} variant="outlined">
+      <Paper style={{ padding: 10, height: 250 }} variant="outlined">
         <Typography align="center" variant="h6" gutterBottom>
           {!selectedNode ? "Select Node to view Status" : "Selected Node"}
         </Typography>
@@ -242,7 +246,7 @@ export function NodeStatus({
                   <CircularProgress size={20} style={{ marginRight: 8 }} />
                   Checking HAProxy Status
                 </>
-              ) : error ? (
+              ) : getHaProxyStatusError ? (
                 "Failed to fetch"
               ) : !haProxy || haProxyOnline === "n/a" ? (
                 "No HAProxy"
@@ -253,10 +257,10 @@ export function NodeStatus({
           </Paper>
         </div>
 
-        {error && (
+        {getHaProxyStatusError && (
           <Alert severity="error">
             <AlertTitle>{"Error fetching HAProxy status"}</AlertTitle>
-            {error.message}
+            {getHaProxyStatusError.message}
           </Alert>
         )}
       </Paper>
