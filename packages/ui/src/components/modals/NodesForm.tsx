@@ -80,9 +80,9 @@ export function NodesForm({
         name: "",
         port: undefined,
         loadBalancers: [],
-        backend: "",
-        frontend: "",
-        server: "",
+        backend: undefined,
+        frontend: undefined,
+        server: undefined,
       },
       validate,
       validateOnChange: false,
@@ -97,10 +97,13 @@ export function NodesForm({
       const hostHasFqdn = Boolean(
         formData.hosts.find(({ id }) => id === values.host)?.fqdn,
       );
-      if (!hostHasFqdn) setHttps(false);
+      if (!hostHasFqdn) {
+        setHttps(false);
+        setFieldValue("https", false);
+      }
       setHostHasFqdn(hostHasFqdn);
     }
-  }, [values.host, formData]);
+  }, [values.host, formData, setFieldValue]);
 
   useEffect(() => {
     if (values.backend) {
@@ -130,14 +133,15 @@ export function NodesForm({
     if (update && selectedNode) {
       setFieldValue("chain", selectedNode.chain.id);
       setFieldValue("host", selectedNode.host.id);
-      setFieldValue("url", selectedNode.url.includes("https"));
+      setFieldValue("https", selectedNode.url.includes("https"));
       setFieldValue(
         "loadBalancers",
         selectedNode.loadBalancers.map(({ id }) => id),
       );
       setFieldValue("name", selectedNode.name);
-      setFieldValue("port", selectedNode.port);
+      setFieldValue("port", Number(selectedNode.port));
       setFieldValue("backend", selectedNode.backend);
+      setFieldValue("frontend", selectedNode.frontend);
       setFieldValue("server", selectedNode.server);
       setFieldValue("haProxy", selectedNode.haProxy);
     }
@@ -145,7 +149,7 @@ export function NodesForm({
 
   /* ----- Mutations ----- */
   const [submitCreate] = useCreateNodeMutation({
-    variables: { input: values },
+    variables: { input: { ...values, port: Number(values.port) } },
     onCompleted: () => {
       resetForm();
       refetchNodes();
@@ -159,7 +163,7 @@ export function NodesForm({
   });
 
   const [submitUpdate] = useUpdateNodeMutation({
-    variables: { update: { id: selectedNode?.id, ...values } },
+    variables: { update: { id: selectedNode?.id, ...values, port: Number(values.port) } },
     onCompleted: () => {
       resetForm();
       refetchNodes();
