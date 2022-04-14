@@ -8,13 +8,15 @@ import { HostsCSV } from "./HostsCSV";
 import { HostsForm } from "./HostsForm";
 import { NodesCSV } from "./NodesCSV";
 import { NodesForm } from "./NodesForm";
+import { LocationsForm } from "./LocationsForm";
 
 export type IModalTypes =
   | "confirmation"
   | "hostsCsv"
   | "hostsForm"
   | "nodesCsv"
-  | "nodesForm";
+  | "nodesForm"
+  | "locationsForm";
 
 export interface IModalState {
   modalType: IModalTypes;
@@ -31,6 +33,7 @@ const MODAL_TYPES = {
   hostsForm: HostsForm,
   nodesCsv: NodesCSV,
   nodesForm: NodesForm,
+  locationsForm: LocationsForm,
 };
 
 export function RootModal() {

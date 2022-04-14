@@ -47,6 +47,9 @@ const resolvers = {
     createHost: async (_, { input }) => {
       return await new AutomationService().createHost(input);
     },
+    createLocation: async (_, { name }) => {
+      return await LocationsModel.create({ name });
+    },
     createNode: async (_, { input }) => {
       return await new AutomationService().createNode(input);
     },

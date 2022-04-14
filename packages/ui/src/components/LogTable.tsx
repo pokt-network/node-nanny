@@ -33,7 +33,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
 import { ILogsQuery, IParsedLog } from "types";
-import { formatHeaderCell } from "utils";
+import { formatHeaderCell, s } from "utils";
 import SearchBar from "./SearchBar";
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -109,6 +109,7 @@ function EnhancedTableHead({
 
 interface TableProps {
   rows: ILogsQuery["logs"]["docs"];
+  numNodes: number;
   loading: boolean;
   loadItems: any;
   height?: number;
@@ -139,6 +140,7 @@ function getSortedColumns(row: any, header: boolean, columnsOrder: string[]) {
 
 export function LogTable({
   rows,
+  numNodes,
   loading,
   loadItems,
   height,
@@ -164,7 +166,7 @@ export function LogTable({
     });
   };
 
-  const parsedRows = parseLogsForTable(rows || []);
+  let parsedRows = parseLogsForTable(rows || []);
 
   const handleFiltersSelect = (event) => {
     setFilter(event.target.value);
@@ -277,17 +279,21 @@ export function LogTable({
   const { filters, filterFunctions } = filterOptions || {};
   const filterEnabled = Boolean(filterOptions && filters && filterFunctions);
   if (filterEnabled && filter && filter !== "All") {
-    rows = rows.filter(filterFunctions[filter]);
+    console.log({ parsedRows });
+    parsedRows = parsedRows.filter(filterFunctions[filter]);
   }
 
   return (
     <Box sx={{ width: "100%" }}>
       <Paper sx={{ width: "100%", overflow: "hidden", padding: "16px" }}>
-        {type && (
-          <Typography align="center" variant="h4" gutterBottom>
-            {type}
-          </Typography>
-        )}
+        <Typography align="center" variant="h4" gutterBottom>
+          {!numNodes || !rows?.length
+            ? "Select nodes to view logs"
+            : `Showing ${parsedRows.length} ${
+                filter === "All" ? "" : filter
+              } log entries for ${numNodes} Node${s(numNodes)}`}
+        </Typography>
+
         <div style={{ display: "flex", marginRight: 16 }}>
           {filterEnabled && (
             <FormControl style={{ maxHeight: 56, width: "25%", marginRight: 16 }}>
