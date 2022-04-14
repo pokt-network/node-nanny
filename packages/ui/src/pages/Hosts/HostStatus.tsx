@@ -72,7 +72,7 @@ export function HostStatus({
           alignItems: "center",
         }}
       >
-        <Paper style={{ width: 434, padding: 10 }} variant="outlined">
+        <Paper style={{ width: 434, padding: 10, marginBottom: 16 }} variant="outlined">
           <Typography align="center" variant="h6" gutterBottom>
             {!selectedHost ? "Select Host to view Status" : "Selected Host"}
           </Typography>

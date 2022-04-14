@@ -29,7 +29,7 @@ export default function LogsDatadog() {
             PNF Internal
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Monitor is running in internal mode and logs are being sent to Datadog.
+            Monitor is in internal mode and logs are being sent to Datadog.
           </Typography>
         </CardContent>
         <CardActions>
