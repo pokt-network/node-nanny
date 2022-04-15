@@ -67,7 +67,7 @@ export function RootModal() {
       }}
     >
       <Fade in={open}>
-        <div style={{ padding: 32 }}>
+        <div>
           <SpecifiedModal {...modalProps} />
         </div>
       </Fade>
