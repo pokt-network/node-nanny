@@ -58,7 +58,7 @@ export function Hosts() {
     ModalHelper.open({
       modalType: "hostsCsv",
       modalProps: {
-        refetchNodes: refetch,
+        refetchHosts: refetch,
         locations: locationsData?.locations,
         hostNames,
       },

@@ -185,7 +185,9 @@ export function Table({
   const displayRows = mapDisplay ? rows.map(mapDisplay) : rows;
 
   const getHeaderText = (): string => {
-    const unfiltered = `${rows?.length} ${type}${s(rows.length)}`;
+    const unfiltered = `${
+      type === "Node" || type === "Host" ? rows?.length : ""
+    } ${type}${s(rows.length)}`;
     return !filterEnabled || filter === "All"
       ? unfiltered
       : `${rows?.length} ${filter} ${type}${s(rows.length)}`;
