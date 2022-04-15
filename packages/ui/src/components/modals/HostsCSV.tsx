@@ -49,12 +49,12 @@ export function HostsCSV({ locations, hostNames, refetchHosts }: NodesCSVProps) 
   const columnsOrder = ["name", "location", "ip", "fqdn", "loadBalancer"];
 
   /* ----- CSV Validation ----- */
-  const validLocations = locations.map(({ name }) => name);
+  const validLocations = locations?.map(({ name }) => name);
   const schema = {
     name: (name: string) => !!name && typeof name === "string",
     loadBalancer: (loadBalancer: string) =>
       typeof JSON.parse(loadBalancer) === "boolean" || !JSON.parse(loadBalancer),
-    location: (location: string) => validLocations.includes(location.toUpperCase()),
+    location: (location: string) => validLocations?.includes(location.toUpperCase()),
     ip: (ip: string) => !ip || regexTest(ip, "ip"),
     fqdn: (fqdn: string) => !fqdn || regexTest(fqdn, "fqdn"),
   };
@@ -76,9 +76,7 @@ export function HostsCSV({ locations, hostNames, refetchHosts }: NodesCSVProps) 
         invalidHosts.push(`[${host.name}]: ${invalidFields.join(", ")}`);
       }
       if (!host.fqdn && !host.ip) {
-        invalidHosts.push(
-          `[${host.name}]: Host must have either an IP or a FQDN, but not both.`,
-        );
+        invalidHosts.push(`[${host.name}]: Host must have either an IP or a FQDN.`);
       }
       if (hostNames.includes(host.name)) {
         invalidHosts.push(`[${host.name}]: Host name is already taken.`);
@@ -134,12 +132,16 @@ export function HostsCSV({ locations, hostNames, refetchHosts }: NodesCSVProps) 
         </Typography>
         <CSVReader onFileLoaded={parseHostsCsv} parserOptions={{ header: true }} />
         {hostsError && (
-          <Alert severity="error">
+          <Alert severity="error" style={{ overflow: "scroll", maxHeight: 200 }}>
             <AlertTitle>
               Warning: Invalid fields detected. Please correct the following fields before
               attempting to upload Hosts CSV.
             </AlertTitle>
-            {hostsError}
+            {hostsError.includes("\n") ? (
+              hostsError.split("\n").map((error) => <Typography>{error}</Typography>)
+            ) : (
+              <Typography>{hostsError}</Typography>
+            )}
           </Alert>
         )}
         {backendError && (
@@ -152,6 +154,7 @@ export function HostsCSV({ locations, hostNames, refetchHosts }: NodesCSVProps) 
             type={`Adding ${hosts.length} Host${hosts.length === 1 ? "" : "s"}`}
             rows={hosts}
             columnsOrder={columnsOrder}
+            height={400}
           />
         )}
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
@@ -165,11 +168,13 @@ export function HostsCSV({ locations, hostNames, refetchHosts }: NodesCSVProps) 
           </Button>
           <Button
             disabled={Boolean(!hosts || hostsError || backendError)}
+            style={{ marginTop: 8, height: 40, width: 150 }}
             onClick={submitCSV}
             variant="contained"
+            color="success"
           >
             {loading ? (
-              <CircularProgress size={20} />
+              <CircularProgress size={20} style={{ color: "white" }} />
             ) : !hosts?.length ? (
               "No hosts"
             ) : (

@@ -22,6 +22,7 @@ export interface INodeCsvInput {
   port: number;
   haProxy: boolean;
   backend?: string;
+  frontend?: string;
   server?: string;
 }
 
