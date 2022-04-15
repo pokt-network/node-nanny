@@ -39,7 +39,6 @@ interface ICSVNode {
   name: string;
   loadBalancers: string;
   port: string;
-  url: string;
   backend?: string;
   frontend?: string;
   server?: string;
@@ -64,38 +63,41 @@ export function NodesCSV({
 
   /* ----- Table Options ---- */
   const columnsOrder = [
-    "name",
-    "chain",
-    "host",
-    "port",
-    "url",
     "https",
-    "server",
-    "loadBalancers",
+    "chain",
     "haProxy",
+    "host",
+    "name",
+    "loadBalancers",
+    "port",
+    "backend",
+    "frontend",
+    "server",
   ];
 
   /* ----- CSV Validation ----- */
-  const validChains = chains.map(({ name }) => name);
-  const validHosts = hosts.map(({ name }) => name);
-  const hostsWithFqdn = hosts.filter(({ fqdn }) => Boolean(fqdn)).map(({ name }) => name);
-  const validLoadBalancers = loadBalancers.map(({ name }) => name);
+  const validChains = chains?.map(({ name }) => name);
+  const validHosts = hosts?.map(({ name }) => name);
+  const hostsWithFqdn = hosts
+    ?.filter(({ fqdn }) => Boolean(fqdn))
+    .map(({ name }) => name);
+  const validLoadBalancers = loadBalancers?.map(({ name }) => name);
   const schema = {
-    chain: (chain: string) => !!chain && validChains.includes(chain.toUpperCase()),
-    host: (host: string) => !!host && validHosts.includes(host.toLowerCase()),
+    chain: (chain: string) => !!chain && validChains?.includes(chain.toUpperCase()),
+    host: (host: string) => !!host && validHosts?.includes(host.toLowerCase()),
     https: (https: string) =>
       https.toLowerCase() === "false" || https.toLowerCase() === "true",
     name: (name: string) => !!name,
     haProxy: (haProxy: string) =>
       haProxy.toLowerCase() === "true" || haProxy.toLowerCase() === "false",
     loadBalancers: (loadBalancers: string) =>
+      !loadBalancers?.length ||
       loadBalancers
         .toLowerCase()
         .split(",")
         .map((lb) => lb.trim())
-        .every((lb: string) => validLoadBalancers.includes(lb)),
+        .every((lb: string) => validLoadBalancers?.includes(lb)),
     port: (port: string) => regexTest(port, "port"),
-    url: (url: string) => regexTest(url, "url"),
   };
   const validate = (node: any, schema: { [key: string]: (value: string) => boolean }) =>
     Object.keys(schema).filter((key) => !schema[key](node[key]));
@@ -126,7 +128,7 @@ export function NodesCSV({
     const invalidNodes: any = [];
     const parsedNodes = nodesWithRequiredFields.map((node) => {
       const invalidFields = validate(node, schema);
-      if (node.https.toLowerCase() === "true" && hostsWithFqdn.includes(node.host)) {
+      if (node.https.toLowerCase() === "true" && !hostsWithFqdn.includes(node.host)) {
         invalidFields.push(
           `[${node.name}]: Host does not have an FQDN; HTTPS is not allowed without an FQDN.`,
         );
@@ -151,7 +153,7 @@ export function NodesCSV({
       }
       return {
         ...node,
-        https: Boolean(node.https.toLowerCase()),
+        https: Boolean(node.https.toLowerCase() === "true"),
         chain: node.chain.toUpperCase(),
         host: node.host.toLowerCase(),
         name: node.name,
@@ -194,20 +196,34 @@ export function NodesCSV({
   return (
     <div>
       <Box sx={style}>
-        <Typography id="modal-modal-title" variant="h6" component="h2">
+        <Typography variant="h6" component="h2">
           Upload Nodes CSV
+        </Typography>
+        <Typography gutterBottom>
+          Note: Batch creation of nodes via CSV import can take a long time. This is
+          because Discord channels and webhooks for each chain/location combination are
+          created for each node that represents a chain/location that does not already
+          exist in the inventory database. Discord imposes rate limiting on the automated
+          creation of webhooks so each new channel can take 5-10 seconds to create.{" "}
+        </Typography>
+        <Typography gutterBottom>
+          Please do not navigate away, refresh or close this window during this time.
         </Typography>
         <CSVReader
           onFileLoaded={parseNodesCSV}
           parserOptions={{ header: true, skipEmptyLines: true }}
         />
         {nodesError && (
-          <Alert severity="error">
+          <Alert severity="error" style={{ overflow: "scroll", maxHeight: 200 }}>
             <AlertTitle>
               Warning: There were one or more issues with your CSV format. Please correct
               the following issues before attempting to create nodes via CSV.
             </AlertTitle>
-            {nodesError}
+            {nodesError.includes("\n") ? (
+              nodesError.split("\n").map((error) => <Typography>{error}</Typography>)
+            ) : (
+              <Typography>{nodesError}</Typography>
+            )}
           </Alert>
         )}
         {backendError && (
@@ -216,11 +232,14 @@ export function NodesCSV({
           </Alert>
         )}
         {nodes && (
-          <Table
-            type={`Adding ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`}
-            rows={nodes}
-            columnsOrder={columnsOrder}
-          />
+          <div>
+            <Table
+              type={`Adding ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`}
+              rows={nodes}
+              columnsOrder={columnsOrder}
+              height={400}
+            />
+          </div>
         )}
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
           <Button
@@ -233,12 +252,13 @@ export function NodesCSV({
           </Button>
           <Button
             disabled={Boolean(!nodes || nodesError || backendError)}
-            style={{ marginTop: 8 }}
+            style={{ marginTop: 8, height: 40, width: 150 }}
             onClick={submitCSV}
             variant="contained"
+            color="success"
           >
             {loading ? (
-              <CircularProgress size={20} />
+              <CircularProgress size={20} style={{ color: "white" }} />
             ) : !nodes?.length ? (
               "No nodes"
             ) : (
