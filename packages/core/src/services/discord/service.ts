@@ -30,14 +30,18 @@ export class Service {
 
   public async addWebhookForNode({ chain, host }: INode): Promise<void> {
     const { name } = chain;
-    const { location } = host;
+    const {
+      location: { name: location },
+    } = host;
 
-    if (await WebhookModel.exists({ chain: name, location: location.name })) {
+    const noDiscordVars = !this.token || !this.serverId;
+    const webhookExists = await WebhookModel.exists({ chain: name, location });
+    if (noDiscordVars || webhookExists) {
       return;
     }
 
-    const categoryName = `NODE-NANNY-${location.name}`;
-    const channelName = `${name}-${location.name}`.toLowerCase();
+    const categoryName = `NODE-NANNY-${location}`;
+    const channelName = `${name}-${location}`.toLowerCase();
 
     const server = await this.initServer();
     const allChannels = await server.channels.fetch();
@@ -56,7 +60,7 @@ export class Service {
       });
 
       const { url } = await channel.createWebhook(`${channelName}-alert`);
-      await WebhookModel.create({ chain: name, location: location.name, url });
+      await WebhookModel.create({ chain: name, location, url });
     }
   }
 
