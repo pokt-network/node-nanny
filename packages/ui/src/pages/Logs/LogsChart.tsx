@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from "react";
-import { Alert, AlertTitle, LinearProgress, Typography } from "@mui/material";
+import { Alert, AlertTitle, LinearProgress } from "@mui/material";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,7 +12,7 @@ import { Bar } from "react-chartjs-2";
 
 import { useLogsForChartLazyQuery, ILogsForChartQuery } from "types";
 import { ITimePeriod } from "./periods";
-import { deepEqual, s } from "../../utils";
+import { deepEqual } from "../../utils";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
@@ -72,15 +72,15 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
         label: "Healthy",
         stack: arbitraryStackKey,
         data: oks,
-        backgroundColor: "rgba(63,203,226,1)",
-        hoverBackgroundColor: "rgba(46,185,235,1)",
+        backgroundColor: "#1D8AED",
+        hoverBackgroundColor: "#1565ad",
       },
       {
         label: "Error",
         stack: arbitraryStackKey,
         data: errors,
-        backgroundColor: "rgba(163,103,126,1)",
-        hoverBackgroundColor: "rgba(140,85,100,1)",
+        backgroundColor: "#F93232",
+        hoverBackgroundColor: "#b52222",
       },
     ],
   };
@@ -88,41 +88,31 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
 
   if (error) {
     return (
-      <>
-        <Alert severity="error">
-          <AlertTitle>{"Error fetching logs: "}</AlertTitle>
-          {error.message}
-        </Alert>
-      </>
+      <Alert severity="error">
+        <AlertTitle>{"Error fetching logs: "}</AlertTitle>
+        {error.message}
+      </Alert>
     );
   }
 
   return (
-    <>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          height: "200px",
-          width: "100%",
-          marginBottom: 32,
-        }}
-      >
-        <Typography>
-          Logs for{" "}
-          {!nodeIds?.length
-            ? "all nodes"
-            : `${nodeIds?.length} node${s(nodeIds?.length)}`}
-        </Typography>
-        {!error && !logData?.length && (
-          <div style={{ width: "100%" }}>
-            <LinearProgress />
-          </div>
-        )}
-        <Bar data={data} options={options} height="200px" width="100"></Bar>
-      </div>
-    </>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        height: "200px",
+        width: "100%",
+        marginBottom: 32,
+      }}
+    >
+      {!error && !logData?.length && (
+        <div style={{ width: "100%" }}>
+          <LinearProgress />
+        </div>
+      )}
+      <Bar data={data} options={options} height="200px" width="100"></Bar>
+    </div>
   );
 }
 
