@@ -34,12 +34,12 @@ const nodesSchema = new Schema<INode>(
     status: {
       type: String,
       enum: Object.values(HealthTypes.EErrorStatus),
-      default: HealthTypes.EErrorStatus.OK,
+      default: HealthTypes.EErrorStatus.PENDING,
     },
     conditions: {
       type: String,
       enum: Object.values(HealthTypes.EErrorConditions),
-      default: HealthTypes.EErrorConditions.HEALTHY,
+      default: HealthTypes.EErrorConditions.PENDING,
     },
     loadBalancers: [{ type: Schema.Types.ObjectId, ref: "Hosts" }],
     backend: String,
