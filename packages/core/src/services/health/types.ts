@@ -38,6 +38,7 @@ export enum EErrorConditions {
   NOT_SYNCHRONIZED = "NOT_SYNCHRONIZED",
   NO_PEERS = "NO_PEERS",
   PEER_NOT_SYNCHRONIZED = "PEER_NOT_SYNCHRONIZED",
+  PENDING = "PENDING",
 }
 
 export enum EErrorStatus {
@@ -45,6 +46,7 @@ export enum EErrorStatus {
   OK = "OK",
   INFO = "INFO",
   WARNING = "WARNING",
+  PENDING = "PENDING",
 }
 
 export interface IBlockHeight {
