@@ -14,7 +14,7 @@ export default function SearchBar({ value, onChange, type, sx }: ISearchBarProps
   const searchText = `Search${type ? ` ${type}s` : ""}`;
 
   return (
-    <FormControl fullWidth sx={sx}>
+    <FormControl fullWidth size="small" sx={sx}>
       {type && <InputLabel htmlFor="search-input">{searchText}</InputLabel>}
       <OutlinedInput
         id="search-input"
