@@ -3,7 +3,6 @@ import { styled, createTheme, ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import MuiDrawer from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
-import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
@@ -16,28 +15,6 @@ import { Home, Hosts, Logs, Nodes } from "./pages";
 import { Nav, RootModal } from "./components";
 
 const drawerWidth: number = 240;
-
-interface AppBarProps extends MuiAppBarProps {
-  open?: boolean;
-}
-
-const AppBar = styled(MuiAppBar, {
-  shouldForwardProp: (prop) => prop !== "open",
-})<AppBarProps>(({ theme, open }) => ({
-  zIndex: theme.zIndex.drawer + 1,
-  transition: theme.transitions.create(["width", "margin"], {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  ...(open && {
-    marginLeft: drawerWidth,
-    width: `calc(100% - ${drawerWidth}px)`,
-    transition: theme.transitions.create(["width", "margin"], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-  }),
-}));
 
 const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== "open" })(
   ({ theme, open }) => ({
@@ -61,54 +38,50 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== "open" 
           width: theme.spacing(9),
         },
       }),
+      background: "linear-gradient(123.23deg, #141C24 11.81%, #262A34 98.51%)",
+      borderRadius: "0px 20px 20px 0px",
+      border: "none"
     },
   }),
 );
 
-const mdTheme = createTheme();
+const mdTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: "#C5EC4B"
+    },
+    secondary: {
+      main: "#1D8AED"
+    },
+    success: {
+      main: "#307C0D"
+    },
+    error: {
+      main: "#F93232"
+    },
+    background: {
+      paper: "#192430",
+      default: "#192430"
+    }
+  },
+  typography: {
+    fontFamily: 'Manrope, sans-serif'
+  }
+});
 
 function DashboardContent() {
   const [open, setOpen] = React.useState(true);
   const toggleDrawer = () => {
     setOpen(!open);
   };
+  const year = new Date().getFullYear()
 
   return (
     <ThemeProvider theme={mdTheme}>
       <RootModal />
-      <Box sx={{ display: "flex" }}>
+      <Box sx={{ display: "flex", background: "linear-gradient(106.7deg, #0E1318 16.95%, #111A1F 87.74%)" }}>
         <CssBaseline />
-        <AppBar position="absolute" open={open}>
-          <Toolbar
-            sx={{
-              pr: "24px", // keep right padding when drawer closed
-            }}
-          >
-            <IconButton
-              edge="start"
-              color="inherit"
-              aria-label="open drawer"
-              onClick={toggleDrawer}
-              sx={{
-                marginRight: "36px",
-                ...(open && { display: "none" }),
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography
-              flex="1"
-              align="center"
-              component="h1"
-              variant="h6"
-              color="black"
-              noWrap
-              sx={{ flexGrow: 1 }}
-            >
-              Pocket Node Nanny
-            </Typography>
-          </Toolbar>
-        </AppBar>
         <Drawer variant="permanent" open={open}>
           <Toolbar
             sx={{
@@ -118,34 +91,61 @@ function DashboardContent() {
               px: [1],
             }}
           >
-            <IconButton onClick={toggleDrawer}>
-              <ChevronLeftIcon />
+            <IconButton
+              edge="start"
+              color="inherit"
+              aria-label="toggle navigation drawer"
+              aria-expanded={!!open}
+              onClick={toggleDrawer}
+            >
+              <MenuIcon sx={{
+                ...(open && { display: "none" })
+              }} />
+              <ChevronLeftIcon sx={{
+                ...(!open && { display: "none" })
+              }} />
             </IconButton>
           </Toolbar>
           <Nav />
+          <Box sx={{
+            display: "flex",
+            alignItems: "end",
+            paddingBottom: 6,
+            paddingLeft: 2,
+            paddingRight: 2,
+            height: "100%"
+          }}>
+            <Typography variant="body2">© {year} Pocket Network Inc</Typography>
+          </Box>
         </Drawer>
-        <Box
+        <Container
           component="main"
+          maxWidth="lg"
           sx={{
-            backgroundColor: (theme) =>
-              theme.palette.mode === "light"
-                ? theme.palette.grey[100]
-                : theme.palette.grey[900],
             flexGrow: 1,
             height: "100vh",
             overflow: "auto",
           }}
         >
-          <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <div>___</div>
-          </Container>
+          <Box sx={{ mt: 2, mb: 6 }}>
+            <Typography
+              flex="1"
+              component="h1"
+              variant="h6"
+              noWrap
+              sx={{ flexGrow: 1 }}
+            >
+              Pocket Node Nanny
+            </Typography>
+          </Box>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="/nodes" element={<Nodes />} />
             <Route path="/hosts" element={<Hosts />} />
           </Routes>
-        </Box>
+          <Box mb={6} />
+        </Container>
       </Box>
     </ThemeProvider>
   );
