@@ -3,11 +3,13 @@ import {
   Alert,
   AlertTitle,
   Autocomplete,
+  Box,
   Checkbox,
   FormControl,
   InputLabel,
   LinearProgress,
   MenuItem,
+  Paper,
   Select,
   SelectChangeEvent,
   TextField,
@@ -15,7 +17,7 @@ import {
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 
-import { LogTable } from "components";
+import { LogsTable } from "./LogsTable";
 import { INode, useLogsLazyQuery, useNodesQuery } from "types";
 import { ITimePeriod, timePeriods } from "./periods";
 
@@ -87,54 +89,56 @@ export default function LogsMongo() {
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        margin: "16px",
       }}
     >
-      <Autocomplete
-        fullWidth
-        multiple
-        id="nodes-search"
-        value={nodes.map((nodeId) => sortedNodes.find(({ id }) => id === nodeId))}
-        options={sortedNodes}
-        disableCloseOnSelect
-        getOptionLabel={(node) => node.name}
-        renderOption={(props, node: any, { selected }) => (
-          <li {...props}>
-            <Checkbox
-              icon={icon}
-              checkedIcon={checkedIcon}
-              style={{ marginRight: 8 }}
-              checked={selected}
-            />
-            {getNodeNameForHealthCheck(node)}
-          </li>
-        )}
-        onChange={(_event, value: any) => setNodes(value.map(({ id }) => id))}
-        renderInput={(params) => (
-          <TextField {...params} label="Select Nodes" placeholder="Select nodes" />
-        )}
-      />
-
-      <div style={{ marginTop: "10px" }} />
-      <FormControl fullWidth>
-        <InputLabel id="chain-label">Time Period</InputLabel>
-        <Select
-          labelId="chain-label"
-          value={logPeriod.code}
-          label="Time Period"
-          onChange={handleTimePeriodChange}
-        >
-          {timePeriods.map(({ code, label }) => (
-            <MenuItem key={code} value={code}>
-              {label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      <div style={{ marginTop: "10px" }} />
-      <LogsChart logPeriod={logPeriod} nodeIds={nodes} />
-      <div style={{ marginTop: "10px" }} />
-      <LogTable
+      <Paper sx={{ width: "100%", padding: 2 }}>
+        <FormControl fullWidth>
+          <Autocomplete
+            fullWidth
+            multiple
+            id="nodes-search"
+            value={nodes.map((nodeId) => sortedNodes.find(({ id }) => id === nodeId))}
+            options={sortedNodes}
+            disableCloseOnSelect
+            getOptionLabel={(node) => node.name}
+            renderOption={(props, node: any, { selected }) => (
+              <li {...props}>
+                <Checkbox
+                  icon={icon}
+                  checkedIcon={checkedIcon}
+                  style={{ marginRight: 8 }}
+                  checked={selected}
+                />
+                {getNodeNameForHealthCheck(node)}
+              </li>
+            )}
+            onChange={(_event, value: any) => setNodes(value.map(({ id }) => id))}
+            renderInput={(params) => (
+              <TextField {...params} label="Select Nodes" placeholder="Select nodes" />
+            )}
+          />
+        </FormControl>
+        <Box mt={2} />
+        <FormControl fullWidth>
+          <InputLabel id="chain-label">Time Period</InputLabel>
+          <Select
+            labelId="chain-label"
+            value={logPeriod.code}
+            label="Time Period"
+            onChange={handleTimePeriodChange}
+          >
+            {timePeriods.map(({ code, label }) => (
+              <MenuItem key={code} value={code}>
+                {label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <Box mt={2} />
+        <LogsChart logPeriod={logPeriod} nodeIds={nodes} />
+      </Paper>
+      <Box mt={4} />
+      <LogsTable
         searchable
         rows={logsData?.logs.docs}
         numNodes={nodes?.length}
