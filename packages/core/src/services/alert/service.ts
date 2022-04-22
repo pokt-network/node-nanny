@@ -27,21 +27,21 @@ export class Service {
   }
 
   /* ----- Discord Alerts ----- */
-  sendErrorChannel = async ({ title, message }: AlertTypes.IErrorChannelAlertParams) => {
-    colorLog(`${title}\n${message}`, "red");
-    try {
-      return await this.sendDiscordMessage({
-        title,
-        color: AlertColor.ERROR,
-        channel: Env("MONITOR_TEST")
-          ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST
-          : AlertTypes.Webhooks.WEBHOOK_ERRORS,
-        fields: [{ name: "Error", value: this.trimMessage(message) }],
-      });
-    } catch (error) {
-      console.error(error?.message);
-    }
-  };
+  // sendErrorChannel = async ({ title, message }: AlertTypes.IErrorChannelAlertParams) => {
+  //   colorLog(`${title}\n${message}`, "red");
+  //   try {
+  //     return await this.sendDiscordMessage({
+  //       title,
+  //       color: AlertColor.ERROR,
+  //       channel: Env("MONITOR_TEST")
+  //         ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST
+  //         : AlertTypes.Webhooks.WEBHOOK_ERRORS,
+  //       fields: [{ name: "Error", value: this.trimMessage(message) }],
+  //     });
+  //   } catch (error) {
+  //     console.error(error?.message);
+  //   }
+  // };
 
   sendError = async ({
     title,
