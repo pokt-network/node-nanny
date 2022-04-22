@@ -23,7 +23,6 @@ export class App {
   /** Runs a health check on all non-muted nodes in the inventory DB at a set interval.
    * Events are published to REDIS and logs written to MongoDB. */
   async main() {
-    console.log("INTERVAL IS", Env("MONITOR_INTERVAL"), Env("MONGO_URI"));
     await connect();
     await createFrontendAlertChannel();
 
@@ -36,6 +35,13 @@ export class App {
     const mode = Env("MONITOR_TEST") ? "TEST" : "PRODUCTION";
     const secs = this.interval / 1000;
     console.log(`Starting monitor in ${mode} mode with ${secs} sec interval ...`);
+
+    /* ----- PNF Interval Dispatchers Report ----- */
+    if (Env("PNF") && nodes.some(({ dispatch }) => dispatch === true)) {
+      setInterval(async () => {
+        await publish.pnfDispatchersReport();
+      }, 600000);
+    }
 
     /* ----- Start Node Monitoring Interval ----- */
     console.log(`📺 Monitor running. Monitoring ${nodes.length} node${s(nodes.length)}`);
