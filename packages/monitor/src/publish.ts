@@ -63,8 +63,4 @@ export class Publish {
       }
     }
   }
-
-  // async pnfDispatchersReport() {
-  //   await this.redis.publish("pnf-dispatch-report", "true");
-  // }
 }
