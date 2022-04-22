@@ -41,18 +41,29 @@ export function NodeStatus({
   refetchNodes,
 }: INodeStatusProps) {
   /* ----- Display Node ----- */
-  const { id, name, backend, frontend, port, server, url, muted, haProxy } =
-    selectedNode || {
-      id: "",
-      name: "",
-      backend: "",
-      frontend: "",
-      port: "",
-      server: "",
-      url: "",
-      muted: undefined,
-      haProxy: undefined,
-    };
+  const {
+    id,
+    name,
+    backend,
+    frontend,
+    port,
+    server,
+    url,
+    muted,
+    haProxy,
+    loadBalancers,
+  } = selectedNode || {
+    id: "",
+    name: "",
+    backend: "",
+    frontend: "",
+    port: "",
+    server: "",
+    url: "",
+    muted: undefined,
+    haProxy: undefined,
+    loadBalancers: [],
+  };
 
   /* ----- Delete Node ----- */
   const [submit, { error: deleteNodeError }] = useDeleteNodeMutation({
@@ -178,7 +189,7 @@ export function NodeStatus({
 
   return (
     <>
-      <Paper style={{ padding: 10, height: 250 }} variant="outlined">
+      <Paper style={{ padding: 10, height: "auto" }} variant="outlined">
         <Typography align="center" variant="h6" gutterBottom>
           {!selectedNode ? "Select Node to view Status" : "Selected Node"}
         </Typography>
@@ -194,6 +205,11 @@ export function NodeStatus({
             <Typography>Port: {port}</Typography>
             <Typography>Server: {server ?? "None"}</Typography>
             <Typography gutterBottom>URL: {url}</Typography>
+            {loadBalancers?.length && (
+              <Typography gutterBottom>
+                Load Balancers: {loadBalancers.map(({ name }) => name).join(",")}
+              </Typography>
+            )}
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <Button
                 onClick={handleOpenUpdateNodeModal}

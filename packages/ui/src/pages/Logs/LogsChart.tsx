@@ -28,7 +28,7 @@ interface LogsChartProps {
 
 function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
   const { format, increment, numPeriods, timePeriod } = logPeriod;
-  const [logData, setLogData] = useState<ILogsForChartQuery["logsForChart"]>([]);
+  const [logData, setLogData] = useState<ILogsForChartQuery["logsForChart"]>(undefined);
 
   const getQueryVars = useCallback(() => {
     const endDate = dayjs().toISOString();
@@ -38,12 +38,12 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
     return queryVars;
   }, [numPeriods, timePeriod, increment, nodeIds]);
 
-  const [submit, { error }] = useLogsForChartLazyQuery({
+  const [submit, { error, loading }] = useLogsForChartLazyQuery({
     onCompleted: ({ logsForChart }) => setLogData(logsForChart),
   });
 
   useEffect(() => {
-    submit({ variables: { input: getQueryVars() } });
+    if (nodeIds?.length) submit({ variables: { input: getQueryVars() } });
   }, [logPeriod, submit, getQueryVars]);
 
   useEffect(() => {
@@ -53,7 +53,7 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
     return () => clearInterval(refetchInterval);
   }, [submit, getQueryVars]);
 
-  const { labels, errors, oks } = logData.reduce(
+  const { labels, errors, oks } = logData?.reduce(
     (arrays: { labels: string[]; errors: number[]; oks: number[] }, entry) => {
       return {
         labels: [...arrays.labels, dayjs(entry.timestamp).format(format)],
@@ -115,7 +115,7 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
             ? "all nodes"
             : `${nodeIds?.length} node${s(nodeIds?.length)}`}
         </Typography>
-        {!error && !logData?.length && (
+        {!error && loading && !logData?.length && (
           <div style={{ width: "100%" }}>
             <LinearProgress />
           </div>
