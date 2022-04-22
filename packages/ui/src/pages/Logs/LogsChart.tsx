@@ -110,10 +110,9 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
         }}
       >
         <Typography>
-          Logs for{" "}
           {!nodeIds?.length
-            ? "all nodes"
-            : `${nodeIds?.length} node${s(nodeIds?.length)}`}
+            ? "Select node(s) to view logs"
+            : `Logs for ${nodeIds?.length} node${s(nodeIds?.length)}`}
         </Typography>
         {!error && loading && !logData?.length && (
           <div style={{ width: "100%" }}>
