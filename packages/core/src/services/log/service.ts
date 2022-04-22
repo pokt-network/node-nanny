@@ -5,11 +5,13 @@ import { FilterQuery } from "mongoose";
 import { LogsModel, ILog, IPaginatedLogs } from "../../models";
 import { INodeLogParams, ILogChartParams, ILogForChart } from "./types";
 
+import Env from "../../environment";
+
 export class Service {
   public init(id: string, name: string): Logger {
     const transport = {
       mongodb: new transports.MongoDB({
-        db: process.env.MONGO_URI,
+        db: Env("MONGO_URI"),
         expireAfterSeconds: 60,
         label: id,
         collection: "logs",
@@ -17,10 +19,12 @@ export class Service {
       }),
       datadog: new transports.Http({
         host: "http-intake.logs.datadoghq.eu",
-        path: `/api/v2/logs?dd-api-key=${process.env.DD_API_KEY}&ddsource=nodejs&service=node-nanny/${name}`,
+        path: `/api/v2/logs?dd-api-key=${Env(
+          "DD_API_KEY",
+        )}&ddsource=nodejs&service=node-nanny/${name}`,
         ssl: true,
       }),
-    }[process.env.MONITOR_LOGGER];
+    }[Env("MONITOR_LOGGER")];
 
     return createLogger({
       level: "info",

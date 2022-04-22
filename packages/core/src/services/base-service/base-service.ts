@@ -5,6 +5,8 @@ import { colorLog, s } from "../../utils";
 import { Service as AlertService } from "../alert";
 import { Service as HAProxyService } from "../haproxy";
 
+import Env from "../../environment";
+
 export class Service {
   private haProxy: HAProxyService;
   public alert: AlertService;
@@ -93,11 +95,11 @@ export class Service {
 
   /** Ensures that the Load Balancer's IP is replaced with locahost when running in test mode.
    * This prevents the automation from taking production nodes out of protation. */
-  private getLoadBalancerDomain(ip: string): string {
-    if (process.env.MONITOR_TEST === "1") {
+  private getLoadBalancerDomain(domain: string): string {
+    if (Env("MONITOR_TEST")) {
       return "ec2-3-145-99-143.us-east-2.compute.amazonaws.com";
     }
-    return ip;
+    return domain;
   }
 
   /* ----- Server Check Methods ----- */
@@ -165,7 +167,8 @@ export class Service {
 
   /* ----- Message String Methods ----- */
   getHAProxyMessage({ destination, loadBalancers }: IRotationParams): string {
-    if (process.env.MONITOR_TEST === "1") return "";
+    if (Env("MONITOR_TEST")) return "";
+
     const urls = loadBalancers
       .map(({ url, ip }) => `http://${url || ip}:8050/stats?scope=${destination}`)
       .join("\n");
