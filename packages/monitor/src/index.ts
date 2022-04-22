@@ -36,13 +36,6 @@ export class App {
     const secs = this.interval / 1000;
     console.log(`Starting monitor in ${mode} mode with ${secs} sec interval ...`);
 
-    /* ----- PNF Interval Dispatchers Report ----- */
-    // if (Env("PNF") && nodes.some(({ dispatch }) => dispatch === true)) {
-    //   setInterval(async () => {
-    //     await publish.pnfDispatchersReport();
-    //   }, 600000);
-    // }
-
     /* ----- Start Node Monitoring Interval ----- */
     console.log(`📺 Monitor running. Monitoring ${nodes.length} node${s(nodes.length)}`);
 

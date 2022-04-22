@@ -32,8 +32,7 @@ export interface IRedisEventParams {
   notSynced: boolean;
   status: HealthTypes.EErrorStatus;
   nodeCount: number;
-  warningMessage?: string;
-  downDispatchers?: string[];
+  dispatchFrontendDown?: boolean;
 }
 
 export enum PocketTypes {
