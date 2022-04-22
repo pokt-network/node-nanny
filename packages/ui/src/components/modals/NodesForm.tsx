@@ -352,7 +352,7 @@ export function NodesForm({
           </FormControl>
           <div style={{ marginTop: "10px" }} />
           <Typography align="center" gutterBottom>
-            Set Frontend to
+            Set
           </Typography>
           <FormControl fullWidth>
             <TextField
