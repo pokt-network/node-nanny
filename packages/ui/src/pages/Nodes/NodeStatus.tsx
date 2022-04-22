@@ -67,12 +67,14 @@ export function NodeStatus({
     onCompleted: ({ muteMonitor }) => {
       const { muted } = muteMonitor;
       setSelectedNode({ ...selectedNode!, muted });
+      ModalHelper.close();
     },
   });
   const [unmuteMonitor, { error: unmuteMonitorError }] = useUnmuteMonitorMutation({
     onCompleted: ({ unmuteMonitor }) => {
       const { muted } = unmuteMonitor;
       setSelectedNode({ ...selectedNode!, muted });
+      ModalHelper.close();
     },
   });
 
