@@ -279,7 +279,6 @@ export function LogTable({
   const { filters, filterFunctions } = filterOptions || {};
   const filterEnabled = Boolean(filterOptions && filters && filterFunctions);
   if (filterEnabled && filter && filter !== "All") {
-    console.log({ parsedRows });
     parsedRows = parsedRows.filter(filterFunctions[filter]);
   }
 
