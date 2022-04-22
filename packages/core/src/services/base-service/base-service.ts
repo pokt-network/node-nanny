@@ -29,8 +29,14 @@ export class Service {
     destination,
     server,
     loadBalancers,
+    manual = false,
   }: IRotationParams): Promise<boolean> {
     try {
+      if (!manual) {
+        const status = await this.getServerStatus({ destination, server, loadBalancers });
+        if (status === ELoadBalancerStatus.ONLINE) return;
+      }
+
       const loadBalancerResponse = await Promise.all(
         loadBalancers.map(({ fqdn, ip }) =>
           this.haProxy.enableServer({
