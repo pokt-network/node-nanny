@@ -47,8 +47,6 @@ export function NodesForm({
   selectedNode,
   update,
 }: NodesFormProps) {
-  const [backendDisabled, setBackendDisabled] = useState(false);
-  const [frontendDisabled, setFrontendDisabled] = useState(false);
   const [https, setHttps] = useState(false);
   const [hostHasFqdn, setHostHasFqdn] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -68,29 +66,45 @@ export function NodesForm({
     if (hostPortCombos.includes(`${values.host}/${values.port}`)) {
       errors.port = "Host/port combination is already taken";
     }
+    if (values.haProxy) {
+      if (!values.backend) {
+        errors.backend = "Backend is required if HAProxy enabled.";
+      }
+      if (!values.loadBalancers?.length) {
+        errors.loadBalancers = "At least one load balancer is required.";
+      }
+    }
     return errors;
   };
-  const { values, errors, handleChange, handleSubmit, setFieldValue, resetForm } =
-    useFormik({
-      initialValues: {
-        https: false,
-        chain: "",
-        haProxy: false,
-        host: "",
-        name: "",
-        port: undefined,
-        loadBalancers: [],
-        backend: undefined,
-        frontend: undefined,
-        server: undefined,
-      },
-      validate,
-      validateOnChange: false,
-      onSubmit: async () => {
-        setLoading(true);
-        update ? submitUpdate() : submitCreate();
-      },
-    });
+
+  const {
+    values,
+    errors,
+    handleChange,
+    handleSubmit,
+    setErrors,
+    setFieldValue,
+    resetForm,
+  } = useFormik({
+    initialValues: {
+      https: false,
+      chain: "",
+      haProxy: true,
+      host: "",
+      name: "",
+      port: undefined,
+      loadBalancers: [],
+      backend: "",
+      frontend: "",
+      server: "",
+    },
+    validate,
+    validateOnChange: false,
+    onSubmit: async () => {
+      setLoading(true);
+      update ? submitUpdate() : submitCreate();
+    },
+  });
 
   useEffect(() => {
     if (formData?.hosts && values.host) {
@@ -106,20 +120,14 @@ export function NodesForm({
   }, [values.host, formData, setFieldValue]);
 
   useEffect(() => {
-    if (values.backend) {
-      setFrontendDisabled(true);
-    } else {
-      setFrontendDisabled(false);
+    if (!values.haProxy) {
+      setFieldValue("backend", "");
+      setFieldValue("frontend", "");
+      setFieldValue("server", "");
+      setFieldValue("loadBalancers", []);
+      setErrors({ ...errors, backend: null, loadBalancers: null });
     }
-  }, [values.backend]);
-
-  useEffect(() => {
-    if (values.frontend) {
-      setBackendDisabled(true);
-    } else {
-      setBackendDisabled(false);
-    }
-  }, [values.frontend]);
+  }, [values.haProxy]);
 
   /* ----- Update Mode ----- */
   if (update && selectedNode) {
@@ -183,6 +191,9 @@ export function NodesForm({
         <Paper style={{ width: 700, padding: 32 }} variant="outlined">
           <Typography align="center" variant="h6" gutterBottom>
             {`${update ? "Update" : "Add New"} Node`}
+          </Typography>
+          <Typography align="center" gutterBottom>
+            Required Fields
           </Typography>
           <FormControl fullWidth error={!!errors.chain}>
             <InputLabel id="chain-label">Chain</InputLabel>
@@ -271,7 +282,34 @@ export function NodesForm({
             />
           </FormControl>
           <div style={{ marginTop: "10px" }} />
+          <Typography align="center" gutterBottom>
+            Load Balancer Settings
+          </Typography>
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+            }}
+          >
+            HAproxy
+            <Switch name="haProxy" checked={values.haProxy} onChange={handleChange} />
+          </div>
           <FormControl fullWidth>
+            <TextField
+              name="backend"
+              value={values.backend}
+              onChange={handleChange}
+              disabled={!!values.frontend || !values.haProxy}
+              label="Backend"
+              variant="outlined"
+              error={!!errors.backend}
+              helperText={errors.backend}
+            />
+          </FormControl>
+          <div style={{ marginTop: "10px" }} />
+          <FormControl fullWidth error={!!errors.loadBalancers}>
             <InputLabel id="lb-label">Load Balancers</InputLabel>
             <Select
               name="loadBalancers"
@@ -279,6 +317,7 @@ export function NodesForm({
               labelId="lb-label"
               value={values.loadBalancers}
               onChange={handleChange}
+              disabled={!!values.frontend || !values.haProxy}
               input={<OutlinedInput label="Load Balancers" />}
               renderValue={(selected) => {
                 return selected
@@ -296,55 +335,36 @@ export function NodesForm({
                 </MenuItem>
               ))}
             </Select>
+            {!!errors.loadBalancers && (
+              <FormHelperText>{errors.loadBalancers}</FormHelperText>
+            )}
           </FormControl>
-          <div style={{ marginTop: "10px" }} />
-          <FormControl fullWidth>
-            <TextField
-              name="backend"
-              value={values.backend}
-              onChange={handleChange}
-              disabled={backendDisabled}
-              label="Backend"
-              variant="outlined"
-            />
-          </FormControl>
-          <div style={{ marginTop: "10px" }} />
-          <FormControl fullWidth>
-            <TextField
-              name="frontend"
-              value={values.frontend}
-              onChange={handleChange}
-              disabled={frontendDisabled}
-              label="Frontend"
-              variant="outlined"
-            />
-          </FormControl>
-
-          <div style={{ marginTop: "10px" }} />
+          <div style={{ marginTop: "10px" }} />{" "}
           <FormControl fullWidth>
             <TextField
               name="server"
               value={values.server}
               onChange={handleChange}
-              label="Server"
+              disabled={!!values.frontend || !values.haProxy}
+              label="Server (optional)"
               variant="outlined"
             />
           </FormControl>
-          <div
-            style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
-          >
-            <div
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-start",
-              }}
-            >
-              HAproxy
-              <Switch name="haProxy" checked={values.haProxy} onChange={handleChange} />
-            </div>
-          </div>
+          <div style={{ marginTop: "10px" }} />
+          <Typography align="center" gutterBottom>
+            Set Frontend to
+          </Typography>
+          <FormControl fullWidth>
+            <TextField
+              name="frontend"
+              value={values.frontend}
+              onChange={handleChange}
+              disabled={!!values.backend || values.haProxy}
+              label="Frontend (optional)"
+              variant="outlined"
+            />
+          </FormControl>
+          <div style={{ marginTop: "10px" }} />
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <Button
               onClick={ModalHelper.close}
