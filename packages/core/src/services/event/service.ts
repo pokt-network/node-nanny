@@ -255,6 +255,7 @@ export class Service extends BaseService {
     const noOracleStr = noOracle
       ? `\nWarning - No Oracle for node. Node has ${details?.numPeers} peers.`
       : "";
+
     return {
       message: [countStr, ethSyncStr, heightStr, badOracleStr, noOracleStr]
         .filter(Boolean)
