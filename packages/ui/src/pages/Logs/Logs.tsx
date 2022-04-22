@@ -1,12 +1,14 @@
 import LogsDatadog from "./LogsDatadog";
 import LogsMongo from "./LogsMongo";
 
+import Env from "../../environment";
+
 export function Logs() {
   if (
-    process.env.REACT_APP_PNF === "1" &&
-    process.env.REACT_APP_MONITOR_LOGGER === "datadog" &&
-    process.env.REACT_APP_DATADOG_URL &&
-    process.env.REACT_APP_DATADOG_IFRAME_URL
+    Env("PNF") &&
+    Env("MONITOR_LOGGER") === "datadog" &&
+    Env("DATADOG_URL") &&
+    Env("DATADOG_IFRAME_URL")
   ) {
     return <LogsDatadog />;
   }
