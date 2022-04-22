@@ -26,7 +26,7 @@ export class App {
     await connect();
     await createFrontendAlertChannel();
 
-    const nodes = await NodesModel.find({ muted: false })
+    const nodes = await NodesModel.find({ muted: false, dispatch: true })
       .populate("host")
       .populate("chain")
       .exec();
@@ -35,13 +35,6 @@ export class App {
     const mode = Env("MONITOR_TEST") ? "TEST" : "PRODUCTION";
     const secs = this.interval / 1000;
     console.log(`Starting monitor in ${mode} mode with ${secs} sec interval ...`);
-
-    /* ----- PNF Interval Dispatchers Report ----- */
-    // if (Env("PNF") && nodes.some(({ dispatch }) => dispatch === true)) {
-    //   setInterval(async () => {
-    //     await publish.pnfDispatchersReport();
-    //   }, 600000);
-    // }
 
     /* ----- Start Node Monitoring Interval ----- */
     console.log(`📺 Monitor running. Monitoring ${nodes.length} node${s(nodes.length)}`);
