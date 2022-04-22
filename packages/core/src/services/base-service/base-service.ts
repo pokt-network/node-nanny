@@ -35,6 +35,10 @@ export class Service {
       if (!manual) {
         const status = await this.getServerStatus({ destination, server, loadBalancers });
         if (status === ELoadBalancerStatus.ONLINE) return;
+        if (status === ELoadBalancerStatus.ERROR) {
+          const message = this.getErrorMessage(server, "error");
+          throw message;
+        }
       }
 
       const loadBalancerResponse = await Promise.all(
@@ -50,8 +54,6 @@ export class Service {
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
       const message = `Could not add ${destination}/${server} to rotation. ${error}`;
-      colorLog(message, "red");
-      await this.alert.sendErrorChannel({ title: destination, message });
       throw new Error(message);
     }
   }
@@ -67,17 +69,13 @@ export class Service {
       if (!manual) {
         if (serverCount <= 1) {
           const message = this.getErrorMessage(server, "count", serverCount);
-          colorLog(message, "red");
-          await this.alert.sendErrorChannel({ title: destination, message });
-          throw new Error(message);
+          throw message;
         }
 
         const status = await this.getServerStatus({ destination, server, loadBalancers });
         if (status === ELoadBalancerStatus.OFFLINE) {
           const message = this.getErrorMessage(server, "offline");
-          colorLog(message, "red");
-          await this.alert.sendErrorChannel({ title: destination, message });
-          throw new Error(message);
+          throw message;
         }
       }
 
@@ -93,8 +91,6 @@ export class Service {
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
       const message = `Could not remove ${destination}/${server} from rotation. ${error}`;
-      colorLog(message, "red");
-      await this.alert.sendErrorChannel({ title: destination, message });
       throw new Error(message);
     }
   }
@@ -183,7 +179,7 @@ export class Service {
 
   private getErrorMessage(
     server: string,
-    mode: "count" | "offline" | "online",
+    mode: "count" | "offline" | "error",
     count?: number,
   ): string {
     return {
@@ -191,7 +187,7 @@ export class Service {
         count,
       )} online.\nManual intervention required.`,
       offline: `Could not remove ${server} from load balancer. Server already offline.`,
-      online: `Could not add ${server} to load balancer. Server already online.`,
+      error: `Could not add ${server} to load balancer due to server status check returning ERROR status.`,
     }[mode];
   }
 }
