@@ -13,6 +13,8 @@ import {
   PagerDutyServices,
 } from "./types";
 
+import Env from "../../environment";
+
 export class Service {
   private discordClient: AxiosInstance;
   private pagerDutyClient: any;
@@ -21,7 +23,7 @@ export class Service {
     this.discordClient = axios.create({
       headers: { "Content-Type": "application/json" },
     });
-    this.pagerDutyClient = pagerDutyApi({ token: process.env.PAGER_DUTY_API_KEY });
+    this.pagerDutyClient = pagerDutyApi({ token: Env("PAGER_DUTY_API_KEY") });
   }
 
   /* ----- Discord Alerts ----- */
@@ -31,10 +33,9 @@ export class Service {
       return await this.sendDiscordMessage({
         title,
         color: AlertColor.ERROR,
-        channel:
-          process.env.MONITOR_TEST === "1"
-            ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST
-            : AlertTypes.Webhooks.WEBHOOK_ERRORS,
+        channel: Env("MONITOR_TEST")
+          ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST
+          : AlertTypes.Webhooks.WEBHOOK_ERRORS,
         fields: [{ name: "Error", value: this.trimMessage(message) }],
       });
     } catch (error) {
@@ -143,7 +144,7 @@ export class Service {
 
     if (frontend) {
       query = { chain: "FRONTEND_ALERT" };
-    } else if (process.env.PNF === "1" && chain === "POKT-DIS") {
+    } else if (Env("PNF") && chain === "POKT-DIS") {
       query = { chain };
     } else {
       query = { chain, location };

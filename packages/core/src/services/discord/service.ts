@@ -2,6 +2,8 @@ import { Client, Intents, CategoryChannel, Guild as Server } from "discord.js";
 
 import { INode, WebhookModel } from "../../models";
 
+import Env from "../../environment";
+
 export class Service {
   private client: Client;
   private token: string;
@@ -15,8 +17,8 @@ export class Service {
         return true;
       },
     });
-    this.token = process.env.DISCORD_TOKEN;
-    this.serverId = process.env.DISCORD_SERVER_ID;
+    this.token = Env("DISCORD_TOKEN");
+    this.serverId = Env("DISCORD_SERVER_ID");
   }
 
   private async initServer(): Promise<Server> {
