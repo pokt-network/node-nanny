@@ -36,7 +36,6 @@ export default function LogsMongo() {
     onError: () => setLogsLoading(false),
   });
 
-  console.log(logsData?.logs);
   const filterOptions = {
     filters: ["All", "OK", "Error"],
     filterFunctions: {
