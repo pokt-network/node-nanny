@@ -34,8 +34,8 @@ const main = async () => {
   });
 };
 
-process.on("SIGINT", function () {
-  disconnect();
+process.on("SIGINT", async function () {
+  await disconnect();
 });
 
 main();

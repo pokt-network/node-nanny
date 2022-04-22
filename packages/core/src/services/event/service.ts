@@ -52,10 +52,10 @@ export class Service extends BaseService {
       await this.toggleServer({ node, title, enable: false });
     }
 
-    if (this.pnf && downDispatchers?.length >= this.pnfDispatchThreshold) {
-      await this.alertPocketDispatchersAreDown(downDispatchers);
-      ELoadBalancerStatus;
-    }
+    // if (this.pnf && downDispatchers?.length >= this.pnfDispatchThreshold) {
+    //   await this.alertPocketDispatchersAreDown(downDispatchers);
+    //   ELoadBalancerStatus;
+    // }
   };
 
   processRetriggered = async (eventJson: string): Promise<void> => {
@@ -64,7 +64,7 @@ export class Service extends BaseService {
       message,
       notSynced,
       title,
-      serverCount,
+      nodeCount,
       downDispatchers,
     } = await this.parseEvent(eventJson, EAlertTypes.RETRIGGER);
     const { backend, chain, host, frontend, loadBalancers, server } = node;
@@ -85,14 +85,14 @@ export class Service extends BaseService {
         server,
         loadBalancers,
       });
-      if (backend && serverCount >= 2 && onlineStatus === ELoadBalancerStatus.ONLINE) {
+      if (backend && nodeCount >= 2 && onlineStatus === ELoadBalancerStatus.ONLINE) {
         await this.toggleServer({ node, title, enable: false });
       }
     }
 
-    if (this.pnf && downDispatchers?.length >= this.pnfDispatchThreshold) {
-      await this.alertPocketDispatchersAreDown(downDispatchers);
-    }
+    // if (this.pnf && downDispatchers?.length >= this.pnfDispatchThreshold) {
+    //   await this.alertPocketDispatchersAreDown(downDispatchers);
+    // }
   };
 
   processResolved = async (eventJson: string): Promise<void> => {
@@ -153,7 +153,7 @@ export class Service extends BaseService {
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
     const { chain, backend, frontend, loadBalancers, dispatch, url } = node;
 
-    const serverCount = !dispatch
+    const nodeCount = !dispatch
       ? await this.getServerCount({
           destination: frontend || backend,
           loadBalancers,
@@ -172,7 +172,12 @@ export class Service extends BaseService {
           conditions === EErrorConditions.NO_RESPONSE
         : conditions === EErrorConditions.NOT_SYNCHRONIZED;
 
-    const { message, statusStr } = this.getAlertMessage(event, alertType);
+    const { message, statusStr } = this.getAlertMessage(
+      event,
+      alertType,
+      nodeCount,
+      frontend || backend,
+    );
 
     const parsedEvent: IRedisEventParams = {
       title: `[${alertType}] - ${statusStr}`,
@@ -181,7 +186,7 @@ export class Service extends BaseService {
       healthy,
       notSynced,
       status,
-      serverCount,
+      nodeCount,
       downDispatchers,
     };
     return parsedEvent;
@@ -208,14 +213,14 @@ export class Service extends BaseService {
         ? await this.enableServer({ destination: backend, server, loadBalancers })
         : await this.disableServer({ destination: backend, server, loadBalancers });
 
-      const serverCount = !node.dispatch
+      const nodeCount = !node.dispatch
         ? await this.getServerCount({ destination: backend, loadBalancers })
         : null;
       const { title, message } = this.getRotationMessage(
         node,
         enable,
         "success",
-        serverCount,
+        nodeCount,
       );
       await this.sendMessage(
         { title, message, chain: chain.name, location: host.location.name },
@@ -268,7 +273,8 @@ export class Service extends BaseService {
   private getAlertMessage(
     { count, conditions, name, ethSyncing, height, details }: IRedisEvent,
     alertType: EAlertTypes,
-    // downDispatchers: string[] = null,
+    nodeCount: number,
+    destination: string,
   ): { message: string; statusStr: string } {
     const badOracles = details?.badOracles?.join("\n");
     const noOracle = details?.noOracle;
@@ -294,13 +300,19 @@ export class Service extends BaseService {
     //       `${downDispatchers.join("\n")}`,
     //     ].join("\n")
     //   : "";
+    let serverCountStr =
+      nodeCount && nodeCount >= 0
+        ? `${nodeCount} node${s(nodeCount)} ${is(
+            nodeCount,
+          )} in rotation for ${destination}.`
+        : "";
+    if (nodeCount <= 1) serverCountStr = `${serverCountStr.toUpperCase()}`;
     const badOracleStr = badOracles?.length
       ? `\nWarning - Bad Oracle${s(badOracles.length)}\n${badOracles}`
       : "";
     const noOracleStr = noOracle
       ? `\nWarning - No Oracle for node. Node has ${details?.numPeers} peers.`
       : "";
-
     return {
       message: [countStr, ethSyncStr, heightStr, badOracleStr, noOracleStr]
         .filter(Boolean)
@@ -313,7 +325,7 @@ export class Service extends BaseService {
     { backend, chain, host, loadBalancers }: INode,
     enable: boolean,
     mode: "success" | "error",
-    serverCount: number,
+    nodeCount: number,
     error?: any,
   ): { title: string; message: string } {
     const name = `${host.name}/${chain.name}`;
@@ -331,12 +343,12 @@ export class Service extends BaseService {
           error: `[Error] - Could not remove ${name} from rotation`,
         }[mode];
     let serverCountStr =
-      serverCount && serverCount >= 0
-        ? `${serverCount} node${s(serverCount)} ${is(serverCount)} in rotation for ${
+      nodeCount && nodeCount >= 0
+        ? `${nodeCount} node${s(nodeCount)} ${is(nodeCount)} in rotation for ${
             backend ? `backend ${backend}.` : ""
           }`
         : "";
-    if (serverCount <= 1) serverCountStr = `${serverCountStr.toUpperCase()}`;
+    if (nodeCount <= 1) serverCountStr = `${serverCountStr.toUpperCase()}`;
     const message = [haProxyMessage, serverCountStr, error].filter(Boolean).join("\n");
 
     return { title, message };
