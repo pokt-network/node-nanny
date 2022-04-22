@@ -13,14 +13,16 @@ import { s, is } from "../../utils";
 
 import { Service as BaseService } from "../base-service/base-service";
 
+import Env from "../../environment";
+
 export class Service extends BaseService {
   private pnf: boolean;
   private pnfDispatchThreshold: number;
 
   constructor() {
     super();
-    this.pnf = process.env.PNF === "1";
-    this.pnfDispatchThreshold = Number(process.env.PNF_DISPATCH_THRESHOLD || 5);
+    this.pnf = Env("PNF");
+    this.pnfDispatchThreshold = Env("PNF_DISPATCH_THRESHOLD");
   }
 
   /* ----- Trigger Methods ----- */
@@ -162,22 +164,22 @@ export class Service extends BaseService {
       this.pnf && dispatch && chain.name === ESupportedBlockchains["POKT-DIS"]
         ? await this.getDownDispatchers(node)
         : null;
+    const healthy = conditions === EErrorConditions.HEALTHY;
+    const notSynced =
+      this.pnf && chain.type === ESupportedBlockchains.POKT
+        ? conditions === EErrorConditions.NOT_SYNCHRONIZED ||
+          conditions === EErrorConditions.OFFLINE ||
+          conditions === EErrorConditions.NO_RESPONSE
+        : conditions === EErrorConditions.NOT_SYNCHRONIZED;
 
-    const { message, statusStr } = this.getAlertMessage(
-      event,
-      alertType,
-      serverCount,
-      frontend,
-      backend,
-      downDispatchers,
-    );
+    const { message, statusStr } = this.getAlertMessage(event, alertType);
 
     const parsedEvent: IRedisEventParams = {
       title: `[${alertType}] - ${statusStr}`,
       message,
       node,
-      healthy: conditions === EErrorConditions.HEALTHY,
-      notSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
+      healthy,
+      notSynced,
       status,
       serverCount,
       downDispatchers,
@@ -266,10 +268,7 @@ export class Service extends BaseService {
   private getAlertMessage(
     { count, conditions, name, ethSyncing, height, details }: IRedisEvent,
     alertType: EAlertTypes,
-    serverCount: number,
-    frontend: string,
-    backend: string,
-    downDispatchers: string[] = null,
+    // downDispatchers: string[] = null,
   ): { message: string; statusStr: string } {
     const badOracles = details?.badOracles?.join("\n");
     const noOracle = details?.noOracle;
@@ -287,23 +286,14 @@ export class Service extends BaseService {
             : `Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
         }`
       : "";
-    let serverCountStr =
-      (!downDispatchers ?? serverCount) && serverCount >= 0
-        ? `${serverCount} node${s(serverCount)} ${is(serverCount)} in rotation for ${
-            frontend || backend
-              ? `${frontend ? "frontend" : "backend"} ${frontend || backend}`
-              : ""
-          }`
-        : "";
-    if (serverCount <= 1) serverCountStr = `${serverCountStr.toUpperCase()}`;
-    const downDispatchersStr = downDispatchers?.length
-      ? [
-          `\n${downDispatchers.length} dispatcher${s(downDispatchers.length)} ${is(
-            downDispatchers.length,
-          )} down:`,
-          `${downDispatchers.join("\n")}`,
-        ].join("\n")
-      : "";
+    // const downDispatchersStr = downDispatchers?.length
+    //   ? [
+    //       `\n${downDispatchers.length} dispatcher${s(downDispatchers.length)} ${is(
+    //         downDispatchers.length,
+    //       )} down:`,
+    //       `${downDispatchers.join("\n")}`,
+    //     ].join("\n")
+    //   : "";
     const badOracleStr = badOracles?.length
       ? `\nWarning - Bad Oracle${s(badOracles.length)}\n${badOracles}`
       : "";
@@ -312,15 +302,7 @@ export class Service extends BaseService {
       : "";
 
     return {
-      message: [
-        countStr,
-        ethSyncStr,
-        heightStr,
-        serverCountStr,
-        downDispatchersStr,
-        badOracleStr,
-        noOracleStr,
-      ]
+      message: [countStr, ethSyncStr, heightStr, badOracleStr, noOracleStr]
         .filter(Boolean)
         .join("\n"),
       statusStr,
@@ -348,12 +330,13 @@ export class Service extends BaseService {
           success: `[Removed] - Successfully removed ${name} from rotation`,
           error: `[Error] - Could not remove ${name} from rotation`,
         }[mode];
-    const serverCountStr =
+    let serverCountStr =
       serverCount && serverCount >= 0
         ? `${serverCount} node${s(serverCount)} ${is(serverCount)} in rotation for ${
             backend ? `backend ${backend}.` : ""
           }`
         : "";
+    if (serverCount <= 1) serverCountStr = `${serverCountStr.toUpperCase()}`;
     const message = [haProxyMessage, serverCountStr, error].filter(Boolean).join("\n");
 
     return { title, message };
