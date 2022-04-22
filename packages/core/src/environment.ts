@@ -15,7 +15,7 @@ type IBooleanVars = "PNF" | "MONITOR_TEST";
 
 type IEnvVars = IStringVars | INumberVars | IBooleanVars;
 
-const ENV_VARS = {
+const ENV_VARS: { [variable: string]: () => string | number | boolean } = {
   DD_API_KEY: () => process.env.DD_API_KEY,
   DISCORD_SERVER_ID: () => process.env.DISCORD_SERVER_ID,
   DISCORD_TOKEN: () => process.env.DISCORD_TOKEN,
@@ -33,7 +33,7 @@ const ENV_VARS = {
   PNF: () => Boolean(process.env.PNF === "1" || false),
 };
 
-export default function env<B extends IEnvVars>(
+export default function Env<B extends IEnvVars>(
   name: B,
 ): B extends IStringVars ? string : B extends INumberVars ? number : boolean {
   return ENV_VARS[name]() as B extends IStringVars
