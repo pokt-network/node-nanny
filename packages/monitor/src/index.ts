@@ -5,6 +5,8 @@ import { Health, Log } from "@pokt-foundation/node-nanny-core/dist/services";
 import { HealthTypes } from "@pokt-foundation/node-nanny-core/dist/types";
 import { colorLog, s } from "@pokt-foundation/node-nanny-core/dist/utils";
 
+import Env from "@pokt-foundation/node-nanny-core/dist/environment";
+
 import { Publish } from "./publish";
 
 export class App {
@@ -15,12 +17,13 @@ export class App {
   constructor() {
     this.log = new Log();
     this.health = new Health();
-    this.interval = Number(process.env.MONITOR_INTERVAL || 10000);
+    this.interval = Env("MONITOR_INTERVAL");
   }
 
   /** Runs a health check on all non-muted nodes in the inventory DB at a set interval.
    * Events are published to REDIS and logs written to MongoDB. */
   async main() {
+    console.log("INTERVAL IS", Env("MONITOR_INTERVAL"), Env("MONGO_URI"));
     await connect();
     await createFrontendAlertChannel();
 
@@ -30,7 +33,7 @@ export class App {
       .exec();
     const publish = new Publish(nodes);
 
-    const mode = process.env.MONITOR_TEST === "1" ? "TEST" : "PRODUCTION";
+    const mode = Env("MONITOR_TEST") ? "TEST" : "PRODUCTION";
     const secs = this.interval / 1000;
     console.log(`Starting monitor in ${mode} mode with ${secs} sec interval ...`);
 

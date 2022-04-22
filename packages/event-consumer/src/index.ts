@@ -2,8 +2,10 @@ import Redis from "ioredis";
 import { Event as EventConsumer } from "@pokt-foundation/node-nanny-core/dist/services";
 import { connect, disconnect } from "@pokt-foundation/node-nanny-core/dist/db";
 
+import Env from "@pokt-foundation/node-nanny-core/dist/environment";
+
 const consumer = new EventConsumer();
-const redis = new Redis({ host: process.env.REDIS_HOST });
+const redis = new Redis({ host: Env("REDIS_HOST") });
 
 const main = async () => {
   await connect();

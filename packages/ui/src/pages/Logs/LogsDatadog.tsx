@@ -7,6 +7,8 @@ import {
   Typography,
 } from "@mui/material";
 
+import Env from "../../environment";
+
 export default function LogsDatadog() {
   return (
     <Card sx={{ display: "flex", width: "85vw", height: 415, margin: "32px" }}>
@@ -36,7 +38,7 @@ export default function LogsDatadog() {
           <Button
             size="large"
             variant="contained"
-            href={process.env.REACT_APP_DATADOG_URL}
+            href={Env("DATADOG_URL")}
             target="_blank"
           >
             View Logs On Datadog
@@ -48,7 +50,7 @@ export default function LogsDatadog() {
           component="iframe"
           height="100%"
           width="100%"
-          src={process.env.REACT_APP_DATADOG_IFRAME_URL}
+          src={Env("DATADOG_IFRAME_URL")}
         />
       </div>
     </Card>

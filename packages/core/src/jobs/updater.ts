@@ -1,7 +1,10 @@
 import axios from "axios";
+
 import { connect, disconnect } from "../db";
-import { ChainsModel, OraclesModel, IChain, IOracle, WebhookModel } from "../models";
+import { ChainsModel, OraclesModel, IChain, IOracle } from "../models";
 import { getTimestamp } from "../utils";
+
+import Env from "../environment";
 
 interface IChainsAndOraclesResponse {
   chains: IChain[];
@@ -10,7 +13,7 @@ interface IChainsAndOraclesResponse {
 
 /* ----- Script Runs Every Hour ----- */
 (async () => {
-  if (process.env.PNF === "1") return;
+  if (Env("PNF")) return;
 
   await connect();
 

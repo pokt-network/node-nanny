@@ -14,6 +14,8 @@ import { ModalHelper } from "utils";
 
 import { NodeStatus } from "./NodeStatus";
 
+import Env from "../../environment";
+
 export function Nodes() {
   const [selectedNode, setSelectedNode] = useState<INode>(undefined);
   const { data, error, loading, refetch } = useNodesQuery();
@@ -50,7 +52,7 @@ export function Nodes() {
     "haProxy",
     "muted",
   ];
-  if (process.env.REACT_APP_PNF === "1") {
+  if (Env("PNF")) {
     filterOptions.filters.push("Dispatch");
     filterOptions.filterFunctions.Dispatch = ({ dispatch }: INode) => Boolean(dispatch);
     columnsOrder.push("dispatch");
