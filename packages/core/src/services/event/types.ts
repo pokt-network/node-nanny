@@ -20,7 +20,6 @@ export interface IRotationParams {
 
 export interface IToggleServerParams {
   node: INode;
-  title: string;
   enable: boolean;
 }
 
