@@ -45,7 +45,7 @@ export class Service extends BaseService {
 
     /* Remove backend node from rotation if NOT_SYNCHRONIZED */
     if (backend && !frontend && notSynced) {
-      await this.toggleServer({ node, title, enable: false });
+      await this.toggleServer({ node, enable: false });
     }
 
     /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
@@ -81,7 +81,7 @@ export class Service extends BaseService {
     /* Remove backend node from rotation if NOT_SYNCHRONIZED and there are at least 2 healthy nodes.
     This covers the case where the only node in rotation was out of sync and its peers catch up. */
     if (nodeCount >= 2 && backend && !frontend && notSynced) {
-      await this.toggleServer({ node, title, enable: false });
+      await this.toggleServer({ node, enable: false });
     }
 
     /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
@@ -111,7 +111,7 @@ export class Service extends BaseService {
 
     /* Add backend node to rotation if HEALTHY */
     if (backend && !frontend && healthy) {
-      await this.toggleServer({ node, title, enable: true });
+      await this.toggleServer({ node, enable: true });
     }
   };
 
@@ -160,8 +160,6 @@ export class Service extends BaseService {
     };
     return parsedEvent;
   }
-
-  private;
 
   private async sendMessage(
     params: AlertTypes.IAlertParams,
