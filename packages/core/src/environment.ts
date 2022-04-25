@@ -4,6 +4,7 @@ type IStringVars =
   | "DISCORD_TOKEN"
   | "MONGO_URI"
   | "MONITOR_LOGGER"
+  | "MONITOR_TEST_DOMAIN"
   | "PAGER_DUTY_API_KEY"
   | "REDIS_HOST";
 type INumberVars =
@@ -21,6 +22,7 @@ const ENV_VARS: { [variable: string]: () => string | number | boolean } = {
   DISCORD_TOKEN: () => process.env.DISCORD_TOKEN,
   MONGO_URI: () => process.env.MONGO_URI,
   MONITOR_LOGGER: () => process.env.MONITOR_LOGGER,
+  MONITOR_TEST_DOMAIN: () => process.env.MONITOR_TEST_DOMAIN,
   PAGER_DUTY_API_KEY: () => process.env.PAGER_DUTY_API_KEY,
   REDIS_HOST: () => process.env.REDIS_HOST,
 
@@ -33,7 +35,7 @@ const ENV_VARS: { [variable: string]: () => string | number | boolean } = {
   PNF: () => Boolean(process.env.PNF === "1" || false),
 };
 
-export default function Env<B extends IEnvVars>(
+export default function env<B extends IEnvVars>(
   name: B,
 ): B extends IStringVars ? string : B extends INumberVars ? number : boolean {
   return ENV_VARS[name]() as B extends IStringVars
