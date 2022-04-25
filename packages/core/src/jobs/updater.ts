@@ -4,7 +4,7 @@ import { connect, disconnect } from "../db";
 import { ChainsModel, OraclesModel, IChain, IOracle } from "../models";
 import { getTimestamp } from "../utils";
 
-import Env from "../environment";
+import env from "../environment";
 
 interface IChainsAndOraclesResponse {
   chains: IChain[];
@@ -13,7 +13,7 @@ interface IChainsAndOraclesResponse {
 
 /* ----- Script Runs Every Hour ----- */
 (async () => {
-  if (Env("PNF")) return;
+  if (env("PNF")) return;
 
   await connect();
 

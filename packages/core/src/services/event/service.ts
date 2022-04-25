@@ -4,7 +4,6 @@ import { INode, NodesModel } from "../../models";
 import { AlertTypes } from "../../types";
 import {
   EAlertTypes,
-  ELoadBalancerStatus,
   IRedisEvent,
   IRedisEventParams,
   IToggleServerParams,
@@ -13,7 +12,7 @@ import { s, is } from "../../utils";
 
 import { Service as BaseService } from "../base-service/base-service";
 
-import Env from "../../environment";
+import env from "../../environment";
 
 export class Service extends BaseService {
   constructor() {
@@ -49,8 +48,8 @@ export class Service extends BaseService {
       await this.toggleServer({ node, title, enable: false });
     }
 
-    /* (PNF Internal only.) Send PagerDuty alert if Dispatcher HAProxy is down */
-    if (Env("PNF") && dispatchFrontendDown) {
+    /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
+    if (env("PNF") && dispatchFrontendDown) {
       await this.urgentAlertDispatchFrontendIsDown(message);
     }
   };
@@ -85,8 +84,8 @@ export class Service extends BaseService {
       await this.toggleServer({ node, title, enable: false });
     }
 
-    /* (PNF Internal only.) Send PagerDuty alert if Dispatcher HAProxy is down */
-    if (Env("PNF") && dispatchFrontendDown) {
+    /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
+    if (env("PNF") && dispatchFrontendDown) {
       await this.urgentAlertDispatchFrontendIsDown(message);
     }
   };
@@ -135,12 +134,12 @@ export class Service extends BaseService {
     });
     const healthy = conditions === EErrorConditions.HEALTHY;
     const notSynced =
-      Env("PNF") && dispatch
+      env("PNF") && dispatch
         ? conditions === EErrorConditions.NOT_SYNCHRONIZED ||
           conditions === EErrorConditions.OFFLINE ||
           conditions === EErrorConditions.NO_RESPONSE
         : conditions === EErrorConditions.NOT_SYNCHRONIZED;
-    const dispatchFrontendDown = Boolean(Env("PNF") && dispatch && frontend && notSynced);
+    const dispatchFrontendDown = Boolean(env("PNF") && dispatch && frontend && notSynced);
 
     const { message, statusStr } = this.getAlertMessage(
       event,
@@ -161,6 +160,8 @@ export class Service extends BaseService {
     };
     return parsedEvent;
   }
+
+  private;
 
   private async sendMessage(
     params: AlertTypes.IAlertParams,
@@ -212,6 +213,7 @@ export class Service extends BaseService {
     }
   }
 
+  /* ----- PNF Internal Only ----- */
   private async urgentAlertDispatchFrontendIsDown(message: string): Promise<void> {
     await this.alert.createPagerDutyIncident({
       title: "URGENT ALERT! Dispatch Frontend is down!",
