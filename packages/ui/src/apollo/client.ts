@@ -1,9 +1,9 @@
 import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client";
 import { IPaginatedLogs } from "../types";
 
-import Env from "../environment";
+import env from "../environment";
 
-const hostname = Env("BACKEND_HOST") || window.location.hostname;
+const hostname = env("BACKEND_HOST") || window.location.hostname;
 const uri = `http://${hostname}:4000`;
 
 export default new ApolloClient({

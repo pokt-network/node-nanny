@@ -16,7 +16,7 @@ const ENV_VARS: { [variable: string]: () => string | boolean } = {
   PNF: () => Boolean(process.env.REACT_APP_PNF === "1" || false),
 };
 
-export default function Env<B extends IEnvVars>(
+export default function env<B extends IEnvVars>(
   name: B,
 ): B extends IStringVars ? string : boolean {
   return ENV_VARS[name]() as B extends IStringVars ? string : boolean;
