@@ -1,5 +1,5 @@
-import LogsDatadog from "./LogsDatadog";
-import LogsMongo from "./LogsMongo";
+import LogsDatadog from "components/Logs/LogsDatadog";
+import LogsMongo from "components/Logs/LogsMongo";
 
 export function Logs() {
   if (
