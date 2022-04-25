@@ -80,7 +80,13 @@ function DashboardContent() {
   return (
     <ThemeProvider theme={mdTheme}>
       <RootModal />
-      <Box sx={{ display: "flex", background: "linear-gradient(106.7deg, #0E1318 16.95%, #111A1F 87.74%)" }}>
+      <Box 
+        sx={{ 
+          display: "flex", 
+          height: '100vh',
+          background: "linear-gradient(106.7deg, #0E1318 16.95%, #111A1F 87.74%)"
+        }}
+      >
         <CssBaseline />
         <Drawer variant="permanent" open={open}>
           <Toolbar
@@ -123,7 +129,6 @@ function DashboardContent() {
           maxWidth="lg"
           sx={{
             flexGrow: 1,
-            height: "100vh",
             overflow: "auto",
           }}
         >
@@ -131,7 +136,7 @@ function DashboardContent() {
             <Typography
               flex="1"
               component="h1"
-              variant="h6"
+              variant="h5"
               noWrap
               sx={{ flexGrow: 1 }}
             >
