@@ -11,7 +11,7 @@ import dayjs from "dayjs";
 import { Bar } from "react-chartjs-2";
 
 import { useLogsForChartLazyQuery, ILogsForChartQuery } from "types";
-import { ITimePeriod } from "./periods";
+import { ITimePeriod } from "utils/periods";
 import { deepEqual } from "../../utils";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
