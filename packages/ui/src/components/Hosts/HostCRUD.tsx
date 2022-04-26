@@ -1,29 +1,41 @@
-import { Dispatch } from "react"
+import { Dispatch, useEffect, useState } from "react"
 
 import Paper from "components/Paper"
 import Title from "components/Title"
 import { HostActionsState } from "pages/Hosts"
 import HostForm from "./HostForm"
-import { HostsTableRow } from "pages/Hosts"
+import { IHost, IHostsQuery, ILocation } from "types"
 
 import Box from "@mui/material/Box"
-import { IHostsQuery, ILocation } from "types"
 import { ApolloQueryResult } from "@apollo/client"
 
 interface HostCRUDProps {
   locations: ILocation[]
   hostNames: string[];
-  host: HostsTableRow
-  type: "create" | "edit"
+  host: IHost
+  type: HostActionsState
   setState: Dispatch<HostActionsState>
   refetch: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>
 }
 
 export const HostCRUD = ({ host, locations, hostNames, type, setState, refetch }: HostCRUDProps) => {
+  const [title, setTitle] = useState("Select Host To View Status")
 
-  const handleCancel = () => {
-    setState(HostActionsState.Info)
-  }
+  useEffect(() => {
+    if(host) {
+      if(type === "info") {
+        setTitle("Selected Host")
+      }
+      if(type === "edit") {
+        setTitle("Edit Host")
+      }
+      if(type === "create") {
+        setTitle("Create Host")
+      }
+    } else {
+      setTitle("Select Host To View Status")
+    }
+  }, [host, type])
 
   return (
     <Paper>
@@ -38,16 +50,18 @@ export const HostCRUD = ({ host, locations, hostNames, type, setState, refetch }
           }
         }}
       >
-        <Title>{`${type} Host`}</Title>
+        <Title>{title}</Title>
       </Box>
       <Box>
         <HostForm
-          update={type === "edit"}
+          read={type === "info"}
+          update={type === "info" || type === "edit"}
           locations={locations}
           hostNames={hostNames}
           refetchHosts={refetch}
-          selectedHost={type === "edit" ? host : null}
-          onCancel={handleCancel}
+          selectedHost={type !== "create" ? host : null}
+          onCancel={() => setState(HostActionsState.Info)}
+          setState={setState}
         />
       </Box>
     </Paper>
