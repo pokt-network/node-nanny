@@ -15,11 +15,9 @@ import {
   ListItemText,
   MenuItem,
   OutlinedInput,
-  Paper,
   Select,
   Switch,
   TextField,
-  Typography,
 } from "@mui/material";
 
 import {
@@ -185,7 +183,7 @@ export const NodeForm = ({
         loadBalancersRef.current.querySelector("input").value = "";
       }
     }
-  }, [update, selectedNode, setFieldValue]);
+  }, [update, selectedNode, setFieldValue, resetForm]);
 
   /* ----- Mutations ----- */
   const [submitCreate] = useCreateNodeMutation({
