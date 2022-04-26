@@ -133,13 +133,12 @@ export class Service extends BaseService {
       : conditions === EErrorConditions.NOT_SYNCHRONIZED;
     const dispatchFrontendDown = Boolean(pnfDispatch && frontend && notSynced);
 
-    const nodeCount = await this.getServerCount({
+    const { online: nodeCount, total: nodeTotal } = await this.getServerCount({
       destination: frontend || backend,
       loadBalancers,
       frontendUrl: frontend ? url : null,
       dispatch: pnfDispatch,
     });
-    const nodeTotal = await NodesModel.count({ chain: chain.id, haProxy: true });
 
     const { message, statusStr } = this.alert.getAlertMessage(
       event,
@@ -185,11 +184,10 @@ export class Service extends BaseService {
         : await this.disableServer({ destination: backend, server, loadBalancers });
 
       if (serverToggled) {
-        const nodeCount = await this.getServerCount({
+        const { online: nodeCount, total: nodeTotal } = await this.getServerCount({
           destination: backend,
           loadBalancers,
         });
-        const nodeTotal = await NodesModel.count({ chain: chain.id });
 
         const { title, message } = this.alert.getRotationMessage(
           node,
