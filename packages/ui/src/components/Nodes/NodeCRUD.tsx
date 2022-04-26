@@ -70,7 +70,6 @@ export const NodeCRUD = ({
     loading ||
     !!getHaProxyStatusError ||
     typeof haProxyOnline !== "boolean";
-  const haProxyStatusText = haProxyOnline ? "Online" : "Offline";
   const haProxyButtonText = `${haProxyOnline ? "Remove" : "Add"} Node ${
     haProxyOnline ? "from" : "to"
   } Rotation`;
@@ -96,8 +95,6 @@ export const NodeCRUD = ({
       setSelectedNode({ ...node!, muted });
     },
   });
-
-  const muteStatusText = !node ? "No Node Selected" : node?.muted ? "Muted" : "Not Muted";
 
   const handleOpenMuteModal = () => {
     ModalHelper.open({
