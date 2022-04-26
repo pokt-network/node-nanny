@@ -11,7 +11,8 @@ export const Title = (props: TitleProps) => {
       component="h3" 
       variant="h6" 
       sx={{
-        marginBottom: 3
+        marginBottom: 3,
+        fontWeight: "700"
       }}
     >
       {props.children}
