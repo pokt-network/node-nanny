@@ -1,20 +1,17 @@
-import Space, { SpaceSizeEnum } from "components/Space"
-import MuiPaper, { PaperTypeMap } from "@mui/material/Paper"
+import MuiPaper, { PaperTypeMap } from "@mui/material/Paper";
 
 export const Paper = (props: PaperTypeMap["props"]) => {
   return (
-    <>
-      <MuiPaper
-        sx={{
-          width: "100%", 
-          padding: 2
-        }}
-      >
-        {props.children}
-      </MuiPaper>
-      <Space h={SpaceSizeEnum.Md} />
-    </>
-  )
-}
+    <MuiPaper
+      sx={{
+        width: "100%",
+        padding: 2,
+        marginBottom: 4,
+      }}
+    >
+      {props.children}
+    </MuiPaper>
+  );
+};
 
-export default Paper
+export default Paper;
