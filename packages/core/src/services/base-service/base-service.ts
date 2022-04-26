@@ -1,6 +1,6 @@
 import { ELoadBalancerStatus, IRotationParams } from "../event/types";
 import { NodesModel, INode } from "../../models";
-import { colorLog, s } from "../../utils";
+import { s } from "../../utils";
 
 import { Service as AlertService } from "../alert";
 import { Service as HAProxyService } from "../haproxy";
@@ -115,6 +115,7 @@ export class Service {
     destination,
     loadBalancers,
     frontendUrl,
+    dispatch,
   }: IRotationParams): Promise<number> {
     const results: number[] = [];
     if (frontendUrl) {
@@ -130,6 +131,7 @@ export class Service {
           const count = await this.haProxy.getServerCount({
             destination,
             domain: this.getLoadBalancerDomain(fqdn || ip),
+            dispatch,
           });
           results.push(count);
         } catch (error) {
