@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Dispatch, useEffect, useState } from "react";
 import { ApolloQueryResult } from "@apollo/client";
 import CSVReader from "react-csv-reader";
 import {
@@ -10,7 +10,6 @@ import {
   Typography,
 } from "@mui/material";
 
-import { Table } from "components";
 import {
   IGetHostsChainsAndLoadBalancersQuery,
   INodeCsvInput,
@@ -18,18 +17,10 @@ import {
   useCreateNodesCsvMutation,
 } from "types";
 import { ModalHelper, parseBackendError, regexTest, s } from "utils";
-
-const style = {
-  position: "absolute" as "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: "90%",
-  bgcolor: "background.paper",
-  border: "2px solid #000",
-  boxShadow: 24,
-  p: 4,
-};
+import { NodeActionsState } from "pages/Nodes";
+import Table from "components/Table";
+import Paper from "components/Paper";
+import Title from "components/Title";
 
 interface ICSVNode {
   https: string;
@@ -49,14 +40,16 @@ interface NodesCSVProps {
   nodeNames: string[];
   hostPortCsvCombos: string[];
   refetchNodes: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
+  setState: Dispatch<NodeActionsState>;
 }
 
-export function NodesCSV({
+export const NodesCSV = ({
   formData: { chains, hosts, loadBalancers },
   nodeNames,
   hostPortCsvCombos,
   refetchNodes,
-}: NodesCSVProps) {
+  setState,
+}: NodesCSVProps) => {
   const [nodes, setNodes] = useState<INodeCsvInput[]>(undefined);
   const [nodesError, setNodesError] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
@@ -192,23 +185,23 @@ export function NodesCSV({
     }
   };
 
-  /* ----- Layout ----- */
   return (
-    <div>
-      <Box sx={style}>
-        <Typography variant="h6" component="h2">
-          Upload Nodes CSV
+    <Paper>
+      <Title>Upload Nodes CSV</Title>
+      <Box>
+        <Typography variant="subtitle1" mb={1}>
+          Batch creation of nodes via CSV import can take a long time.
         </Typography>
-        <Typography gutterBottom>
-          Note: Batch creation of nodes via CSV import can take a long time. This is
-          because Discord channels and webhooks for each chain/location combination are
-          created for each node that represents a chain/location that does not already
-          exist in the inventory database. Discord imposes rate limiting on the automated
-          creation of webhooks so each new channel can take 5-10 seconds to create.{" "}
+        <Typography variant="body2" mb={2}>
+          This is because Discord channels and webhooks for each chain/location
+          combination are created for each node that represents a chain/location that does
+          not already exist in the inventory database. Discord imposes rate limiting on
+          the automated creation of webhooks so each new channel can take 5-10 seconds to
+          create.{" "}
         </Typography>
-        <Typography gutterBottom>
+        <Alert severity="warning" sx={{ mb: 4 }}>
           Please do not navigate away, refresh or close this window during this time.
-        </Typography>
+        </Alert>
         <CSVReader
           onFileLoaded={parseNodesCSV}
           parserOptions={{ header: true, skipEmptyLines: true }}
@@ -237,25 +230,22 @@ export function NodesCSV({
               type={`Adding ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`}
               rows={nodes}
               columnsOrder={columnsOrder}
-              height={400}
+              numPerPage={10}
             />
           </div>
         )}
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-          <Button
-            onClick={ModalHelper.close}
-            style={{ height: 40, width: 150 }}
-            variant="contained"
-            color="error"
-          >
-            Cancel
-          </Button>
+        <Box
+          sx={{
+            marginTop: 4,
+            textAlign: "center",
+            "& button": { margin: 1 },
+          }}
+        >
           <Button
             disabled={Boolean(!nodes || nodesError || backendError)}
-            style={{ marginTop: 8, height: 40, width: 150 }}
             onClick={submitCSV}
             variant="contained"
-            color="success"
+            color="primary"
           >
             {loading ? (
               <CircularProgress size={20} style={{ color: "white" }} />
@@ -265,8 +255,17 @@ export function NodesCSV({
               `Add ${nodes.length} Node${s(nodes.length)}`
             )}
           </Button>
-        </div>
+          <Button
+            onClick={() => setState(NodeActionsState.Info)}
+            variant="outlined"
+            color="error"
+          >
+            Cancel
+          </Button>
+        </Box>
       </Box>
-    </div>
+    </Paper>
   );
-}
+};
+
+export default NodesCSV;

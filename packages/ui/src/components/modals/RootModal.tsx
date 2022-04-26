@@ -5,16 +5,10 @@ import { modalStateVar } from "apollo";
 
 import { ConfirmationModal } from "./ConfirmationModal";
 import { HostsForm } from "./HostsForm";
-import { NodesCSV } from "./NodesCSV";
 import { NodesForm } from "./NodesForm";
 import { LocationsForm } from "./LocationsForm";
 
-export type IModalTypes =
-  | "confirmation"
-  | "hostsForm"
-  | "nodesCsv"
-  | "nodesForm"
-  | "locationsForm";
+export type IModalTypes = "confirmation" | "hostsForm" | "nodesForm" | "locationsForm";
 
 export interface IModalState {
   modalType: IModalTypes;
@@ -28,7 +22,6 @@ export interface IModalState {
 const MODAL_TYPES = {
   confirmation: ConfirmationModal,
   hostsForm: HostsForm,
-  nodesCsv: NodesCSV,
   nodesForm: NodesForm,
   locationsForm: LocationsForm,
 };

@@ -3,10 +3,10 @@ import { Alert, AlertTitle, Grid, LinearProgress } from "@mui/material";
 
 import { Table } from "components";
 import { INode, useGetHostsChainsAndLoadBalancersQuery, useNodesQuery } from "types";
-import { ModalHelper } from "utils";
 
 import NodesInventory from "components/Nodes/NodesInventory";
 import NodeCRUD from "components/Nodes/NodeCRUD";
+import NodesCSV from "components/Nodes/NodesCSV";
 
 export enum NodeActionsState {
   Info = "info",
@@ -58,39 +58,22 @@ export function Nodes() {
     // columnsOrder.push("dispatch");
   }
 
-  /* ----- Modal Methods ----- */
   const nodeNames = data?.nodes.map(({ name }) => name);
   const hostPortCombos = data?.nodes.map(({ host, port }) => `${host.id}/${port}`);
   const hostPortCsvCombos = data?.nodes.map(({ host, port }) => `${host.name}/${port}`);
 
-  const handleOpenCreateNodeModal = () => {
-    ModalHelper.open({
-      modalType: "nodesForm",
-      modalProps: { formData, refetchNodes: refetch, nodeNames, hostPortCombos },
-    });
-  };
-
-  const handleOpenUploadNodeCSVModal = () => {
-    ModalHelper.open({
-      modalType: "nodesCsv",
-      modalProps: { formData, refetchNodes: refetch, nodeNames, hostPortCsvCombos },
-    });
-  };
-
   /* ----- Layout ----- */
-  if (loading) return <LinearProgress />;
+  if (loading || formLoading) return <LinearProgress />;
   if (error || formError) {
     return (
-      <>
-        <Alert severity="error">
-          <AlertTitle>{"Error fetching data: "}</AlertTitle>
-          {(error || formError).message}
-        </Alert>
-      </>
+      <Alert severity="error">
+        <AlertTitle>{"Error fetching data: "}</AlertTitle>
+        {(error || formError).message}
+      </Alert>
     );
   }
 
-  if (data) {
+  if (data && formData) {
     return (
       <>
         <NodesInventory nodes={data?.nodes as INode[]} setState={setState} />
@@ -107,6 +90,17 @@ export function Nodes() {
                 setSelectedNode={setSelectedNode}
                 refetch={refetch}
               ></NodeCRUD>
+            </Grid>
+          )}
+          {state === "upload" && (
+            <Grid item sm={12} lg={6} order={{ lg: 2 }}>
+              <NodesCSV
+                nodeNames={nodeNames}
+                formData={formData}
+                hostPortCsvCombos={hostPortCsvCombos}
+                refetchNodes={refetch}
+                setState={setState}
+              ></NodesCSV>
             </Grid>
           )}
           <Grid item sm={12} lg={6} order={{ lg: 1 }}>
