@@ -26,7 +26,7 @@ export class App {
     await connect();
     await createFrontendAlertChannel();
 
-    const nodes = await NodesModel.find({ muted: false, chain: "" })
+    const nodes = await NodesModel.find({ muted: false })
       .populate("host")
       .populate("chain")
       .exec();
