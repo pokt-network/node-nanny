@@ -117,18 +117,20 @@ function DashboardContent() {
             </IconButton>
           </Toolbar>
           <Nav />
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "end",
-              paddingBottom: 6,
-              paddingLeft: 2,
-              paddingRight: 2,
-              height: "100%",
-            }}
-          >
-            <Typography variant="body2">© {year} Pocket Network Inc</Typography>
-          </Box>
+          {open && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "end",
+                paddingBottom: 6,
+                paddingLeft: 2,
+                paddingRight: 2,
+                height: "100%",
+              }}
+            >
+              <Typography variant="body2">© {year} Pocket Network Inc</Typography>
+            </Box>
+          )}
         </Drawer>
         <Box
           component="main"
