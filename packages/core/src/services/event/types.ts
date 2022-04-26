@@ -16,6 +16,7 @@ export interface IRotationParams {
   frontendUrl?: string;
   server?: string;
   manual?: boolean;
+  dispatch?: boolean;
 }
 
 export interface IToggleServerParams {
