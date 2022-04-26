@@ -8,6 +8,7 @@ import { NodeActionsState } from "pages/Nodes";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
 
 interface NodesInventoryProps {
   nodes: INode[];
@@ -36,18 +37,35 @@ export const NodesInventory = ({ nodes, setState }: NodesInventoryProps) => {
           <Title>Nodes Inventory</Title>
         </Grid>
         <Grid item sm={12} md>
-          <Grid container spacing={2} columns={{ xs: 12, md: 3 }}>
+          <Grid
+            container
+            spacing={4}
+            columns={{ xs: 12, md: 3 }}
+            sx={{
+              "& .MuiGrid-item": {
+                display: "flex",
+                alignItems: "center",
+              },
+              "& .MuiTypography-body1": {
+                marginLeft: 1,
+              },
+            }}
+          >
             <Grid item>
-              <Typography>{nodesTotal} Nodes</Typography>
+              <Chip label={nodesTotal} variant="outlined"></Chip>
+              <Typography>Nodes</Typography>
             </Grid>
             <Grid item>
-              <Typography>{healthyTotal} Healthy</Typography>
+              <Chip label={healthyTotal} variant="outlined"></Chip>
+              <Typography>Healthy</Typography>
             </Grid>
             <Grid item>
-              <Typography>{errorTotal} Error</Typography>
+              <Chip label={errorTotal} variant="outlined"></Chip>
+              <Typography>Error</Typography>
             </Grid>
             <Grid item>
-              <Typography>{mutedTotal} Muted</Typography>
+              <Chip label={mutedTotal} variant="outlined"></Chip>
+              <Typography>Muted</Typography>
             </Grid>
           </Grid>
         </Grid>
