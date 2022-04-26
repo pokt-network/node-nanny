@@ -4,7 +4,6 @@ import { Fade, Modal } from "@mui/material";
 import { modalStateVar } from "apollo";
 
 import { ConfirmationModal } from "./ConfirmationModal";
-import { HostsCSV } from "./HostsCSV";
 import { HostsForm } from "./HostsForm";
 import { NodesCSV } from "./NodesCSV";
 import { NodesForm } from "./NodesForm";
@@ -12,7 +11,6 @@ import { LocationsForm } from "./LocationsForm";
 
 export type IModalTypes =
   | "confirmation"
-  | "hostsCsv"
   | "hostsForm"
   | "nodesCsv"
   | "nodesForm"
@@ -29,7 +27,6 @@ export interface IModalState {
 
 const MODAL_TYPES = {
   confirmation: ConfirmationModal,
-  hostsCsv: HostsCSV,
   hostsForm: HostsForm,
   nodesCsv: NodesCSV,
   nodesForm: NodesForm,
