@@ -34,7 +34,7 @@ export class Service {
     try {
       if (!manual) {
         const status = await this.getServerStatus({ destination, server, loadBalancers });
-        if (status === ELoadBalancerStatus.ONLINE) return;
+        if (status === ELoadBalancerStatus.ONLINE) return false;
         if (status === ELoadBalancerStatus.ERROR) {
           const message = this.getErrorMessage(server, "error");
           throw message;
@@ -73,8 +73,9 @@ export class Service {
         }
 
         const status = await this.getServerStatus({ destination, server, loadBalancers });
-        if (status === ELoadBalancerStatus.OFFLINE) {
-          const message = this.getErrorMessage(server, "offline");
+        if (status === ELoadBalancerStatus.OFFLINE) return false;
+        if (status === ELoadBalancerStatus.ERROR) {
+          const message = this.getErrorMessage(server, "error");
           throw message;
         }
       }
