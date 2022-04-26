@@ -2,9 +2,10 @@ import axios, { AxiosInstance } from "axios";
 import { FilterQuery } from "mongoose";
 import { api as pagerDutyApi } from "@pagerduty/pdjs";
 
-import { WebhookModel, IWebhook } from "../../models";
+import { Service as BaseService } from "../base-service/base-service";
+import { INode, IWebhook, WebhookModel } from "../../models";
 import { AlertTypes } from "../../types";
-import { colorLog } from "../../utils";
+import { colorLog, s, is } from "../../utils";
 import {
   AlertColor,
   SendMessageInput,
@@ -12,14 +13,16 @@ import {
   IncidentLevel,
   PagerDutyServices,
 } from "./types";
+import { EAlertTypes, IRedisEvent } from "../event/types";
 
 import env from "../../environment";
 
-export class Service {
+export class Service extends BaseService {
   private discordClient: AxiosInstance;
   private pagerDutyClient: any;
 
   constructor() {
+    super();
     this.discordClient = axios.create({
       headers: { "Content-Type": "application/json" },
     });
@@ -27,22 +30,6 @@ export class Service {
   }
 
   /* ----- Discord Alerts ----- */
-  // sendErrorChannel = async ({ title, message }: AlertTypes.IErrorChannelAlertParams) => {
-  //   colorLog(`${title}\n${message}`, "red");
-  //   try {
-  //     return await this.sendDiscordMessage({
-  //       title,
-  //       color: AlertColor.ERROR,
-  //       channel: env("MONITOR_TEST")
-  //         ? AlertTypes.Webhooks.WEBHOOK_ERRORS_TEST
-  //         : AlertTypes.Webhooks.WEBHOOK_ERRORS,
-  //       fields: [{ name: "Error", value: this.trimMessage(message) }],
-  //     });
-  //   } catch (error) {
-  //     console.error(error?.message);
-  //   }
-  // };
-
   sendError = async ({
     title,
     message,
@@ -188,5 +175,85 @@ export class Service {
     } catch (error) {
       throw new Error(`Could not create PD incident. ${error}`);
     }
+  }
+
+  /* ----- Message String Methods ----- */
+  getAlertMessage(
+    { count, conditions, name, ethSyncing, height, details }: IRedisEvent,
+    alertType: EAlertTypes,
+    nodeCount: number,
+    nodeTotal: number,
+    destination: string,
+  ): { message: string; statusStr: string } {
+    const badOracles = details?.badOracles?.join("\n");
+    const noOracle = details?.noOracle;
+
+    const statusStr = `${name} is ${conditions}.`;
+    const countStr =
+      alertType !== EAlertTypes.RESOLVED
+        ? `This event has occurred ${count} time${s(count)} since first occurrence.`
+        : "";
+    const ethSyncStr = ethSyncing ? `ETH Syncing - ${ethSyncing}` : "";
+    const heightStr = height
+      ? `Height - ${
+          typeof height === "number"
+            ? height
+            : `Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
+        }`
+      : "";
+    let nodeCountStr =
+      nodeCount && nodeCount >= 0
+        ? `${nodeCount} of ${nodeTotal} node${s(nodeTotal)} ${is(
+            nodeTotal,
+          )} in rotation for ${destination}.`
+        : "";
+    if (nodeCount <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
+    const badOracleStr = badOracles?.length
+      ? `\nWarning - Bad Oracle${s(badOracles.length)}\n${badOracles}`
+      : "";
+    const noOracleStr = noOracle
+      ? `\nWarning - No Oracle for node. Node has ${details?.numPeers} peers.`
+      : "";
+
+    return {
+      message: [countStr, ethSyncStr, heightStr, badOracleStr, noOracleStr, nodeCountStr]
+        .filter(Boolean)
+        .join("\n"),
+      statusStr,
+    };
+  }
+
+  getRotationMessage(
+    { backend, chain, host, loadBalancers }: INode,
+    enable: boolean,
+    mode: "success" | "error",
+    nodeCount: number,
+    nodeTotal: number,
+    error?: any,
+  ): { title: string; message: string } {
+    const name = `${host.name}/${chain.name}`;
+    const haProxyMessage = this.getHAProxyMessage({
+      destination: backend,
+      loadBalancers,
+    });
+    const title = enable
+      ? {
+          success: `[Added] - Successfully added ${name} to rotation`,
+          error: `[Error] - Could not add ${name} to rotation`,
+        }[mode]
+      : {
+          success: `[Removed] - Successfully removed ${name} from rotation`,
+          error: `[Error] - Could not remove ${name} from rotation`,
+        }[mode];
+    let nodeCountStr =
+      nodeCount && nodeCount >= 0
+        ? `${nodeCount} of ${nodeTotal} node${s(nodeTotal)} ${is(
+            nodeCount,
+          )} in rotation for ${backend}.`
+        : "";
+    if (nodeCount <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
+    const message = [haProxyMessage, nodeCountStr, error].filter(Boolean).join("\n");
+
+    return { title, message };
   }
 }
