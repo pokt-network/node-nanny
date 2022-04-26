@@ -4,20 +4,25 @@ import Table from "components/Table";
 import { LogsSelectNodes } from "components/Logs/LogsSelectNodes";
 import { useLogsQuery, useNodesQuery, ILogsQuery, IParsedLog } from "types";
 
-import {
-  Alert,
-  AlertTitle,
-  LinearProgress,
-} from "@mui/material";
+import { Alert, AlertTitle, LinearProgress } from "@mui/material";
+
+interface LogWithId extends IParsedLog {
+  id: string;
+}
 
 export default function LogsMongo() {
   const [nodeIds, setNodeIds] = useState<string[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(25);
-  const [selectedRow, setSelectedRow] = useState<IParsedLog>(undefined);
+  const [selectedRow, setSelectedRow] = useState<LogWithId>(undefined);
 
   const { data: nodesData, error: nodesError, loading: nodesLoading } = useNodesQuery();
-  const { data: logsData, error: logsError, fetchMore, refetch } = useLogsQuery({
+  const {
+    data: logsData,
+    error: logsError,
+    fetchMore,
+    refetch,
+  } = useLogsQuery({
     variables: { input: { nodeIds: nodeIds, page: 1, limit: rowsPerPage } },
     onCompleted: () => setLogsLoading(false),
     onError: () => setLogsLoading(false),
@@ -42,25 +47,25 @@ export default function LogsMongo() {
   }, [nodeIds, refetch]);
 
   const onPageChange = (page: number) => {
-    console.log(page)
+    console.log(page);
     if (logsData.logs.hasNextPage) {
       setLogsLoading(true);
       fetchMore({
-        variables: { 
+        variables: {
           input: {
             nodeIds,
             page: page + 1,
-            limit: rowsPerPage
-          }
+            limit: rowsPerPage,
+          },
         },
       });
     }
-  }
+  };
 
-  const parseLogsForTable = (logs: ILogsQuery["logs"]["docs"]): IParsedLog[] => {
+  const parseLogsForTable = (logs: ILogsQuery["logs"]["docs"]): LogWithId[] => {
     return logs.map(({ message, timestamp }, i) => {
       const parsedMessage = JSON.parse(message);
-      const stamp = new Date(Number(timestamp)).toISOString()
+      const stamp = new Date(Number(timestamp)).toISOString();
       return {
         id: `${stamp}_${i}`,
         timestamp: stamp,
@@ -84,8 +89,12 @@ export default function LogsMongo() {
 
   return (
     <>
-      <LogsSelectNodes nodes={nodesData.nodes} nodeIds={nodeIds} setNodeIds={setNodeIds} />
-      <Table<IParsedLog> 
+      <LogsSelectNodes
+        nodes={nodesData.nodes}
+        nodeIds={nodeIds}
+        setNodeIds={setNodeIds}
+      />
+      <Table<LogWithId>
         type="Log"
         paginate
         searchable
