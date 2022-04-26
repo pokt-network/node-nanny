@@ -11,7 +11,7 @@ import { NodesModel } from "./models";
   for await (const node of nodes) {
     const server = node.name.split("/")[1];
     const backend = "poktdispatch";
-    await NodesModel.updateOne({ _id: node.id }, { server, backend });
+    await NodesModel.updateOne({ _id: node.id }, { server, backend, haProxy: true });
     nodesUpdated++;
     console.log(`Updated ${nodesUpdated} of ${nodes.length} nodes...`);
   }
