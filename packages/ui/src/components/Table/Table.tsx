@@ -1,4 +1,11 @@
-import { ChangeEvent, Dispatch, MouseEvent, SetStateAction, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  Dispatch,
+  MouseEvent,
+  SetStateAction,
+  useEffect,
+  useState,
+} from "react";
 import {
   Table as MUITable,
   TableBody,
@@ -11,7 +18,7 @@ import {
   Collapse,
   Box,
   IconButton,
-  CircularProgress
+  CircularProgress,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
@@ -19,8 +26,8 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
 import { s } from "utils";
-import Paper from "components/Paper"
-import Title from "components/Title"
+import Paper from "components/Paper";
+import Title from "components/Title";
 import TableHead from "./TableHead";
 import TableFilter from "./TableFilter";
 
@@ -109,12 +116,11 @@ export const Table = <T extends unknown>({
   onSelectRow,
   onPageChange,
   onRowsPerPageChange,
-  mapDisplay
+  mapDisplay,
 }: TableProps<T>) => {
-
   type RowWithId = T & {
-    id: string
-  }
+    id: string;
+  };
 
   const [allRows, setAllRows] = useState<RowWithId[]>([]);
   const [currRows, setCurrRows] = useState(allRows);
@@ -134,15 +140,15 @@ export const Table = <T extends unknown>({
   };
 
   const handleChangePage = (_: unknown, newPage: number) => {
-    console.log(newPage)
-    if(newPage >= allRows.length / rowsPerPage) {
-      onPageChange(newPage)
+    console.log(newPage);
+    if (newPage >= allRows.length / rowsPerPage) {
+      onPageChange(newPage);
     }
     setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
-    onRowsPerPageChange?.(parseInt(event.target.value, 10))
+    onRowsPerPageChange?.(parseInt(event.target.value, 10));
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -152,68 +158,72 @@ export const Table = <T extends unknown>({
 
   useEffect(() => {
     const rowsWithId: RowWithId[] = rows.map((row, index) => {
-      if(!(row as any).id) {
-        (row as any).id = `${index}`
+      if (!(row as any).id) {
+        (row as any).id = `${index}`;
       }
-      return (row as T & { id: string })
-    })
-    setAllRows(rowsWithId)
-  }, [rows])
+      return row as T & { id: string };
+    });
+    setAllRows(rowsWithId);
+  }, [rows]);
 
   useEffect(() => {
-    if(currRows.length === 0) {
-      setCurrRows(allRows)
+    if (currRows.length === 0) {
+      setCurrRows(allRows);
     }
-  }, [currRows, allRows])
+  }, [currRows, allRows]);
 
   useEffect(() => {
-    let rows = allRows
-    if(mapDisplay) {
-      rows = rows.map(mapDisplay)
+    let rows = allRows;
+    if (mapDisplay) {
+      rows = rows.map(mapDisplay);
     }
-    if(searchable && searchTerm !== "") {
-      console.log("searchFilter")
+    if (searchable && searchTerm !== "") {
+      console.log("searchFilter");
       rows = rows.filter((row) =>
-      Object.values(row)
-      .join()
-      .toLowerCase()
-      .trim()
-      .includes(searchTerm.toLowerCase().trim())
-      )
+        Object.values(row)
+          .join()
+          .toLowerCase()
+          .trim()
+          .includes(searchTerm.toLowerCase().trim()),
+      );
     }
-    if(filterEnabled && filter && filter !== "All") {
-      console.log("filterFilter")
-      rows = rows.filter(filterFunctions[filter])
+    if (filterEnabled && filter && filter !== "All") {
+      console.log("filterFilter");
+      rows = rows.filter(filterFunctions[filter]);
     }
-    setCurrRows(rows)
-  }, [searchable, searchTerm, allRows, filterEnabled, filterFunctions, filter, mapDisplay])
+    setCurrRows(rows);
+  }, [
+    searchable,
+    searchTerm,
+    allRows,
+    filterEnabled,
+    filterFunctions,
+    filter,
+    mapDisplay,
+  ]);
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
   const getHeaderText = (): string => {
-    const filterString = !filterEnabled || filter === "All" ? "" : filter
-    const searchString = searchTerm ? `"${searchTerm}"` : ""
-    return `${currRows.length !== 0 ? currRows.length : ""} ${searchString} ${filterString} ${type}${s(rows.length)}`;
+    const filterString = !filterEnabled || filter === "All" ? "" : filter;
+    const searchString = searchTerm ? `"${searchTerm}"` : "";
+    return `${
+      currRows.length !== 0 ? currRows.length : ""
+    } ${searchString} ${filterString} ${type}${s(rows.length)}`;
   };
 
   const handleOnSelect = (row) => {
-    if(selectedRow === row.id) {
+    if (selectedRow === row.id) {
       onSelectRow?.(null);
     } else {
-      onSelectRow?.(
-        allRows.find(r => r.id === row.id),
-      );
+      onSelectRow?.(allRows.find((r) => r.id === row.id));
     }
-  }
+  };
 
   return (
     <Paper>
-      {type && (
-        <Title>
-          {getHeaderText()}
-        </Title>
-      )}
-      <TableFilter 
+      {type && <Title>{getHeaderText()}</Title>}
+      <TableFilter
         filters={filters}
         filter={filter}
         setFilter={setFilter}
@@ -222,13 +232,8 @@ export const Table = <T extends unknown>({
         searchEnabled={true}
         filterEnabled={true}
       />
-      <TableContainer  sx={{ maxHeight: height || "none" }}>
-        <MUITable
-          stickyHeader
-          sx={{ minWidth: 750 }}
-          aria-labelledby="tableTitle"
-          size="small"
-        >
+      <TableContainer sx={{ maxHeight: height || "none" }}>
+        <MUITable stickyHeader aria-labelledby="tableTitle" size="small">
           <TableHead
             rows={rows}
             order={order}
@@ -238,80 +243,107 @@ export const Table = <T extends unknown>({
             expandable={expandable}
           />
           <TableBody>
-            {!loading && currRows
-              .sort(getComparator(order, orderBy))
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row) => {
-                return (
-                  <>
-                    <TableRow
-                      key={String(row.id)}
-                      sx={{
-                        "&:last-child td, &:last-child th": { border: 0 },
-                        cursor: `${onSelectRow ? "pointer" : "default"}`,
-                      }}
-                      hover={!!onSelectRow}
-                      selected={selectedRow === String(row.id)}
-                    >
-                      {expandable && (
-                        <TableCell
-                          sx={{
-                            display: "flex",
-                            alignItems: "center"
-                          }}
-                        >
-                          {typeof (row as any).status === "string" && (
-                            <Chip
-                              sx={{ height: "10px", width: "10px", marginTop: 2, marginBottom: 2, marginRight: 1, top: "-1px", position: "relative"}}
-                              color={
-                                ({ OK: "success", ERROR: "error" }[(row as any).status] as any) ||
-                                ("default" as any)
-                              }
-                            />
-                          )}
-                          {row[expandKey] && (
-                            <IconButton
-                              aria-label="expand row"
-                              size="small"
-                              onClick={() => handleOnSelect(row)}
-                            >
-                              {selectedRow === String(row.id) ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                            </IconButton>
-                          )}
-                        </TableCell>
-                      )}
-                      {getSortedColumns(row, false, columnsOrder)
-                        .filter(([key]) => key !== "id" && key !== "__typename")
-                        .map(([key, value], i) => {
-                          return (
-                            <TableCell
-                              key={`${value as any}-${i}`}
-                              align={!i ? "left" : "right"}
-                              onClick={() => handleOnSelect(row)}
-                            >
-                              <CellContents cell={value} />
-                            </TableCell>
-                          );
-                        })}
-                    </TableRow>
-                    {expandable && row[expandKey] && (
-                      <TableRow>
-                        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-                          <Collapse in={selectedRow === String(row.id)} timeout="auto" unmountOnExit>
-                            <Box sx={{ margin: 1 }}>
-                              <Typography gutterBottom component="div" style={{ fontSize: 10 }}>
-                                <div style={{ whiteSpace: "pre-wrap", maxWidth: "90%" }}>
-                                  {JSON.stringify(row[expandKey], null, 2)}
-                                </div>
-                              </Typography>
-                            </Box>
-                          </Collapse>
-                        </TableCell>
+            {!loading &&
+              currRows
+                .sort(getComparator(order, orderBy))
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((row, index) => {
+                  return (
+                    <>
+                      <TableRow
+                        key={String(row.id) ?? index}
+                        sx={{
+                          "&:last-child td, &:last-child th": { border: 0 },
+                          cursor: `${onSelectRow ? "pointer" : "default"}`,
+                        }}
+                        hover={!!onSelectRow}
+                        selected={selectedRow === String(row.id)}
+                      >
+                        {expandable && (
+                          <TableCell
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                            }}
+                          >
+                            {typeof (row as any).status === "string" && (
+                              <Chip
+                                sx={{
+                                  height: "10px",
+                                  width: "10px",
+                                  marginTop: 2,
+                                  marginBottom: 2,
+                                  marginRight: 1,
+                                  top: "-1px",
+                                  position: "relative",
+                                }}
+                                color={
+                                  ({ OK: "success", ERROR: "error" }[
+                                    (row as any).status
+                                  ] as any) || ("default" as any)
+                                }
+                              />
+                            )}
+                            {row[expandKey] && (
+                              <IconButton
+                                aria-label="expand row"
+                                size="small"
+                                onClick={() => handleOnSelect(row)}
+                              >
+                                {selectedRow === String(row.id) ? (
+                                  <KeyboardArrowUpIcon />
+                                ) : (
+                                  <KeyboardArrowDownIcon />
+                                )}
+                              </IconButton>
+                            )}
+                          </TableCell>
+                        )}
+                        {getSortedColumns(row, false, columnsOrder)
+                          .filter(([key]) => key !== "id" && key !== "__typename")
+                          .map(([key, value], i) => {
+                            return (
+                              <TableCell
+                                key={`${value as any}-${i}`}
+                                align={!i ? "left" : "right"}
+                                onClick={() => handleOnSelect(row)}
+                              >
+                                <CellContents cell={value} />
+                              </TableCell>
+                            );
+                          })}
                       </TableRow>
-                    )}
-                  </>
-                );
-              })}
+                      {expandable && row[expandKey] && (
+                        <TableRow>
+                          <TableCell
+                            style={{ paddingBottom: 0, paddingTop: 0 }}
+                            colSpan={6}
+                          >
+                            <Collapse
+                              in={selectedRow === String(row.id)}
+                              timeout="auto"
+                              unmountOnExit
+                            >
+                              <Box sx={{ margin: 1 }}>
+                                <Typography
+                                  gutterBottom
+                                  component="div"
+                                  style={{ fontSize: 10 }}
+                                >
+                                  <div
+                                    style={{ whiteSpace: "pre-wrap", maxWidth: "90%" }}
+                                  >
+                                    {JSON.stringify(row[expandKey], null, 2)}
+                                  </div>
+                                </Typography>
+                              </Box>
+                            </Collapse>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
+                  );
+                })}
             {emptyRows > 0 && (
               <TableRow
                 style={{
@@ -340,7 +372,11 @@ export const Table = <T extends unknown>({
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={allRows.length / rowsPerPage - 1 === page && serverLoading ? -1 : allRows.length}
+          count={
+            allRows.length / rowsPerPage - 1 === page && serverLoading
+              ? -1
+              : allRows.length
+          }
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -349,6 +385,6 @@ export const Table = <T extends unknown>({
       )}
     </Paper>
   );
-}
+};
 
-export default Table
+export default Table;

@@ -46,7 +46,7 @@ export const TableHead = ({
         )}
         {headCells.map((headCell, i) => (
           <TableCell
-            key={headCell.id}
+            key={headCell.id ?? i}
             align={!i ? "left" : "right"}
             sortDirection={orderBy === headCell.id ? order : false}
             sx={{ backgroundColor: "transparent", color: "secondary.main", fontWeight: "bold" }}
