@@ -1,8 +1,8 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
-import util from "util";
 import axiosRetry from "axios-retry";
 import { exec } from "child_process";
 import { Types } from "mongoose";
+import util from "util";
 
 import { IChain, INode, ChainsModel, NodesModel, OraclesModel } from "../../models";
 import {
@@ -18,7 +18,7 @@ import {
   IRPCResponse,
   IRPCSyncResponse,
 } from "./types";
-import { hexToDec } from "../../utils";
+import { camelToTitle, hexToDec } from "../../utils";
 
 export class Service {
   private rpc: AxiosInstance;
@@ -214,7 +214,6 @@ export class Service {
       const internalHeight = hexToDec(internalBh.result);
       const externalHeight = externalBh;
 
-      const ethSyncingResult = ethSyncing.result;
       const delta = Math.abs(externalHeight - internalHeight);
 
       if (internalBh.error?.code) {
@@ -244,7 +243,7 @@ export class Service {
 
       return {
         ...healthResponse,
-        ethSyncing: ethSyncingResult,
+        ethSyncing,
         peers: numPeers,
         height: { internalHeight, externalHeight, delta },
       };
@@ -382,7 +381,7 @@ export class Service {
     url: string,
     auth?: string,
     harmony?: boolean,
-  ): Promise<IRPCSyncResponse> {
+  ): Promise<string> {
     const method = harmony ? "hmyv2_syncing" : "eth_syncing";
     try {
       const { data } = await this.rpc.post<IRPCSyncResponse>(
@@ -390,7 +389,9 @@ export class Service {
         { jsonrpc: "2.0", id: 1, method, params: [] },
         this.getAxiosRequestConfig(auth),
       );
-      return data;
+      return Object.entries(data.result)
+        .map(([key, value]) => `${camelToTitle(key)}: ${hexToDec(value)}`)
+        .join(" / ");
     } catch (error) {
       throw new Error(`getEthSyncing could not contact blockchain node ${error} ${url}`);
     }
