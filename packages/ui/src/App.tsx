@@ -40,34 +40,34 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== "open" 
       }),
       background: "linear-gradient(123.23deg, #141C24 11.81%, #262A34 98.51%)",
       borderRadius: "0px 20px 20px 0px",
-      border: "none"
+      border: "none",
     },
   }),
 );
 
 const mdTheme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: "dark",
     primary: {
-      main: "#C5EC4B"
+      main: "#C5EC4B",
     },
     secondary: {
-      main: "#1D8AED"
+      main: "#1D8AED",
     },
     success: {
-      main: "#307C0D"
+      main: "#307C0D",
     },
     error: {
-      main: "#F93232"
+      main: "#F93232",
     },
     background: {
       paper: "#192430",
-      default: "#192430"
-    }
+      default: "#192430",
+    },
   },
   typography: {
-    fontFamily: 'Manrope, sans-serif'
-  }
+    fontFamily: "Manrope, sans-serif",
+  },
 });
 
 function DashboardContent() {
@@ -75,16 +75,16 @@ function DashboardContent() {
   const toggleDrawer = () => {
     setOpen(!open);
   };
-  const year = new Date().getFullYear()
+  const year = new Date().getFullYear();
 
   return (
     <ThemeProvider theme={mdTheme}>
       <RootModal />
-      <Box 
-        sx={{ 
-          display: "flex", 
-          height: '100vh',
-          background: "linear-gradient(106.7deg, #0E1318 16.95%, #111A1F 87.74%)"
+      <Box
+        sx={{
+          display: "flex",
+          height: "100vh",
+          background: "linear-gradient(106.7deg, #0E1318 16.95%, #111A1F 87.74%)",
         }}
       >
         <CssBaseline />
@@ -104,53 +104,63 @@ function DashboardContent() {
               aria-expanded={!!open}
               onClick={toggleDrawer}
             >
-              <MenuIcon sx={{
-                ...(open && { display: "none" })
-              }} />
-              <ChevronLeftIcon sx={{
-                ...(!open && { display: "none" })
-              }} />
+              <MenuIcon
+                sx={{
+                  ...(open && { display: "none" }),
+                }}
+              />
+              <ChevronLeftIcon
+                sx={{
+                  ...(!open && { display: "none" }),
+                }}
+              />
             </IconButton>
           </Toolbar>
           <Nav />
-          <Box sx={{
-            display: "flex",
-            alignItems: "end",
-            paddingBottom: 6,
-            paddingLeft: 2,
-            paddingRight: 2,
-            height: "100%"
-          }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "end",
+              paddingBottom: 6,
+              paddingLeft: 2,
+              paddingRight: 2,
+              height: "100%",
+            }}
+          >
             <Typography variant="body2">© {year} Pocket Network Inc</Typography>
           </Box>
         </Drawer>
-        <Container
+        <Box
           component="main"
-          maxWidth="lg"
           sx={{
             flexGrow: 1,
             overflow: "auto",
           }}
         >
-          <Box sx={{ mt: 2, mb: 6 }}>
-            <Typography
-              flex="1"
-              component="h1"
-              variant="h5"
-              noWrap
-              sx={{ flexGrow: 1 }}
-            >
-              Pocket Node Nanny
-            </Typography>
-          </Box>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/logs" element={<Logs />} />
-            <Route path="/nodes" element={<Nodes />} />
-            <Route path="/hosts" element={<Hosts />} />
-          </Routes>
-          <Box mb={6} />
-        </Container>
+          <Container maxWidth="xl">
+            <Box sx={{ mt: 2, mb: 6 }}>
+              <Typography
+                flex="1"
+                component="h1"
+                variant="h5"
+                noWrap
+                sx={{
+                  flexGrow: 1,
+                  fontWeight: "700",
+                }}
+              >
+                Pocket Node Nanny
+              </Typography>
+            </Box>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/logs" element={<Logs />} />
+              <Route path="/nodes" element={<Nodes />} />
+              <Route path="/hosts" element={<Hosts />} />
+            </Routes>
+            <Box mb={6} />
+          </Container>
+        </Box>
       </Box>
     </ThemeProvider>
   );
