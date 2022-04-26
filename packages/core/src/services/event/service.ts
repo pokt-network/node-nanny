@@ -1,17 +1,15 @@
 import { AlertColor } from "../alert/types";
+import { Service as BaseService } from "../base-service/base-service";
 import { EErrorConditions, EErrorStatus } from "../health/types";
 import { INode, NodesModel } from "../../models";
-import { AlertTypes } from "../../types";
 import {
   EAlertTypes,
   IRedisEvent,
   IRedisEventParams,
   IToggleServerParams,
 } from "./types";
+import { AlertTypes } from "../../types";
 import { s, is } from "../../utils";
-
-import { Service as BaseService } from "../base-service/base-service";
-
 import env from "../../environment";
 
 export class Service extends BaseService {
@@ -127,11 +125,6 @@ export class Service extends BaseService {
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
     const { backend, frontend, loadBalancers, dispatch, url } = node;
 
-    const nodeCount = await this.getServerCount({
-      destination: frontend || backend,
-      loadBalancers,
-      frontendUrl: frontend ? url : null,
-    });
     const healthy = conditions === EErrorConditions.HEALTHY;
     const notSynced =
       env("PNF") && dispatch
@@ -140,6 +133,12 @@ export class Service extends BaseService {
           conditions === EErrorConditions.NO_RESPONSE
         : conditions === EErrorConditions.NOT_SYNCHRONIZED;
     const dispatchFrontendDown = Boolean(env("PNF") && dispatch && frontend && notSynced);
+
+    const nodeCount = await this.getServerCount({
+      destination: frontend || backend,
+      loadBalancers,
+      frontendUrl: frontend ? url : null,
+    });
 
     const { message, statusStr } = this.getAlertMessage(
       event,
