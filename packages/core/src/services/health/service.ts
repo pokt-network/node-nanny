@@ -402,7 +402,10 @@ export class Service {
         this.getAxiosRequestConfig(auth),
       );
       return Object.entries(data.result)
-        .map(([key, value]) => `${camelToTitle(key)}: ${hexToDec(value)}`)
+        .map(([key, value]) => {
+          const syncValue = key.toLowerCase().includes("hash") ? value : hexToDec(value);
+          return `${camelToTitle(key)}: ${syncValue}`;
+        })
         .join(" / ");
     } catch (error) {
       throw new Error(`getEthSyncing could not contact blockchain node ${error} ${url}`);
