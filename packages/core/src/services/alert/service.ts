@@ -187,6 +187,7 @@ export class Service extends BaseService {
   ): { message: string; statusStr: string } {
     const badOracles = details?.badOracles?.join("\n");
     const noOracle = details?.noOracle;
+    const nodeIsAheadOfPeer = details?.nodeIsAheadOfPeer;
 
     const statusStr = `${name} is ${conditions}.`;
     const countStr =
@@ -214,9 +215,20 @@ export class Service extends BaseService {
     const noOracleStr = noOracle
       ? `\nWarning - No Oracle for node. Node has ${details?.numPeers} peers.`
       : "";
+    const nodeIsAheadOfPeerStr = nodeIsAheadOfPeer
+      ? `Warning - Node is ahead of peers.\nDelta: ${nodeIsAheadOfPeer}`
+      : "";
 
     return {
-      message: [countStr, ethSyncStr, heightStr, badOracleStr, noOracleStr, nodeCountStr]
+      message: [
+        countStr,
+        ethSyncStr,
+        heightStr,
+        badOracleStr,
+        noOracleStr,
+        nodeCountStr,
+        nodeIsAheadOfPeerStr,
+      ]
         .filter(Boolean)
         .join("\n"),
       statusStr,
