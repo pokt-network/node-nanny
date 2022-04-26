@@ -184,7 +184,6 @@ export class Service {
       } else if (!healthyOracles.length && healthyPeers.length >= 2) {
         healthResponse = {
           ...healthResponse,
-          sendWarning: true,
           details: { noOracle: true, numPeers: healthyPeers.length },
         };
       }
@@ -194,7 +193,6 @@ export class Service {
     if (badOracles.length) {
       healthResponse = {
         ...healthResponse,
-        sendWarning: true,
         details: {
           ...healthResponse.details,
           badOracles: badOracles.map(({ url }) => url),
@@ -203,6 +201,7 @@ export class Service {
     }
 
     try {
+      /* Get node's block height, highest block height from reference nodes and ethSyncing object */
       const [internalBh, externalBh, ethSyncing] = await Promise.all([
         this.getBlockHeight(url, basicAuth, harmony),
         this.getReferenceBlockHeight(referenceUrls, allowance, harmony),
@@ -211,10 +210,23 @@ export class Service {
 
       const { result } = await this.getExternalPeers(url, basicAuth);
       const numPeers = hexToDec(result);
-      const internalHeight = hexToDec(internalBh.result);
-      const externalHeight = externalBh;
+      const nodeHeight = hexToDec(internalBh.result);
+      const peerHeight = externalBh;
 
-      const delta = externalHeight - internalHeight;
+      /* Compare highest ref height with node's height */
+      const difference = peerHeight - nodeHeight;
+      const nodeIsAheadOfPeer = difference + allowance < 0;
+      const delta = Math.abs(peerHeight - nodeHeight);
+
+      if (nodeIsAheadOfPeer) {
+        healthResponse = {
+          ...healthResponse,
+          details: {
+            ...healthResponse.details,
+            nodeIsAheadOfPeer: delta,
+          },
+        };
+      }
 
       if (internalBh.error?.code) {
         return {
@@ -225,7 +237,7 @@ export class Service {
         };
       }
 
-      if (delta > allowance) {
+      if (difference > allowance) {
         healthResponse = {
           ...healthResponse,
           status: EErrorStatus.ERROR,
@@ -233,7 +245,7 @@ export class Service {
         };
       }
 
-      if (Math.sign(delta + allowance) === -1) {
+      if (nodeIsAheadOfPeer) {
         healthResponse = {
           ...healthResponse,
           status: EErrorStatus.ERROR,
@@ -245,7 +257,7 @@ export class Service {
         ...healthResponse,
         ethSyncing,
         peers: numPeers,
-        height: { internalHeight, externalHeight, delta },
+        height: { internalHeight: nodeHeight, externalHeight: peerHeight, delta },
       };
     } catch (error) {
       const isTimeout = String(error).includes(`Error: timeout of 1000ms exceeded`);
