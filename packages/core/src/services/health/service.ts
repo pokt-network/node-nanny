@@ -214,7 +214,7 @@ export class Service {
       const internalHeight = hexToDec(internalBh.result);
       const externalHeight = externalBh;
 
-      const delta = Math.abs(externalHeight - internalHeight);
+      const delta = externalHeight - internalHeight;
 
       if (internalBh.error?.code) {
         return {
