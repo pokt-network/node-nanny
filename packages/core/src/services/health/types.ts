@@ -72,13 +72,13 @@ export interface IHealthResponse {
   delta?: number;
   refNodeUrls?: string[];
   highest?: any;
-  sendWarning?: boolean;
 }
 
 export interface IHealthResponseDetails {
   noOracle?: boolean;
   numPeers?: number;
   badOracles?: string[];
+  nodeIsAheadOfPeer?: number;
 }
 
 export interface IReferenceURL {
