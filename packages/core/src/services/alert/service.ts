@@ -2,7 +2,6 @@ import axios, { AxiosInstance } from "axios";
 import { FilterQuery } from "mongoose";
 import { api as pagerDutyApi } from "@pagerduty/pdjs";
 
-import { Service as BaseService } from "../base-service/base-service";
 import { INode, IWebhook, WebhookModel } from "../../models";
 import { AlertTypes } from "../../types";
 import { colorLog, s, is } from "../../utils";
@@ -13,16 +12,15 @@ import {
   IncidentLevel,
   PagerDutyServices,
 } from "./types";
-import { EAlertTypes, IRedisEvent } from "../event/types";
+import { EAlertTypes, IRedisEvent, IRotationParams } from "../event/types";
 
 import env from "../../environment";
 
-export class Service extends BaseService {
+export class Service {
   private discordClient: AxiosInstance;
   private pagerDutyClient: any;
 
   constructor() {
-    super();
     this.discordClient = axios.create({
       headers: { "Content-Type": "application/json" },
     });
@@ -194,7 +192,7 @@ export class Service extends BaseService {
       alertType !== EAlertTypes.RESOLVED
         ? `This event has occurred ${count} time${s(count)} since first occurrence.`
         : "";
-    const ethSyncStr = ethSyncing ? `ETH Syncing - ${ethSyncing}` : "";
+    const ethSyncStr = ethSyncing ? `\nETH Syncing - ${ethSyncing}\n` : "";
     const heightStr = height
       ? `Height - ${
           typeof height === "number"
@@ -222,8 +220,8 @@ export class Service extends BaseService {
     return {
       message: [
         countStr,
-        ethSyncStr,
         heightStr,
+        ethSyncStr,
         badOracleStr,
         noOracleStr,
         nodeCountStr,
@@ -267,5 +265,23 @@ export class Service extends BaseService {
     const message = [haProxyMessage, nodeCountStr, error].filter(Boolean).join("\n");
 
     return { title, message };
+  }
+
+  getHAProxyMessage({ destination, loadBalancers }: IRotationParams): string {
+    if (env("MONITOR_TEST")) return "";
+
+    const urls = loadBalancers
+      .map(({ url, ip }) => `http://${url || ip}:8050/stats?scope=${destination}`)
+      .join("\n");
+    return `HAProxy Status\n${urls}`;
+  }
+
+  getErrorMessage(server: string, mode: "count" | "error", count?: number): string {
+    return {
+      count: `Could not remove ${server} from load balancer. ${count} server${s(
+        count,
+      )} online.\nManual intervention required.`,
+      error: `Could not add ${server} to load balancer due to server status check returning ERROR status.`,
+    }[mode];
   }
 }
