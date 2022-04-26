@@ -1,4 +1,4 @@
-import { useState, useEffect, Dispatch } from "react";
+import { useState, useEffect, Dispatch, useRef } from "react";
 import { useFormik, FormikErrors } from "formik";
 import { ApolloQueryResult } from "@apollo/client";
 import {
@@ -22,9 +22,12 @@ import {
   IHostsQuery,
   ILocation,
   useCreateHostMutation,
+  useDeleteHostMutation,
   useUpdateHostMutation,
 } from "types";
 import { ModalHelper, regexTest } from "utils";
+import { HostActionsState } from "pages/Hosts";
+import Form from "components/Form";
 
 interface HostsFormProps {
   locations: ILocation[];
@@ -34,6 +37,7 @@ interface HostsFormProps {
   update?: boolean;
   read?: boolean;
   onCancel?: Dispatch<any>
+  setState?: Dispatch<HostActionsState>
 }
 
 export const HostForm = ({
@@ -43,12 +47,15 @@ export const HostForm = ({
   selectedHost,
   update,
   read,
-  onCancel
+  onCancel,
+  setState
 }: HostsFormProps) => {
   const [ipDisabled, setIPDisabled] = useState(false);
   const [fqdnDisabled, setFQDNDisabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [backendError, setBackendError] = useState("");
+
+  const locationRef = useRef<HTMLInputElement>()
 
   /* ----- Form Validation ----- */
   const validate = (values: IHostInput): FormikErrors<IHostInput> => {
@@ -100,11 +107,17 @@ export const HostForm = ({
     if (update && selectedHost) {
       setFieldValue("location", selectedHost.location.id);
       setFieldValue("name", selectedHost.name);
-      setFieldValue("ip", selectedHost.ip);
-      setFieldValue("fqdn", selectedHost.fqdn);
+      setFieldValue("ip", selectedHost.ip ?? "");
+      setFieldValue("fqdn", selectedHost.fqdn ?? "");
       setFieldValue("loadBalancer", selectedHost.loadBalancer);
     }
-  }, [update, selectedHost, setFieldValue]);
+    if (!selectedHost) {
+      resetForm()
+      if(locationRef.current) {
+        locationRef.current.querySelector("input").value = ""
+      }
+    }
+  }, [update, selectedHost, setFieldValue, resetForm]);
 
   /* ----- Mutations ----- */
   const [submitCreate] = useCreateHostMutation({
@@ -135,109 +148,101 @@ export const HostForm = ({
     },
   });
 
+  const [submitDelete, { error: deleteHostError }] = useDeleteHostMutation({
+    onCompleted: () => {
+      refetchHosts();
+      ModalHelper.close();
+    },
+  });
+
+  const handleOpenDeleteModal = () => {
+    ModalHelper.open({
+      modalType: "confirmation",
+      modalProps: {
+        handleOk: () => submitDelete({ variables: { id: selectedHost?.id } }),
+        promptText: `Are you sure you wish to remove host ${selectedHost?.name} from the inventory database?`,
+        okText: "Delete Host",
+        okColor: "error",
+        cancelColor: "primary",
+        error: deleteHostError?.message,
+      },
+    });
+  };
+
   /* ----- Layout ----- */
   return (
-    <Box
-      sx={{
-        "& .MuiFormControl-root": {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          width: "100%",
-          border: 0,
-          margin: 0,
-          padding: "4px 0"
-        },
-        "& .MuiInputBase-root, & .MuiBox-root": {
-          flexGrow: 1,
-          width: "100%",
-        },
-        "& label": {
-          width: "150px",
-          position: "relative",
-          transform: "none"
-        },
-        "& fieldset": {
-          borderWidth: `${read ? "0px" : "1px"}`
-        },
-        "& legend": {
-          display: "none"
-        }
-      }}
+    <Form
+      read={read}
     >
-      <FormControl fullWidth error={!!errors.location}>
-        {read && (
-          <TextField
-          name="location"
-          value={locations?.find(l => l.id === values.location)?.name}
-          onChange={handleChange}
-          label="Location"
-          variant="outlined"
-          error={!!errors.location}
-          helperText={errors.location}
-          disabled={read}
-          size="small"
-          />
-        )}
-        {!read && (
-          <>
-            <InputLabel id="location-label">Location</InputLabel>
-            <Select
-              name="location"
-              labelId="location-label"
-              value={values.location}
-              label="Location"
-              onChange={handleChange}
-              disabled={read}
-              size="small"
-            >
-              {locations?.map(({ id, name }) => (
-                <MenuItem value={id}>{name}</MenuItem>
-              ))}
-            </Select>
-            {!!errors.location && <FormHelperText>{errors.location}</FormHelperText>}
-          </>
-        )}
-      </FormControl>
-      <FormControl fullWidth>
+      {read && (
         <TextField
-          name="name"
-          value={values.name}
-          onChange={handleChange}
-          label="Host Name"
-          variant="outlined"
-          error={!!errors.name}
-          helperText={errors.name}
-          disabled={read}
-          size="small"
+        ref={locationRef}
+        name="location"
+        value={locations?.find(l => l.id === values.location)?.name}
+        onChange={handleChange}
+        label="Location"
+        variant="outlined"
+        error={!!errors.location}
+        helperText={errors.location}
+        disabled={read}
+        size="small"
         />
-      </FormControl>
-      <FormControl fullWidth>
-        <TextField
-          name="ip"
-          value={values.ip}
-          onChange={handleChange}
-          label="Host IP"
-          variant="outlined"
-          disabled={read ?? ipDisabled}
-          error={!!errors.ip}
-          helperText={errors.ip}
-          size="small"
-        />
-      </FormControl>
-      <FormControl fullWidth>
-        <TextField
-          name="fqdn"
-          value={values.fqdn}
-          onChange={handleChange}
-          label="Host FQDN"
-          variant="outlined"
-          disabled={read ?? fqdnDisabled}
-          error={!!errors.fqdn}
-          helperText={errors.fqdn}
-          size="small"
-        />
-      </FormControl>
+      )}
+      {!read && (
+        <FormControl fullWidth error={!!errors.location}>
+          <InputLabel id="location-label">Location</InputLabel>
+          <Select
+            name="location"
+            labelId="location-label"
+            value={values.location}
+            label="Location"
+            onChange={handleChange}
+            disabled={read}
+            size="small"
+          >
+            {locations?.map(({ id, name }) => (
+              <MenuItem value={id}>{name}</MenuItem>
+            ))}
+          </Select>
+          {!!errors.location && <FormHelperText>{errors.location}</FormHelperText>}
+        </FormControl>
+      )}
+      <TextField
+        name="name"
+        value={values.name}
+        onChange={handleChange}
+        label="Host Name"
+        variant="outlined"
+        error={!!errors.name}
+        helperText={errors.name}
+        disabled={read}
+        size="small"
+        fullWidth
+      />
+      <TextField
+        name="ip"
+        value={values.ip}
+        onChange={handleChange}
+        label="Host IP"
+        variant="outlined"
+        disabled={read ?? ipDisabled}
+        error={!!errors.ip}
+        helperText={errors.ip}
+        size="small"
+        fullWidth
+      />
+      <TextField
+        name="fqdn"
+        value={values.fqdn}
+        onChange={handleChange}
+        label="Host FQDN"
+        variant="outlined"
+        disabled={read ?? fqdnDisabled}
+        error={!!errors.fqdn}
+        helperText={errors.fqdn}
+        size="small"
+        fullWidth
+      />
       <FormControl fullWidth>
         <InputLabel disabled={read} >Load Balancer</InputLabel>
         <Box>
@@ -253,7 +258,7 @@ export const HostForm = ({
         <Box
           sx={{ 
             marginTop: 4,
-            textAlign: "center",
+            textAlign: "right",
             '& button': { margin: 1 }
           }}
         >
@@ -271,8 +276,33 @@ export const HostForm = ({
           <Button
             onClick={onCancel}
             variant="outlined"
+            color="error"
           >
             Cancel
+          </Button>
+        </Box>
+      )}
+      {selectedHost && read && (
+        <Box
+          sx={{ 
+            marginTop: 4,
+            textAlign: "right",
+            '& button': { margin: 1 }
+          }}
+        >
+          <Button
+            onClick={() => setState(HostActionsState.Edit)}
+            variant="contained"
+            color="primary"
+          >
+            Update Host
+          </Button>
+          <Button
+            onClick={handleOpenDeleteModal}
+            variant="outlined"
+            color="error"
+          >
+            Delete Host
           </Button>
         </Box>
       )}
@@ -282,7 +312,7 @@ export const HostForm = ({
           {backendError}
         </Alert>
       )}
-    </Box>
+    </Form>
   );
 }
 
