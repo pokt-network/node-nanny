@@ -59,7 +59,7 @@ export class Service extends BaseService {
       message,
       notSynced,
       title,
-      nodeCount,
+      nodesOnline,
       dispatchFrontendDown,
     } = await this.parseEvent(eventJson, EAlertTypes.RETRIGGER);
     const { backend, chain, host, frontend, muted } = node;
@@ -81,7 +81,7 @@ export class Service extends BaseService {
 
     /* Remove backend node from rotation if NOT_SYNCHRONIZED and there are at least 2 healthy nodes.
     This covers the case where the only node in rotation was out of sync and its peers catch up. */
-    if (nodeCount >= 2 && backend && !frontend && notSynced) {
+    if (nodesOnline >= 2 && backend && !frontend && notSynced) {
       await this.toggleServer({ node, enable: false });
     }
 
@@ -139,7 +139,7 @@ export class Service extends BaseService {
       : conditions === EErrorConditions.NOT_SYNCHRONIZED;
     const dispatchFrontendDown = Boolean(pnfDispatch && frontend && notSynced);
 
-    const { online: nodeCount, total: nodeTotal } = await this.getServerCount({
+    const { online: nodesOnline, total: nodesTotal } = await this.getServerCount({
       destination: frontend || backend,
       loadBalancers,
       frontendUrl: frontend ? url : null,
@@ -149,8 +149,8 @@ export class Service extends BaseService {
     const { message, statusStr } = this.alert.getAlertMessage(
       event,
       alertType,
-      nodeCount,
-      nodeTotal,
+      nodesOnline,
+      nodesTotal,
       frontend || backend,
     );
 
@@ -161,8 +161,8 @@ export class Service extends BaseService {
       healthy,
       notSynced,
       status,
-      nodeCount,
-      nodeTotal,
+      nodesOnline,
+      nodesTotal,
       dispatchFrontendDown,
     };
     return parsedEvent;
@@ -190,7 +190,7 @@ export class Service extends BaseService {
         : await this.disableServer({ destination: backend, server, loadBalancers });
 
       if (serverToggled) {
-        const { online: nodeCount, total: nodeTotal } = await this.getServerCount({
+        const { online: nodesOnline, total: nodesTotal } = await this.getServerCount({
           destination: backend,
           loadBalancers,
         });
@@ -199,8 +199,8 @@ export class Service extends BaseService {
           node,
           enable,
           "success",
-          nodeCount,
-          nodeTotal,
+          nodesOnline,
+          nodesTotal,
         );
         await this.sendMessage(
           { title, message, chain: chain.name, location: host.location.name },
