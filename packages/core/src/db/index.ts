@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import Env from "../environment";
+import env from "../environment";
 
 const connect = async (): Promise<void> => {
-  await mongoose.connect(Env("MONGO_URI"));
+  await mongoose.connect(env("MONGO_URI"));
 };
 
 const disconnect = async (): Promise<void> => {
