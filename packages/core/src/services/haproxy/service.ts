@@ -53,6 +53,17 @@ export class Service {
     return { online: online.length, total: total.length };
   }
 
+  async getValidHaProxy({ destination, domain }: IHAProxyParams) {
+    try {
+      const response = await this.getCurrentStateByChainCommand({ destination, domain });
+      if (response.includes("Can't find backend")) return false;
+      return true;
+    } catch {
+      console.log("ERROR");
+      return false;
+    }
+  }
+
   private async getCurrentStateByChainCommand({
     destination,
     domain,

@@ -286,6 +286,26 @@ export class Service extends BaseService {
     return 1;
   }
 
+  async checkValidHaProxy({
+    backend,
+    frontend,
+    host,
+    loadBalancers: loadBalancerIds,
+  }: INodeInput): Promise<boolean> {
+    if (frontend && host) {
+      const { fqdn, ip } = await HostsModel.findOne({ _id: host });
+
+      return await this.getValidHaProxy({
+        destination: frontend,
+        frontendUrl: fqdn || ip,
+      });
+    } else if (backend) {
+      const loadBalancers = await HostsModel.find({ _id: { $in: loadBalancerIds } });
+
+      return await this.getValidHaProxy({ destination: backend, loadBalancers });
+    }
+  }
+
   async muteMonitor(id: string): Promise<INode> {
     await NodesModel.updateOne({ _id: id }, { muted: true }).exec();
     await this.restartMonitor();

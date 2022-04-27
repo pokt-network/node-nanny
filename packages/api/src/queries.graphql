@@ -152,3 +152,7 @@ query GetHostsChainsAndLoadBalancers {
 query GetNodeStatus($id: ID!) {
   haProxyStatus: getHaProxyStatus(id: $id)
 }
+
+query CheckValidHaProxy($input: NodeInput!) {
+  validHaProxy: checkValidHaProxy(input: $input)
+}

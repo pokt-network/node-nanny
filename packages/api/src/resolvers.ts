@@ -41,6 +41,9 @@ const resolvers = {
     getHaProxyStatus: async (_, { id }) => {
       return await new AutomationService().getHaProxyStatus(id);
     },
+    checkValidHaProxy: async (_, { input }) => {
+      return await new AutomationService().checkValidHaProxy(input);
+    },
   },
 
   Mutation: {
