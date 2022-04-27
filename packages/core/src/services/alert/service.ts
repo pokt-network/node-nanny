@@ -179,8 +179,8 @@ export class Service {
   getAlertMessage(
     { count, conditions, name, ethSyncing, height, details }: IRedisEvent,
     alertType: EAlertTypes,
-    nodeCount: number,
-    nodeTotal: number,
+    nodesOnline: number,
+    nodesTotal: number,
     destination: string,
   ): { message: string; statusStr: string } {
     const badOracles = details?.badOracles?.join("\n");
@@ -201,12 +201,12 @@ export class Service {
         }`
       : "";
     let nodeCountStr =
-      nodeCount && nodeCount >= 0
-        ? `${nodeCount} of ${nodeTotal} node${s(nodeTotal)} ${is(
-            nodeTotal,
+      nodesOnline && nodesOnline >= 0
+        ? `${nodesOnline} of ${nodesTotal} node${s(nodesTotal)} ${is(
+            nodesTotal,
           )} in rotation for ${destination}.`
         : "";
-    if (nodeCount <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
+    if (nodesOnline <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
     const badOracleStr = badOracles?.length
       ? `\nWarning - Bad Oracle${s(badOracles.length)}\n${badOracles}`
       : "";
@@ -237,8 +237,8 @@ export class Service {
     { backend, chain, host, loadBalancers }: INode,
     enable: boolean,
     mode: "success" | "error",
-    nodeCount: number,
-    nodeTotal: number,
+    nodesOnline: number,
+    nodesTotal: number,
     error?: any,
   ): { title: string; message: string } {
     const name = `${host.name}/${chain.name}`;
@@ -256,12 +256,12 @@ export class Service {
           error: `[Error] - Could not remove ${name} from rotation`,
         }[mode];
     let nodeCountStr =
-      nodeCount && nodeCount >= 0
-        ? `${nodeCount} of ${nodeTotal} node${s(nodeTotal)} ${is(
-            nodeCount,
+      nodesOnline && nodesOnline >= 0
+        ? `${nodesOnline} of ${nodesTotal} node${s(nodesTotal)} ${is(
+            nodesOnline,
           )} in rotation for ${backend}.`
         : "";
-    if (nodeCount <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
+    if (nodesOnline <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
     const message = [haProxyMessage, nodeCountStr, error].filter(Boolean).join("\n");
 
     return { title, message };
