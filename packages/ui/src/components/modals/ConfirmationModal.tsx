@@ -1,30 +1,27 @@
-import { Alert, AlertTitle, Paper, Button, Typography } from "@mui/material";
-
+import Paper from "components/Paper";
+import Title from "components/Title";
 import { ModalHelper } from "utils";
+
+import { Alert, AlertTitle, Box, Button, Typography } from "@mui/material";
 
 export interface ConfirmationModalProps {
   handleOk: any;
   promptText: string;
   okText?: string;
   confirmText?: string;
-  okColor?:
-    | "inherit"
-    | "success"
-    | "error"
-    | "primary"
-    | "secondary"
-    | "info"
-    | "warning";
-  cancelColor?:
-    | "inherit"
-    | "success"
-    | "error"
-    | "primary"
-    | "secondary"
-    | "info"
-    | "warning";
+  okColor?: Color;
+  cancelColor?: Color;
   error?: string;
 }
+
+type Color =
+  | "inherit"
+  | "success"
+  | "error"
+  | "primary"
+  | "secondary"
+  | "info"
+  | "warning";
 
 export function ConfirmationModal({
   handleOk,
@@ -36,45 +33,39 @@ export function ConfirmationModal({
   error,
 }: ConfirmationModalProps) {
   return (
-    <>
-      <Paper style={{ width: "100%", padding: 32 }} variant="outlined" color="success">
-        {confirmText && (
-          <Typography variant="h4" align="center" gutterBottom>
-            {confirmText}
-          </Typography>
-        )}
-        <Typography>
-          {promptText.includes("\n")
-            ? promptText
-                .split("\n")
-                .map((line) => <Typography gutterBottom>{line}</Typography>)
-            : promptText}
-        </Typography>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: 16,
-          }}
+    <Paper>
+      {confirmText && <Title>{confirmText}</Title>}
+      <Typography>
+        {promptText.includes("\n")
+          ? promptText
+              .split("\n")
+              .map((line) => <Typography gutterBottom>{line}</Typography>)
+          : promptText}
+      </Typography>
+      <Box
+        sx={{
+          marginTop: 4,
+          textAlign: "right",
+          "& button": { margin: 1 },
+        }}
+      >
+        <Button onClick={handleOk} variant="contained" color={okColor || "primary"}>
+          {okText || "OK"}
+        </Button>
+        <Button
+          onClick={() => ModalHelper.close()}
+          variant="outlined"
+          color={cancelColor || "inherit"}
         >
-          <Button
-            onClick={() => ModalHelper.close()}
-            variant="contained"
-            color={cancelColor || "error"}
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleOk} variant="contained" color={okColor || "success"}>
-            {okText || "OK"}
-          </Button>
-        </div>
-        {error && (
-          <Alert severity="error">
-            <AlertTitle>{"Error:"}</AlertTitle>
-            {error}
-          </Alert>
-        )}
-      </Paper>
-    </>
+          Cancel
+        </Button>
+      </Box>
+      {error && (
+        <Alert severity="error">
+          <AlertTitle>{"Error:"}</AlertTitle>
+          {error}
+        </Alert>
+      )}
+    </Paper>
   );
 }
