@@ -1,26 +1,19 @@
 import { AlertColor } from "../alert/types";
-import { EErrorConditions, EErrorStatus, ESupportedBlockchains } from "../health/types";
-import { INode, NodesModel } from "../../models";
-import { AlertTypes } from "../../types";
+import { Service as BaseService } from "../base-service/base-service";
+import { EErrorConditions, EErrorStatus } from "../health/types";
+import { NodesModel } from "../../models";
 import {
   EAlertTypes,
-  ELoadBalancerStatus,
   IRedisEvent,
   IRedisEventParams,
   IToggleServerParams,
 } from "./types";
-import { s, is } from "../../utils";
-
-import { Service as BaseService } from "../base-service/base-service";
+import { AlertTypes } from "../../types";
+import env from "../../environment";
 
 export class Service extends BaseService {
-  private pnf: boolean;
-  private pnfDispatchThreshold: number;
-
   constructor() {
     super();
-    this.pnf = process.env.PNF === "1";
-    this.pnfDispatchThreshold = Number(process.env.PNF_DISPATCH_THRESHOLD || 5);
   }
 
   /* ----- Trigger Methods ----- */
@@ -31,28 +24,32 @@ export class Service extends BaseService {
       notSynced,
       status,
       title,
-      downDispatchers,
+      dispatchFrontendDown,
     } = await this.parseEvent(eventJson, EAlertTypes.TRIGGER);
-    const { chain, host, backend, frontend } = node;
+    const { chain, host, backend, frontend, muted } = node;
 
-    await this.sendMessage(
-      {
-        title,
-        message,
-        chain: chain.name,
-        location: host.location.name,
-        frontend: Boolean(frontend),
-      },
-      status,
-    );
-
-    if (backend && !frontend && notSynced) {
-      await this.toggleServer({ node, title, enable: false });
+    /* Send alert message to Discord */
+    if (!muted) {
+      await this.sendMessage(
+        {
+          title,
+          message,
+          chain: chain.name,
+          location: host.location.name,
+          frontend: Boolean(frontend),
+        },
+        status,
+      );
     }
 
-    if (this.pnf && downDispatchers?.length >= this.pnfDispatchThreshold) {
-      await this.alertPocketDispatchersAreDown(downDispatchers);
-      ELoadBalancerStatus;
+    /* Remove backend node from rotation if NOT_SYNCHRONIZED */
+    if (backend && !frontend && notSynced) {
+      await this.toggleServer({ node, enable: false });
+    }
+
+    /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
+    if (env("PNF") && dispatchFrontendDown) {
+      await this.urgentAlertDispatchFrontendIsDown(message);
     }
   };
 
@@ -62,80 +59,62 @@ export class Service extends BaseService {
       message,
       notSynced,
       title,
-      serverCount,
-      downDispatchers,
+      nodesOnline,
+      dispatchFrontendDown,
     } = await this.parseEvent(eventJson, EAlertTypes.RETRIGGER);
-    const { backend, chain, host, frontend, loadBalancers, server } = node;
+    const { backend, chain, host, frontend, muted } = node;
 
-    const messageParams = {
-      title,
-      message,
-      chain: chain.name,
-      location: host.location.name,
-      frontend: Boolean(frontend),
-    };
-
-    await this.sendMessage(messageParams, EErrorStatus.INFO, AlertColor.RETRIGGER);
-
-    if (!frontend && notSynced) {
-      const onlineStatus = await this.getServerStatus({
-        destination: backend,
-        server,
-        loadBalancers,
-      });
-      if (backend && serverCount >= 2 && onlineStatus === ELoadBalancerStatus.ONLINE) {
-        await this.toggleServer({ node, title, enable: false });
-      }
-    }
-
-    if (this.pnf && downDispatchers?.length >= this.pnfDispatchThreshold) {
-      await this.alertPocketDispatchersAreDown(downDispatchers);
-    }
-  };
-
-  processResolved = async (eventJson: string): Promise<void> => {
-    const {
-      node,
-      message,
-      healthy,
-      status,
-      title,
-      warningMessage,
-    } = await this.parseEvent(eventJson, EAlertTypes.RESOLVED);
-    const { chain, host, frontend, backend, server, loadBalancers } = node;
-
-    await this.sendMessage(
-      {
-        title,
-        message,
-        chain: chain.name,
-        location: host.location.name,
-        frontend: Boolean(frontend),
-      },
-      status,
-    );
-    if (warningMessage && !frontend) {
+    /* Send alert message to Discord */
+    if (!muted) {
       await this.sendMessage(
         {
-          title: "Warning",
-          message: warningMessage,
+          title,
+          message,
           chain: chain.name,
           location: host.location.name,
           frontend: Boolean(frontend),
         },
-        EErrorStatus.WARNING,
+        EErrorStatus.INFO,
+        AlertColor.RETRIGGER,
       );
     }
 
-    if (!frontend && healthy) {
-      const onlineStatus = await this.getServerStatus({
-        destination: backend,
-        server,
-        loadBalancers,
-      });
-      if (backend && onlineStatus === ELoadBalancerStatus.OFFLINE) {
-        await this.toggleServer({ node, title, enable: true });
-      }
+    /* Remove backend node from rotation if NOT_SYNCHRONIZED and there are at least 2 healthy nodes.
+    This covers the case where the only node in rotation was out of sync and its peers catch up. */
+    if (nodesOnline >= 2 && backend && !frontend && notSynced) {
+      await this.toggleServer({ node, enable: false });
+    }
+
+    /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
+    if (env("PNF") && dispatchFrontendDown) {
+      await this.urgentAlertDispatchFrontendIsDown(message);
+    }
+  };
+
+  processResolved = async (eventJson: string): Promise<void> => {
+    const { node, message, healthy, status, title } = await this.parseEvent(
+      eventJson,
+      EAlertTypes.RESOLVED,
+    );
+    const { chain, host, frontend, backend, muted } = node;
+
+    /* Send alert message to Discord */
+    if (!muted) {
+      await this.sendMessage(
+        {
+          title,
+          message,
+          chain: chain.name,
+          location: host.location.name,
+          frontend: Boolean(frontend),
+        },
+        status,
+      );
+    }
+
+    /* Add backend node to rotation if HEALTHY */
+    if (backend && !frontend && healthy) {
+      await this.toggleServer({ node, enable: true });
     }
   };
 
@@ -149,38 +128,42 @@ export class Service extends BaseService {
 
     const node = await this.getNode(id);
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
-    const { chain, backend, frontend, loadBalancers, dispatch, url } = node;
+    const { backend, frontend, loadBalancers, dispatch, url } = node;
+    const pnfDispatch = env("PNF") && dispatch;
 
-    const serverCount = !dispatch
-      ? await this.getServerCount({
-          destination: frontend || backend,
-          loadBalancers,
-          frontendUrl: frontend ? url : null,
-        })
-      : null;
-    const downDispatchers =
-      this.pnf && dispatch && chain.name === ESupportedBlockchains["POKT-DIS"]
-        ? await this.getDownDispatchers(node)
-        : null;
+    const healthy = conditions === EErrorConditions.HEALTHY;
+    const notSynced = pnfDispatch
+      ? conditions === EErrorConditions.NOT_SYNCHRONIZED ||
+        conditions === EErrorConditions.OFFLINE ||
+        conditions === EErrorConditions.NO_RESPONSE
+      : conditions === EErrorConditions.NOT_SYNCHRONIZED;
+    const dispatchFrontendDown = Boolean(pnfDispatch && frontend && notSynced);
 
-    const { message, statusStr } = this.getAlertMessage(
+    const { online: nodesOnline, total: nodesTotal } = await this.getServerCount({
+      destination: frontend || backend,
+      loadBalancers,
+      frontendUrl: frontend ? url : null,
+      dispatch: pnfDispatch,
+    });
+
+    const { message, statusStr } = this.alert.getAlertMessage(
       event,
       alertType,
-      serverCount,
-      frontend,
-      backend,
-      downDispatchers,
+      nodesOnline,
+      nodesTotal,
+      frontend || backend,
     );
 
     const parsedEvent: IRedisEventParams = {
       title: `[${alertType}] - ${statusStr}`,
       message,
       node,
-      healthy: conditions === EErrorConditions.HEALTHY,
-      notSynced: conditions === EErrorConditions.NOT_SYNCHRONIZED,
+      healthy,
+      notSynced,
       status,
-      serverCount,
-      downDispatchers,
+      nodesOnline,
+      nodesTotal,
+      dispatchFrontendDown,
     };
     return parsedEvent;
   }
@@ -202,25 +185,30 @@ export class Service extends BaseService {
     const { backend, chain, host, loadBalancers, server } = node;
 
     try {
-      enable /* Enable or Disable Server */
+      const serverToggled = enable /* Enable or Disable Server */
         ? await this.enableServer({ destination: backend, server, loadBalancers })
         : await this.disableServer({ destination: backend, server, loadBalancers });
 
-      const serverCount = !node.dispatch
-        ? await this.getServerCount({ destination: backend, loadBalancers })
-        : null;
-      const { title, message } = this.getRotationMessage(
-        node,
-        enable,
-        "success",
-        serverCount,
-      );
-      await this.sendMessage(
-        { title, message, chain: chain.name, location: host.location.name },
-        EErrorStatus.INFO,
-      );
+      if (serverToggled) {
+        const { online: nodesOnline, total: nodesTotal } = await this.getServerCount({
+          destination: backend,
+          loadBalancers,
+        });
+
+        const { title, message } = this.alert.getRotationMessage(
+          node,
+          enable,
+          "success",
+          nodesOnline,
+          nodesTotal,
+        );
+        await this.sendMessage(
+          { title, message, chain: chain.name, location: host.location.name },
+          EErrorStatus.INFO,
+        );
+      }
     } catch (error) {
-      const { title, message } = this.getRotationMessage(
+      const { title, message } = this.alert.getRotationMessage(
         node,
         enable,
         "error",
@@ -234,128 +222,11 @@ export class Service extends BaseService {
     }
   }
 
-  private async getDownDispatchers({ chain }: INode): Promise<string[]> {
-    const downDispatchNodes = await NodesModel.find({
-      dispatch: true,
-      chain: chain.id as any,
-      status: { $ne: EErrorStatus.OK },
-      conditions: { $ne: EErrorConditions.HEALTHY },
-    })
-      .populate({ path: "host", populate: "location" })
-      .exec();
-
-    return downDispatchNodes?.length
-      ? downDispatchNodes.map(
-          ({ name, host, conditions }) =>
-            `${name.replace("POKT-DIS/", "")} / ${host.location.name} - ${conditions}`,
-        )
-      : [];
-  }
-
-  private async alertPocketDispatchersAreDown(downDispatchers: string[]): Promise<void> {
+  /* ----- PNF Internal Only ----- */
+  private async urgentAlertDispatchFrontendIsDown(message: string): Promise<void> {
     await this.alert.createPagerDutyIncident({
-      title: "ALERT - Dispatchers are down!",
-      details: [
-        `${downDispatchers.length} dispatchers are down!`,
-        `Down Dispatchers\n${downDispatchers.join("\n")}`,
-      ].join("\n"),
+      title: "URGENT ALERT! Dispatch Frontend is down!",
+      details: ["Dispatchers' HAProxy frontend is down!", message].join("\n"),
     });
-  }
-
-  /* ----- Message String Methods ----- */
-  private getAlertMessage(
-    { count, conditions, name, ethSyncing, height, details }: IRedisEvent,
-    alertType: EAlertTypes,
-    serverCount: number,
-    frontend: string,
-    backend: string,
-    downDispatchers: string[] = null,
-  ): { message: string; statusStr: string } {
-    const badOracles = details?.badOracles?.join("\n");
-    const noOracle = details?.noOracle;
-
-    const statusStr = `${name} is ${conditions}.`;
-    const countStr =
-      alertType !== EAlertTypes.RESOLVED
-        ? `This event has occurred ${count} time${s(count)} since first occurrence.`
-        : "";
-    const ethSyncStr = ethSyncing ? `ETH Syncing: ${JSON.stringify(ethSyncing)}` : "";
-    const heightStr = height
-      ? `Height - ${
-          typeof height === "number"
-            ? height
-            : `Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
-        }`
-      : "";
-    let serverCountStr =
-      (!downDispatchers ?? serverCount) && serverCount >= 0
-        ? `${serverCount} node${s(serverCount)} ${is(serverCount)} in rotation for ${
-            frontend || backend
-              ? `${frontend ? "frontend" : "backend"} ${frontend || backend}`
-              : ""
-          }`
-        : "";
-    if (serverCount <= 1) serverCountStr = `${serverCountStr.toUpperCase()}`;
-    const downDispatchersStr = downDispatchers?.length
-      ? [
-          `\n${downDispatchers.length} dispatcher${s(downDispatchers.length)} ${is(
-            downDispatchers.length,
-          )} down:`,
-          `${downDispatchers.join("\n")}`,
-        ].join("\n")
-      : "";
-    const badOracleStr = badOracles?.length
-      ? `\nWarning - Bad Oracle${s(badOracles.length)}\n${badOracles}`
-      : "";
-    const noOracleStr = noOracle
-      ? `\nWarning - No Oracle for node. Node has ${details?.numPeers} peers.`
-      : "";
-
-    return {
-      message: [
-        countStr,
-        ethSyncStr,
-        heightStr,
-        serverCountStr,
-        downDispatchersStr,
-        badOracleStr,
-        noOracleStr,
-      ]
-        .filter(Boolean)
-        .join("\n"),
-      statusStr,
-    };
-  }
-
-  private getRotationMessage(
-    { backend, chain, host, loadBalancers }: INode,
-    enable: boolean,
-    mode: "success" | "error",
-    serverCount: number,
-    error?: any,
-  ): { title: string; message: string } {
-    const name = `${host.name}/${chain.name}`;
-    const haProxyMessage = this.getHAProxyMessage({
-      destination: backend,
-      loadBalancers,
-    });
-    const title = enable
-      ? {
-          success: `[Added] - Successfully added ${name} to rotation`,
-          error: `[Error] - Could not add ${name} to rotation`,
-        }[mode]
-      : {
-          success: `[Removed] - Successfully removed ${name} from rotation`,
-          error: `[Error] - Could not remove ${name} from rotation`,
-        }[mode];
-    const serverCountStr =
-      serverCount && serverCount >= 0
-        ? `${serverCount} node${s(serverCount)} ${is(serverCount)} in rotation for ${
-            backend ? `backend ${backend}.` : ""
-          }`
-        : "";
-    const message = [haProxyMessage, serverCountStr, error].filter(Boolean).join("\n");
-
-    return { title, message };
   }
 }
