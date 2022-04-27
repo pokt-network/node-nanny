@@ -27,7 +27,6 @@ const createMocks = async () => {
   };
   const host = await HostsModel.create(mockHost);
   const mockNode = {
-    name: "TEST/test1/2a",
     chain: chain.id,
     host: host.id,
     port: 8810,
@@ -59,7 +58,6 @@ describe("Automation Service Tests", () => {
       test("Should update one single node", async () => {
         const update = {
           id: node.id.toString(),
-          name: "test/testy123/2a",
           server: "2c",
           port: 5678,
           backend: null,
@@ -67,7 +65,6 @@ describe("Automation Service Tests", () => {
 
         const updatedNode = await automationService.updateNode(update, false);
 
-        expect(updatedNode.name).toEqual(update.name);
         expect(updatedNode.server).toEqual(update.server);
         expect(updatedNode.port).toEqual(update.port);
         expect(updatedNode.url).toEqual(
