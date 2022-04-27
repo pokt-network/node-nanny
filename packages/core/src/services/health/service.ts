@@ -65,8 +65,7 @@ export class Service {
 
   /* ----- Algorand ----- */
   private getAlgorandNodeHealth = async (node: INode): Promise<IHealthResponse> => {
-    const name = this.getNodeNameForHealthCheck(node);
-    const { url, basicAuth } = node;
+    const { name, url, basicAuth } = node;
 
     try {
       const { data, status } = await this.rpc.get(
@@ -99,8 +98,7 @@ export class Service {
 
   /* ----- Avalanche ----- */
   private getAvaNodeHealth = async (node: INode): Promise<IHealthResponse> => {
-    const name = this.getNodeNameForHealthCheck(node);
-    const { url, basicAuth } = node;
+    const { name, url, basicAuth } = node;
 
     try {
       const { data } = await this.rpc.post(
@@ -140,8 +138,7 @@ export class Service {
     node: INode,
     { harmony }: IEVMHealthCheckOptions = { harmony: false },
   ): Promise<IHealthResponse> => {
-    const name = this.getNodeNameForHealthCheck(node);
-    const { chain, url, host, port, basicAuth } = node;
+    const { name, chain, url, host, port, basicAuth } = node;
     const { allowance } = chain;
 
     let healthResponse: IHealthResponse = {
@@ -434,8 +431,7 @@ export class Service {
 
   /* ----- Pocket ----- */
   private getPocketNodeHealth = async (node: INode): Promise<IHealthResponse> => {
-    const name = this.getNodeNameForHealthCheck(node);
-    const { id, chain, url } = node;
+    const { name, id, chain, url } = node;
     const { allowance } = chain;
 
     const { height: isRpcResponding } = await this.getPocketHeight(url);
@@ -544,8 +540,7 @@ export class Service {
 
   /* ----- Solana ----- */
   private getSolNodeHealth = async (node: INode): Promise<IHealthResponse> => {
-    const name = this.getNodeNameForHealthCheck(node);
-    const { url, basicAuth } = node;
+    const { name, url, basicAuth } = node;
 
     const execute = util.promisify(exec);
     const command = basicAuth
@@ -593,8 +588,7 @@ export class Service {
 
   /* ----- Tendermint ----- */
   private getTendermintNodeHealth = async (node: INode): Promise<IHealthResponse> => {
-    const name = this.getNodeNameForHealthCheck(node);
-    const { url, basicAuth } = node;
+    const { name, url, basicAuth } = node;
 
     try {
       const { data } = await this.rpc.get(
@@ -626,9 +620,4 @@ export class Service {
       };
     }
   };
-
-  /* ----- String Methods ----- */
-  private getNodeNameForHealthCheck({ host, name }: INode): string {
-    return `${host.name}/${name}`;
-  }
 }
