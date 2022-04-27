@@ -52,6 +52,7 @@ const nodesSchema = new Schema<INode>(
   { timestamps: true },
 );
 
+nodesSchema.index({ name: 1 });
 nodesSchema.index(
   { host: 1, port: 1, server: 1 },
   { unique: true, partialFilterExpression: { server: { $type: "string" } } },
