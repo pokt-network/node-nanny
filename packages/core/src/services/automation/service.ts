@@ -1,6 +1,5 @@
-import { EC2 } from "aws-sdk";
 import { exec } from "child_process";
-import { Types, UpdateQuery } from "mongoose";
+import { UpdateQuery } from "mongoose";
 
 import { Service as DiscordService } from "../discord";
 import { ELoadBalancerStatus } from "../event/types";
@@ -23,11 +22,8 @@ import {
 import { Service as BaseService } from "../base-service/base-service";
 
 export class Service extends BaseService {
-  private ec2: EC2;
-
   constructor() {
     super();
-    this.ec2 = new EC2({ region: "us-east-2" });
   }
 
   /* ----- CRUD Methods ----- */
@@ -216,7 +212,7 @@ export class Service extends BaseService {
     const input: UpdateQuery<any> = {};
     Object.entries(unsanitizedCreate).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== "") {
-        input[key] = value.trim();
+        input[key] = typeof value === "string" ? value.trim() : value;
       }
     });
     return input;
@@ -233,7 +229,7 @@ export class Service extends BaseService {
           update.$unset[key] = 1;
         }
       } else {
-        update[key] = value.trim();
+        update[key] = typeof value === "string" ? value.trim() : value;
       }
     });
     return update;
