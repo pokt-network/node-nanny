@@ -67,13 +67,13 @@ export class Service {
     if (env("MONITOR_TEST") && !env("MONITOR_TEST_DOMAIN")) return false;
 
     try {
-      const { online: nodeCount } = await this.getServerCount({
+      const { online: nodesOnline } = await this.getServerCount({
         destination,
         loadBalancers,
       });
       if (!manual) {
-        if (nodeCount <= 1) {
-          const message = this.alert.getErrorMessage(server, "count", nodeCount);
+        if (nodesOnline <= 1) {
+          const message = this.alert.getErrorMessage(server, "count", nodesOnline);
           throw message;
         }
 
