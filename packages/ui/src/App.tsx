@@ -11,7 +11,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 
 import { Route, Routes } from "react-router-dom";
-import { Home, Hosts, Logs, Nodes } from "./pages";
+import { Hosts, Logs, Nodes } from "./pages";
 import { Nav, RootModal } from "./components";
 
 const drawerWidth: number = 240;
@@ -155,8 +155,7 @@ function DashboardContent() {
               </Typography>
             </Box>
             <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/logs" element={<Logs />} />
+              <Route path="/" element={<Logs />} />
               <Route path="/nodes" element={<Nodes />} />
               <Route path="/hosts" element={<Hosts />} />
             </Routes>
