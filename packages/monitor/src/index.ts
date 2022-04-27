@@ -5,6 +5,8 @@ import { Health, Log } from "@pokt-foundation/node-nanny-core/dist/services";
 import { HealthTypes } from "@pokt-foundation/node-nanny-core/dist/types";
 import { colorLog, s } from "@pokt-foundation/node-nanny-core/dist/utils";
 
+import env from "@pokt-foundation/node-nanny-core/dist/environment";
+
 import { Publish } from "./publish";
 
 export class App {
@@ -15,7 +17,7 @@ export class App {
   constructor() {
     this.log = new Log();
     this.health = new Health();
-    this.interval = Number(process.env.MONITOR_INTERVAL || 10000);
+    this.interval = env("MONITOR_INTERVAL");
   }
 
   /** Runs a health check on all non-muted nodes in the inventory DB at a set interval.
@@ -24,13 +26,10 @@ export class App {
     await connect();
     await createFrontendAlertChannel();
 
-    const nodes = await NodesModel.find({ muted: false })
-      .populate("host")
-      .populate("chain")
-      .exec();
+    const nodes = await NodesModel.find({}).populate("host").populate("chain").exec();
     const publish = new Publish(nodes);
 
-    const mode = process.env.MONITOR_TEST === "1" ? "TEST" : "PRODUCTION";
+    const mode = env("MONITOR_TEST") ? "TEST" : "PRODUCTION";
     const secs = this.interval / 1000;
     console.log(`Starting monitor in ${mode} mode with ${secs} sec interval ...`);
 
@@ -66,8 +65,8 @@ export class App {
   }
 }
 
-process.on("SIGINT", function () {
-  disconnect();
+process.on("SIGINT", async function () {
+  await disconnect();
 });
 
 new App().main();
