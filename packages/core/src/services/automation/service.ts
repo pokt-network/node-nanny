@@ -32,29 +32,23 @@ export class Service extends BaseService {
 
   /* ----- CRUD Methods ----- */
   public async createHost(hostInput: IHostInput, restart = true): Promise<IHost> {
-    const hostFields: IHostInput = {
-      name: hostInput.name,
-      location: hostInput.location,
-      loadBalancer: hostInput.loadBalancer,
-    };
-    if (hostInput.fqdn) hostFields.fqdn = hostInput.fqdn;
-    if (hostInput.ip) hostFields.ip = hostInput.ip;
-    const host = await HostsModel.create(hostFields);
+    const sanitizedInput = this.sanitizeCreate(hostInput);
+    const host = await HostsModel.create(sanitizedInput);
+
     if (restart) await this.restartMonitor();
+
     return host;
   }
 
   public async createHostsCSV(hosts: IHostCsvInput[]): Promise<IHost[]> {
     try {
       const createdHosts: IHost[] = [];
-      for await (let hostInput of hosts) {
+      for await (const hostInput of hosts) {
         const hostInputObj: IHostInput = {
-          name: hostInput.name,
+          ...hostInput,
           loadBalancer: Boolean(hostInput.loadBalancer),
           location: (await LocationsModel.findOne({ name: hostInput.location }))._id,
         };
-        if (hostInput.ip) hostInputObj.ip = hostInput.ip;
-        if (hostInput.fqdn) hostInputObj.fqdn = hostInput.fqdn;
 
         const host = await HostsModel.create(hostInputObj);
         createdHosts.push(host);
@@ -81,7 +75,8 @@ export class Service extends BaseService {
     const url = `http${secure ? "s" : ""}://${fqdn || ip}:${nodeInput.port}`;
 
     try {
-      ({ id } = await NodesModel.create({ ...rest, url }));
+      const sanitizedInput = this.sanitizeCreate({ ...rest, url });
+      ({ id } = await NodesModel.create(sanitizedInput));
 
       const node = await this.getNode(id);
 
@@ -121,30 +116,30 @@ export class Service extends BaseService {
     }
   }
 
-  public async updateHost(update: IHostUpdate, restart = true): Promise<IHost> {
-    const { id } = update;
-    delete update.id;
-    const sanitizedUpdate: UpdateQuery<IHost<false>> = {};
-    Object.entries(update).forEach(([key, value]) => {
-      if (value !== undefined) sanitizedUpdate[key] = value;
-    });
+  public async updateHost(
+    unsanitizedUpdate: IHostUpdate,
+    restart = true,
+  ): Promise<IHost> {
+    const { id } = unsanitizedUpdate;
+    delete unsanitizedUpdate.id;
+    const update = this.sanitizeUpdate(unsanitizedUpdate);
 
     const { ip, fqdn } = (await HostsModel.findOne({ _id: id })) as IHost<false>;
-    const newIp = sanitizedUpdate.ip && sanitizedUpdate.ip !== ip;
-    const newFqdn = sanitizedUpdate.fqdn && sanitizedUpdate.fqdn !== fqdn;
+    const newIp = update.ip && update.ip !== ip;
+    const newFqdn = update.fqdn && update.fqdn !== fqdn;
 
     /* If Host IP or FQDN changes, all nodes on that host will need to be updated */
     if ((newIp || newFqdn) && (await NodesModel.exists({ host: id }))) {
-      await this.updateNodeUrlsIfHostDomainChanges(id, sanitizedUpdate);
+      await this.updateNodeUrlsIfHostDomainChanges(id, update);
     }
-    if (ip && sanitizedUpdate.fqdn) {
-      sanitizedUpdate.$unset = { ip: 1 };
+    if (ip && update.fqdn) {
+      update.$unset = { ...update.$unset, ip: 1 };
     }
-    if (fqdn && sanitizedUpdate.ip) {
-      sanitizedUpdate.$unset = { fqdn: 1 };
+    if (fqdn && update.ip) {
+      update.$unset = { ...update.$unset, fqdn: 1 };
     }
 
-    await HostsModel.updateOne({ _id: id }, { ...sanitizedUpdate });
+    await HostsModel.updateOne({ _id: id }, { ...update });
     if (restart) await this.restartMonitor();
 
     return await HostsModel.findOne({ _id: id }).populate("location").exec();
@@ -165,35 +160,35 @@ export class Service extends BaseService {
     }
   }
 
-  public async updateNode(update: INodeUpdate, restart = true): Promise<INode> {
-    const { id, https } = update;
-    delete update.id;
-    delete update.https;
-    const sanitizedUpdate: UpdateQuery<INode> = {};
-    Object.entries(update).forEach(([key, value]) => {
-      if (value !== undefined) sanitizedUpdate[key] = value;
-    });
+  public async updateNode(
+    unsanitizedUpdate: INodeUpdate,
+    restart = true,
+  ): Promise<INode> {
+    const { id, https } = unsanitizedUpdate;
+    delete unsanitizedUpdate.id;
+    delete unsanitizedUpdate.https;
+    const update = this.sanitizeUpdate(unsanitizedUpdate);
 
     const { host, url, port } = (await NodesModel.findOne({ _id: id })) as INode<false>;
-    const newHost = sanitizedUpdate.host !== host;
+    const newHost = update.host !== host;
 
     /* If Node's fields change, the node's URL must be updated to reflect the changes */
     if (newHost) {
       const { fqdn, ip } = await HostsModel.findOne({ _id: host });
-      sanitizedUpdate.url = `${fqdn || ip}:${port}`;
+      update.url = `${fqdn || ip}:${port}`;
     }
-    if (sanitizedUpdate.port) {
-      sanitizedUpdate.url = (newHost ? sanitizedUpdate.url : url.split("://")[1]).replace(
+    if (update.port) {
+      update.url = (newHost ? update.url : url.split("://")[1]).replace(
         String(port),
-        String(sanitizedUpdate.port),
+        String(update.port),
       );
     }
-    if (sanitizedUpdate.url) {
+    if (update.url) {
       const secure = typeof https === "boolean" && https;
-      sanitizedUpdate.url = `http${secure ? "s" : ""}://${sanitizedUpdate.url}`;
+      update.url = `http${secure ? "s" : ""}://${update.url}`;
     }
 
-    await NodesModel.updateOne({ _id: id }, { ...sanitizedUpdate });
+    await NodesModel.updateOne({ _id: id }, { ...update });
     if (restart) await this.restartMonitor();
 
     return await this.getNode(id);
@@ -215,6 +210,33 @@ export class Service extends BaseService {
     if (restart) await this.restartMonitor();
 
     return node;
+  }
+
+  private sanitizeCreate(unsanitizedCreate: { [key: string]: any }): UpdateQuery<any> {
+    const input: UpdateQuery<any> = {};
+    Object.entries(unsanitizedCreate).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        input[key] = value.trim();
+      }
+    });
+    return input;
+  }
+
+  private sanitizeUpdate(unsanitizedUpdate: { [key: string]: any }): UpdateQuery<any> {
+    const update: UpdateQuery<any> = {};
+    Object.entries(unsanitizedUpdate).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === "") {
+        if (Object.keys(update).includes("$unset")) {
+          update.$unset[key] = 1;
+        } else {
+          update.$unset = {};
+          update.$unset[key] = 1;
+        }
+      } else {
+        update[key] = value.trim();
+      }
+    });
+    return update;
   }
 
   /* ----- Rotation Methods ----- */

@@ -1,9 +1,9 @@
 import { ELoadBalancerStatus, IRotationParams } from "../event/types";
 import { NodesModel, INode } from "../../models";
-import { colorLog, s } from "../../utils";
-
 import { Service as AlertService } from "../alert";
 import { Service as HAProxyService } from "../haproxy";
+
+import env from "../../environment";
 
 export class Service {
   private haProxy: HAProxyService;
@@ -27,14 +27,26 @@ export class Service {
     destination,
     server,
     loadBalancers,
+    manual = false,
   }: IRotationParams): Promise<boolean> {
+    if (env("MONITOR_TEST") && !env("MONITOR_TEST_DOMAIN")) return false;
+
     try {
+      if (!manual) {
+        const status = await this.getServerStatus({ destination, server, loadBalancers });
+        if (status === ELoadBalancerStatus.ONLINE) return false;
+        if (status === ELoadBalancerStatus.ERROR) {
+          const message = this.alert.getErrorMessage(server, "error");
+          throw message;
+        }
+      }
+
       const loadBalancerResponse = await Promise.all(
         loadBalancers.map(({ fqdn, ip }) =>
           this.haProxy.enableServer({
             destination,
             server,
-            domain: this.getLoadBalancerDomain(fqdn || ip),
+            domain: this.getLoadBalancerDomain(fqdn || ip, true),
           }),
         ),
       );
@@ -42,8 +54,6 @@ export class Service {
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
       const message = `Could not add ${destination}/${server} to rotation. ${error}`;
-      colorLog(message, "red");
-      await this.alert.sendErrorChannel({ title: destination, message });
       throw new Error(message);
     }
   }
@@ -54,22 +64,24 @@ export class Service {
     loadBalancers,
     manual = false,
   }: IRotationParams): Promise<boolean> {
+    if (env("MONITOR_TEST") && !env("MONITOR_TEST_DOMAIN")) return false;
+
     try {
-      const serverCount = await this.getServerCount({ destination, loadBalancers });
+      const { online: nodesOnline } = await this.getServerCount({
+        destination,
+        loadBalancers,
+      });
       if (!manual) {
-        if (serverCount <= 1) {
-          const message = this.getErrorMessage(server, "count", serverCount);
-          colorLog(message, "red");
-          await this.alert.sendErrorChannel({ title: destination, message });
-          throw new Error(message);
+        if (nodesOnline <= 1) {
+          const message = this.alert.getErrorMessage(server, "count", nodesOnline);
+          throw message;
         }
 
         const status = await this.getServerStatus({ destination, server, loadBalancers });
-        if (status === ELoadBalancerStatus.OFFLINE) {
-          const message = this.getErrorMessage(server, "offline");
-          colorLog(message, "red");
-          await this.alert.sendErrorChannel({ title: destination, message });
-          throw new Error(message);
+        if (status === ELoadBalancerStatus.OFFLINE) return false;
+        if (status === ELoadBalancerStatus.ERROR) {
+          const message = this.alert.getErrorMessage(server, "error");
+          throw message;
         }
       }
 
@@ -78,26 +90,25 @@ export class Service {
           this.haProxy.disableServer({
             destination,
             server,
-            domain: this.getLoadBalancerDomain(fqdn || ip),
+            domain: this.getLoadBalancerDomain(fqdn || ip, true),
           }),
         ),
       );
       return loadBalancerResponse.every(Boolean);
     } catch (error) {
       const message = `Could not remove ${destination}/${server} from rotation. ${error}`;
-      colorLog(message, "red");
-      await this.alert.sendErrorChannel({ title: destination, message });
       throw new Error(message);
     }
   }
 
   /** Ensures that the Load Balancer's IP is replaced with locahost when running in test mode.
    * This prevents the automation from taking production nodes out of protation. */
-  private getLoadBalancerDomain(ip: string): string {
-    if (process.env.MONITOR_TEST === "1") {
-      return "ec2-3-145-99-143.us-east-2.compute.amazonaws.com";
+  private getLoadBalancerDomain(domain: string, automation = false): string {
+    if (automation && env("MONITOR_TEST")) {
+      return env("MONITOR_TEST_DOMAIN");
     }
-    return ip;
+
+    return domain;
   }
 
   /* ----- Server Check Methods ----- */
@@ -105,12 +116,15 @@ export class Service {
     destination,
     loadBalancers,
     frontendUrl,
-  }: IRotationParams): Promise<number> {
-    const results: number[] = [];
+    dispatch,
+  }: IRotationParams): Promise<{ online: number; total: number }> {
+    const results: { online: number; total: number }[] = [];
+
     if (frontendUrl) {
       const domain = frontendUrl.split("//")[1].split(":")[0];
+
       try {
-        return await this.haProxy.getServerCount({ destination, domain });
+        return await this.haProxy.getServerCount({ destination, domain, dispatch });
       } catch (error) {
         throw `Could not get frontend count.\nURL: ${domain} Frontend: ${destination} ${error}`;
       }
@@ -120,6 +134,7 @@ export class Service {
           const count = await this.haProxy.getServerCount({
             destination,
             domain: this.getLoadBalancerDomain(fqdn || ip),
+            dispatch,
           });
           results.push(count);
         } catch (error) {
@@ -127,11 +142,12 @@ export class Service {
         }
       }
 
-      if (results.every((count) => count === results[0])) {
+      if (results.every(({ online }) => online === results[0].online)) {
         return results[0];
       }
     }
-    return -1;
+
+    return null;
   }
 
   async getServerStatus({
@@ -161,28 +177,5 @@ export class Service {
       return ELoadBalancerStatus.OFFLINE;
     }
     return ELoadBalancerStatus.ERROR;
-  }
-
-  /* ----- Message String Methods ----- */
-  getHAProxyMessage({ destination, loadBalancers }: IRotationParams): string {
-    if (process.env.MONITOR_TEST === "1") return "";
-    const urls = loadBalancers
-      .map(({ url, ip }) => `http://${url || ip}:8050/stats?scope=${destination}`)
-      .join("\n");
-    return `HAProxy Status\n${urls}`;
-  }
-
-  private getErrorMessage(
-    server: string,
-    mode: "count" | "offline" | "online",
-    count?: number,
-  ): string {
-    return {
-      count: `Could not remove ${server} from load balancer. ${count} server${s(
-        count,
-      )} online.\nManual intervention required.`,
-      offline: `Could not remove ${server} from load balancer. Server already offline.`,
-      online: `Could not add ${server} to load balancer. Server already online.`,
-    }[mode];
   }
 }

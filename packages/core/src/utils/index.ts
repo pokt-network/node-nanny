@@ -20,6 +20,12 @@ export const getTimestamp = (): string => {
 export const s = (count: number): string => (count === 1 ? "" : "s");
 export const is = (count: number): string => (count === 1 ? "is" : "are");
 
+export const camelToTitle = (camelCase: string): string =>
+  camelCase
+    .replace(/([A-Z])/g, (match) => ` ${match}`)
+    .replace(/^./, (match) => match.toUpperCase())
+    .trim();
+
 const colorCodes = {
   red: "\x1B[31m%s\x1B[0m",
   green: "\x1B[32m%s\x1B[0m",
