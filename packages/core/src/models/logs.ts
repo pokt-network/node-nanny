@@ -24,6 +24,9 @@ const logSchema = new Schema<ILog>(
 
 logSchema.plugin(mongoosePaginate);
 
+logSchema.index({ timestamp: -1 });
+logSchema.index({ label: -1 });
+
 export const LogsModel = model<LogDocument, PaginateModel<LogDocument>>(
   "Logs",
   logSchema,

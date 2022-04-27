@@ -26,4 +26,6 @@ export const hostsSchema = new Schema<IHost>(
   { timestamps: true },
 );
 
+hostsSchema.index({ name: 1 });
+
 export const HostsModel: Model<IHost> = model("Hosts", hostsSchema);
