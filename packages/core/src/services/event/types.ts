@@ -31,8 +31,8 @@ export interface IRedisEventParams {
   healthy: boolean;
   notSynced: boolean;
   status: HealthTypes.EErrorStatus;
-  nodeCount: number;
-  nodeTotal: number;
+  nodesOnline: number;
+  nodesTotal: number;
   dispatchFrontendDown?: boolean;
 }
 
