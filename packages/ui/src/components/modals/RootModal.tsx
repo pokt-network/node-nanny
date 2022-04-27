@@ -1,12 +1,10 @@
 import { useReactiveVar } from "@apollo/client";
-import { Fade, Modal } from "@mui/material";
+import { Fade, Modal, Box } from "@mui/material";
 
 import { modalStateVar } from "apollo";
+import { ModalHelper } from "utils";
 
 import { ConfirmationModal } from "./ConfirmationModal";
-import { HostsForm } from "./HostsForm";
-import { NodesForm } from "./NodesForm";
-import { LocationsForm } from "./LocationsForm";
 
 export type IModalTypes = "confirmation" | "hostsForm" | "nodesForm" | "locationsForm";
 
@@ -21,9 +19,6 @@ export interface IModalState {
 
 const MODAL_TYPES = {
   confirmation: ConfirmationModal,
-  hostsForm: HostsForm,
-  nodesForm: NodesForm,
-  locationsForm: LocationsForm,
 };
 
 export function RootModal() {
@@ -33,7 +28,14 @@ export function RootModal() {
 
   const modalProps = modalState.modalProps;
 
-  const { onClose } = modalState?.modalOptions || {};
+  const { onClose } = modalState?.modalOptions || {
+    onClose: () =>
+      modalStateVar({
+        modalType: undefined,
+        modalProps: undefined,
+        modalOptions: undefined,
+      }),
+  };
 
   if (!modalType) {
     return null;
@@ -57,9 +59,9 @@ export function RootModal() {
       }}
     >
       <Fade in={open}>
-        <div>
+        <Box sx={{ m: 2, width: "100%", maxWidth: "600px" }}>
           <SpecifiedModal {...modalProps} />
-        </div>
+        </Box>
       </Fade>
     </Modal>
   );
