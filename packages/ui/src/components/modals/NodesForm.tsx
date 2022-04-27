@@ -25,10 +25,11 @@ import {
   INodeInput,
   INodesQuery,
   IGetHostsChainsAndLoadBalancersQuery,
+  useCheckValidHaProxyLazyQuery,
   useCreateNodeMutation,
   useUpdateNodeMutation,
 } from "types";
-import { ModalHelper } from "utils";
+import { ModalHelper, regexTest, s } from "utils";
 
 export interface NodesFormProps {
   formData: IGetHostsChainsAndLoadBalancersQuery;
@@ -51,17 +52,56 @@ export function NodesForm({
   const [loading, setLoading] = useState(false);
   const [backendError, setBackendError] = useState("");
 
-  const getNodeName = () => {
+  const getNodeName = (): string => {
     if (values.chain && values.host) {
       const chainName = formData?.chains?.find(({ id }) => id === values.chain)?.name;
       const hostName = formData?.hosts?.find(({ id }) => id === values.host)?.name;
       let nodeName = `${hostName}/${chainName}`;
+
       const count = String(
         (nodeNames?.filter((name) => name.includes(nodeName))?.length || 0) + 1,
       ).padStart(2, "0");
+
       return `${nodeName}/${count}`;
     } else {
       return "";
+    }
+  };
+
+  // TO-DO -> Split frontend creation fields into their own form
+  const handleFormSubmit = async () => {
+    setLoading(true);
+
+    if (values.haProxy && values.backend) {
+      const { data } = await checkValidHaProxy();
+
+      if (data?.validHaProxy) {
+        update ? submitUpdate() : submitCreate();
+      } else {
+        setLoading(false);
+        setErrors({
+          ...errors,
+          backend: `Backend ${
+            values.backend
+          } is not a valid backend for the selected load balancer${s(
+            values.loadBalancers.length,
+          )}. Please ensure the backend string you have entered exactly matches a valid backend string in your haproxy.cfg file`,
+        });
+      }
+    } else if (!values.haProxy && values.frontend) {
+      const { data } = await checkValidHaProxy();
+
+      if (data?.validHaProxy) {
+        update ? submitUpdate() : submitCreate();
+      } else {
+        setLoading(false);
+        setErrors({
+          ...errors,
+          frontend: `Frontend ${values.frontend} is not a valid frontend for the selected load balancer. Please ensure the frontend string you have entered exactly matches a valid frontend string in your haproxy.cfg file`,
+        });
+      }
+    } else {
+      update ? submitUpdate() : submitCreate();
     }
   };
 
@@ -74,6 +114,9 @@ export function NodesForm({
       errors.host = "Host does not have an FQDN so HTTPS cannot be enabled";
     }
     if (!values.port) errors.port = "Port is required";
+    if (values.port && !regexTest(String(values.port), "port")) {
+      errors.port = "Invalues port number";
+    }
     if (hostPortCombos.includes(`${values.host}/${values.port}`)) {
       errors.port = "Host/port combination is already taken";
     }
@@ -83,6 +126,11 @@ export function NodesForm({
       }
       if (!values.loadBalancers?.length) {
         errors.loadBalancers = "At least one load balancer is required.";
+      }
+    } else {
+      if (values.frontend && !values.host) {
+        errors.frontend =
+          "A load balancer host must be selected if creating a frontend node.";
       }
     }
     return errors;
@@ -99,6 +147,7 @@ export function NodesForm({
   } = useFormik({
     initialValues: {
       https: false,
+      name: "",
       chain: "",
       host: "",
       port: undefined,
@@ -107,15 +156,10 @@ export function NodesForm({
       loadBalancers: [],
       server: "",
       frontend: "",
-      name: "",
     },
     validate,
     validateOnChange: false,
-    onSubmit: async () => {
-      setLoading(true);
-      console.log({ ...values, name: getNodeName(), port: Number(values.port) });
-      update ? submitUpdate() : submitCreate();
-    },
+    onSubmit: handleFormSubmit,
   });
 
   useEffect(() => {
@@ -200,6 +244,11 @@ export function NodesForm({
       setBackendError(error.message);
       setLoading(false);
     },
+  });
+
+  /* ----- Queries ----- */
+  const [checkValidHaProxy] = useCheckValidHaProxyLazyQuery({
+    variables: { input: { ...values, name: getNodeName(), port: Number(values.port) } },
   });
 
   /* ----- Layout ----- */
@@ -361,7 +410,7 @@ export function NodesForm({
           </FormControl>
           <div style={{ marginTop: "10px" }} />
           <Typography align="center" gutterBottom>
-            Set
+            Set Node as Load Balancer Frontend
           </Typography>
           <FormControl fullWidth>
             <TextField
@@ -371,6 +420,8 @@ export function NodesForm({
               disabled={!!values.backend || values.haProxy}
               label="Frontend (optional)"
               variant="outlined"
+              error={!!errors.frontend}
+              helperText={errors.frontend}
             />
           </FormControl>
           <div style={{ marginTop: "10px" }} />
