@@ -11,6 +11,7 @@ export interface INodeInput {
   backend?: string;
   frontend?: string;
   server?: string;
+  frontendHost?: string;
 }
 
 export interface INodeCsvInput {

@@ -201,7 +201,7 @@ export class Service {
         }`
       : "";
     let nodeCountStr =
-      nodesOnline && nodesOnline >= 0
+      typeof nodesOnline === "number" && nodesOnline >= 0
         ? `${nodesOnline} of ${nodesTotal} node${s(nodesTotal)} ${is(
             nodesTotal,
           )} in rotation for ${destination}.`

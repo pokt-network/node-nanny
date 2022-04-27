@@ -157,7 +157,7 @@ export class Service {
   }: IRotationParams): Promise<ELoadBalancerStatus> {
     const results: boolean[] = [];
 
-    for (const { fqdn, ip } of loadBalancers) {
+    for await (const { fqdn, ip } of loadBalancers) {
       try {
         const status = await this.haProxy.getServerStatus({
           destination,
@@ -177,5 +177,31 @@ export class Service {
       return ELoadBalancerStatus.OFFLINE;
     }
     return ELoadBalancerStatus.ERROR;
+  }
+
+  async getValidHaProxy({
+    destination,
+    frontendUrl,
+    loadBalancers,
+  }: IRotationParams): Promise<boolean> {
+    if (frontendUrl) {
+      return await this.haProxy.getValidHaProxy({ destination, domain: frontendUrl });
+    } else {
+      const results: boolean[] = [];
+
+      for await (const { fqdn, ip } of loadBalancers) {
+        try {
+          const status = await this.haProxy.getValidHaProxy({
+            destination,
+            domain: this.getLoadBalancerDomain(fqdn || ip),
+          });
+          results.push(status);
+        } catch (error) {
+          throw `Could not get backend status.\nIP: ${ip} Backend: ${destination} ${error}`;
+        }
+      }
+
+      return results.every((status) => status === true);
+    }
   }
 }
