@@ -4,11 +4,14 @@ import { Service } from "./service";
 
 const logService = new Service();
 let logs: ILog[];
+
 const mockId = "6244d6843e984hff093rjfihf2f6";
+const numOfLogs = 100;
+
 const createMocks = async () => {
   let index = 0;
   const logs = [];
-  for await (const _log of [...Array(83)]) {
+  for await (const _log of [...Array(numOfLogs)]) {
     index++;
     const mockLog = {
       timestamp: new Date().toISOString(),
@@ -42,7 +45,7 @@ describe("Automation Service Tests", () => {
       });
 
       expect(logsForNode).toBeTruthy();
-      expect(logsForNode.docs.length).toEqual(83);
+      expect(logsForNode.docs.length).toEqual(numOfLogs);
       expect(logsForNode.docs.filter(({ level }) => level === "info").length).toEqual(56);
       expect(logsForNode.docs.filter(({ level }) => level === "error").length).toEqual(
         27,
@@ -59,7 +62,7 @@ describe("Automation Service Tests", () => {
       });
 
       expect(logsForNode).toBeTruthy();
-      expect(logsForNode.docs.length).toEqual(83);
+      expect(logsForNode.docs.length).toEqual(numOfLogs);
       expect(logsForNode.docs.filter(({ level }) => level === "info").length).toEqual(56);
       expect(logsForNode.docs.filter(({ level }) => level === "error").length).toEqual(
         27,
@@ -77,7 +80,7 @@ describe("Automation Service Tests", () => {
 
       expect(logData[0].ok).toEqual(56);
       expect(logData[0].error).toEqual(27);
-      expect(logData[0].ok + logData[0].error).toEqual(83);
+      expect(logData[0].ok + logData[0].error).toEqual(numOfLogs);
     });
 
     test("Should fetch log data in a specified increment for a specified time range and for a specific set of nodes if nodeIds set", async () => {
@@ -90,7 +93,7 @@ describe("Automation Service Tests", () => {
 
       expect(logData[0].ok).toEqual(56);
       expect(logData[0].error).toEqual(27);
-      expect(logData[0].ok + logData[0].error).toEqual(83);
+      expect(logData[0].ok + logData[0].error).toEqual(numOfLogs);
     });
   });
 });
