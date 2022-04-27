@@ -26,10 +26,7 @@ export class App {
     await connect();
     await createFrontendAlertChannel();
 
-    const nodes = await NodesModel.find({ muted: false })
-      .populate("host")
-      .populate("chain")
-      .exec();
+    const nodes = await NodesModel.find({}).populate("host").populate("chain").exec();
     const publish = new Publish(nodes);
 
     const mode = env("MONITOR_TEST") ? "TEST" : "PRODUCTION";
