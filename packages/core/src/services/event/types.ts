@@ -16,11 +16,11 @@ export interface IRotationParams {
   frontendUrl?: string;
   server?: string;
   manual?: boolean;
+  dispatch?: boolean;
 }
 
 export interface IToggleServerParams {
   node: INode;
-  title: string;
   enable: boolean;
 }
 
@@ -31,7 +31,8 @@ export interface IRedisEventParams {
   healthy: boolean;
   notSynced: boolean;
   status: HealthTypes.EErrorStatus;
-  nodeCount: number;
+  nodesOnline: number;
+  nodesTotal: number;
   dispatchFrontendDown?: boolean;
 }
 
