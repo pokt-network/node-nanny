@@ -178,6 +178,7 @@ const typeDefs = gql`
     logsForChart(input: LogChartParams!): [LogForChart!]!
 
     getHaProxyStatus(id: ID!): Int!
+    checkValidHaProxy(input: NodeInput!): Boolean!
     nodeStatus(id: String): String!
   }
 
