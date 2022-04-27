@@ -21,10 +21,12 @@ import { ApolloQueryResult } from "@apollo/client";
 
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
-import Alert from "@mui/material/Alert";
+import Alert, { AlertColor } from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Typography from "@mui/material/Typography";
 
 interface NodeCRUDProps {
   node: INode;
@@ -48,6 +50,7 @@ export const NodeCRUD = ({
   refetch,
 }: NodeCRUDProps) => {
   const [title, setTitle] = useState("Select Node To View Status");
+  const [severity, setSeverity] = useState<AlertColor>("success");
 
   const [getStatus, { data, error: getHaProxyStatusError, loading }] =
     useGetNodeStatusLazyQuery();
@@ -101,7 +104,7 @@ export const NodeCRUD = ({
       modalType: "confirmation",
       modalProps: {
         handleOk: () => handleMuteToggle(node?.id),
-        confirmText: `Confirm ${node?.muted ? "Unmute" : "Mute"} Node`,
+        confirmText: `${node?.muted ? "Unmute" : "Mute"} Node: ${node?.name}`,
         okText: `${node?.muted ? "Unmute" : "Mute"} Node`,
         promptText: (node?.muted ? text.unmuteMonitor : text.muteMonitor).replaceAll(
           "{selectedNode}",
@@ -117,7 +120,7 @@ export const NodeCRUD = ({
       modalType: "confirmation",
       modalProps: {
         handleOk: () => handleHaProxyButtonClick(node?.id),
-        confirmText: `Confirm ${haProxyOnline ? "Disable" : "Enable"} Node`,
+        confirmText: `${haProxyOnline ? "Disable" : "Enable"} Node: ${node?.name}`,
         okText: `${haProxyOnline ? "Disable" : "Enable"} Node`,
         promptText: (haProxyOnline
           ? text.removeFromRotation
@@ -143,6 +146,18 @@ export const NodeCRUD = ({
       setTitle("Select Node To View Status");
     }
   }, [node, type]);
+
+  useEffect(() => {
+    if (node) {
+      switch (node.status) {
+        case "ERROR":
+          return setSeverity("error");
+        case "OK":
+        default:
+          return setSeverity("success");
+      }
+    }
+  }, [node]);
 
   return (
     <Paper>
@@ -187,6 +202,36 @@ export const NodeCRUD = ({
         )}
       </Grid>
       <Box>
+        {node && type !== "create" && (
+          <Box
+            sx={{
+              width: "auto",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 1,
+              p: 2,
+              mb: 2,
+              borderRadius: 1,
+              backgroundColor: "background.default",
+            }}
+          >
+            <Typography>Status &#38; Condition</Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Chip
+                sx={{
+                  height: "10px",
+                  width: "10px",
+                }}
+                color={
+                  ({ OK: "success", ERROR: "error" }[node.status] as any) ||
+                  ("default" as any)
+                }
+              />
+              <Typography>{node.conditions}</Typography>
+            </Box>
+          </Box>
+        )}
         <NodeForm
           read={type === "info"}
           update={type === "info" || type === "edit"}
