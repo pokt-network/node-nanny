@@ -10,6 +10,8 @@ type IStringVars =
 type INumberVars =
   | "ALERT_RETRIGGER_THRESHOLD"
   | "ALERT_TRIGGER_THRESHOLD"
+  | "MONGO_MAX_LOG_NUMBER"
+  | "MONGO_MAX_LOG_SIZE"
   | "MONITOR_INTERVAL"
   | "PNF_DISPATCH_THRESHOLD";
 type IBooleanVars = "PNF" | "MONITOR_TEST";
@@ -28,6 +30,8 @@ const ENV_VARS: { [variable: string]: () => string | number | boolean } = {
 
   ALERT_RETRIGGER_THRESHOLD: () => Number(process.env.ALERT_RETRIGGER_THRESHOLD || 60),
   ALERT_TRIGGER_THRESHOLD: () => Number(process.env.ALERT_TRIGGER_THRESHOLD || 6),
+  MONGO_MAX_LOG_NUMBER: () => Number(process.env.MONGO_MAX_LOG_NUMBER || 10000000),
+  MONGO_MAX_LOG_SIZE: () => Number(process.env.MONGO_MAX_LOG_SIZE || 5368709120),
   MONITOR_INTERVAL: () => Number(process.env.MONITOR_INTERVAL || 10000),
   PNF_DISPATCH_THRESHOLD: () => Number(process.env.PNF_DISPATCH_THRESHOLD || 5),
 
