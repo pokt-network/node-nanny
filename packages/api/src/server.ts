@@ -16,6 +16,6 @@ import typeDefs from "./schema";
   console.log(`🚀 GraphQL server listening on ${port}`);
 })();
 
-process.on("SIGINT", function () {
-  disconnect();
+process.on("SIGINT", async function () {
+  await disconnect();
 });

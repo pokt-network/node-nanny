@@ -5,22 +5,28 @@ import { FilterQuery } from "mongoose";
 import { LogsModel, ILog, IPaginatedLogs } from "../../models";
 import { INodeLogParams, ILogChartParams, ILogForChart } from "./types";
 
+import env from "../../environment";
+
 export class Service {
   public init(id: string, name: string): Logger {
     const transport = {
       mongodb: new transports.MongoDB({
-        db: process.env.MONGO_URI,
-        expireAfterSeconds: 60,
+        db: env("MONGO_URI"),
         label: id,
         collection: "logs",
         leaveConnectionOpen: false,
+        capped: true,
+        cappedMax: env("MONGO_MAX_LOG_NUMBER"),
+        cappedSize: env("MONGO_MAX_LOG_SIZE"),
       }),
       datadog: new transports.Http({
         host: "http-intake.logs.datadoghq.eu",
-        path: `/api/v2/logs?dd-api-key=${process.env.DD_API_KEY}&ddsource=nodejs&service=node-nanny/${name}`,
+        path: `/api/v2/logs?dd-api-key=${env(
+          "DD_API_KEY",
+        )}&ddsource=nodejs&service=node-nanny/${name}`,
         ssl: true,
       }),
-    }[process.env.MONITOR_LOGGER];
+    }[env("MONITOR_LOGGER")];
 
     return createLogger({
       level: "info",
