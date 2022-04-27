@@ -226,10 +226,11 @@ export const NodeForm = ({
       modalType: "confirmation",
       modalProps: {
         handleOk: () => submitDelete({ variables: { id: selectedNode?.id } }),
+        confirmText: `Delete: ${selectedNode?.name}`,
         promptText: `Are you sure you wish to remove host ${selectedNode?.name} from the inventory database?`,
         okText: "Delete Host",
         okColor: "error",
-        cancelColor: "primary",
+        cancelColor: "inherit",
         error: deleteNodeError?.message,
       },
     });
@@ -450,7 +451,7 @@ export const NodeForm = ({
                 `${update ? "Save" : "Create"} Node`
               )}
             </Button>
-            <Button onClick={onCancel} variant="outlined" color="error">
+            <Button onClick={onCancel} variant="outlined" color="inherit">
               Cancel
             </Button>
           </Box>
