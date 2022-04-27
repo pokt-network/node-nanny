@@ -129,7 +129,7 @@ export function NodesCSV({
       let nodeName = `${node.host}/${node.chain}`;
       counts[nodeName] = counts[nodeName]
         ? counts[nodeName] + 1
-        : nodeNames?.filter((name) => name.includes(nodeName))?.length || 1;
+        : nodeNames?.filter((name) => name.includes(nodeName))?.length + 1 || 1;
       const count = String(counts[nodeName]).padStart(2, "0");
       nodeName = `${nodeName}/${count}`;
 
