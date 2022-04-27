@@ -18,8 +18,7 @@
   },
   "scripts": {
     "start": "pnpm build && node ./dist/graphql/server.js",
-    "start:dev": "pm2 start ./dist/server.js --name api-dev",
-    "start:dev:watch": "pm2 start \"nodemon ./src/server.ts\" --name api-dev",
+    "start:dev": "pm2 start \"nodemon ./src/server.ts\" --name api-dev",
     "build": "tsc -b . && pnpm generate",
     "build:clean": "tsc --build --clean && rm -rf ./dist",
     "build:watch": "tsc -b -w .",

@@ -39,12 +39,18 @@ export class Service {
     return null;
   }
 
-  async getServerCount({ destination, domain }: IHAProxyParams) {
+  async getServerCount({ destination, domain, dispatch }: IHAProxyParams) {
     const raw = await this.getCurrentStateByChainCommand({ destination, domain });
     const lines = raw.split("\n").filter((line) => !line.includes("backup"));
-    return lines.filter((line) => {
-      return line.includes(destination) && Number(line.split(" ")[5]) === 2;
-    }).length;
+
+    const total = lines.filter((line) => {
+      return line.includes(destination) && (!dispatch || !line.includes("mainnet"));
+    });
+    const online = total.filter((line) => {
+      return Number(line.split(" ")[5]) === 2;
+    });
+
+    return { online: online.length, total: total.length };
   }
 
   private async getCurrentStateByChainCommand({
