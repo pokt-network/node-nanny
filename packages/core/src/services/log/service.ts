@@ -12,10 +12,12 @@ export class Service {
     const transport = {
       mongodb: new transports.MongoDB({
         db: env("MONGO_URI"),
-        expireAfterSeconds: 60,
         label: id,
         collection: "logs",
         leaveConnectionOpen: false,
+        capped: true,
+        cappedMax: env("MONGO_MAX_LOG_NUMBER"),
+        cappedSize: env("MONGO_MAX_LOG_SIZE"),
       }),
       datadog: new transports.Http({
         host: "http-intake.logs.datadoghq.eu",
