@@ -36,8 +36,8 @@ interface HostsFormProps {
   selectedHost?: IHost;
   update?: boolean;
   read?: boolean;
-  onCancel?: Dispatch<any>
-  setState?: Dispatch<HostActionsState>
+  onCancel?: Dispatch<any>;
+  setState?: Dispatch<HostActionsState>;
 }
 
 export const HostForm = ({
@@ -48,14 +48,14 @@ export const HostForm = ({
   update,
   read,
   onCancel,
-  setState
+  setState,
 }: HostsFormProps) => {
   const [ipDisabled, setIPDisabled] = useState(false);
   const [fqdnDisabled, setFQDNDisabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [backendError, setBackendError] = useState("");
 
-  const locationRef = useRef<HTMLInputElement>()
+  const locationRef = useRef<HTMLInputElement>();
 
   /* ----- Form Validation ----- */
   const validate = (values: IHostInput): FormikErrors<IHostInput> => {
@@ -112,9 +112,9 @@ export const HostForm = ({
       setFieldValue("loadBalancer", selectedHost.loadBalancer);
     }
     if (!selectedHost) {
-      resetForm()
-      if(locationRef.current) {
-        locationRef.current.querySelector("input").value = ""
+      resetForm();
+      if (locationRef.current) {
+        locationRef.current.querySelector("input").value = "";
       }
     }
   }, [update, selectedHost, setFieldValue, resetForm]);
@@ -160,10 +160,11 @@ export const HostForm = ({
       modalType: "confirmation",
       modalProps: {
         handleOk: () => submitDelete({ variables: { id: selectedHost?.id } }),
+        confirmText: `Delete: ${selectedHost?.name}`,
         promptText: `Are you sure you wish to remove host ${selectedHost?.name} from the inventory database?`,
         okText: "Delete Host",
         okColor: "error",
-        cancelColor: "primary",
+        cancelColor: "inherit",
         error: deleteHostError?.message,
       },
     });
@@ -171,21 +172,19 @@ export const HostForm = ({
 
   /* ----- Layout ----- */
   return (
-    <Form
-      read={read}
-    >
+    <Form read={read}>
       {read && (
         <TextField
-        ref={locationRef}
-        name="location"
-        value={locations?.find(l => l.id === values.location)?.name}
-        onChange={handleChange}
-        label="Location"
-        variant="outlined"
-        error={!!errors.location}
-        helperText={errors.location}
-        disabled={read}
-        size="small"
+          ref={locationRef}
+          name="location"
+          value={locations?.find((l) => l.id === values.location)?.name}
+          onChange={handleChange}
+          label="Location"
+          variant="outlined"
+          error={!!errors.location}
+          helperText={errors.location}
+          disabled={read}
+          size="small"
         />
       )}
       {!read && (
@@ -244,7 +243,7 @@ export const HostForm = ({
         fullWidth
       />
       <FormControl fullWidth>
-        <InputLabel disabled={read} >Load Balancer</InputLabel>
+        <InputLabel disabled={read}>Load Balancer</InputLabel>
         <Box>
           <Switch
             name="loadBalancer"
@@ -256,38 +255,30 @@ export const HostForm = ({
       </FormControl>
       {!read && (
         <Box
-          sx={{ 
+          sx={{
             marginTop: 4,
             textAlign: "right",
-            '& button': { margin: 1 }
+            "& button": { margin: 1 },
           }}
         >
-          <Button
-            type="submit"
-            variant="contained"
-            onClick={handleSubmit as any}
-          >
+          <Button type="submit" variant="contained" onClick={handleSubmit as any}>
             {loading ? (
               <CircularProgress size={20} />
             ) : (
               `${update ? "Save" : "Create"} Host`
             )}
           </Button>
-          <Button
-            onClick={onCancel}
-            variant="outlined"
-            color="error"
-          >
+          <Button onClick={onCancel} variant="outlined" color="inherit">
             Cancel
           </Button>
         </Box>
       )}
       {selectedHost && read && (
         <Box
-          sx={{ 
+          sx={{
             marginTop: 4,
             textAlign: "right",
-            '& button': { margin: 1 }
+            "& button": { margin: 1 },
           }}
         >
           <Button
@@ -297,11 +288,7 @@ export const HostForm = ({
           >
             Update Host
           </Button>
-          <Button
-            onClick={handleOpenDeleteModal}
-            variant="outlined"
-            color="error"
-          >
+          <Button onClick={handleOpenDeleteModal} variant="outlined" color="error">
             Delete Host
           </Button>
         </Box>
@@ -314,6 +301,6 @@ export const HostForm = ({
       )}
     </Form>
   );
-}
+};
 
-export default HostForm
+export default HostForm;
