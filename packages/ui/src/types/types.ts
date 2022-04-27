@@ -251,6 +251,7 @@ export type IPaginatedLogs = {
 
 export type IQuery = {
   chains: Array<IChain>;
+  checkValidHaProxy: Scalars['Boolean'];
   getHaProxyStatus: Scalars['Int'];
   hosts: Array<IHost>;
   locations: Array<ILocation>;
@@ -261,6 +262,11 @@ export type IQuery = {
   nodes: Array<INode>;
   oracles: Array<IOracle>;
   webhooks: Array<IWebhook>;
+};
+
+
+export type IQueryCheckValidHaProxyArgs = {
+  input: INodeInput;
 };
 
 
@@ -453,6 +459,13 @@ export type IGetNodeStatusQueryVariables = Exact<{
 
 
 export type IGetNodeStatusQuery = { haProxyStatus: number };
+
+export type ICheckValidHaProxyQueryVariables = Exact<{
+  input: INodeInput;
+}>;
+
+
+export type ICheckValidHaProxyQuery = { validHaProxy: boolean };
 
 
 export const CreateHostDocument = gql`
@@ -1352,3 +1365,36 @@ export function useGetNodeStatusLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
 export type GetNodeStatusQueryHookResult = ReturnType<typeof useGetNodeStatusQuery>;
 export type GetNodeStatusLazyQueryHookResult = ReturnType<typeof useGetNodeStatusLazyQuery>;
 export type GetNodeStatusQueryResult = Apollo.QueryResult<IGetNodeStatusQuery, IGetNodeStatusQueryVariables>;
+export const CheckValidHaProxyDocument = gql`
+    query CheckValidHaProxy($input: NodeInput!) {
+  validHaProxy: checkValidHaProxy(input: $input)
+}
+    `;
+
+/**
+ * __useCheckValidHaProxyQuery__
+ *
+ * To run a query within a React component, call `useCheckValidHaProxyQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCheckValidHaProxyQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCheckValidHaProxyQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCheckValidHaProxyQuery(baseOptions: Apollo.QueryHookOptions<ICheckValidHaProxyQuery, ICheckValidHaProxyQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ICheckValidHaProxyQuery, ICheckValidHaProxyQueryVariables>(CheckValidHaProxyDocument, options);
+      }
+export function useCheckValidHaProxyLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ICheckValidHaProxyQuery, ICheckValidHaProxyQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ICheckValidHaProxyQuery, ICheckValidHaProxyQueryVariables>(CheckValidHaProxyDocument, options);
+        }
+export type CheckValidHaProxyQueryHookResult = ReturnType<typeof useCheckValidHaProxyQuery>;
+export type CheckValidHaProxyLazyQueryHookResult = ReturnType<typeof useCheckValidHaProxyLazyQuery>;
+export type CheckValidHaProxyQueryResult = Apollo.QueryResult<ICheckValidHaProxyQuery, ICheckValidHaProxyQueryVariables>;
