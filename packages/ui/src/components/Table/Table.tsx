@@ -167,10 +167,15 @@ export const Table = <T extends unknown>({
   }, [rows]);
 
   useEffect(() => {
-    if (currRows.length === 0) {
-      setCurrRows(allRows);
+    if (allRows.length > 0) {
+      if (currRows.length === 0) {
+        setCurrRows(allRows);
+      }
+      if (allRows.length / rowsPerPage - 1 < page) {
+        setPage(0);
+      }
     }
-  }, [currRows, allRows]);
+  }, [currRows, allRows, page, rowsPerPage]);
 
   useEffect(() => {
     let rows = allRows;
