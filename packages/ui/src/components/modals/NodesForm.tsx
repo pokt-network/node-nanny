@@ -38,7 +38,6 @@ export interface NodesFormProps {
   update?: boolean;
   refetchNodes: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
 }
-
 export function NodesForm({
   formData,
   nodeNames,
@@ -60,8 +59,6 @@ export function NodesForm({
     if (https && !hostHasFqdn) {
       errors.host = "Host does not have an FQDN so HTTPS cannot be enabled";
     }
-    if (!values.name) errors.name = "Name is required";
-    if (nodeNames.includes(values.name)) errors.name = "Name is already taken";
     if (!values.port) errors.port = "Port is required";
     if (hostPortCombos.includes(`${values.host}/${values.port}`)) {
       errors.port = "Host/port combination is already taken";
@@ -89,14 +86,14 @@ export function NodesForm({
     initialValues: {
       https: false,
       chain: "",
-      haProxy: true,
       host: "",
       name: "",
       port: undefined,
-      loadBalancers: [],
+      haProxy: true,
       backend: "",
-      frontend: "",
+      loadBalancers: [],
       server: "",
+      frontend: "",
     },
     validate,
     validateOnChange: false,
@@ -131,7 +128,6 @@ export function NodesForm({
 
   /* ----- Update Mode ----- */
   if (update && selectedNode) {
-    nodeNames = nodeNames.filter((name) => name !== selectedNode.name);
     hostPortCombos = hostPortCombos.filter(
       (combo) => combo !== `${selectedNode.host.id}/${selectedNode.port}`,
     );
@@ -146,7 +142,6 @@ export function NodesForm({
         "loadBalancers",
         selectedNode.loadBalancers.map(({ id }) => id),
       );
-      setFieldValue("name", selectedNode.name);
       setFieldValue("port", Number(selectedNode.port));
       setFieldValue("backend", selectedNode.backend);
       setFieldValue("frontend", selectedNode.frontend);
@@ -184,13 +179,30 @@ export function NodesForm({
     },
   });
 
+  const getNodeName = () => {
+    if (values.chain && values.host) {
+      const chainName = formData?.chains?.find(({ id }) => id === values.chain)?.name;
+      const hostName = formData?.hosts?.find(({ id }) => id === values.host)?.name;
+      let nodeName = `${hostName}/${chainName}`;
+      const count = String(
+        (nodeNames?.filter((name) => name.includes(nodeName))?.length || 0) + 1,
+      ).padStart(2, "0");
+      return `${nodeName}/${count}`;
+    } else {
+      return "";
+    }
+  };
+
   /* ----- Layout ----- */
   return (
     <>
       <div style={{ display: "flex", flexDirection: "column" }}>
         <Paper style={{ width: 700, padding: 32 }} variant="outlined">
-          <Typography align="center" variant="h6" gutterBottom>
+          <Typography align="center" variant="h5">
             {`${update ? "Update" : "Add New"} Node`}
+          </Typography>
+          <Typography align="center" variant="h6" gutterBottom>
+            {getNodeName()}
           </Typography>
           <Typography align="center" gutterBottom>
             Required Fields
@@ -257,18 +269,6 @@ export function NodesForm({
               )}
             </div>
           </div>
-          <div style={{ marginTop: "10px" }} />
-          <FormControl fullWidth>
-            <TextField
-              name="name"
-              value={values.name}
-              onChange={handleChange}
-              label="Name"
-              variant="outlined"
-              error={!!errors.name}
-              helperText={errors.name}
-            />
-          </FormControl>
           <div style={{ marginTop: "10px" }} />
           <FormControl fullWidth>
             <TextField
