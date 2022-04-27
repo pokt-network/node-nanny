@@ -51,6 +51,20 @@ export function NodesForm({
   const [loading, setLoading] = useState(false);
   const [backendError, setBackendError] = useState("");
 
+  const getNodeName = () => {
+    if (values.chain && values.host) {
+      const chainName = formData?.chains?.find(({ id }) => id === values.chain)?.name;
+      const hostName = formData?.hosts?.find(({ id }) => id === values.host)?.name;
+      let nodeName = `${hostName}/${chainName}`;
+      const count = String(
+        (nodeNames?.filter((name) => name.includes(nodeName))?.length || 0) + 1,
+      ).padStart(2, "0");
+      return `${nodeName}/${count}`;
+    } else {
+      return "";
+    }
+  };
+
   /* ----- Form Validation ----- */
   const validate = (values: INodeInput): FormikErrors<INodeInput> => {
     const errors: FormikErrors<INodeInput> = {};
@@ -87,18 +101,19 @@ export function NodesForm({
       https: false,
       chain: "",
       host: "",
-      name: "",
       port: undefined,
       haProxy: true,
       backend: "",
       loadBalancers: [],
       server: "",
       frontend: "",
+      name: "",
     },
     validate,
     validateOnChange: false,
     onSubmit: async () => {
       setLoading(true);
+      console.log({ ...values, name: getNodeName(), port: Number(values.port) });
       update ? submitUpdate() : submitCreate();
     },
   });
@@ -135,6 +150,7 @@ export function NodesForm({
 
   useEffect(() => {
     if (update && selectedNode) {
+      setFieldValue("name", selectedNode.name);
       setFieldValue("chain", selectedNode.chain.id);
       setFieldValue("host", selectedNode.host.id);
       setFieldValue("https", selectedNode.url.includes("https"));
@@ -152,7 +168,7 @@ export function NodesForm({
 
   /* ----- Mutations ----- */
   const [submitCreate] = useCreateNodeMutation({
-    variables: { input: { ...values, port: Number(values.port) } },
+    variables: { input: { ...values, name: getNodeName(), port: Number(values.port) } },
     onCompleted: () => {
       resetForm();
       refetchNodes();
@@ -166,7 +182,14 @@ export function NodesForm({
   });
 
   const [submitUpdate] = useUpdateNodeMutation({
-    variables: { update: { id: selectedNode?.id, ...values, port: Number(values.port) } },
+    variables: {
+      update: {
+        id: selectedNode?.id,
+        ...values,
+        name: getNodeName(),
+        port: Number(values.port),
+      },
+    },
     onCompleted: () => {
       resetForm();
       refetchNodes();
@@ -178,20 +201,6 @@ export function NodesForm({
       setLoading(false);
     },
   });
-
-  const getNodeName = () => {
-    if (values.chain && values.host) {
-      const chainName = formData?.chains?.find(({ id }) => id === values.chain)?.name;
-      const hostName = formData?.hosts?.find(({ id }) => id === values.host)?.name;
-      let nodeName = `${hostName}/${chainName}`;
-      const count = String(
-        (nodeNames?.filter((name) => name.includes(nodeName))?.length || 0) + 1,
-      ).padStart(2, "0");
-      return `${nodeName}/${count}`;
-    } else {
-      return "";
-    }
-  };
 
   /* ----- Layout ----- */
   return (
