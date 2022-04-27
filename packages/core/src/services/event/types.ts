@@ -12,7 +12,7 @@ export interface IRedisEvent extends HealthTypes.IHealthResponse {
 
 export interface IRotationParams {
   destination: string;
-  loadBalancers: IHost[];
+  loadBalancers?: IHost[];
   frontendUrl?: string;
   server?: string;
   manual?: boolean;
