@@ -2,7 +2,7 @@ import Redis from "ioredis";
 import { INode } from "@pokt-foundation/node-nanny-core/dist/models";
 import { EventTypes, HealthTypes } from "@pokt-foundation/node-nanny-core/dist/types";
 
-import Env from "@pokt-foundation/node-nanny-core/dist/environment";
+import env from "@pokt-foundation/node-nanny-core/dist/environment";
 
 interface IMonitorEvent {
   message: HealthTypes.IHealthResponse;
@@ -16,9 +16,9 @@ export class Publish {
   private map: Map<string, number>;
 
   constructor(nodes: INode[]) {
-    this.redis = new Redis({ host: Env("REDIS_HOST") });
-    this.threshold = Env("ALERT_TRIGGER_THRESHOLD");
-    this.retriggerThreshold = Env("ALERT_RETRIGGER_THRESHOLD");
+    this.redis = new Redis({ host: env("REDIS_HOST") });
+    this.threshold = env("ALERT_TRIGGER_THRESHOLD");
+    this.retriggerThreshold = env("ALERT_RETRIGGER_THRESHOLD");
     this.map = this.initPublish(nodes);
   }
 

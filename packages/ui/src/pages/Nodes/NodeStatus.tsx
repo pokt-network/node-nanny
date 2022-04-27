@@ -204,12 +204,13 @@ export function NodeStatus({
             }`}</Typography>
             <Typography>Port: {port}</Typography>
             <Typography>Server: {server ?? "None"}</Typography>
-            <Typography gutterBottom>URL: {url}</Typography>
-            {loadBalancers?.length && (
-              <Typography gutterBottom>
-                Load Balancers: {loadBalancers.map(({ name }) => name).join(",")}
-              </Typography>
-            )}
+            <Typography>URL: {url}</Typography>
+            <Typography gutterBottom>
+              Load Balancers:{" "}
+              {loadBalancers?.length
+                ? loadBalancers.map(({ name }) => name).join(",")
+                : "None"}
+            </Typography>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <Button
                 onClick={handleOpenUpdateNodeModal}
