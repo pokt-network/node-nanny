@@ -1,4 +1,4 @@
-import { useState, useEffect, Dispatch, useRef } from "react";
+import { useState, useEffect, Dispatch, useRef, useCallback } from "react";
 import { useFormik, FormikErrors } from "formik";
 import { ApolloQueryResult } from "@apollo/client";
 import {
@@ -100,25 +100,42 @@ export const HostForm = ({
     }
   }, [values.ip]);
 
+  const handleResetFormState = useCallback(() => {
+    setFieldValue("location", selectedHost.location.id);
+    setFieldValue("name", selectedHost.name);
+    setFieldValue("ip", selectedHost.ip ?? "");
+    setFieldValue("fqdn", selectedHost.fqdn ?? "");
+    setFieldValue("loadBalancer", selectedHost.loadBalancer);
+  }, [setFieldValue, selectedHost]);
+
+  const handleResetRefs = useCallback(() => {
+    if (locationRef.current) {
+      locationRef.current.querySelector("input").value = "";
+    }
+  }, []);
+
+  const handleCancel = (e) => {
+    if (update) {
+      handleResetFormState();
+    }
+    onCancel(e);
+  };
+
   /* ----- Update Mode ----- */
   if (update && selectedHost) {
     hostNames = hostNames.filter((name) => name !== selectedHost.name);
   }
+
   useEffect(() => {
     if (update && selectedHost) {
-      setFieldValue("location", selectedHost.location.id);
-      setFieldValue("name", selectedHost.name);
-      setFieldValue("ip", selectedHost.ip ?? "");
-      setFieldValue("fqdn", selectedHost.fqdn ?? "");
-      setFieldValue("loadBalancer", selectedHost.loadBalancer);
+      handleResetFormState();
+      handleResetRefs();
     }
     if (!selectedHost) {
+      handleResetRefs();
       resetForm();
-      if (locationRef.current) {
-        locationRef.current.querySelector("input").value = "";
-      }
     }
-  }, [update, selectedHost, setFieldValue, resetForm]);
+  }, [update, selectedHost, resetForm, handleResetFormState]);
 
   /* ----- Mutations ----- */
   const [submitCreate] = useCreateHostMutation({
@@ -225,7 +242,7 @@ export const HostForm = ({
         onChange={handleChange}
         label="Host IP"
         variant="outlined"
-        disabled={read ?? ipDisabled}
+        disabled={read ? read : ipDisabled}
         error={!!errors.ip}
         helperText={errors.ip}
         size="small"
@@ -237,7 +254,7 @@ export const HostForm = ({
         onChange={handleChange}
         label="Host FQDN"
         variant="outlined"
-        disabled={read ?? fqdnDisabled}
+        disabled={read ? read : fqdnDisabled}
         error={!!errors.fqdn}
         helperText={errors.fqdn}
         size="small"
@@ -269,7 +286,7 @@ export const HostForm = ({
               `${update ? "Save" : "Create"} Host`
             )}
           </Button>
-          <Button onClick={onCancel} variant="outlined" color="inherit">
+          <Button onClick={handleCancel} variant="outlined" color="inherit">
             Cancel
           </Button>
         </Box>
