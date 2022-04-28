@@ -16,6 +16,7 @@ import {
   MenuItem,
   OutlinedInput,
   Select,
+  Snackbar,
   Switch,
   TextField,
 } from "@mui/material";
@@ -25,11 +26,12 @@ import {
   INodeInput,
   INodesQuery,
   IGetHostsChainsAndLoadBalancersQuery,
+  useCheckValidHaProxyLazyQuery,
   useCreateNodeMutation,
   useUpdateNodeMutation,
   useDeleteNodeMutation,
 } from "types";
-import { ModalHelper } from "utils";
+import { ModalHelper, s } from "utils";
 import Form from "components/Form";
 import { NodeActionsState } from "pages/Nodes";
 
@@ -65,13 +67,64 @@ export const NodeForm = ({
   const [loading, setLoading] = useState(false);
   const [backendError, setBackendError] = useState("");
   const [frontendExists, setFrontendExists] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordNoMatch, setPasswordNoMatch] = useState("");
 
   const urlRef = useRef<HTMLInputElement>();
   const chainRef = useRef<HTMLInputElement>();
   const hostRef = useRef<HTMLInputElement>();
   const loadBalancersRef = useRef<HTMLInputElement>();
 
+  /* ----- Snackbar ----- */
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarText, setSnackbarText] = useState("");
+
+  const handleOpenSnackbar = (text: string) => {
+    setSnackbarOpen(true);
+    setSnackbarText(text);
+  };
+
+  const handleCloseSnackbar = (_, reason?: string) => {
+    if (reason === "clickaway") return;
+    setSnackbarOpen(false);
+  };
+
   /* ----- Form Validation ----- */
+  const handleFormSubmit = async () => {
+    if (frontend && passwordNoMatch) return;
+    try {
+      setLoading(true);
+
+      if (values.haProxy || frontend) {
+        const { data } = await checkValidHaProxy();
+
+        if (data?.validHaProxy) {
+          update ? submitUpdate() : submitCreate();
+        } else {
+          setLoading(false);
+          const newErrors = frontend
+            ? {
+                ...errors,
+                frontend: `Frontend ${values.frontend} is not a valid frontend for the selected load balancer. Please ensure the frontend string you have entered exactly matches a valid frontend string in your haproxy.cfg file`,
+              }
+            : {
+                ...errors,
+                backend: `Backend ${
+                  values.backend
+                } is not a valid backend for the selected load balancer${s(
+                  values.loadBalancers.length,
+                )}. Please ensure the backend string you have entered exactly matches a valid backend string in your haproxy.cfg file.`,
+              };
+          setErrors(newErrors);
+        }
+      } else {
+        update ? submitUpdate() : submitCreate();
+      }
+    } catch (error: any) {
+      setBackendError(error.message);
+    }
+  };
+
   const validate = (values: INodeInput): FormikErrors<INodeInput> => {
     const errors: FormikErrors<INodeInput> = {};
     if (!values.chain) errors.chain = "Chain is required";
@@ -98,6 +151,11 @@ export const NodeForm = ({
       if (!values.basicAuth.split(":")[0] || !values.basicAuth.split(":")[1]) {
         errors.basicAuth = "Username and password are required";
       }
+      if (values.basicAuth.split(":")[1] !== confirmPassword) {
+        setPasswordNoMatch("Password and confirm password don't match");
+      } else {
+        setPasswordNoMatch("");
+      }
     }
     return errors;
   };
@@ -106,8 +164,8 @@ export const NodeForm = ({
     errors,
     handleChange,
     handleSubmit,
-    setErrors,
     setFieldValue,
+    setErrors,
     resetForm,
   } = useFormik({
     initialValues: {
@@ -116,31 +174,38 @@ export const NodeForm = ({
       host: "",
       name: "",
       url: "",
-      port: undefined,
+      port: "",
       haProxy: true,
       backend: "",
       loadBalancers: [],
       server: "",
       frontend: "",
-      basicAuth: ":",
+      basicAuth: "",
     },
     validate,
     validateOnChange: false,
-    onSubmit: async () => {
-      setLoading(true);
-      update ? submitUpdate() : submitCreate();
-    },
+    onSubmit: handleFormSubmit,
   });
 
   const handleBasicAuthChange = ({ target }) => {
-    console.log({ values });
     const { name, value } = target;
     const username = `${name === "username" ? value : values.basicAuth.split(":")[0]}`;
     const password = `${name === "password" ? value : values.basicAuth.split(":")[1]}`;
     const newValue = `${username}:${password}`;
-    console.log(newValue);
     setFieldValue("basicAuth", newValue);
   };
+
+  useEffect(() => {
+    if (!values.haProxy || frontend) {
+      setFieldValue("backend", "");
+      setFieldValue("loadBalancers", []);
+      setFieldValue("server", "");
+    }
+    if (!frontend) {
+      setFieldValue("frontend", "");
+      setFieldValue("basicAuth", "");
+    }
+  }, [values.haProxy, frontend, setFieldValue]);
 
   useEffect(() => {
     if (formData?.hosts && values.host) {
@@ -155,28 +220,6 @@ export const NodeForm = ({
     }
   }, [values.host, formData, setFieldValue]);
 
-  useEffect(() => {
-    if (update) {
-      if (frontend && !values.haProxy) {
-        if (selectedNode?.frontend) setFieldValue("frontend", selectedNode.frontend);
-        setFieldValue("backend", "");
-        setFieldValue("server", "");
-        setFieldValue("loadBalancers", []);
-        setErrors({ ...errors, backend: null, loadBalancers: null });
-      }
-      if (!frontend && values.haProxy) {
-        setFieldValue("frontend", "");
-        if (selectedNode?.backend) setFieldValue("backend", selectedNode?.backend);
-        if (selectedNode?.server) setFieldValue("server", selectedNode?.server);
-        if (selectedNode?.loadBalancers)
-          setFieldValue(
-            "loadBalancers",
-            selectedNode?.loadBalancers.map((lb) => lb.id),
-          );
-      }
-    }
-  }, [update, errors, setErrors, setFieldValue, selectedNode, values.haProxy]);
-
   const getNodeName = useCallback(() => {
     if (values.chain && values.host) {
       const chainName = formData?.chains?.find(({ id }) => id === values.chain)?.name;
@@ -186,15 +229,15 @@ export const NodeForm = ({
       if (frontend) {
         return `frontend-${nodeName}`;
       } else {
-        const count = String(
-          (nodeNames?.filter((name) => name.includes(nodeName))?.length || 0) + 1,
-        ).padStart(2, "0");
+        const existingNodeCount =
+          nodeNames?.filter((name) => name.includes(nodeName))?.length || 0;
+        const count = String(existingNodeCount + 1).padStart(2, "0");
         return `${nodeName}/${count}`;
       }
     } else {
       return "";
     }
-  }, [values.chain, values.host, frontend]);
+  }, [values.chain, values.host, frontend, formData.chains, formData.hosts, nodeNames]);
 
   const getNodeUrl = useCallback(() => {
     if (values.host && values.port) {
@@ -205,7 +248,7 @@ export const NodeForm = ({
     } else {
       return "";
     }
-  }, [values.host, values.port, values.https]);
+  }, [values.host, values.port, values.https, formData.hosts]);
 
   useEffect(() => {
     if (frontend) {
@@ -213,7 +256,7 @@ export const NodeForm = ({
       const frontendExists = frontendHostChainCombos.includes(hostChainCombo);
       setFrontendExists(frontendExists);
     }
-  }, [values.host, values.chain, frontend]);
+  }, [values.host, values.chain, frontend, frontendHostChainCombos]);
 
   /* ----- Update Mode ----- */
   if (update && selectedNode) {
@@ -271,24 +314,31 @@ export const NodeForm = ({
     }
     if (!selectedNode) {
       handleResetRefs();
-      resetForm({
-        values: {
-          https: false,
-          chain: "",
-          haProxy: true,
-          host: "",
-          url: "",
-          name: "",
-          port: "" as unknown as number,
-          loadBalancers: [],
-          backend: "",
-          server: "",
-          frontend: "",
-          basicAuth: ":",
-        },
-      });
+      resetForm();
+      setConfirmPassword("");
+      setPasswordNoMatch("");
     }
-  }, [update, selectedNode, resetForm, handleResetFormState, handleResetRefs]);
+  }, [
+    update,
+    selectedNode,
+    resetForm,
+    handleResetFormState,
+    handleResetRefs,
+    setConfirmPassword,
+    setPasswordNoMatch,
+    frontend,
+  ]);
+
+  /* ----- Queries ----- */
+  const [checkValidHaProxy] = useCheckValidHaProxyLazyQuery({
+    variables: {
+      input: {
+        ...values,
+        name: getNodeName(),
+        url: getNodeUrl(),
+      },
+    },
+  });
 
   /* ----- Mutations ----- */
   const [submitCreate] = useCreateNodeMutation({
@@ -297,13 +347,12 @@ export const NodeForm = ({
         ...values,
         name: getNodeName(),
         url: getNodeUrl(),
-        port: Number(values.port),
       },
     },
-    onCompleted: () => {
+    onCompleted: ({ createNode }) => {
+      handleOpenSnackbar(`Node ${createNode.name} successfully created!`);
       resetForm();
       refetchNodes();
-      ModalHelper.close();
       setLoading(false);
     },
     onError: (error) => {
@@ -319,13 +368,12 @@ export const NodeForm = ({
         ...values,
         name: getNodeName(),
         url: getNodeUrl(),
-        port: Number(values.port),
       },
     },
-    onCompleted: () => {
+    onCompleted: ({ updateNode }) => {
+      handleOpenSnackbar(`Node ${updateNode.name} successfully updated!`);
       resetForm();
       refetchNodes();
-      ModalHelper.close();
       setLoading(false);
     },
     onError: (error) => {
@@ -463,7 +511,7 @@ export const NodeForm = ({
                   name="https"
                   checked={values.https}
                   onChange={handleChange}
-                  disabled={read ? read : !hostHasFqdn}
+                  disabled={read || !hostHasFqdn}
                 />
               }
               label={
@@ -604,6 +652,7 @@ export const NodeForm = ({
             />
             <TextField
               name="password"
+              type="password"
               value={values.basicAuth?.split(":")[1]}
               onChange={handleBasicAuthChange}
               label="Password"
@@ -612,6 +661,18 @@ export const NodeForm = ({
               fullWidth
               error={!!errors.basicAuth}
               helperText={errors.basicAuth}
+            />
+            <TextField
+              name="password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              label="Confirm Password"
+              variant="outlined"
+              size="small"
+              fullWidth
+              error={!!passwordNoMatch}
+              helperText={passwordNoMatch}
             />
           </>
         )}
@@ -666,6 +727,17 @@ export const NodeForm = ({
             </Button>
           </Box>
         )}
+
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={6000}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          onClose={handleCloseSnackbar}
+        >
+          <Alert severity="success" sx={{ width: "100%" }}>
+            {snackbarText}
+          </Alert>
+        </Snackbar>
 
         {backendError && (
           <Alert severity="error">

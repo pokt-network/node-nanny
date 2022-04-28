@@ -156,7 +156,6 @@ export const NodesCSV = ({
         chain: node.chain.toUpperCase(),
         host: node.host.toLowerCase(),
         name: nodeName,
-        port: Number(node.port),
         loadBalancers: node.loadBalancers
           ?.toLowerCase()
           .split(",")
