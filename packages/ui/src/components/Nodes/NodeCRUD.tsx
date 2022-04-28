@@ -34,6 +34,7 @@ interface NodeCRUDProps {
   formData: IGetHostsChainsAndLoadBalancersQuery;
   nodeNames: string[];
   hostPortCombos: string[];
+  frontendNodeHosts: string[];
   setSelectedNode: Dispatch<SetStateAction<INode>>;
   refetch: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
   setState: Dispatch<NodeActionsState>;
@@ -45,6 +46,7 @@ export const NodeCRUD = ({
   type,
   formData,
   hostPortCombos,
+  frontendNodeHosts,
   setSelectedNode,
   setState,
   refetch,
@@ -226,6 +228,7 @@ export const NodeCRUD = ({
           nodeNames={nodeNames}
           formData={formData}
           hostPortCombos={hostPortCombos}
+          frontendNodeHosts={frontendNodeHosts}
           refetchNodes={refetch}
           selectedNode={type !== "create" ? node : null}
           onCancel={() => setState(NodeActionsState.Info)}

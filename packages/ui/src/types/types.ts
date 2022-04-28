@@ -214,6 +214,7 @@ export type INodeInput = {
   name: Scalars['String'];
   port: Scalars['Int'];
   server?: InputMaybe<Scalars['String']>;
+  url: Scalars['String'];
 };
 
 export type INodeUpdate = {
