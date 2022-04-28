@@ -28,8 +28,6 @@ export default function LogsMongo() {
     onError: () => setLogsLoading(false),
   });
 
-  console.log(logsData?.logs);
-
   const filterOptions = {
     filters: ["All", "OK", "Error"],
     filterFunctions: {
@@ -47,7 +45,6 @@ export default function LogsMongo() {
   }, [nodeIds, refetch]);
 
   const onPageChange = (page: number) => {
-    console.log(page);
     if (logsData.logs.hasNextPage) {
       setLogsLoading(true);
       fetchMore({
