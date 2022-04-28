@@ -1,6 +1,6 @@
 import { AlertColor } from "../alert/types";
 import { Service as BaseService } from "../base-service/base-service";
-import { EErrorConditions, EErrorStatus } from "../health/types";
+import { EErrorConditions, EErrorStatus, ESupportedBlockchains } from "../health/types";
 import { NodesModel } from "../../models";
 import {
   EAlertTypes,
@@ -183,6 +183,11 @@ export class Service extends BaseService {
 
   private async toggleServer({ node, enable }: IToggleServerParams): Promise<void> {
     const { backend, chain, host, loadBalancers, server } = node;
+
+    /* PNF Internal handling to prevent trying to pull mainnet nodes out of HAProxy */
+    if (env("PNF") && chain.name === ESupportedBlockchains["POKT-MAIN"]) {
+      return;
+    }
 
     try {
       const serverToggled = enable /* Enable or Disable Server */
