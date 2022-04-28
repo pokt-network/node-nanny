@@ -1,42 +1,58 @@
-import Divider from "@mui/material/Divider";
+import Link from "@mui/material/Link";
 import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import PeopleIcon from "@mui/icons-material/StorageSharp";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import LayersIcon from "@mui/icons-material/ComputerSharp";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+
+const data = [
+  {
+    label: "Logs",
+    to: "/",
+    icon: BarChartIcon,
+  },
+  {
+    label: "Nodes",
+    to: "/nodes",
+    icon: LayersIcon,
+  },
+  {
+    label: "Hosts",
+    to: "/hosts",
+    icon: PeopleIcon,
+  },
+];
 
 export const Nav = () => {
-  const navigate = useNavigate();
+  const location = useLocation();
   return (
-    <div>
-      <Divider />
-      <List>
-        <div>
-          <ListItem button onClick={() => navigate("/logs")}>
+    <List>
+      {data &&
+        data.map((navItem) => (
+          <ListItemButton
+            key={navItem.label}
+            component={Link}
+            href={navItem.to}
+            color="inherit"
+            selected={navItem.to === location.pathname}
+            sx={{
+              "&.Mui-selected": {
+                backgroundColor: "#2E3643",
+              },
+              "&.Mui-selected:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.08)",
+              },
+            }}
+          >
             <ListItemIcon>
-              <BarChartIcon />
+              <navItem.icon />
             </ListItemIcon>
-            <ListItemText primary="Logs" />
-          </ListItem>
-
-          <ListItem button onClick={() => navigate("/hosts")}>
-            <ListItemIcon>
-              <PeopleIcon />
-            </ListItemIcon>
-            <ListItemText primary="Hosts" />
-          </ListItem>
-
-          <ListItem button onClick={() => navigate("/nodes")}>
-            <ListItemIcon>
-              <LayersIcon />
-            </ListItemIcon>
-            <ListItemText primary="Nodes" />
-          </ListItem>
-        </div>
-      </List>
-    </div>
+            <ListItemText primary={navItem.label} />
+          </ListItemButton>
+        ))}
+    </List>
   );
 };

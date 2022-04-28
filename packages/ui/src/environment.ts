@@ -16,8 +16,18 @@ const ENV_VARS: { [variable: string]: () => string | boolean } = {
   PNF: () => Boolean(process.env.REACT_APP_PNF === "1" || false),
 };
 
+<<<<<<< HEAD
 export default function env<B extends IEnvVars>(
   name: B,
 ): B extends IStringVars ? string : boolean {
   return ENV_VARS[name]() as B extends IStringVars ? string : boolean;
 }
+=======
+export const env = <B extends IEnvVars>(
+  name: B,
+): B extends IStringVars ? string : boolean => {
+  return ENV_VARS[name]() as B extends IStringVars ? string : boolean;
+}
+
+export default env
+>>>>>>> kevinu/T-2557_implement-ui-styles-on-the-current-node-nanny-ui

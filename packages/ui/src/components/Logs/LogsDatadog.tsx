@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import env from "../../environment";
+import env from "environment";
 
 export default function LogsDatadog() {
   return (
