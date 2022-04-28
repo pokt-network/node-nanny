@@ -178,6 +178,7 @@ export class Service {
     }
     return ELoadBalancerStatus.ERROR;
   }
+<<<<<<< HEAD
 
   async getValidHaProxy({
     destination,
@@ -204,4 +205,6 @@ export class Service {
       return results.every((status) => status === true);
     }
   }
+=======
+>>>>>>> kevinu/T-2557_implement-ui-styles-on-the-current-node-nanny-ui
 }
