@@ -34,7 +34,7 @@ interface NodeCRUDProps {
   formData: IGetHostsChainsAndLoadBalancersQuery;
   nodeNames: string[];
   hostPortCombos: string[];
-  frontendNodeHosts: string[];
+  frontendHostChainCombos: string[];
   setSelectedNode: Dispatch<SetStateAction<INode>>;
   refetch: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
   setState: Dispatch<NodeActionsState>;
@@ -46,7 +46,7 @@ export const NodeCRUD = ({
   type,
   formData,
   hostPortCombos,
-  frontendNodeHosts,
+  frontendHostChainCombos,
   setSelectedNode,
   setState,
   refetch,
@@ -138,6 +138,9 @@ export const NodeCRUD = ({
     if (type === "create") {
       setTitle("Create Node");
     }
+    if (type === "createFrontend") {
+      setTitle("Create Frontend");
+    }
     if (type === "edit") {
       setTitle("Edit Node");
     }
@@ -155,7 +158,7 @@ export const NodeCRUD = ({
         <Grid item sm={12} md>
           <Title>{title}</Title>
         </Grid>
-        {node && type !== "create" && (
+        {node && type !== "create" && type !== "createFrontend" && (
           <Grid item sm={12} md="auto" sx={{ "& button": { marginLeft: 1 } }}>
             <Button
               variant="outlined"
@@ -192,7 +195,7 @@ export const NodeCRUD = ({
         )}
       </Grid>
       <Box>
-        {node && type !== "create" && (
+        {node && type !== "create" && type !== "createFrontend" && (
           <Box
             sx={{
               width: "auto",
@@ -224,11 +227,12 @@ export const NodeCRUD = ({
         )}
         <NodeForm
           read={type === "info"}
+          frontend={type === "createFrontend"}
           update={type === "info" || type === "edit"}
           nodeNames={nodeNames}
           formData={formData}
           hostPortCombos={hostPortCombos}
-          frontendNodeHosts={frontendNodeHosts}
+          frontendHostChainCombos={frontendHostChainCombos}
           refetchNodes={refetch}
           selectedNode={type !== "create" ? node : null}
           onCancel={() => setState(NodeActionsState.Info)}
