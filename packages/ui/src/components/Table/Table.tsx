@@ -232,6 +232,7 @@ export const Table = <T extends unknown>({
     <Paper>
       {type && <Title>{getHeaderText()}</Title>}
       <TableFilter
+        type={type}
         filters={filters}
         filter={filter}
         setFilter={setFilter}

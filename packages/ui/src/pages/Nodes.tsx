@@ -13,6 +13,7 @@ import env from "environment";
 export enum NodeActionsState {
   Info = "info",
   Create = "create",
+  CreateFrontend = "createFrontend",
   Edit = "edit",
   Upload = "upload",
 }
@@ -63,9 +64,9 @@ export function Nodes() {
   const nodeNames = data?.nodes.map(({ name }) => name);
   const hostPortCombos = data?.nodes.map(({ host, port }) => `${host.id}/${port}`);
   const hostPortCsvCombos = data?.nodes.map(({ host, port }) => `${host.name}/${port}`);
-  const frontendNodeHosts = data?.nodes
+  const frontendHostChainCombos = data?.nodes
     .filter(({ frontend }) => !!frontend)
-    .map(({ host }) => host.id);
+    .map(({ host, chain }) => `${host.id}/${chain.id}`);
 
   const handleSelectRow = (row) => {
     setState(NodeActionsState.Info);
@@ -88,7 +89,10 @@ export function Nodes() {
       <>
         <NodesInventory nodes={data?.nodes as INode[]} setState={setState} />
         <Grid container spacing={{ sm: 0, lg: 3 }}>
-          {(state === "info" || state === "create" || state === "edit") && (
+          {(state === "info" ||
+            state === "create" ||
+            state === "createFrontend" ||
+            state === "edit") && (
             <Grid item sm={12} lg={5} order={{ lg: 2 }}>
               <NodeCRUD
                 type={state}
@@ -96,22 +100,22 @@ export function Nodes() {
                 nodeNames={nodeNames}
                 formData={formData}
                 hostPortCombos={hostPortCombos}
-                frontendNodeHosts={frontendNodeHosts}
+                frontendHostChainCombos={frontendHostChainCombos}
                 setState={setState}
                 setSelectedNode={setSelectedNode}
                 refetch={refetch}
-              ></NodeCRUD>
+              />
             </Grid>
           )}
           {state === "upload" && (
-            <Grid item sm={12} lg={6} order={{ lg: 2 }}>
+            <Grid item sm={12} lg={5} order={{ lg: 2 }}>
               <NodesCSV
                 nodeNames={nodeNames}
                 formData={formData}
                 hostPortCsvCombos={hostPortCsvCombos}
                 refetchNodes={refetch}
                 setState={setState}
-              ></NodesCSV>
+              />
             </Grid>
           )}
           <Grid item sm={12} lg={7} order={{ lg: 1 }}>
