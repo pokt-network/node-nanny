@@ -1,6 +1,5 @@
-import { EC2 } from "aws-sdk";
 import { exec } from "child_process";
-import { Types, UpdateQuery } from "mongoose";
+import { UpdateQuery } from "mongoose";
 
 import { Service as DiscordService } from "../discord";
 import { ELoadBalancerStatus } from "../event/types";
@@ -23,11 +22,8 @@ import {
 import { Service as BaseService } from "../base-service/base-service";
 
 export class Service extends BaseService {
-  private ec2: EC2;
-
   constructor() {
     super();
-    this.ec2 = new EC2({ region: "us-east-2" });
   }
 
   /* ----- CRUD Methods ----- */
@@ -65,17 +61,14 @@ export class Service extends BaseService {
   public async createNode(nodeInput: INodeInput, restart = true): Promise<INode> {
     let id: string;
     const { https, ...rest } = nodeInput;
-    const { fqdn, ip } = await HostsModel.findOne({ _id: nodeInput.host });
+    const { fqdn } = await HostsModel.findOne({ _id: nodeInput.host });
 
     if (https && !fqdn) {
       throw new Error(`Node cannot use https with a host that does not have a FQDN.`);
     }
 
-    const secure = typeof https === "boolean" && https;
-    const url = `http${secure ? "s" : ""}://${fqdn || ip}:${nodeInput.port}`;
-
     try {
-      const sanitizedInput = this.sanitizeCreate({ ...rest, url });
+      const sanitizedInput = this.sanitizeCreate({ ...rest });
       ({ id } = await NodesModel.create(sanitizedInput));
 
       const node = await this.getNode(id);
@@ -94,11 +87,16 @@ export class Service extends BaseService {
     try {
       const createdNodes: INode[] = [];
       for await (const nodeInput of nodes) {
+        const host = await HostsModel.findOne({ name: nodeInput.host });
+        const https = Boolean(nodeInput.https === "true");
+        const { fqdn, ip } = host;
+
         const nodeInputWithIds: INodeInput = {
           ...nodeInput,
-          https: Boolean(nodeInput.https),
+          https,
           chain: (await ChainsModel.findOne({ name: nodeInput.chain }))._id,
-          host: (await HostsModel.findOne({ name: nodeInput.host }))._id,
+          host: host._id,
+          url: `http${https ? "s" : ""}://${fqdn || ip}:${nodeInput.port}`,
           loadBalancers: (
             await HostsModel.find({ name: { $in: nodeInput.loadBalancers } })
           ).map(({ _id }) => _id),
