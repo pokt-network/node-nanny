@@ -12,6 +12,7 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  Snackbar,
   Switch,
   TextField,
 } from "@mui/material";
@@ -56,6 +57,20 @@ export const HostForm = ({
   const [backendError, setBackendError] = useState("");
 
   const locationRef = useRef<HTMLInputElement>();
+
+  /* ----- Snackbar ----- */
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarText, setSnackbarText] = useState("");
+
+  const handleOpenSnackbar = (text: string) => {
+    setSnackbarOpen(true);
+    setSnackbarText(text);
+  };
+
+  const handleCloseSnackbar = (_, reason?: string) => {
+    if (reason === "clickaway") return;
+    setSnackbarOpen(false);
+  };
 
   /* ----- Form Validation ----- */
   const validate = (values: IHostInput): FormikErrors<IHostInput> => {
@@ -135,12 +150,13 @@ export const HostForm = ({
       handleResetRefs();
       resetForm();
     }
-  }, [update, selectedHost, resetForm, handleResetFormState]);
+  }, [update, selectedHost, resetForm, handleResetFormState, handleResetRefs]);
 
   /* ----- Mutations ----- */
   const [submitCreate] = useCreateHostMutation({
     variables: { input: values },
-    onCompleted: () => {
+    onCompleted: ({ createHost }) => {
+      handleOpenSnackbar(`Host ${createHost.name} successfully created!`);
       resetForm();
       refetchHosts();
       ModalHelper.close();
@@ -154,7 +170,8 @@ export const HostForm = ({
 
   const [submitUpdate] = useUpdateHostMutation({
     variables: { update: { id: selectedHost?.id, ...values } },
-    onCompleted: () => {
+    onCompleted: ({ updateHost }) => {
+      handleOpenSnackbar(`Host ${updateHost.name} successfully updated!`);
       resetForm();
       refetchHosts();
       ModalHelper.close();
@@ -311,6 +328,18 @@ export const HostForm = ({
           </Button>
         </Box>
       )}
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert severity="success" sx={{ width: "100%" }}>
+          {snackbarText}
+        </Alert>
+      </Snackbar>
+
       {backendError && (
         <Alert severity="error">
           <AlertTitle>{`Error ${update ? "Updating" : "Creating"} Host`}</AlertTitle>
