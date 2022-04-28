@@ -1,6 +1,10 @@
 import { AlertColor } from "../alert/types";
 import { Service as BaseService } from "../base-service/base-service";
+<<<<<<< HEAD
 import { EErrorConditions, EErrorStatus, ESupportedBlockchains } from "../health/types";
+=======
+import { EErrorConditions, EErrorStatus } from "../health/types";
+>>>>>>> kevinu/T-2557_implement-ui-styles-on-the-current-node-nanny-ui
 import { NodesModel } from "../../models";
 import {
   EAlertTypes,
