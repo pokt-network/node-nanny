@@ -18,7 +18,9 @@ export enum ESupportedBlockchains {
   KOV = "KOV",
   HEI = "HEI",
   POKT = "POKT",
+  /* PNF Internal only */
   "POKT-DIS" = "POKT-DIS",
+  "POKT-MAIN" = "POKT-MAIN",
 }
 
 export enum ESupportedBlockchainTypes {
