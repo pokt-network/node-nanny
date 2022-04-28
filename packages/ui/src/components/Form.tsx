@@ -9,8 +9,8 @@ export const Form: React.FC<FormProps> = ({ read, children }) => {
     <Box
       sx={{
         "& .MuiFormControl-root": {
-          display: "flex",
-          flexDirection: "row",
+          display: "grid",
+          gridTemplateColumns: "150px 1fr",
           alignItems: "center",
           width: "100%",
           border: 0,
@@ -37,6 +37,10 @@ export const Form: React.FC<FormProps> = ({ read, children }) => {
         "& .MuiFormControlLabel-root": {
           width: "100%",
           margin: 0,
+        },
+        "& .MuiFormHelperText-root": {
+          gridColumn: "2",
+          marginX: 1,
         },
       }}
     >
