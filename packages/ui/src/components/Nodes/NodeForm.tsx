@@ -37,6 +37,7 @@ export interface NodesFormProps {
   formData: IGetHostsChainsAndLoadBalancersQuery;
   nodeNames: string[];
   hostPortCombos: string[];
+  frontendNodeHosts: string[];
   selectedNode?: INode;
   update?: boolean;
   read?: boolean;
@@ -49,6 +50,7 @@ export const NodeForm = ({
   formData,
   nodeNames,
   hostPortCombos,
+  frontendNodeHosts,
   refetchNodes,
   selectedNode,
   update,
@@ -61,25 +63,12 @@ export const NodeForm = ({
   const [loading, setLoading] = useState(false);
   const [backendError, setBackendError] = useState("");
   const [frontendBool, setFrontendBool] = useState(!!selectedNode?.frontend);
+  const [frontendExists, setFrontendExists] = useState(false);
 
   const urlRef = useRef<HTMLInputElement>();
   const chainRef = useRef<HTMLInputElement>();
   const hostRef = useRef<HTMLInputElement>();
   const loadBalancersRef = useRef<HTMLInputElement>();
-
-  const getNodeName = () => {
-    if (values.chain && values.host) {
-      const chainName = formData?.chains?.find(({ id }) => id === values.chain)?.name;
-      const hostName = formData?.hosts?.find(({ id }) => id === values.host)?.name;
-      let nodeName = `${hostName}/${chainName}`;
-      const count = String(
-        (nodeNames?.filter((name) => name.includes(nodeName))?.length || 0) + 1,
-      ).padStart(2, "0");
-      return `${nodeName}/${count}`;
-    } else {
-      return "";
-    }
-  };
 
   /* ----- Form Validation ----- */
   const validate = (values: INodeInput): FormikErrors<INodeInput> => {
@@ -89,8 +78,6 @@ export const NodeForm = ({
     if (https && !hostHasFqdn) {
       errors.host = "Host does not have an FQDN so HTTPS cannot be enabled";
     }
-    if (!values.name) errors.name = "Name is required";
-    if (nodeNames.includes(values.name)) errors.name = "Name is already taken";
     if (!values.port) errors.port = "Port is required";
     if (hostPortCombos.includes(`${values.host}/${values.port}`)) {
       errors.port = "Host/port combination is already taken";
@@ -122,13 +109,14 @@ export const NodeForm = ({
       https: false,
       chain: "",
       host: "",
+      name: "",
+      url: "",
       port: undefined,
       haProxy: true,
       backend: "",
       loadBalancers: [],
       server: "",
       frontend: "",
-      name: "",
     },
     validate,
     validateOnChange: false,
@@ -182,6 +170,36 @@ export const NodeForm = ({
     values.haProxy,
     frontendBool,
   ]);
+
+  const getNodeName = useCallback(() => {
+    if (values.chain && values.host) {
+      const chainName = formData?.chains?.find(({ id }) => id === values.chain)?.name;
+      const hostName = formData?.hosts?.find(({ id }) => id === values.host)?.name;
+      let nodeName = `${hostName}/${chainName}`;
+      const count = String(
+        (nodeNames?.filter((name) => name.includes(nodeName))?.length || 0) + 1,
+      ).padStart(2, "0");
+      return `${frontendBool ? "frontend-" : ""}${nodeName}/${count}`;
+    } else {
+      return "";
+    }
+  }, [values.chain, values.host, frontendBool]);
+
+  const getNodeUrl = useCallback(() => {
+    if (values.host && values.port) {
+      const host = formData?.hosts?.find(({ id }) => id === values.host);
+      const hostDomain = host?.ip || host?.fqdn;
+      const protocol = `http${values.https ? "s" : ""}`;
+      return `${protocol}://${hostDomain}:${values.port}`;
+    } else {
+      return "";
+    }
+  }, [values.host, values.port, values.https]);
+
+  useEffect(() => {
+    console.log(frontendNodeHosts, values.host);
+    setFrontendExists(frontendNodeHosts.includes(values.host));
+  }, [values.host]);
 
   /* ----- Update Mode ----- */
   if (update && selectedNode) {
@@ -247,6 +265,7 @@ export const NodeForm = ({
           chain: "",
           haProxy: false,
           host: "",
+          url: "",
           name: "",
           port: "" as unknown as number,
           loadBalancers: [],
@@ -326,8 +345,6 @@ export const NodeForm = ({
           onChange={handleChange}
           label="Name"
           variant="outlined"
-          error={!!errors.name}
-          helperText={errors.name}
           disabled
           size="small"
           sx={{
@@ -337,7 +354,7 @@ export const NodeForm = ({
         <TextField
           name="url"
           ref={urlRef}
-          value={selectedNode?.url}
+          value={getNodeUrl()}
           onChange={handleChange}
           label="URL"
           variant="outlined"
@@ -431,10 +448,10 @@ export const NodeForm = ({
                 />
               }
               label={
-                !selectedNode
+                !values.host || (update && !selectedNode)
                   ? ""
                   : hostHasFqdn
-                  ? "Selected host has an FQDN"
+                  ? "Selected host has an FQDN; HTTPS may be enabled"
                   : "Selected host does not have an FQDN"
               }
             />
@@ -531,7 +548,10 @@ export const NodeForm = ({
             />
           </>
         )}
-        <FormControl fullWidth disabled={read ? read : !!values.haProxy}>
+        <FormControl
+          fullWidth
+          disabled={frontendExists || read ? read : !!values.haProxy}
+        >
           <InputLabel>Frontend</InputLabel>
           <Box>
             <Switch
