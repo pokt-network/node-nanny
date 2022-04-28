@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Dispatch, useEffect, useState } from "react";
 import { ApolloQueryResult } from "@apollo/client";
 import CSVReader from "react-csv-reader";
 import {
@@ -10,21 +10,11 @@ import {
   Typography,
 } from "@mui/material";
 
-import { Table } from "components";
+import { Table, Title } from "components";
+import Paper from "components/Paper";
 import { IHostCsvInput, IHostsQuery, ILocation, useCreateHostsCsvMutation } from "types";
-import { ModalHelper, parseBackendError, regexTest, s } from "utils";
-
-const style = {
-  position: "absolute" as "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: "90%",
-  bgcolor: "background.paper",
-  border: "2px solid #000",
-  boxShadow: 24,
-  p: 4,
-};
+import { parseBackendError, regexTest, s } from "utils";
+import { HostActionsState } from "pages/Hosts";
 
 interface ICSVHost {
   name: string;
@@ -38,9 +28,10 @@ interface NodesCSVProps {
   locations: ILocation[];
   hostNames: string[];
   refetchHosts: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>;
+  setState: Dispatch<HostActionsState>
 }
 
-export function HostsCSV({ locations, hostNames, refetchHosts }: NodesCSVProps) {
+export const HostsCSV = ({ locations, hostNames, refetchHosts, setState }: NodesCSVProps) => {
   const [hosts, setHosts] = useState<IHostCsvInput[]>(undefined);
   const [hostsError, setHostsError] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
@@ -107,7 +98,7 @@ export function HostsCSV({ locations, hostNames, refetchHosts }: NodesCSVProps) 
   const [submit, { error, loading }] = useCreateHostsCsvMutation({
     onCompleted: () => {
       refetchHosts();
-      ModalHelper.close();
+      setState(HostActionsState.Info)
     },
   });
 
@@ -125,64 +116,66 @@ export function HostsCSV({ locations, hostNames, refetchHosts }: NodesCSVProps) 
 
   /* ----- Layout ----- */
   return (
-    <div>
-      <Box sx={style}>
-        <Typography id="modal-modal-title" variant="h6" component="h2">
-          Upload Hosts CSV
-        </Typography>
-        <CSVReader onFileLoaded={parseHostsCsv} parserOptions={{ header: true }} />
-        {hostsError && (
-          <Alert severity="error" style={{ overflow: "scroll", maxHeight: 200 }}>
-            <AlertTitle>
-              Warning: Invalid fields detected. Please correct the following fields before
-              attempting to upload Hosts CSV.
-            </AlertTitle>
-            {hostsError.includes("\n") ? (
-              hostsError.split("\n").map((error) => <Typography>{error}</Typography>)
-            ) : (
-              <Typography>{hostsError}</Typography>
-            )}
-          </Alert>
-        )}
-        {backendError && (
-          <Alert severity="error">
-            <AlertTitle>Backend error: {backendError}</AlertTitle>
-          </Alert>
-        )}
-        {hosts && (
-          <Table
-            type={`Adding ${hosts.length} Host${hosts.length === 1 ? "" : "s"}`}
-            rows={hosts}
-            columnsOrder={columnsOrder}
-            height={400}
-          />
-        )}
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-          <Button
-            onClick={ModalHelper.close}
-            style={{ height: 40, width: 150 }}
-            variant="contained"
-            color="error"
-          >
-            Cancel
-          </Button>
-          <Button
-            disabled={Boolean(!hosts || hostsError || backendError)}
-            style={{ marginTop: 8, height: 40, width: 150 }}
-            onClick={submitCSV}
-            variant="contained"
-            color="success"
-          >
-            {loading ? (
-              <CircularProgress size={20} style={{ color: "white" }} />
-            ) : !hosts?.length ? (
-              "No hosts"
-            ) : (
-              `Add ${hosts.length} Host${s(hosts.length)}`
-            )}
-          </Button>
-        </div>
+    <Paper>
+      <Title>Upload Hosts CSV</Title>
+      <CSVReader onFileLoaded={parseHostsCsv} parserOptions={{ header: true }} />
+      {hostsError && (
+        <Alert severity="error" style={{ overflow: "scroll", maxHeight: 200 }}>
+          <AlertTitle>
+            Warning: Invalid fields detected. Please correct the following fields before
+            attempting to upload Hosts CSV.
+          </AlertTitle>
+          {hostsError.includes("\n") ? (
+            hostsError.split("\n").map((error) => <Typography>{error}</Typography>)
+          ) : (
+            <Typography>{hostsError}</Typography>
+          )}
+        </Alert>
+      )}
+      {backendError && (
+        <Alert severity="error">
+          <AlertTitle>Backend error: {backendError}</AlertTitle>
+        </Alert>
+      )}
+      {hosts && (
+        <Table
+          type={`Adding ${hosts.length} Host${hosts.length === 1 ? "" : "s"}`}
+          rows={hosts}
+          columnsOrder={columnsOrder}
+          height={400}
+        />
+      )}
+      <Box
+        sx={{ 
+          marginTop: 4,
+          textAlign: "center",
+          '& button': { margin: 1 }
+        }}
+      >
+        <Button
+          disabled={Boolean(!hosts || hostsError || backendError)}
+          onClick={submitCSV}
+          variant="contained"
+          color="primary"
+        >
+          {loading ? (
+            <CircularProgress size={20} style={{ color: "white" }} />
+          ) : !hosts?.length ? (
+            "No hosts"
+          ) : (
+            `Add ${hosts.length} Host${s(hosts.length)}`
+          )}
+        </Button>
+        <Button
+          onClick={() => setState(HostActionsState.Info)}
+          variant="outlined"
+          color="error"
+        >
+          Cancel
+        </Button>
       </Box>
-    </div>
+    </Paper>
   );
 }
+
+export default HostsCSV
