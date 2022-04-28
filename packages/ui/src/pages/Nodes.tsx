@@ -57,12 +57,15 @@ export function Nodes() {
   if (env("PNF")) {
     filterOptions.filters.push("Dispatch");
     filterOptions.filterFunctions.Dispatch = ({ dispatch }: INode) => Boolean(dispatch);
-    // columnsOrder.push("dispatch");
+    columnsOrder.push("dispatch");
   }
 
   const nodeNames = data?.nodes.map(({ name }) => name);
   const hostPortCombos = data?.nodes.map(({ host, port }) => `${host.id}/${port}`);
   const hostPortCsvCombos = data?.nodes.map(({ host, port }) => `${host.name}/${port}`);
+  const frontendNodeHosts = data?.nodes
+    .filter(({ frontend }) => !!frontend)
+    .map(({ host }) => host.id);
 
   const handleSelectRow = (row) => {
     setState(NodeActionsState.Info);
@@ -84,15 +87,16 @@ export function Nodes() {
     return (
       <>
         <NodesInventory nodes={data?.nodes as INode[]} setState={setState} />
-        <Grid container spacing={{ sm: 0, lg: 4 }}>
+        <Grid container spacing={{ sm: 0, lg: 3 }}>
           {(state === "info" || state === "create" || state === "edit") && (
-            <Grid item sm={12} lg={6} order={{ lg: 2 }}>
+            <Grid item sm={12} lg={5} order={{ lg: 2 }}>
               <NodeCRUD
                 type={state}
                 node={selectedNode}
                 nodeNames={nodeNames}
                 formData={formData}
                 hostPortCombos={hostPortCombos}
+                frontendNodeHosts={frontendNodeHosts}
                 setState={setState}
                 setSelectedNode={setSelectedNode}
                 refetch={refetch}
@@ -110,7 +114,7 @@ export function Nodes() {
               ></NodesCSV>
             </Grid>
           )}
-          <Grid item sm={12} lg={6} order={{ lg: 1 }}>
+          <Grid item sm={12} lg={7} order={{ lg: 1 }}>
             <Table<INode>
               type="Node"
               paginate
