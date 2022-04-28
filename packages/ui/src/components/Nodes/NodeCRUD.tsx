@@ -21,7 +21,7 @@ import { ApolloQueryResult } from "@apollo/client";
 
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
-import Alert, { AlertColor } from "@mui/material/Alert";
+import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
@@ -133,18 +133,17 @@ export const NodeCRUD = ({
   };
 
   useEffect(() => {
-    if (node) {
-      if (type === "info") {
-        setTitle("Selected Node");
-      }
-      if (type === "edit") {
-        setTitle("Edit Node");
-      }
-      if (type === "create") {
-        setTitle("Create Node");
-      }
-    } else {
+    if (type === "create") {
+      setTitle("Create Node");
+    }
+    if (type === "edit") {
+      setTitle("Edit Node");
+    }
+    if (type === "info") {
       setTitle("Select Node To View Status");
+    }
+    if (type === "info" && node) {
+      setTitle("Selected Node");
     }
   }, [node, type]);
 
