@@ -89,6 +89,7 @@ const typeDefs = gql`
     chain: ID!
     host: ID!
     name: String!
+    url: String!
     port: Int!
     loadBalancers: [ID!]!
     haProxy: Boolean!
