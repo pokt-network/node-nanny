@@ -98,6 +98,7 @@ export default function LogsMongo() {
         expandable
         loading={logsLoading}
         serverLoading
+        serverHasNextPage={logsData.logs.hasNextPage}
         expandKey="health"
         filterOptions={filterOptions}
         columnsOrder={columnsOrder}
