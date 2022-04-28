@@ -1,25 +1,35 @@
-import { Dispatch } from "react"
+import { Dispatch } from "react";
 
-import SearchBar from "components/SearchBar"
+import SearchBar from "components/SearchBar";
 
-import Box from "@mui/material/Box"
-import FormControl from "@mui/material/FormControl"
-import InputLabel from "@mui/material/InputLabel"
-import Select from "@mui/material/Select"
-import MenuItem from "@mui/material/MenuItem"
-import ListItemText from "@mui/material/ListItemText"
+import Box from "@mui/material/Box";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import ListItemText from "@mui/material/ListItemText";
 
 type TableFilterProps = {
-  filter: string
-  filters: string[]
-  setFilter: Dispatch<string>
-  searchTerm: string
-  setSearchTerm: Dispatch<string>
-  searchEnabled: boolean
-  filterEnabled: boolean
-}
+  type: string;
+  filter: string;
+  filters: string[];
+  setFilter: Dispatch<string>;
+  searchTerm: string;
+  setSearchTerm: Dispatch<string>;
+  searchEnabled: boolean;
+  filterEnabled: boolean;
+};
 
-export const TableFilter = ({ filters, filter, setFilter, searchTerm, setSearchTerm, searchEnabled, filterEnabled }: TableFilterProps) => {
+export const TableFilter = ({
+  type,
+  filters,
+  filter,
+  setFilter,
+  searchTerm,
+  setSearchTerm,
+  searchEnabled,
+  filterEnabled,
+}: TableFilterProps) => {
   const handleFiltersSelect = (event) => {
     setFilter(event.target.value);
   };
@@ -30,11 +40,11 @@ export const TableFilter = ({ filters, filter, setFilter, searchTerm, setSearchT
         <SearchBar
           value={searchTerm}
           onChange={(event) => setSearchTerm((event as any).target.value)}
-          type={"Log"}
+          type={type}
         />
       )}
       {filterEnabled && (
-        <FormControl size="small" sx={{ width: "25%"}}>
+        <FormControl size="small" sx={{ width: "25%" }}>
           <InputLabel id="filter-label">Filter</InputLabel>
           <Select
             name="filter"
@@ -53,7 +63,7 @@ export const TableFilter = ({ filters, filter, setFilter, searchTerm, setSearchT
         </FormControl>
       )}
     </Box>
-  )
-}
+  );
+};
 
-export default TableFilter
+export default TableFilter;
