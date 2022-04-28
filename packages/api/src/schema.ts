@@ -90,7 +90,7 @@ const typeDefs = gql`
     host: ID!
     name: String!
     url: String!
-    port: Int!
+    port: String!
     loadBalancers: [ID!]!
     haProxy: Boolean!
     backend: String
@@ -113,7 +113,7 @@ const typeDefs = gql`
     host: String!
     name: String!
     loadBalancers: [String!]!
-    port: Int!
+    port: String!
     haProxy: Boolean!
     backend: String
     frontend: String
@@ -136,7 +136,7 @@ const typeDefs = gql`
     name: String
     url: String
     loadBalancers: [ID]
-    port: Int
+    port: String
     haProxy: Boolean
     backend: String
     frontend: String

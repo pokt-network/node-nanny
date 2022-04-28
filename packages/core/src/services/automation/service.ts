@@ -68,7 +68,7 @@ export class Service extends BaseService {
     }
 
     try {
-      const sanitizedInput = this.sanitizeCreate({ ...rest });
+      const sanitizedInput = this.sanitizeCreate({ ...rest, port: Number(rest.port) });
       ({ id } = await NodesModel.create(sanitizedInput));
 
       const node = await this.getNode(id);
@@ -206,7 +206,7 @@ export class Service extends BaseService {
       update.url = `http${secure ? "s" : ""}://${update.url}`;
     }
 
-    await NodesModel.updateOne({ _id: id }, { ...update });
+    await NodesModel.updateOne({ _id: id }, { ...update, port: Number(update.port) });
     if (restart) await this.restartMonitor();
 
     return await this.getNode(id);
