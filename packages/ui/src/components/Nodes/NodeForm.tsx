@@ -1,4 +1,4 @@
-import { Dispatch, useEffect, useRef, useState } from "react";
+import { Dispatch, useCallback, useEffect, useRef, useState } from "react";
 import { useFormik, FormikErrors } from "formik";
 import { ApolloQueryResult } from "@apollo/client";
 import {
@@ -56,8 +56,6 @@ export const NodeForm = ({
   onCancel,
   setState,
 }: NodesFormProps) => {
-  const [backendDisabled, setBackendDisabled] = useState(false);
-  const [frontendDisabled, setFrontendDisabled] = useState(false);
   const [https, setHttps] = useState(false);
   const [hostHasFqdn, setHostHasFqdn] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -66,6 +64,20 @@ export const NodeForm = ({
   const chainRef = useRef<HTMLInputElement>();
   const hostRef = useRef<HTMLInputElement>();
   const loadBalancersRef = useRef<HTMLInputElement>();
+
+  const getNodeName = () => {
+    if (values.chain && values.host) {
+      const chainName = formData?.chains?.find(({ id }) => id === values.chain)?.name;
+      const hostName = formData?.hosts?.find(({ id }) => id === values.host)?.name;
+      let nodeName = `${hostName}/${chainName}`;
+      const count = String(
+        (nodeNames?.filter((name) => name.includes(nodeName))?.length || 0) + 1,
+      ).padStart(2, "0");
+      return `${nodeName}/${count}`;
+    } else {
+      return "";
+    }
+  };
 
   /* ----- Form Validation ----- */
   const validate = (values: INodeInput): FormikErrors<INodeInput> => {
@@ -81,29 +93,44 @@ export const NodeForm = ({
     if (hostPortCombos.includes(`${values.host}/${values.port}`)) {
       errors.port = "Host/port combination is already taken";
     }
+    if (values.haProxy) {
+      if (!values.backend) {
+        errors.backend = "Backend is required if HAProxy enabled.";
+      }
+      if (!values.loadBalancers?.length) {
+        errors.loadBalancers = "At least one load balancer is required.";
+      }
+    }
     return errors;
   };
-  const { values, errors, handleChange, handleSubmit, setFieldValue, resetForm } =
-    useFormik({
-      initialValues: {
-        https: false,
-        chain: "",
-        haProxy: false,
-        host: "",
-        name: "",
-        port: undefined,
-        loadBalancers: [],
-        backend: undefined,
-        frontend: undefined,
-        server: undefined,
-      },
-      validate,
-      validateOnChange: false,
-      onSubmit: async () => {
-        setLoading(true);
-        update ? submitUpdate() : submitCreate();
-      },
-    });
+  const {
+    values,
+    errors,
+    handleChange,
+    handleSubmit,
+    setErrors,
+    setFieldValue,
+    resetForm,
+  } = useFormik({
+    initialValues: {
+      https: false,
+      chain: "",
+      host: "",
+      port: undefined,
+      haProxy: true,
+      backend: "",
+      loadBalancers: [],
+      server: "",
+      frontend: "",
+      name: "",
+    },
+    validate,
+    validateOnChange: false,
+    onSubmit: async () => {
+      setLoading(true);
+      update ? submitUpdate() : submitCreate();
+    },
+  });
 
   useEffect(() => {
     if (formData?.hosts && values.host) {
@@ -119,20 +146,25 @@ export const NodeForm = ({
   }, [values.host, formData, setFieldValue]);
 
   useEffect(() => {
-    if (values.backend) {
-      setFrontendDisabled(true);
-    } else {
-      setFrontendDisabled(false);
+    if (update) {
+      if (!values.haProxy) {
+        if (selectedNode?.frontend) setFieldValue("frontend", selectedNode.frontend);
+        setFieldValue("backend", "");
+        setFieldValue("server", "");
+        setFieldValue("loadBalancers", []);
+        setErrors({ ...errors, backend: null, loadBalancers: null });
+      }
+      if (values.haProxy) {
+        if (selectedNode?.backend) setFieldValue("backend", selectedNode?.backend);
+        if (selectedNode?.server) setFieldValue("server", selectedNode?.server);
+        if (selectedNode?.loadBalancers)
+          setFieldValue(
+            "loadBalancers",
+            selectedNode?.loadBalancers.map((lb) => lb.id),
+          );
+      }
     }
-  }, [values.backend]);
-
-  useEffect(() => {
-    if (values.frontend) {
-      setBackendDisabled(true);
-    } else {
-      setBackendDisabled(false);
-    }
-  }, [values.frontend]);
+  }, [update, errors, setErrors, setFieldValue, selectedNode, values.haProxy]);
 
   /* ----- Update Mode ----- */
   if (update && selectedNode) {
@@ -142,21 +174,40 @@ export const NodeForm = ({
     );
   }
 
+  const handleResetFormState = useCallback(() => {
+    setFieldValue("chain", selectedNode.chain.id);
+    setFieldValue("host", selectedNode.host.id);
+    setFieldValue("https", selectedNode.url.includes("https"));
+    setFieldValue(
+      "loadBalancers",
+      selectedNode.loadBalancers.map(({ id }) => id),
+    );
+    setFieldValue("name", selectedNode.name);
+    setFieldValue("port", Number(selectedNode.port));
+    setFieldValue("backend", selectedNode.backend);
+    setFieldValue("frontend", selectedNode.frontend);
+    setFieldValue("server", selectedNode.server);
+    setFieldValue("haProxy", selectedNode.haProxy);
+
+    if (chainRef.current) {
+      chainRef.current.querySelector("input").value = "";
+    }
+    if (hostRef.current) {
+      hostRef.current.querySelector("input").value = "";
+    }
+    if (loadBalancersRef.current) {
+      loadBalancersRef.current.querySelector("input").value = "";
+    }
+  }, [setFieldValue, selectedNode]);
+
+  const handleCancel = (e) => {
+    handleResetFormState();
+    onCancel(e);
+  };
+
   useEffect(() => {
     if (update && selectedNode) {
-      setFieldValue("chain", selectedNode.chain.id);
-      setFieldValue("host", selectedNode.host.id);
-      setFieldValue("https", selectedNode.url.includes("https"));
-      setFieldValue(
-        "loadBalancers",
-        selectedNode.loadBalancers.map(({ id }) => id),
-      );
-      setFieldValue("name", selectedNode.name);
-      setFieldValue("port", Number(selectedNode.port));
-      setFieldValue("backend", selectedNode.backend);
-      setFieldValue("frontend", selectedNode.frontend);
-      setFieldValue("server", selectedNode.server);
-      setFieldValue("haProxy", selectedNode.haProxy);
+      handleResetFormState();
     }
     if (!selectedNode) {
       resetForm({
@@ -173,21 +224,12 @@ export const NodeForm = ({
           server: "",
         },
       });
-      if (chainRef.current) {
-        chainRef.current.querySelector("input").value = "";
-      }
-      if (hostRef.current) {
-        hostRef.current.querySelector("input").value = "";
-      }
-      if (loadBalancersRef.current) {
-        loadBalancersRef.current.querySelector("input").value = "";
-      }
     }
-  }, [update, selectedNode, setFieldValue, resetForm]);
+  }, [update, selectedNode, resetForm, handleResetFormState]);
 
   /* ----- Mutations ----- */
   const [submitCreate] = useCreateNodeMutation({
-    variables: { input: { ...values, port: Number(values.port) } },
+    variables: { input: { ...values, name: getNodeName(), port: Number(values.port) } },
     onCompleted: () => {
       resetForm();
       refetchNodes();
@@ -201,7 +243,14 @@ export const NodeForm = ({
   });
 
   const [submitUpdate] = useUpdateNodeMutation({
-    variables: { update: { id: selectedNode?.id, ...values, port: Number(values.port) } },
+    variables: {
+      update: {
+        id: selectedNode?.id,
+        ...values,
+        name: getNodeName(),
+        port: Number(values.port),
+      },
+    },
     onCompleted: () => {
       resetForm();
       refetchNodes();
@@ -240,6 +289,32 @@ export const NodeForm = ({
   return (
     <>
       <Form read={read}>
+        <TextField
+          name="name"
+          value={getNodeName()}
+          onChange={handleChange}
+          label="Name"
+          variant="outlined"
+          error={!!errors.name}
+          helperText={errors.name}
+          disabled
+          size="small"
+          sx={{
+            "& fieldset": { borderWidth: "0px" },
+          }}
+        />
+        <TextField
+          name="name"
+          value={selectedNode?.url}
+          onChange={handleChange}
+          label="URL"
+          variant="outlined"
+          disabled
+          size="small"
+          sx={{
+            "& fieldset": { borderWidth: "0px" },
+          }}
+        />
         {read && (
           <TextField
             ref={chainRef}
@@ -332,18 +407,6 @@ export const NodeForm = ({
           </Box>
         </FormControl>
         <TextField
-          name="name"
-          value={values.name}
-          onChange={handleChange}
-          label="Name"
-          variant="outlined"
-          error={!!errors.name}
-          helperText={errors.name}
-          disabled={read}
-          size="small"
-          fullWidth
-        />
-        <TextField
           name="port"
           value={selectedNode ? values.port : ""}
           onChange={handleChange}
@@ -355,87 +418,98 @@ export const NodeForm = ({
           size="small"
           fullWidth
         />
-        {read && (
-          <TextField
-            ref={loadBalancersRef}
-            name="loadBalancers"
-            value={formData.loadBalancers
-              .filter((lb) => values.loadBalancers.includes(lb.id))
-              ?.map((lb) => lb.name)}
-            onChange={handleChange}
-            label="Load Balancers"
-            variant="outlined"
-            error={!!errors.loadBalancers}
-            helperText={errors.loadBalancers}
-            disabled={read}
-            size="small"
-          />
-        )}
-        {!read && (
-          <FormControl fullWidth disabled={read}>
-            <InputLabel id="lb-label">Load Balancers</InputLabel>
-            <Select
-              name="loadBalancers"
-              multiple
-              labelId="lb-label"
-              value={values.loadBalancers}
-              onChange={handleChange}
-              input={<OutlinedInput label="Load Balancers" />}
-              renderValue={(selected) => {
-                return selected
-                  .map(
-                    (id) =>
-                      formData?.loadBalancers!.find(({ id: lb }) => lb === id)!.name,
-                  )
-                  .join(", ");
-              }}
-              size="small"
-            >
-              {formData?.loadBalancers.map(({ name, id }) => (
-                <MenuItem key={id} value={id}>
-                  <Checkbox checked={values.loadBalancers.indexOf(id!) > -1} />
-                  <ListItemText primary={name} />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        )}
-        <TextField
-          name="backend"
-          value={values.backend}
-          onChange={handleChange}
-          disabled={read ?? backendDisabled}
-          label="Backend"
-          variant="outlined"
-          size="small"
-          fullWidth
-        />
-        <TextField
-          name="frontend"
-          value={values.frontend}
-          onChange={handleChange}
-          disabled={read ?? frontendDisabled}
-          label="Frontend"
-          variant="outlined"
-          size="small"
-          fullWidth
-        />
-        <TextField
-          name="server"
-          value={values.server}
-          onChange={handleChange}
-          label="Server"
-          variant="outlined"
-          disabled={read}
-          size="small"
-          fullWidth
-        />
         <FormControl fullWidth disabled={read}>
           <InputLabel>HAproxy</InputLabel>
           <Box>
             <Switch name="haProxy" checked={values.haProxy} onChange={handleChange} />
           </Box>
         </FormControl>
+        {values.haProxy && (
+          <>
+            <TextField
+              name="backend"
+              value={values.backend}
+              onChange={handleChange}
+              disabled={read ?? (!!values.frontend || !values.haProxy)}
+              label="Backend"
+              variant="outlined"
+              size="small"
+              fullWidth
+            />
+            {read && (
+              <TextField
+                ref={loadBalancersRef}
+                name="loadBalancers"
+                value={formData
+                  ?.loadBalancers!.filter((lb) => values.loadBalancers.includes(lb.id))
+                  ?.map((lb) => lb.name)
+                  ?.join(", ")}
+                onChange={handleChange}
+                label="Load Balancers"
+                variant="outlined"
+                error={!!errors.loadBalancers}
+                helperText={errors.loadBalancers}
+                disabled={read ?? (!!values.frontend || !values.haProxy)}
+                size="small"
+              />
+            )}
+            {!read && (
+              <FormControl
+                fullWidth
+                disabled={read ?? (!!values.frontend || !values.haProxy)}
+              >
+                <InputLabel id="lb-label">Load Balancers</InputLabel>
+                <Select
+                  name="loadBalancers"
+                  multiple
+                  labelId="lb-label"
+                  value={values.loadBalancers}
+                  onChange={handleChange}
+                  input={<OutlinedInput label="Load Balancers" />}
+                  renderValue={(selected) => {
+                    return selected
+                      .map(
+                        (id) =>
+                          formData?.loadBalancers!.find(({ id: lb }) => lb === id)!.name,
+                      )
+                      .join(", ");
+                  }}
+                  size="small"
+                >
+                  {formData?.loadBalancers.map(({ name, id }) => (
+                    <MenuItem key={id} value={id}>
+                      <Checkbox checked={values.loadBalancers.indexOf(id!) > -1} />
+                      <ListItemText primary={name} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+            <TextField
+              name="server"
+              value={values.server}
+              onChange={handleChange}
+              label="Server"
+              variant="outlined"
+              disabled={read ?? (!!values.frontend || !values.haProxy)}
+              size="small"
+              fullWidth
+            />
+          </>
+        )}
+        {!values.haProxy && (
+          <TextField
+            name="frontend"
+            value={values.frontend}
+            onChange={handleChange}
+            disabled={read ?? (!!values.backend || values.haProxy)}
+            label="Frontend"
+            variant="outlined"
+            size="small"
+            fullWidth
+          />
+        )}
+
         {!read && (
           <Box
             sx={{
@@ -451,7 +525,7 @@ export const NodeForm = ({
                 `${update ? "Save" : "Create"} Node`
               )}
             </Button>
-            <Button onClick={onCancel} variant="outlined" color="inherit">
+            <Button onClick={handleCancel} variant="outlined" color="inherit">
               Cancel
             </Button>
           </Box>
