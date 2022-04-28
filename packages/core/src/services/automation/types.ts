@@ -5,6 +5,7 @@ export interface INodeInput {
   chain: Types.ObjectId;
   host: Types.ObjectId;
   name: string;
+  url: string;
   loadBalancers: Types.ObjectId[];
   port: number;
   haProxy: boolean;
