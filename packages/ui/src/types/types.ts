@@ -192,6 +192,7 @@ export type INode = {
 
 export type INodeCsvInput = {
   backend?: InputMaybe<Scalars['String']>;
+  basicAuth?: InputMaybe<Scalars['String']>;
   chain: Scalars['String'];
   frontend?: InputMaybe<Scalars['String']>;
   haProxy: Scalars['Boolean'];
@@ -205,6 +206,7 @@ export type INodeCsvInput = {
 
 export type INodeInput = {
   backend?: InputMaybe<Scalars['String']>;
+  basicAuth?: InputMaybe<Scalars['String']>;
   chain: Scalars['ID'];
   frontend?: InputMaybe<Scalars['String']>;
   haProxy: Scalars['Boolean'];
@@ -229,6 +231,7 @@ export type INodeUpdate = {
   name?: InputMaybe<Scalars['String']>;
   port?: InputMaybe<Scalars['Int']>;
   server?: InputMaybe<Scalars['String']>;
+  url?: InputMaybe<Scalars['String']>;
 };
 
 export type IOracle = {
@@ -452,7 +455,7 @@ export type IWebhooksQuery = { webhooks: Array<{ id: string, location: string, c
 export type IGetHostsChainsAndLoadBalancersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, fqdn?: string | null, ip?: string | null, location: { id: string, name: string } }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string }> };
+export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, fqdn?: string | null, location: { id: string, name: string } }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string, ip?: string | null, fqdn?: string | null, location: { id: string, name: string } }> };
 
 export type IGetNodeStatusQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -1288,7 +1291,6 @@ export const GetHostsChainsAndLoadBalancersDocument = gql`
   hosts {
     id
     name
-    fqdn
     ip
     fqdn
     location {
@@ -1303,6 +1305,12 @@ export const GetHostsChainsAndLoadBalancersDocument = gql`
   loadBalancers: hosts(loadBalancer: true) {
     id
     name
+    ip
+    fqdn
+    location {
+      id
+      name
+    }
   }
 }
     `;
