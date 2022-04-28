@@ -1,23 +1,33 @@
 import { useState, Dispatch } from "react";
 
-import Paper from "components/Paper"
-import Space, { SpaceSizeEnum } from "components/Space"
-import LogsChart from "components/Logs/LogsChart"
-import { SelectChangeEvent, FormControl, Autocomplete, Checkbox, TextField, InputLabel, Select, MenuItem } from "@mui/material";
+import Paper from "components/Paper";
+import Space, { SpaceSizeEnum } from "components/Space";
+import LogsChart from "components/Logs/LogsChart";
+import {
+  SelectChangeEvent,
+  FormControl,
+  Autocomplete,
+  Checkbox,
+  TextField,
+  InputLabel,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import { ITimePeriod, timePeriods } from "utils/periods";
 import { INode, INodesQuery } from "types/types";
 
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import Title from "components/Title";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 type LogsSelectNodesProps = {
-  nodes: INodesQuery["nodes"]
-  nodeIds: string[]
-  setNodeIds: Dispatch<string[]>
-}
+  nodes: INodesQuery["nodes"];
+  nodeIds: string[];
+  setNodeIds: Dispatch<string[]>;
+};
 
 export const LogsSelectNodes = ({ nodes, nodeIds, setNodeIds }: LogsSelectNodesProps) => {
   const [logPeriod, setLogPeriod] = useState<ITimePeriod>(timePeriods[0]);
@@ -40,6 +50,11 @@ export const LogsSelectNodes = ({ nodes, nodeIds, setNodeIds }: LogsSelectNodesP
 
   return (
     <Paper>
+      <Title>
+        {!nodeIds?.length
+          ? "Select node(s) to view logs"
+          : `Logs for ${nodeIds?.length} node${nodeIds?.length ? "s" : ""}`}
+      </Title>
       <FormControl fullWidth>
         <Autocomplete
           fullWidth
@@ -85,5 +100,5 @@ export const LogsSelectNodes = ({ nodes, nodeIds, setNodeIds }: LogsSelectNodesP
       <Space h={SpaceSizeEnum.Sm} />
       <LogsChart logPeriod={logPeriod} nodeIds={nodeIds} />
     </Paper>
-  )
-}
+  );
+};

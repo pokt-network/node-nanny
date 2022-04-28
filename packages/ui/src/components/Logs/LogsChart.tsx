@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from "react";
-import { Alert, AlertTitle, Box, LinearProgress, Typography } from "@mui/material";
+import { Alert, AlertTitle, Box, LinearProgress } from "@mui/material";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -103,14 +103,8 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
         alignItems: "center",
         height: "200px",
         width: "100%",
-        marginBottom: 32,
       }}
     >
-      <Typography>
-        {!nodeIds?.length
-          ? "Select node(s) to view logs"
-          : `Logs for ${nodeIds?.length} node${nodeIds?.length}`}
-      </Typography>
       {!error && loading && !logData?.length && (
         <div style={{ width: "100%" }}>
           <LinearProgress />
