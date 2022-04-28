@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from "react";
-import { Alert, AlertTitle, LinearProgress, Typography } from "@mui/material";
+import { Alert, AlertTitle, Box, LinearProgress } from "@mui/material";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,8 +11,8 @@ import dayjs from "dayjs";
 import { Bar } from "react-chartjs-2";
 
 import { useLogsForChartLazyQuery, ILogsForChartQuery } from "types";
-import { ITimePeriod } from "./periods";
-import { deepEqual, s } from "../../utils";
+import { ITimePeriod } from "utils/periods";
+import { deepEqual } from "../../utils";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
@@ -44,7 +44,11 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
 
   useEffect(() => {
     if (nodeIds?.length) submit({ variables: { input: getQueryVars() } });
+<<<<<<< HEAD:packages/ui/src/pages/Logs/LogsChart.tsx
   }, [logPeriod, submit, getQueryVars]);
+=======
+  }, [logPeriod, submit, getQueryVars, nodeIds]);
+>>>>>>> kevinu/T-2557_implement-ui-styles-on-the-current-node-nanny-ui:packages/ui/src/components/Logs/LogsChart.tsx
 
   useEffect(() => {
     const refetchInterval = setInterval(() => {
@@ -72,15 +76,15 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
         label: "Healthy",
         stack: arbitraryStackKey,
         data: oks,
-        backgroundColor: "rgba(63,203,226,1)",
-        hoverBackgroundColor: "rgba(46,185,235,1)",
+        backgroundColor: "#1D8AED",
+        hoverBackgroundColor: "#1565ad",
       },
       {
         label: "Error",
         stack: arbitraryStackKey,
         data: errors,
-        backgroundColor: "rgba(163,103,126,1)",
-        hoverBackgroundColor: "rgba(140,85,100,1)",
+        backgroundColor: "#F93232",
+        hoverBackgroundColor: "#b52222",
       },
     ],
   };
@@ -88,40 +92,30 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
 
   if (error) {
     return (
-      <>
-        <Alert severity="error">
-          <AlertTitle>{"Error fetching logs: "}</AlertTitle>
-          {error.message}
-        </Alert>
-      </>
+      <Alert severity="error">
+        <AlertTitle>{"Error fetching logs: "}</AlertTitle>
+        {error.message}
+      </Alert>
     );
   }
 
   return (
-    <>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          height: "200px",
-          width: "100%",
-          marginBottom: 32,
-        }}
-      >
-        <Typography>
-          {!nodeIds?.length
-            ? "Select node(s) to view logs"
-            : `Logs for ${nodeIds?.length} node${s(nodeIds?.length)}`}
-        </Typography>
-        {!error && loading && !logData?.length && (
-          <div style={{ width: "100%" }}>
-            <LinearProgress />
-          </div>
-        )}
-        <Bar data={data} options={options} height="200px" width="100"></Bar>
-      </div>
-    </>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        height: "200px",
+        width: "100%",
+      }}
+    >
+      {!error && loading && !logData?.length && (
+        <div style={{ width: "100%" }}>
+          <LinearProgress />
+        </div>
+      )}
+      <Bar data={data} options={options} height="200px" width="100"></Bar>
+    </Box>
   );
 }
 
