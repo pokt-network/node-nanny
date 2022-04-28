@@ -44,11 +44,7 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
 
   useEffect(() => {
     if (nodeIds?.length) submit({ variables: { input: getQueryVars() } });
-<<<<<<< HEAD:packages/ui/src/pages/Logs/LogsChart.tsx
-  }, [logPeriod, submit, getQueryVars]);
-=======
   }, [logPeriod, submit, getQueryVars, nodeIds]);
->>>>>>> kevinu/T-2557_implement-ui-styles-on-the-current-node-nanny-ui:packages/ui/src/components/Logs/LogsChart.tsx
 
   useEffect(() => {
     const refetchInterval = setInterval(() => {
