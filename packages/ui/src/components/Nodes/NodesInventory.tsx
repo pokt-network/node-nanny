@@ -78,6 +78,13 @@ export const NodesInventory = ({ nodes, setState }: NodesInventoryProps) => {
             Create Node
           </Button>
           <Button
+            onClick={() => setState(NodeActionsState.CreateFrontend)}
+            size="small"
+            variant="contained"
+          >
+            Create Frontend
+          </Button>
+          <Button
             onClick={() => setState(NodeActionsState.Upload)}
             size="small"
             variant="outlined"
