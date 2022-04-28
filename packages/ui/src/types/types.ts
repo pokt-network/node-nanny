@@ -200,7 +200,7 @@ export type INodeCsvInput = {
   https: Scalars['Boolean'];
   loadBalancers: Array<Scalars['String']>;
   name: Scalars['String'];
-  port: Scalars['Int'];
+  port: Scalars['String'];
   server?: InputMaybe<Scalars['String']>;
 };
 
@@ -214,7 +214,7 @@ export type INodeInput = {
   https: Scalars['Boolean'];
   loadBalancers: Array<Scalars['ID']>;
   name: Scalars['String'];
-  port: Scalars['Int'];
+  port: Scalars['String'];
   server?: InputMaybe<Scalars['String']>;
   url: Scalars['String'];
 };
@@ -229,7 +229,7 @@ export type INodeUpdate = {
   id: Scalars['ID'];
   loadBalancers?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   name?: InputMaybe<Scalars['String']>;
-  port?: InputMaybe<Scalars['Int']>;
+  port?: InputMaybe<Scalars['String']>;
   server?: InputMaybe<Scalars['String']>;
   url?: InputMaybe<Scalars['String']>;
 };
@@ -336,7 +336,7 @@ export type ICreateNodeMutationVariables = Exact<{
 }>;
 
 
-export type ICreateNodeMutation = { createNode?: { id: string, url: string } | null };
+export type ICreateNodeMutation = { createNode?: { id: string, url: string, name: string } | null };
 
 export type ICreateNodesCsvMutationVariables = Exact<{
   nodes: Array<INodeCsvInput> | INodeCsvInput;
@@ -350,14 +350,14 @@ export type IUpdateHostMutationVariables = Exact<{
 }>;
 
 
-export type IUpdateHostMutation = { updateHost?: { id: string } | null };
+export type IUpdateHostMutation = { updateHost?: { id: string, name: string } | null };
 
 export type IUpdateNodeMutationVariables = Exact<{
   update: INodeUpdate;
 }>;
 
 
-export type IUpdateNodeMutation = { updateNode?: { id: string } | null };
+export type IUpdateNodeMutation = { updateNode?: { id: string, name: string } | null };
 
 export type IDeleteHostMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -578,6 +578,7 @@ export const CreateNodeDocument = gql`
   createNode(input: $input) {
     id
     url
+    name
   }
 }
     `;
@@ -644,6 +645,7 @@ export const UpdateHostDocument = gql`
     mutation UpdateHost($update: HostUpdate!) {
   updateHost(update: $update) {
     id
+    name
   }
 }
     `;
@@ -677,6 +679,7 @@ export const UpdateNodeDocument = gql`
     mutation UpdateNode($update: NodeUpdate!) {
   updateNode(update: $update) {
     id
+    name
   }
 }
     `;
