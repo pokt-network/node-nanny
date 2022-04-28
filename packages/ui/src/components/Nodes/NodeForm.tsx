@@ -60,7 +60,9 @@ export const NodeForm = ({
   const [hostHasFqdn, setHostHasFqdn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [backendError, setBackendError] = useState("");
+  const [frontendBool, setFrontendBool] = useState(!!selectedNode?.frontend);
 
+  const urlRef = useRef<HTMLInputElement>();
   const chainRef = useRef<HTMLInputElement>();
   const hostRef = useRef<HTMLInputElement>();
   const loadBalancersRef = useRef<HTMLInputElement>();
@@ -100,6 +102,10 @@ export const NodeForm = ({
       if (!values.loadBalancers?.length) {
         errors.loadBalancers = "At least one load balancer is required.";
       }
+    }
+    if (values.frontend && values.haProxy) {
+      errors.haProxy = "HaProxy cannot be selected if frontend is checked";
+      errors.haProxy = "Frontend cannot be selected if HaProxy is checked";
     }
     return errors;
   };
@@ -147,14 +153,17 @@ export const NodeForm = ({
 
   useEffect(() => {
     if (update) {
-      if (!values.haProxy) {
+      if (frontendBool && !values.haProxy) {
         if (selectedNode?.frontend) setFieldValue("frontend", selectedNode.frontend);
+        if (selectedNode?.frontend) setFrontendBool(!!selectedNode.frontend);
         setFieldValue("backend", "");
         setFieldValue("server", "");
         setFieldValue("loadBalancers", []);
         setErrors({ ...errors, backend: null, loadBalancers: null });
       }
-      if (values.haProxy) {
+      if (!frontendBool && values.haProxy) {
+        setFieldValue("frontend", "");
+        setFrontendBool(false);
         if (selectedNode?.backend) setFieldValue("backend", selectedNode?.backend);
         if (selectedNode?.server) setFieldValue("server", selectedNode?.server);
         if (selectedNode?.loadBalancers)
@@ -164,7 +173,15 @@ export const NodeForm = ({
           );
       }
     }
-  }, [update, errors, setErrors, setFieldValue, selectedNode, values.haProxy]);
+  }, [
+    update,
+    errors,
+    setErrors,
+    setFieldValue,
+    selectedNode,
+    values.haProxy,
+    frontendBool,
+  ]);
 
   /* ----- Update Mode ----- */
   if (update && selectedNode) {
@@ -186,9 +203,18 @@ export const NodeForm = ({
     setFieldValue("port", Number(selectedNode.port));
     setFieldValue("backend", selectedNode.backend);
     setFieldValue("frontend", selectedNode.frontend);
+    setFrontendBool(!!selectedNode.frontend);
     setFieldValue("server", selectedNode.server);
-    setFieldValue("haProxy", selectedNode.haProxy);
+    setFieldValue(
+      "haProxy",
+      typeof selectedNode.haProxy === "boolean" ? selectedNode.haProxy : false,
+    );
+  }, [setFieldValue, selectedNode]);
 
+  const handleResetRefs = useCallback(() => {
+    if (urlRef.current) {
+      urlRef.current.querySelector("input").value = "";
+    }
     if (chainRef.current) {
       chainRef.current.querySelector("input").value = "";
     }
@@ -198,18 +224,23 @@ export const NodeForm = ({
     if (loadBalancersRef.current) {
       loadBalancersRef.current.querySelector("input").value = "";
     }
-  }, [setFieldValue, selectedNode]);
+  }, []);
 
   const handleCancel = (e) => {
-    handleResetFormState();
+    if (update) {
+      handleResetFormState();
+    }
     onCancel(e);
   };
 
   useEffect(() => {
     if (update && selectedNode) {
       handleResetFormState();
+      handleResetRefs();
     }
     if (!selectedNode) {
+      setFrontendBool(false);
+      handleResetRefs();
       resetForm({
         values: {
           https: false,
@@ -217,15 +248,15 @@ export const NodeForm = ({
           haProxy: false,
           host: "",
           name: "",
-          port: undefined,
+          port: "" as unknown as number,
           loadBalancers: [],
           backend: "",
-          frontend: "",
           server: "",
+          frontend: "",
         },
       });
     }
-  }, [update, selectedNode, resetForm, handleResetFormState]);
+  }, [update, selectedNode, resetForm, handleResetFormState, handleResetRefs]);
 
   /* ----- Mutations ----- */
   const [submitCreate] = useCreateNodeMutation({
@@ -300,11 +331,12 @@ export const NodeForm = ({
           disabled
           size="small"
           sx={{
-            "& fieldset": { borderWidth: "0px" },
+            "& fieldset": { borderWidth: "0px !important" },
           }}
         />
         <TextField
-          name="name"
+          name="url"
+          ref={urlRef}
           value={selectedNode?.url}
           onChange={handleChange}
           label="URL"
@@ -312,7 +344,7 @@ export const NodeForm = ({
           disabled
           size="small"
           sx={{
-            "& fieldset": { borderWidth: "0px" },
+            "& fieldset": { borderWidth: "0px !important" },
           }}
         />
         {read && (
@@ -395,11 +427,13 @@ export const NodeForm = ({
                   name="https"
                   checked={values.https}
                   onChange={handleChange}
-                  disabled={read ?? !hostHasFqdn}
+                  disabled={read ? read : !hostHasFqdn}
                 />
               }
               label={
-                hostHasFqdn
+                !selectedNode
+                  ? ""
+                  : hostHasFqdn
                   ? "Selected host has an FQDN"
                   : "Selected host does not have an FQDN"
               }
@@ -408,7 +442,7 @@ export const NodeForm = ({
         </FormControl>
         <TextField
           name="port"
-          value={selectedNode ? values.port : ""}
+          value={values.port}
           onChange={handleChange}
           label="Port"
           variant="outlined"
@@ -418,7 +452,7 @@ export const NodeForm = ({
           size="small"
           fullWidth
         />
-        <FormControl fullWidth disabled={read}>
+        <FormControl fullWidth disabled={read ? read : frontendBool}>
           <InputLabel>HAproxy</InputLabel>
           <Box>
             <Switch name="haProxy" checked={values.haProxy} onChange={handleChange} />
@@ -497,12 +531,22 @@ export const NodeForm = ({
             />
           </>
         )}
-        {!values.haProxy && (
+        <FormControl fullWidth disabled={read ? read : !!values.haProxy}>
+          <InputLabel>Frontend</InputLabel>
+          <Box>
+            <Switch
+              name="frontendBool"
+              checked={frontendBool}
+              onChange={(_, checked) => setFrontendBool(checked)}
+            />
+          </Box>
+        </FormControl>
+        {frontendBool && (
           <TextField
             name="frontend"
             value={values.frontend}
             onChange={handleChange}
-            disabled={read ?? (!!values.backend || values.haProxy)}
+            disabled={read ?? values.haProxy}
             label="Frontend"
             variant="outlined"
             size="small"

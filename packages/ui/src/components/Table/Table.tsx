@@ -140,7 +140,7 @@ export const Table = <T extends unknown>({
   };
 
   const handleChangePage = (_: unknown, newPage: number) => {
-    console.log(newPage);
+    // if we dont have data for the next page call onPageChange to trigger api
     if (newPage >= allRows.length / rowsPerPage) {
       onPageChange(newPage);
     }
@@ -155,6 +155,8 @@ export const Table = <T extends unknown>({
 
   const { filters, filterFunctions } = filterOptions || {};
   const filterEnabled = Boolean(filterOptions && filters && filterFunctions);
+
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
   useEffect(() => {
     const rowsWithId: RowWithId[] = rows.map((row, index) => {
@@ -171,11 +173,14 @@ export const Table = <T extends unknown>({
       if (currRows.length === 0) {
         setCurrRows(allRows);
       }
-      if (allRows.length / rowsPerPage - 1 < page) {
+      // if the data we get changes and is now greater than the new page number we are on then set page to zero
+      if (allRows.length / rowsPerPage < page && emptyRows === rowsPerPage) {
+        console.log(allRows.length / rowsPerPage - 1);
+        console.log(page);
         setPage(0);
       }
     }
-  }, [currRows, allRows, page, rowsPerPage]);
+  }, [currRows, allRows, page, rowsPerPage, emptyRows]);
 
   useEffect(() => {
     let rows = allRows;
@@ -206,8 +211,6 @@ export const Table = <T extends unknown>({
     filter,
     mapDisplay,
   ]);
-
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
   const getHeaderText = (): string => {
     const filterString = !filterEnabled || filter === "All" ? "" : filter;
