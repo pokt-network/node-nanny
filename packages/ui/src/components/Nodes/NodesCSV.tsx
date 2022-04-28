@@ -56,16 +56,16 @@ export const NodesCSV = ({
 
   /* ----- Table Options ---- */
   const columnsOrder = [
-    "https",
-    "chain",
-    "haProxy",
-    "host",
     "name",
-    "loadBalancers",
+    "chain",
+    "host",
+    "https",
     "port",
+    "haProxy",
     "backend",
-    "frontend",
+    "loadBalancers",
     "server",
+    "frontend",
   ];
 
   /* ----- CSV Validation ----- */
@@ -119,29 +119,37 @@ export const NodesCSV = ({
     );
 
     const invalidNodes: any = [];
+    const counts = {};
     const parsedNodes = nodesWithRequiredFields.map((node) => {
+      let nodeName = `${node.host}/${node.chain}`;
+      counts[nodeName] = counts[nodeName]
+        ? counts[nodeName] + 1
+        : nodeNames?.filter((name) => name.includes(nodeName))?.length + 1 || 1;
+      const count = String(counts[nodeName]).padStart(2, "0");
+      nodeName = `${nodeName}/${count}`;
+
       const invalidFields = validate(node, schema);
       if (node.https.toLowerCase() === "true" && !hostsWithFqdn.includes(node.host)) {
         invalidFields.push(
-          `[${node.name}]: Host does not have an FQDN; HTTPS is not allowed without an FQDN.`,
+          `[${nodeName}]: Host does not have an FQDN; HTTPS is not allowed without an FQDN.`,
         );
       }
       if (invalidFields.length) {
         invalidNodes.push(
-          `Invalid Field${s(invalidFields.length)}: [${node.name}]: ${invalidFields.join(
+          `Invalid Field${s(invalidFields.length)}: [${nodeName}]: ${invalidFields.join(
             "\n",
           )}`,
         );
       }
-      if (nodeNames.includes(node.name)) {
-        invalidNodes.push(`[${node.name}]: Node name is already taken.`);
+      if (nodeNames.includes(nodeName)) {
+        invalidNodes.push(`[${nodeName}]: Node name is already taken.`);
       }
       if (hostPortCsvCombos.includes(`${node.host}/${node.port}`)) {
-        invalidNodes.push(`[${node.name}]: Host/port combination is already taken.`);
+        invalidNodes.push(`[${nodeName}]: Host/port combination is already taken.`);
       }
       if (node.backend && node.frontend) {
         invalidNodes.push(
-          `[${node.name}]: Node may only have backend or frontend, not both.`,
+          `[${nodeName}]: Node may only have backend or frontend, not both.`,
         );
       }
       return {
@@ -149,7 +157,7 @@ export const NodesCSV = ({
         https: Boolean(node.https.toLowerCase() === "true"),
         chain: node.chain.toUpperCase(),
         host: node.host.toLowerCase(),
-        name: node.name,
+        name: nodeName,
         port: Number(node.port),
         loadBalancers: node.loadBalancers
           ?.toLowerCase()
