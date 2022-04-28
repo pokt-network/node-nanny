@@ -1,12 +1,12 @@
 const text = {
   muteMonitor:
-    "This will remove the node {selectedNode} from monitoring and automation.\nYou will no longer receive alerts for {selectedNode} and it will not be removed from rotation if it is out of sync.\nThis will not remove the node from its load balancer (if applicable).\nAre you sure you wish to mute node {selectedNode}?",
+    "This will mute alerts for {selectedNode}.\nYou will no longer receive alerts for {selectedNode}. It will still be automatically added to and removed from rotation if out of sync.\nAre you sure you wish to mute node {selectedNode}?",
   unmuteMonitor:
-    "This will add {selectedNode} to monitoring and automation.\nAre you sure you wish to unmute node {selectedNode}?",
+    "This will resume alerts for {selectedNode}.\nAre you sure you wish to unmute node {selectedNode}?",
   addToRotation:
     "This will enable {selectedNode} on its load balancer and open it up to traffic.\nAre you sure you wish to add {selectedNode} to rotation?",
   removeFromRotation:
-    "This will disable {selectedNode} on its load balancer and stop it from receiving traffic.\nYou will still receive monitor alerts about {selectedNode}. Are you sure you wish to remove {selectedNode} from rotation?",
+    "This will disable {selectedNode} on its load balancer and stop it from receiving traffic.\nYou will still receive monitor alerts about {selectedNode} if it is not muted. Are you sure you wish to remove {selectedNode} from rotation?",
 };
 
 export default text;
