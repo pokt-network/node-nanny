@@ -167,11 +167,7 @@ export const NodeCRUD = ({
               color="secondary"
               size="small"
             >
-              {!node
-                ? "Toggle Node Monitor"
-                : node?.muted
-                ? "Unmute Node Monitor"
-                : "Mute Node Monitor"}
+              {node?.muted ? "Unmute Node" : "Mute Node"}
             </Button>
             <Button
               variant="outlined"

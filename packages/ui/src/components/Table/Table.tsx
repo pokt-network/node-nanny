@@ -134,7 +134,6 @@ export const Table = <T extends unknown>({
   );
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filter, setFilter] = useState<string>("All");
-  const [isApiCall, setIsApiCall] = useState(false);
 
   const handleRequestSort = (_event: MouseEvent<unknown>, property: any) => {
     const isAsc = orderBy === property && order === "asc";
@@ -189,7 +188,6 @@ export const Table = <T extends unknown>({
       rows = rows.map(mapDisplay);
     }
     if (searchable && searchTerm !== "") {
-      console.log("searchFilter");
       rows = rows.filter((row) =>
         Object.values(row)
           .join()
@@ -199,7 +197,6 @@ export const Table = <T extends unknown>({
       );
     }
     if (filterEnabled && filter && filter !== "All") {
-      console.log("filterFilter");
       rows = rows.filter(filterFunctions[filter]);
     }
     setCurrRows(rows);
@@ -311,7 +308,7 @@ export const Table = <T extends unknown>({
                         )}
                         {getSortedColumns(row, false, columnsOrder)
                           .filter(([key]) => key !== "id" && key !== "__typename")
-                          .map(([key, value], i) => {
+                          .map(([_, value], i) => {
                             return (
                               <TableCell
                                 key={`${value as any}-${i}`}
