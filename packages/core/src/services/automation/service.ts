@@ -120,11 +120,17 @@ export class Service extends BaseService {
     delete unsanitizedUpdate.id;
     const update = this.sanitizeUpdate(unsanitizedUpdate);
 
-    const { ip, fqdn } = (await HostsModel.findOne({ _id: id })) as IHost<false>;
+    const { ip, fqdn, name } = (await HostsModel.findOne({ _id: id })) as IHost<false>;
+    const newName = update.name && update.name !== name;
     const newIp = update.ip && update.ip !== ip;
     const newFqdn = update.fqdn && update.fqdn !== fqdn;
 
-    /* If Host IP or FQDN changes, all nodes on that host will need to be updated */
+    /* If Host Name changes, all node names on that host will need to be updated */
+    if (newName && (await NodesModel.exists({ host: id }))) {
+      await this.updateNodeNamesIfHostNameChanges(id, update.name, name);
+    }
+
+    /* If Host IP or FQDN changes, all node URLs on that host will need to be updated */
     if ((newIp || newFqdn) && (await NodesModel.exists({ host: id }))) {
       await this.updateNodeUrlsIfHostDomainChanges(id, update);
     }
@@ -139,6 +145,20 @@ export class Service extends BaseService {
     if (restart) await this.restartMonitor();
 
     return await HostsModel.findOne({ _id: id }).populate("location").exec();
+  }
+
+  private async updateNodeNamesIfHostNameChanges(
+    id: string,
+    newHostName: string,
+    oldHostName: string,
+  ) {
+    const nodesForHost = NodesModel.find({ host: id });
+
+    for await (const { id, name } of nodesForHost) {
+      const newNodeName = name.replace(oldHostName, newHostName);
+
+      await NodesModel.updateOne({ _id: id }, { name: newNodeName });
+    }
   }
 
   private async updateNodeUrlsIfHostDomainChanges(
