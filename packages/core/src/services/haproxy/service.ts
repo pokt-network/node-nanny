@@ -51,7 +51,6 @@ export class Service {
     });
 
     return { online: online.length, total: total.length };
-<<<<<<< HEAD
   }
 
   async getValidHaProxy({ destination, domain }: IHAProxyParams) {
@@ -63,8 +62,6 @@ export class Service {
       console.log("ERROR");
       return false;
     }
-=======
->>>>>>> kevinu/T-2557_implement-ui-styles-on-the-current-node-nanny-ui
   }
 
   private async getCurrentStateByChainCommand({

@@ -197,7 +197,6 @@ export const NodeForm = ({
   }, [values.host, values.port, values.https]);
 
   useEffect(() => {
-    console.log(frontendNodeHosts, values.host);
     setFrontendExists(frontendNodeHosts.includes(values.host));
   }, [values.host]);
 
@@ -448,7 +447,7 @@ export const NodeForm = ({
                 />
               }
               label={
-                !values.host || (update && !selectedNode)
+                read || !values.host
                   ? ""
                   : hostHasFqdn
                   ? "Selected host has an FQDN; HTTPS may be enabled"
