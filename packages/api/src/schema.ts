@@ -96,6 +96,7 @@ const typeDefs = gql`
     backend: String
     frontend: String
     server: String
+    basicAuth: String
   }
 
   input HostInput {
@@ -117,6 +118,7 @@ const typeDefs = gql`
     backend: String
     frontend: String
     server: String
+    basicAuth: String
   }
 
   input HostCSVInput {
@@ -132,6 +134,7 @@ const typeDefs = gql`
     chain: ID
     host: ID
     name: String
+    url: String
     loadBalancers: [ID]
     port: Int
     haProxy: Boolean
