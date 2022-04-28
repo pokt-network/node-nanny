@@ -50,7 +50,6 @@ export const NodeCRUD = ({
   refetch,
 }: NodeCRUDProps) => {
   const [title, setTitle] = useState("Select Node To View Status");
-  const [severity, setSeverity] = useState<AlertColor>("success");
 
   const [getStatus, { data, error: getHaProxyStatusError, loading }] =
     useGetNodeStatusLazyQuery();
@@ -90,12 +89,14 @@ export const NodeCRUD = ({
     onCompleted: ({ muteMonitor }) => {
       const { muted } = muteMonitor;
       setSelectedNode({ ...node!, muted });
+      ModalHelper.close();
     },
   });
   const [unmuteMonitor, { error: unmuteMonitorError }] = useUnmuteMonitorMutation({
     onCompleted: ({ unmuteMonitor }) => {
       const { muted } = unmuteMonitor;
       setSelectedNode({ ...node!, muted });
+      ModalHelper.close();
     },
   });
 
@@ -146,18 +147,6 @@ export const NodeCRUD = ({
       setTitle("Select Node To View Status");
     }
   }, [node, type]);
-
-  useEffect(() => {
-    if (node) {
-      switch (node.status) {
-        case "ERROR":
-          return setSeverity("error");
-        case "OK":
-        default:
-          return setSeverity("success");
-      }
-    }
-  }, [node]);
 
   return (
     <Paper>

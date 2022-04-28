@@ -8,6 +8,8 @@ import NodesInventory from "components/Nodes/NodesInventory";
 import NodeCRUD from "components/Nodes/NodeCRUD";
 import NodesCSV from "components/Nodes/NodesCSV";
 
+import env from "environment";
+
 export enum NodeActionsState {
   Info = "info",
   Create = "create",
@@ -52,7 +54,7 @@ export function Nodes() {
     "haProxy",
     "muted",
   ];
-  if (process.env.REACT_APP_PNF === "1") {
+  if (env("PNF")) {
     filterOptions.filters.push("Dispatch");
     filterOptions.filterFunctions.Dispatch = ({ dispatch }: INode) => Boolean(dispatch);
     // columnsOrder.push("dispatch");
@@ -61,6 +63,11 @@ export function Nodes() {
   const nodeNames = data?.nodes.map(({ name }) => name);
   const hostPortCombos = data?.nodes.map(({ host, port }) => `${host.id}/${port}`);
   const hostPortCsvCombos = data?.nodes.map(({ host, port }) => `${host.name}/${port}`);
+
+  const handleSelectRow = (row) => {
+    setState(NodeActionsState.Info);
+    setSelectedNode(row);
+  };
 
   /* ----- Layout ----- */
   if (loading || formLoading) return <LinearProgress />;
@@ -119,7 +126,7 @@ export function Nodes() {
                 loadBalancers: node.loadBalancers?.map(({ name }) => name),
               })}
               selectedRow={selectedNode?.id}
-              onSelectRow={setSelectedNode}
+              onSelectRow={handleSelectRow}
             />
           </Grid>
         </Grid>

@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from "react";
-import { Alert, AlertTitle, LinearProgress } from "@mui/material";
+import { Alert, AlertTitle, Box, LinearProgress, Typography } from "@mui/material";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -28,7 +28,7 @@ interface LogsChartProps {
 
 function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
   const { format, increment, numPeriods, timePeriod } = logPeriod;
-  const [logData, setLogData] = useState<ILogsForChartQuery["logsForChart"]>([]);
+  const [logData, setLogData] = useState<ILogsForChartQuery["logsForChart"]>(undefined);
 
   const getQueryVars = useCallback(() => {
     const endDate = dayjs().toISOString();
@@ -38,13 +38,13 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
     return queryVars;
   }, [numPeriods, timePeriod, increment, nodeIds]);
 
-  const [submit, { error }] = useLogsForChartLazyQuery({
+  const [submit, { error, loading }] = useLogsForChartLazyQuery({
     onCompleted: ({ logsForChart }) => setLogData(logsForChart),
   });
 
   useEffect(() => {
-    submit({ variables: { input: getQueryVars() } });
-  }, [logPeriod, submit, getQueryVars]);
+    if (nodeIds?.length) submit({ variables: { input: getQueryVars() } });
+  }, [logPeriod, submit, getQueryVars, nodeIds]);
 
   useEffect(() => {
     const refetchInterval = setInterval(() => {
@@ -53,7 +53,7 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
     return () => clearInterval(refetchInterval);
   }, [submit, getQueryVars]);
 
-  const { labels, errors, oks } = logData.reduce(
+  const { labels, errors, oks } = logData?.reduce(
     (arrays: { labels: string[]; errors: number[]; oks: number[] }, entry) => {
       return {
         labels: [...arrays.labels, dayjs(entry.timestamp).format(format)],
@@ -96,8 +96,8 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
   }
 
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -106,13 +106,18 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
         marginBottom: 32,
       }}
     >
-      {!error && !logData?.length && (
+      <Typography>
+        {!nodeIds?.length
+          ? "Select node(s) to view logs"
+          : `Logs for ${nodeIds?.length} node${nodeIds?.length}`}
+      </Typography>
+      {!error && loading && !logData?.length && (
         <div style={{ width: "100%" }}>
           <LinearProgress />
         </div>
       )}
       <Bar data={data} options={options} height="200px" width="100"></Bar>
-    </div>
+    </Box>
   );
 }
 
