@@ -82,6 +82,7 @@ interface TableProps<T> {
   expandable?: boolean;
   loading?: boolean;
   serverLoading?: boolean;
+  serverHasNextPage?: boolean;
   expandKey?: keyof T;
   numPerPage?: number;
   selectedRow?: string;
@@ -107,6 +108,7 @@ export const Table = <T extends unknown>({
   expandable,
   loading,
   serverLoading,
+  serverHasNextPage,
   expandKey,
   numPerPage,
   selectedRow,
@@ -132,6 +134,7 @@ export const Table = <T extends unknown>({
   );
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filter, setFilter] = useState<string>("All");
+  const [isApiCall, setIsApiCall] = useState(false);
 
   const handleRequestSort = (_event: MouseEvent<unknown>, property: any) => {
     const isAsc = orderBy === property && order === "asc";
@@ -140,9 +143,9 @@ export const Table = <T extends unknown>({
   };
 
   const handleChangePage = (_: unknown, newPage: number) => {
-    // if we dont have data for the next page call onPageChange to trigger api
-    if (newPage >= allRows.length / rowsPerPage) {
-      onPageChange(newPage);
+    // if we dont have data for the next page then trigger api
+    if (serverLoading && serverHasNextPage && newPage >= allRows.length / rowsPerPage) {
+      onPageChange?.(newPage);
     }
     setPage(newPage);
   };
@@ -173,14 +176,12 @@ export const Table = <T extends unknown>({
       if (currRows.length === 0) {
         setCurrRows(allRows);
       }
-      // if the data we get changes and is now greater than the new page number we are on then set page to zero
-      if (allRows.length / rowsPerPage < page && emptyRows === rowsPerPage) {
-        console.log(allRows.length / rowsPerPage - 1);
-        console.log(page);
+      // if we arent loading and the whole page is empty rows reset page to zero
+      if (!loading && emptyRows > 0 && emptyRows >= rowsPerPage) {
         setPage(0);
       }
     }
-  }, [currRows, allRows, page, rowsPerPage, emptyRows]);
+  }, [currRows, allRows, page, rowsPerPage, emptyRows, loading]);
 
   useEffect(() => {
     let rows = allRows;
@@ -381,9 +382,11 @@ export const Table = <T extends unknown>({
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
           count={
-            allRows.length / rowsPerPage - 1 === page && serverLoading
+            allRows.length / rowsPerPage - 1 === page &&
+            serverLoading &&
+            serverHasNextPage
               ? -1
-              : allRows.length
+              : currRows.length
           }
           rowsPerPage={rowsPerPage}
           page={page}
