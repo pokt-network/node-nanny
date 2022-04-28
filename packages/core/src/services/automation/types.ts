@@ -12,7 +12,7 @@ export interface INodeInput {
   backend?: string;
   frontend?: string;
   server?: string;
-  frontendHost?: string;
+  basicAuth?: string;
 }
 
 export interface INodeCsvInput {
@@ -26,6 +26,7 @@ export interface INodeCsvInput {
   backend?: string;
   frontend?: string;
   server?: string;
+  basicAuth?: string;
 }
 
 export interface IHostInput {
@@ -50,6 +51,7 @@ export interface INodeUpdate {
   chain?: string;
   host?: string;
   name?: string;
+  url?: string;
   loadBalancers?: string[];
   port?: number;
   haProxy?: boolean;
