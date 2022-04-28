@@ -21,6 +21,7 @@ mutation CreateNode($input: NodeInput!) {
   createNode(input: $input) {
     id
     url
+    name
   }
 }
 mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
@@ -32,11 +33,13 @@ mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
 mutation UpdateHost($update: HostUpdate!) {
   updateHost(update: $update) {
     id
+    name
   }
 }
 mutation UpdateNode($update: NodeUpdate!) {
   updateNode(update: $update) {
     id
+    name
   }
 }
 

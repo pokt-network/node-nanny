@@ -56,15 +56,15 @@ export const NodesInventory = ({ nodes, setState }: NodesInventoryProps) => {
               <Typography>Nodes</Typography>
             </Grid>
             <Grid item>
-              <Chip label={healthyTotal} variant="outlined"></Chip>
-              <Typography>Healthy</Typography>
+              <Chip label={healthyTotal} variant="outlined" color="success"></Chip>
+              <Typography color="success">Healthy</Typography>
             </Grid>
             <Grid item>
-              <Chip label={errorTotal} variant="outlined"></Chip>
+              <Chip label={errorTotal} variant="outlined" color="error"></Chip>
               <Typography>Error</Typography>
             </Grid>
             <Grid item>
-              <Chip label={mutedTotal} variant="outlined"></Chip>
+              <Chip label={mutedTotal} variant="outlined" color="secondary"></Chip>
               <Typography>Muted</Typography>
             </Grid>
           </Grid>

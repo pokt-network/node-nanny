@@ -1,7 +1,7 @@
 import Paper from "components/Paper";
 import Title from "components/Title";
 
-import { Alert, AlertTitle, Box, Button, Grid, Typography } from "@mui/material";
+import { Alert, AlertTitle, Box, Button, Grid } from "@mui/material";
 
 import env from "environment";
 
