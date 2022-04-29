@@ -45,7 +45,7 @@ export default function LogsMongo() {
   }, [nodeIds, refetch]);
 
   const onPageChange = (page: number) => {
-    if (logsData.logs.hasNextPage) {
+    if (logsData.logs?.hasNextPage) {
       setLogsLoading(true);
       fetchMore({
         variables: {

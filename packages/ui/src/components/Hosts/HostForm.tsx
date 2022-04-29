@@ -12,7 +12,6 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  Snackbar,
   Switch,
   TextField,
 } from "@mui/material";
@@ -26,7 +25,7 @@ import {
   useDeleteHostMutation,
   useUpdateHostMutation,
 } from "types";
-import { ModalHelper, regexTest } from "utils";
+import { ModalHelper, regexTest, SnackbarHelper } from "utils";
 import { HostActionsState } from "pages/Hosts";
 import Form from "components/Form";
 
@@ -57,20 +56,6 @@ export const HostForm = ({
   const [backendError, setBackendError] = useState("");
 
   const locationRef = useRef<HTMLInputElement>();
-
-  /* ----- Snackbar ----- */
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarText, setSnackbarText] = useState("");
-
-  const handleOpenSnackbar = (text: string) => {
-    setSnackbarOpen(true);
-    setSnackbarText(text);
-  };
-
-  const handleCloseSnackbar = (_, reason?: string) => {
-    if (reason === "clickaway") return;
-    setSnackbarOpen(false);
-  };
 
   /* ----- Form Validation ----- */
   const validate = (values: IHostInput): FormikErrors<IHostInput> => {
@@ -156,7 +141,7 @@ export const HostForm = ({
   const [submitCreate] = useCreateHostMutation({
     variables: { input: values },
     onCompleted: ({ createHost }) => {
-      handleOpenSnackbar(`Host ${createHost.name} successfully created!`);
+      SnackbarHelper.open({ text: `Host ${createHost.name} successfully created!` });
       resetForm();
       refetchHosts();
       ModalHelper.close();
@@ -171,7 +156,7 @@ export const HostForm = ({
   const [submitUpdate] = useUpdateHostMutation({
     variables: { update: { id: selectedHost?.id, ...values } },
     onCompleted: ({ updateHost }) => {
-      handleOpenSnackbar(`Host ${updateHost.name} successfully updated!`);
+      SnackbarHelper.open({ text: `Host ${updateHost.name} successfully updated!` });
       resetForm();
       refetchHosts();
       ModalHelper.close();
@@ -184,7 +169,8 @@ export const HostForm = ({
   });
 
   const [submitDelete, { error: deleteHostError }] = useDeleteHostMutation({
-    onCompleted: () => {
+    onCompleted: ({ deleteHost }) => {
+      SnackbarHelper.open({ text: `Host ${deleteHost.name} successfully deleted!` });
       refetchHosts();
       ModalHelper.close();
     },
@@ -294,6 +280,8 @@ export const HostForm = ({
             marginTop: 4,
             textAlign: "right",
             "& button": { margin: 1 },
+            width: 125,
+            height: 36.5,
           }}
         >
           <Button type="submit" variant="contained" onClick={handleSubmit as any}>
@@ -320,6 +308,7 @@ export const HostForm = ({
             onClick={() => setState(HostActionsState.Edit)}
             variant="contained"
             color="primary"
+            sx={{ width: 125, height: 36.5 }}
           >
             Update Host
           </Button>
@@ -328,17 +317,6 @@ export const HostForm = ({
           </Button>
         </Box>
       )}
-
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        onClose={handleCloseSnackbar}
-      >
-        <Alert severity="success" sx={{ width: "100%" }}>
-          {snackbarText}
-        </Alert>
-      </Snackbar>
 
       {backendError && (
         <Alert severity="error">
