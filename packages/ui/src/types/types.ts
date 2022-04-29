@@ -257,6 +257,7 @@ export type IQuery = {
   chains: Array<IChain>;
   checkValidHaProxy: Scalars['Boolean'];
   getHaProxyStatus: Scalars['Int'];
+  getServerCount: IServerCount;
   hosts: Array<IHost>;
   locations: Array<ILocation>;
   logs: IPaginatedLogs;
@@ -275,6 +276,11 @@ export type IQueryCheckValidHaProxyArgs = {
 
 
 export type IQueryGetHaProxyStatusArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type IQueryGetServerCountArgs = {
   id: Scalars['ID'];
 };
 
@@ -300,7 +306,12 @@ export type IQueryNodeArgs = {
 
 
 export type IQueryNodeStatusArgs = {
-  id?: InputMaybe<Scalars['String']>;
+  id: Scalars['ID'];
+};
+
+export type IServerCount = {
+  online: Scalars['Int'];
+  total: Scalars['Int'];
 };
 
 export type IWebhook = {
@@ -364,28 +375,28 @@ export type IDeleteHostMutationVariables = Exact<{
 }>;
 
 
-export type IDeleteHostMutation = { deleteHost?: { id: string } | null };
+export type IDeleteHostMutation = { deleteHost?: { id: string, name: string } | null };
 
 export type IDeleteNodeMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type IDeleteNodeMutation = { deleteNode?: { id: string } | null };
+export type IDeleteNodeMutation = { deleteNode?: { id: string, name: string } | null };
 
 export type IMuteMonitorMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type IMuteMonitorMutation = { muteMonitor: { id: string, muted: boolean } };
+export type IMuteMonitorMutation = { muteMonitor: { id: string, muted: boolean, name: string } };
 
 export type IUnmuteMonitorMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type IUnmuteMonitorMutation = { unmuteMonitor: { id: string, muted: boolean } };
+export type IUnmuteMonitorMutation = { unmuteMonitor: { id: string, muted: boolean, name: string } };
 
 export type IEnableHaProxyServerMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -470,6 +481,13 @@ export type ICheckValidHaProxyQueryVariables = Exact<{
 
 
 export type ICheckValidHaProxyQuery = { validHaProxy: boolean };
+
+export type IGetServerCountQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type IGetServerCountQuery = { serverCount: { online: number, total: number } };
 
 
 export const CreateHostDocument = gql`
@@ -713,6 +731,7 @@ export const DeleteHostDocument = gql`
     mutation DeleteHost($id: ID!) {
   deleteHost(id: $id) {
     id
+    name
   }
 }
     `;
@@ -746,6 +765,7 @@ export const DeleteNodeDocument = gql`
     mutation DeleteNode($id: ID!) {
   deleteNode(id: $id) {
     id
+    name
   }
 }
     `;
@@ -780,6 +800,7 @@ export const MuteMonitorDocument = gql`
   muteMonitor(id: $id) {
     id
     muted
+    name
   }
 }
     `;
@@ -814,6 +835,7 @@ export const UnmuteMonitorDocument = gql`
   unmuteMonitor(id: $id) {
     id
     muted
+    name
   }
 }
     `;
@@ -1410,3 +1432,39 @@ export function useCheckValidHaProxyLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type CheckValidHaProxyQueryHookResult = ReturnType<typeof useCheckValidHaProxyQuery>;
 export type CheckValidHaProxyLazyQueryHookResult = ReturnType<typeof useCheckValidHaProxyLazyQuery>;
 export type CheckValidHaProxyQueryResult = Apollo.QueryResult<ICheckValidHaProxyQuery, ICheckValidHaProxyQueryVariables>;
+export const GetServerCountDocument = gql`
+    query GetServerCount($id: ID!) {
+  serverCount: getServerCount(id: $id) {
+    online
+    total
+  }
+}
+    `;
+
+/**
+ * __useGetServerCountQuery__
+ *
+ * To run a query within a React component, call `useGetServerCountQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetServerCountQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetServerCountQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetServerCountQuery(baseOptions: Apollo.QueryHookOptions<IGetServerCountQuery, IGetServerCountQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<IGetServerCountQuery, IGetServerCountQueryVariables>(GetServerCountDocument, options);
+      }
+export function useGetServerCountLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<IGetServerCountQuery, IGetServerCountQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<IGetServerCountQuery, IGetServerCountQueryVariables>(GetServerCountDocument, options);
+        }
+export type GetServerCountQueryHookResult = ReturnType<typeof useGetServerCountQuery>;
+export type GetServerCountLazyQueryHookResult = ReturnType<typeof useGetServerCountLazyQuery>;
+export type GetServerCountQueryResult = Apollo.QueryResult<IGetServerCountQuery, IGetServerCountQueryVariables>;

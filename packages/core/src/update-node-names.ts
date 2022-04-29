@@ -1,13 +1,21 @@
 import { connect, disconnect } from "mongoose";
 import { NodesModel } from "./models";
 
-const getNodeName = async (hostName: string, chainName: string): Promise<string> => {
+const getNodeName = async (
+  hostName: string,
+  chainName: string,
+  frontend: boolean,
+): Promise<string> => {
   const name = `${hostName}/${chainName}`;
-  const count = String((await NodesModel.count({ name: { $regex: name } })) + 1).padStart(
-    2,
-    "0",
-  );
-  return `${name}/${count}`;
+
+  if (frontend) {
+    return `frontend-${name}`;
+  } else {
+    const count = String(
+      (await NodesModel.count({ name: { $regex: name } })) + 1,
+    ).padStart(2, "0");
+    return `${name}/${count}`;
+  }
 };
 
 /* ------ Script Function Begins ------ */
@@ -22,7 +30,7 @@ const getNodeName = async (hostName: string, chainName: string): Promise<string>
     .exec();
 
   for await (const node of nodes) {
-    const name = await getNodeName(node.host.name, node.chain.name);
+    const name = await getNodeName(node.host.name, node.chain.name, !!node.frontend);
     await NodesModel.updateOne({ _id: node.id }, { name });
     console.log({ name });
     nodesUpdated++;

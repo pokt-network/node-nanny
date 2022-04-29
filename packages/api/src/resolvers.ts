@@ -44,6 +44,9 @@ const resolvers = {
     checkValidHaProxy: async (_, { input }) => {
       return await new AutomationService().checkValidHaProxy(input);
     },
+    getServerCount: async (_, { id }) => {
+      return await new AutomationService().getServerCountForUi(id);
+    },
   },
 
   Mutation: {

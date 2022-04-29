@@ -43,7 +43,7 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
   });
 
   useEffect(() => {
-    if (nodeIds?.length) submit({ variables: { input: getQueryVars() } });
+    submit({ variables: { input: getQueryVars() } });
   }, [logPeriod, submit, getQueryVars, nodeIds]);
 
   useEffect(() => {

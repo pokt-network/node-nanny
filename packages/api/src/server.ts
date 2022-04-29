@@ -1,5 +1,6 @@
 import { ApolloServer } from "apollo-server";
 import { connect, disconnect } from "@pokt-foundation/node-nanny-core/dist/db";
+import env from "@pokt-foundation/node-nanny-core/dist/environment";
 
 import resolvers from "./resolvers";
 import typeDefs from "./schema";
@@ -11,7 +12,7 @@ import typeDefs from "./schema";
   console.log(`MongoDB connection established ...`);
 
   const cors = { origin: true, credentials: true };
-  const port = 4000;
+  const port = env("BACKEND_PORT");
   await new ApolloServer({ typeDefs, resolvers, cors }).listen({ port });
   console.log(`🚀 GraphQL server listening on ${port}`);
 })();
