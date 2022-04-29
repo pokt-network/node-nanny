@@ -1,6 +1,8 @@
 import { Schema, model, Document, PaginateModel, PaginateResult } from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 
+import env from "../environment";
+
 interface LogDocument extends Document, ILog {}
 
 export type IPaginatedLogs = PaginateResult<ILog>;
@@ -14,7 +16,7 @@ export interface ILog {
 
 const logSchema = new Schema<ILog>(
   {
-    timestamp: Schema.Types.Date,
+    timestamp: { type: Schema.Types.Date, expiresAt: env("MONGO_MAX_LOG_DAYS") },
     label: String,
     level: String,
     message: String,
