@@ -117,13 +117,11 @@ const typeDefs = gql`
     chain: String!
     host: String!
     name: String!
-    loadBalancers: [String!]!
     port: String!
     automation: Boolean!
     backend: String
-    frontend: String
+    loadBalancers: [String!]!
     server: String
-    basicAuth: String
   }
 
   input HostCSVInput {

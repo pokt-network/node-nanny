@@ -4,8 +4,9 @@ import { Fade, Modal, Box } from "@mui/material";
 import { modalStateVar } from "apollo";
 
 import { ConfirmationModal } from "./ConfirmationModal";
+import { CSVConfirmationModal } from "./CSVConfirmationModal";
 
-export type IModalTypes = "confirmation" | "hostsForm" | "nodesForm" | "locationsForm";
+export type IModalTypes = "confirmation" | "csvConfirmation";
 
 export interface IModalState {
   modalType: IModalTypes;
@@ -18,6 +19,7 @@ export interface IModalState {
 
 const MODAL_TYPES = {
   confirmation: ConfirmationModal,
+  csvConfirmation: CSVConfirmationModal,
 };
 
 export function RootModal() {
@@ -43,6 +45,11 @@ export function RootModal() {
   const open: boolean = !!modalType;
   const SpecifiedModal = MODAL_TYPES[modalType];
 
+  const maxWidth = {
+    confirmation: "600px",
+    csvConfirmation: "90%",
+  }[modalType];
+
   return (
     <Modal
       aria-labelledby={`${modalType}-modal`}
@@ -58,7 +65,7 @@ export function RootModal() {
       }}
     >
       <Fade in={open}>
-        <Box sx={{ m: 2, width: "100%", maxWidth: "600px" }}>
+        <Box sx={{ m: 2, width: "100%", maxWidth, maxHeight: "90%" }}>
           <SpecifiedModal {...modalProps} />
         </Box>
       </Fade>
