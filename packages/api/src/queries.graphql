@@ -44,7 +44,7 @@ query Node($id: ID!) {
       id
       name
     }
-    haProxy
+    automation
     dispatch
     chain {
       id
@@ -74,7 +74,7 @@ query Nodes {
       id
       name
     }
-    haProxy
+    automation
     dispatch
     chain {
       id
