@@ -193,9 +193,7 @@ export type INode = {
 export type INodeCsvInput = {
   automation: Scalars['Boolean'];
   backend?: InputMaybe<Scalars['String']>;
-  basicAuth?: InputMaybe<Scalars['String']>;
   chain: Scalars['String'];
-  frontend?: InputMaybe<Scalars['String']>;
   host: Scalars['String'];
   https: Scalars['Boolean'];
   loadBalancers: Array<Scalars['String']>;

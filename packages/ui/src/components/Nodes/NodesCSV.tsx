@@ -200,7 +200,7 @@ export const NodesCSV = ({
       .map((lb) => lb.trim())
       .filter(Boolean);
 
-  const handleOpenCSVConfirmationModal = (modalProps) => {
+  const handleOpenCSVConfirmationModal = (modalProps: ConfirmationModalProps) => {
     ModalHelper.open({
       modalType: "csvConfirmation",
       modalProps,
