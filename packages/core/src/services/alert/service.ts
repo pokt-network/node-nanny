@@ -234,14 +234,13 @@ export class Service {
   }
 
   getRotationMessage(
-    { backend, chain, host, loadBalancers }: INode,
+    { backend, loadBalancers, name }: INode,
     enable: boolean,
     mode: "success" | "error",
     nodesOnline: number,
     nodesTotal: number,
     error?: any,
   ): { title: string; message: string } {
-    const name = `${host.name}/${chain.name}`;
     const haProxyMessage = this.getHAProxyMessage({
       destination: backend,
       loadBalancers,
