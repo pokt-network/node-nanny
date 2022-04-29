@@ -8,7 +8,7 @@ export interface INodeInput {
   url: string;
   loadBalancers: Types.ObjectId[];
   port: number;
-  haProxy: boolean;
+  automation: boolean;
   backend?: string;
   frontend?: string;
   server?: string;
@@ -22,7 +22,7 @@ export interface INodeCsvInput {
   name: string;
   loadBalancers: string[];
   port: number;
-  haProxy: boolean;
+  automation: boolean;
   backend?: string;
   frontend?: string;
   server?: string;
@@ -54,7 +54,7 @@ export interface INodeUpdate {
   url?: string;
   loadBalancers?: string[];
   port?: number;
-  haProxy?: boolean;
+  automation?: boolean;
   backend?: string;
   frontend?: string;
   server?: string;

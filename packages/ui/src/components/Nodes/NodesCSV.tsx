@@ -25,7 +25,7 @@ import Title from "components/Title";
 interface ICSVNode {
   https: string;
   chain: string;
-  haProxy: string;
+  automation: string;
   host: string;
   loadBalancers: string;
   port: string;
@@ -60,7 +60,7 @@ export const NodesCSV = ({
     "host",
     "https",
     "port",
-    "haProxy",
+    "automation",
     "backend",
     "loadBalancers",
     "server",
@@ -79,8 +79,8 @@ export const NodesCSV = ({
     host: (host: string) => !!host && validHosts?.includes(host.toLowerCase()),
     https: (https: string) =>
       https.toLowerCase() === "false" || https.toLowerCase() === "true",
-    haProxy: (haProxy: string) =>
-      haProxy.toLowerCase() === "true" || haProxy.toLowerCase() === "false",
+    automation: (automation: string) =>
+      automation.toLowerCase() === "true" || automation.toLowerCase() === "false",
     loadBalancers: (loadBalancers: string) =>
       !loadBalancers?.length ||
       loadBalancers
@@ -160,7 +160,7 @@ export const NodesCSV = ({
           ?.toLowerCase()
           .split(",")
           .map((lb) => lb.trim()),
-        haProxy: Boolean(node.haProxy),
+        automation: Boolean(node.automation),
       };
     });
 
