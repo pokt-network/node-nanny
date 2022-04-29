@@ -147,6 +147,7 @@ export const NodeForm = ({
     }
     return errors;
   };
+
   const {
     values,
     errors,
@@ -263,14 +264,11 @@ export const NodeForm = ({
       selectedNode.loadBalancers.map(({ id }) => id),
     );
     setFieldValue("name", selectedNode.name);
-    setFieldValue("port", Number(selectedNode.port));
+    setFieldValue("port", selectedNode.port);
     setFieldValue("backend", selectedNode.backend);
     setFieldValue("frontend", selectedNode.frontend);
     setFieldValue("server", selectedNode.server);
-    setFieldValue(
-      "automation",
-      typeof selectedNode.automation === "boolean" ? selectedNode.automation : false,
-    );
+    setFieldValue("automation", selectedNode.automation);
   }, [setFieldValue, selectedNode]);
 
   const handleResetRefs = useCallback(() => {
@@ -344,7 +342,6 @@ export const NodeForm = ({
       setLoading(false);
     },
     onError: (error) => {
-      console.log({ error });
       setBackendError(error.message);
       setLoading(false);
     },

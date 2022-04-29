@@ -1,40 +1,28 @@
-import { Dispatch, useEffect, useState } from "react";
+import { Dispatch, useState } from "react";
 import { ApolloQueryResult } from "@apollo/client";
 import CSVReader from "react-csv-reader";
-import {
-  Alert,
-  AlertTitle,
-  Box,
-  Button,
-  CircularProgress,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, Button, Typography } from "@mui/material";
 
-import {
-  IGetHostsChainsAndLoadBalancersQuery,
-  INodeCsvInput,
-  INodesQuery,
-  useCreateNodesCsvMutation,
-} from "types";
-import { ModalHelper, parseBackendError, regexTest, s } from "utils";
+import { IGetHostsChainsAndLoadBalancersQuery, INodesQuery } from "types";
+import { ModalHelper, regexTest, s } from "utils";
 import { NodeActionsState } from "pages/Nodes";
-import Table from "components/Table";
+
 import Paper from "components/Paper";
 import Title from "components/Title";
+import { ConfirmationModalProps } from "components/modals/CSVConfirmationModal";
 
 interface ICSVNode {
   https: string;
   chain: string;
-  automation: string;
   host: string;
-  loadBalancers: string;
   port: string;
+  automation: string;
+  loadBalancers?: string;
   backend?: string;
-  frontend?: string;
   server?: string;
 }
 
-interface NodesCSVProps {
+export interface NodesCSVProps {
   formData: IGetHostsChainsAndLoadBalancersQuery;
   nodeNames: string[];
   hostPortCsvCombos: string[];
@@ -49,9 +37,7 @@ export const NodesCSV = ({
   refetchNodes,
   setState,
 }: NodesCSVProps) => {
-  const [nodes, setNodes] = useState<INodeCsvInput[]>(undefined);
   const [nodesError, setNodesError] = useState<string>("");
-  const [backendError, setBackendError] = useState<string>("");
 
   /* ----- Table Options ---- */
   const columnsOrder = [
@@ -64,7 +50,6 @@ export const NodesCSV = ({
     "backend",
     "loadBalancers",
     "server",
-    "frontend",
   ];
 
   /* ----- CSV Validation ----- */
@@ -74,28 +59,66 @@ export const NodesCSV = ({
     ?.filter(({ fqdn }) => Boolean(fqdn))
     .map(({ name }) => name);
   const validLoadBalancers = loadBalancers?.map(({ name }) => name);
-  const schema = {
-    chain: (chain: string) => !!chain && validChains?.includes(chain.toUpperCase()),
-    host: (host: string) => !!host && validHosts?.includes(host.toLowerCase()),
-    https: (https: string) =>
-      https.toLowerCase() === "false" || https.toLowerCase() === "true",
-    automation: (automation: string) =>
-      automation.toLowerCase() === "true" || automation.toLowerCase() === "false",
-    loadBalancers: (loadBalancers: string) =>
-      !loadBalancers?.length ||
-      loadBalancers
-        .toLowerCase()
-        .split(",")
-        .map((lb) => lb.trim())
-        .every((lb: string) => validLoadBalancers?.includes(lb)),
-    port: (port: string) => regexTest(port, "port"),
+
+  const schema: { [key: string]: (value: string, node?: any) => string } = {
+    chain: (chain) => {
+      if (!chain) return "Chain is required";
+      if (!validChains?.includes(chain.toUpperCase())) {
+        return `${chain} is not a valid chain`;
+      }
+    },
+    host: (host) => {
+      if (!host) return "Host is required";
+      if (!validHosts?.includes(host.toLowerCase())) {
+        return `${host} is not a valid host`;
+      }
+    },
+    https: (https) => {
+      if (https.toLowerCase() !== "false" && https.toLowerCase() !== "true") {
+        return "https must be true or false";
+      }
+    },
+    port: (port) => {
+      if (!port) return "Port is required";
+      if (!regexTest(port, "port")) return "Not a valid port";
+    },
+    automation: (automation) => {
+      if (automation.toLowerCase() !== "false" && automation.toLowerCase() !== "true") {
+        return "automation must be true or false";
+      }
+    },
+    backend: (backend, node) => {
+      if (node.automation.toLowerCase() === "true" && !backend) {
+        return "Backend is required if automation is enabled";
+      }
+    },
+    server: (server, node) => {
+      if (node.automation.toLowerCase() === "true" && !server) {
+        return "Server is required if automation is enabled";
+      }
+    },
+    loadBalancers: (loadBalancers, node) => {
+      const lbs = splitLoadBalancers(loadBalancers);
+      if (node.automation.toLowerCase() === "true" && !lbs?.length) {
+        return "At least one loadBalancer is required if automation is enabled";
+      }
+      const invalidLbs = lbs.filter((lb: string) => !validLoadBalancers?.includes(lb));
+      if (invalidLbs?.length) {
+        return `Invalid load balancer names: ${invalidLbs.join(", ")}`;
+      }
+    },
   };
-  const validate = (node: any, schema: { [key: string]: (value: string) => boolean }) =>
-    Object.keys(schema).filter((key) => !schema[key](node[key]));
+
+  const validateCsvNodeInput = (
+    node: any,
+    schema: { [key: string]: (value: string, node?: any) => string },
+  ) =>
+    Object.keys(schema)
+      .filter((key) => !!schema[key](node[key], node))
+      .map((key) => `${key}: ${schema[key](node[key], node)}`);
 
   /* ----- CSV Parsing ----- */
   const parseNodesCSV = (nodesData: ICSVNode[]) => {
-    setBackendError("");
     setNodesError("");
     const requiredFields = Object.keys(schema);
     const nodesMissingRequiredFields = nodesData.filter(
@@ -126,68 +149,62 @@ export const NodesCSV = ({
       const count = String(counts[nodeName]).padStart(2, "0");
       nodeName = `${nodeName}/${count}`;
 
-      const invalidFields = validate(node, schema);
+      /* ---- Validate Nodes CSV ---- */
+      const invalidFields = validateCsvNodeInput(node, schema);
+
       if (node.https.toLowerCase() === "true" && !hostsWithFqdn.includes(node.host)) {
-        invalidFields.push(
-          `[${nodeName}]: Host does not have an FQDN; HTTPS is not allowed without an FQDN.`,
-        );
-      }
-      if (invalidFields.length) {
-        invalidNodes.push(
-          `Invalid Field${s(invalidFields.length)}: [${nodeName}]: ${invalidFields.join(
-            "\n",
-          )}`,
-        );
-      }
-      if (nodeNames.includes(nodeName)) {
-        invalidNodes.push(`[${nodeName}]: Node name is already taken.`);
+        invalidFields.push(`https: Host does not have an FQDN`);
       }
       if (hostPortCsvCombos.includes(`${node.host}/${node.port}`)) {
-        invalidNodes.push(`[${nodeName}]: Host/port combination is already taken.`);
+        invalidFields.push(`host: Host/port combination is already taken`);
       }
-      if (node.backend && node.frontend) {
-        invalidNodes.push(
-          `[${nodeName}]: Node may only have backend or frontend, not both.`,
-        );
+
+      if (invalidFields.length) {
+        invalidNodes.push(`[${nodeName}]: ${invalidFields.join("\n")}`);
       }
+
       return {
-        ...node,
-        https: Boolean(node.https.toLowerCase() === "true"),
+        backend: node.backend,
+        port: node.port,
+        server: node.server,
+        name: nodeName,
         chain: node.chain.toUpperCase(),
         host: node.host.toLowerCase(),
-        name: nodeName,
-        loadBalancers: node.loadBalancers
-          ?.toLowerCase()
-          .split(",")
-          .map((lb) => lb.trim()),
-        automation: Boolean(node.automation),
+        https: Boolean(node.https.toLowerCase() === "true"),
+        automation: Boolean(node.automation.toLowerCase() === "true"),
+        loadBalancers: splitLoadBalancers(node.loadBalancers),
       };
     });
 
+    const modalProps: ConfirmationModalProps = {
+      type: "Node",
+      data: parsedNodes,
+      dataError: nodesError,
+      columnsOrder,
+      refetch: refetchNodes,
+      setState,
+    };
+
     if (invalidNodes.length) {
-      setNodesError(invalidNodes.join("\n"));
-      setNodes(parsedNodes);
+      modalProps.dataError = invalidNodes.join("\n");
+      handleOpenCSVConfirmationModal(modalProps);
     } else {
-      setNodes(parsedNodes);
+      handleOpenCSVConfirmationModal(modalProps);
     }
   };
 
-  /* ----- Submit Mutation ----- */
-  const [submit, { error, loading }] = useCreateNodesCsvMutation({
-    onCompleted: () => {
-      refetchNodes();
-      ModalHelper.close();
-    },
-  });
+  const splitLoadBalancers = (loadBalancers: string) =>
+    loadBalancers
+      ?.toLowerCase()
+      .split(",")
+      .map((lb) => lb.trim())
+      .filter(Boolean);
 
-  useEffect(() => {
-    if (error) setBackendError(parseBackendError(error));
-  }, [error]);
-
-  const submitCSV = () => {
-    if (!nodesError && !backendError && nodes) {
-      submit({ variables: { nodes } });
-    }
+  const handleOpenCSVConfirmationModal = (modalProps) => {
+    ModalHelper.open({
+      modalType: "csvConfirmation",
+      modalProps,
+    });
   };
 
   return (
@@ -207,59 +224,11 @@ export const NodesCSV = ({
         <Alert severity="warning" sx={{ mb: 4 }}>
           Please do not navigate away, refresh or close this window during this time.
         </Alert>
-        <CSVReader
-          onFileLoaded={parseNodesCSV}
-          parserOptions={{ header: true, skipEmptyLines: true }}
-        />
-        {nodesError && (
-          <Alert severity="error" style={{ overflow: "scroll", maxHeight: 200 }}>
-            <AlertTitle>
-              Warning: There were one or more issues with your CSV format. Please correct
-              the following issues before attempting to create nodes via CSV.
-            </AlertTitle>
-            {nodesError.includes("\n") ? (
-              nodesError.split("\n").map((error) => <Typography>{error}</Typography>)
-            ) : (
-              <Typography>{nodesError}</Typography>
-            )}
-          </Alert>
-        )}
-        {backendError && (
-          <Alert severity="error">
-            <AlertTitle>Backend error: {backendError}</AlertTitle>
-          </Alert>
-        )}
-        {nodes && (
-          <div>
-            <Table
-              type={`Adding ${nodes.length} Node${nodes.length === 1 ? "" : "s"}`}
-              rows={nodes}
-              columnsOrder={columnsOrder}
-              numPerPage={10}
-            />
-          </div>
-        )}
-        <Box
-          sx={{
-            marginTop: 4,
-            textAlign: "center",
-            "& button": { margin: 1 },
-          }}
-        >
-          <Button
-            disabled={Boolean(!nodes || nodesError || backendError)}
-            onClick={submitCSV}
-            variant="contained"
-            color="primary"
-          >
-            {loading ? (
-              <CircularProgress size={20} style={{ color: "white" }} />
-            ) : !nodes?.length ? (
-              "No nodes"
-            ) : (
-              `Add ${nodes.length} Node${s(nodes.length)}`
-            )}
-          </Button>
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <CSVReader
+            onFileLoaded={parseNodesCSV}
+            parserOptions={{ header: true, skipEmptyLines: true }}
+          />
           <Button
             onClick={() => setState(NodeActionsState.Info)}
             variant="outlined"
