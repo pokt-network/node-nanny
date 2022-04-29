@@ -16,7 +16,6 @@ import {
   MenuItem,
   OutlinedInput,
   Select,
-  Snackbar,
   Switch,
   TextField,
 } from "@mui/material";
@@ -31,7 +30,7 @@ import {
   useUpdateNodeMutation,
   useDeleteNodeMutation,
 } from "types";
-import { ModalHelper, s } from "utils";
+import { ModalHelper, s, SnackbarHelper } from "utils";
 import Form from "components/Form";
 import { NodeActionsState } from "pages/Nodes";
 
@@ -74,20 +73,6 @@ export const NodeForm = ({
   const chainRef = useRef<HTMLInputElement>();
   const hostRef = useRef<HTMLInputElement>();
   const loadBalancersRef = useRef<HTMLInputElement>();
-
-  /* ----- Snackbar ----- */
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarText, setSnackbarText] = useState("");
-
-  const handleOpenSnackbar = (text: string) => {
-    setSnackbarOpen(true);
-    setSnackbarText(text);
-  };
-
-  const handleCloseSnackbar = (_, reason?: string) => {
-    if (reason === "clickaway") return;
-    setSnackbarOpen(false);
-  };
 
   /* ----- Form Validation ----- */
   const handleFormSubmit = async () => {
@@ -350,12 +335,13 @@ export const NodeForm = ({
       },
     },
     onCompleted: ({ createNode }) => {
-      handleOpenSnackbar(`Node ${createNode.name} successfully created!`);
+      SnackbarHelper.open({ text: `Node ${createNode.name} successfully created!` });
       resetForm();
       refetchNodes();
       setLoading(false);
     },
     onError: (error) => {
+      console.log({ error });
       setBackendError(error.message);
       setLoading(false);
     },
@@ -371,7 +357,7 @@ export const NodeForm = ({
       },
     },
     onCompleted: ({ updateNode }) => {
-      handleOpenSnackbar(`Node ${updateNode.name} successfully updated!`);
+      SnackbarHelper.open({ text: `Node ${updateNode.name} successfully updated!` });
       resetForm();
       refetchNodes();
       setLoading(false);
@@ -383,7 +369,8 @@ export const NodeForm = ({
   });
 
   const [submitDelete, { error: deleteNodeError }] = useDeleteNodeMutation({
-    onCompleted: () => {
+    onCompleted: ({ deleteNode }) => {
+      SnackbarHelper.open({ text: `Node ${deleteNode.name} successfully deleted!` });
       refetchNodes();
       ModalHelper.close();
     },
@@ -507,12 +494,16 @@ export const NodeForm = ({
           <Box>
             <FormControlLabel
               control={
-                <Switch
-                  name="https"
-                  checked={values.https}
-                  onChange={handleChange}
-                  disabled={read || !hostHasFqdn}
-                />
+                read && !selectedNode ? (
+                  <></>
+                ) : (
+                  <Switch
+                    name="https"
+                    checked={values.https}
+                    onChange={handleChange}
+                    disabled={read || !hostHasFqdn}
+                  />
+                )
               }
               label={
                 read || !values.host
@@ -541,7 +532,15 @@ export const NodeForm = ({
             <FormControl fullWidth disabled={read}>
               <InputLabel>Automation</InputLabel>
               <Box>
-                <Switch name="haProxy" checked={values.haProxy} onChange={handleChange} />
+                {read && !selectedNode ? (
+                  <></>
+                ) : (
+                  <Switch
+                    name="haProxy"
+                    checked={values.haProxy}
+                    onChange={handleChange}
+                  />
+                )}
               </Box>
             </FormControl>
             {values.haProxy && (
@@ -695,6 +694,7 @@ export const NodeForm = ({
               variant="contained"
               onClick={handleSubmit as any}
               disabled={frontend && frontendExists}
+              sx={{ width: 125, height: 36.5 }}
             >
               {loading ? (
                 <CircularProgress size={20} />
@@ -719,6 +719,7 @@ export const NodeForm = ({
               onClick={() => setState(NodeActionsState.Edit)}
               variant="contained"
               color="primary"
+              sx={{ width: 125, height: 36.5 }}
             >
               Update Node
             </Button>
@@ -727,17 +728,6 @@ export const NodeForm = ({
             </Button>
           </Box>
         )}
-
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={6000}
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
-          onClose={handleCloseSnackbar}
-        >
-          <Alert severity="success" sx={{ width: "100%" }}>
-            {snackbarText}
-          </Alert>
-        </Snackbar>
 
         {backendError && (
           <Alert severity="error">
