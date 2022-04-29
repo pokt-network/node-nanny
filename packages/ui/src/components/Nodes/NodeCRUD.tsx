@@ -1,4 +1,14 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import {
+  Alert,
+  AlertTitle,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Grid,
+  Typography,
+} from "@mui/material";
 
 import Paper from "components/Paper";
 import Title from "components/Title";
@@ -11,22 +21,14 @@ import {
   useDisableHaProxyServerMutation,
   useEnableHaProxyServerMutation,
   useGetNodeStatusLazyQuery,
+  useGetServerCountLazyQuery,
   useMuteMonitorMutation,
   useUnmuteMonitorMutation,
 } from "types";
-import { ModalHelper } from "utils";
+import { ModalHelper, SnackbarHelper } from "utils";
 import text from "utils/monitor-text";
 
 import { ApolloQueryResult } from "@apollo/client";
-
-import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
-import Alert from "@mui/material/Alert";
-import AlertTitle from "@mui/material/AlertTitle";
-import CircularProgress from "@mui/material/CircularProgress";
-import Button from "@mui/material/Button";
-import Chip from "@mui/material/Chip";
-import Typography from "@mui/material/Typography";
 
 interface NodeCRUDProps {
   node: INode;
@@ -53,27 +55,37 @@ export const NodeCRUD = ({
 }: NodeCRUDProps) => {
   const [title, setTitle] = useState("Select Node To View Status");
 
-  const [getStatus, { data, error: getHaProxyStatusError, loading }] =
+  const [getStatus, { data, error: getStatusError, loading }] =
     useGetNodeStatusLazyQuery();
+  const [getServerCount, { data: serverCountData, loading: serverCountLoading }] =
+    useGetServerCountLazyQuery();
   const [enable, { error: enableHaProxyError }] = useEnableHaProxyServerMutation({
-    onCompleted: () => getStatus(),
+    onCompleted: () => {
+      SnackbarHelper.open({ text: "Node successfully added to rotation." });
+      getStatus();
+    },
   });
   const [disable, { error: disableHaProxyError }] = useDisableHaProxyServerMutation({
-    onCompleted: () => getStatus(),
+    onCompleted: () => {
+      SnackbarHelper.open({ text: "Node successfully removed from rotation." });
+      getStatus();
+    },
   });
 
   useEffect(() => {
-    getStatus({ variables: { id: node?.id } });
-  }, [node, getStatus]);
+    if (node?.haProxy && !node?.frontend) {
+      getStatus({ variables: { id: node.id } });
+    }
+    if (node?.haProxy || node?.frontend) {
+      getServerCount({ variables: { id: node.id } });
+    }
+  }, [node, getStatus, getServerCount]);
 
   const haProxyOnline = { "0": true, "1": false, "-1": "n/a" }[
     String(data?.haProxyStatus)
   ];
   const haProxyButtonDisabled =
-    !node?.haProxy ||
-    loading ||
-    !!getHaProxyStatusError ||
-    typeof haProxyOnline !== "boolean";
+    !node?.haProxy || loading || !!getStatusError || typeof haProxyOnline !== "boolean";
   const haProxyButtonText = `${haProxyOnline ? "Remove" : "Add"} Node ${
     haProxyOnline ? "from" : "to"
   } Rotation`;
@@ -89,15 +101,17 @@ export const NodeCRUD = ({
 
   const [muteMonitor, { error: muteMonitorError }] = useMuteMonitorMutation({
     onCompleted: ({ muteMonitor }) => {
+      SnackbarHelper.open({ text: `Node ${muteMonitor.name} successfully muted.` });
       const { muted } = muteMonitor;
-      setSelectedNode({ ...node!, muted });
+      setSelectedNode({ ...node, muted });
       ModalHelper.close();
     },
   });
   const [unmuteMonitor, { error: unmuteMonitorError }] = useUnmuteMonitorMutation({
     onCompleted: ({ unmuteMonitor }) => {
+      SnackbarHelper.open({ text: `Node ${muteMonitor.name} successfully unmuted.` });
       const { muted } = unmuteMonitor;
-      setSelectedNode({ ...node!, muted });
+      setSelectedNode({ ...node, muted });
       ModalHelper.close();
     },
   });
@@ -148,7 +162,7 @@ export const NodeCRUD = ({
       setTitle("Select Node To View Status");
     }
     if (type === "info" && node) {
-      setTitle("Selected Node");
+      setTitle(`Selected ${node.frontend ? "Frontend" : "Node"}`);
     }
   }, [node, type]);
 
@@ -196,8 +210,9 @@ export const NodeCRUD = ({
             sx={{
               width: "auto",
               display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
+              flexDirection: "column",
+              alignItems: "space-between",
+              justifyContent: "center",
               gap: 1,
               p: 2,
               mb: 2,
@@ -205,20 +220,55 @@ export const NodeCRUD = ({
               backgroundColor: "background.default",
             }}
           >
-            <Typography>Status &#38; Condition</Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Chip
-                sx={{
-                  height: "10px",
-                  width: "10px",
-                }}
-                color={
-                  ({ OK: "success", ERROR: "error" }[node.status] as any) ||
-                  ("default" as any)
-                }
-              />
-              <Typography>{node.conditions}</Typography>
+            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+              <Typography>Status &#38; Condition</Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Chip
+                  sx={{
+                    height: "10px",
+                    width: "10px",
+                  }}
+                  color={
+                    ({ OK: "success", ERROR: "error" }[node.status] as any) ||
+                    ("default" as any)
+                  }
+                />
+                <Typography>{node.conditions}</Typography>
+              </Box>
             </Box>
+            {(node.haProxy || node.frontend) && (
+              <>
+                {node.haProxy && (
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Typography>Load Balancer Status</Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Chip
+                        sx={{
+                          height: "10px",
+                          width: "10px",
+                        }}
+                        color={loading ? "default" : haProxyOnline ? "success" : "error"}
+                      />
+                      <Typography>
+                        {loading ? "..." : haProxyOnline ? "ONLINE" : "OFFLINE"}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Typography>{`${
+                    node.frontend ? "Frontend" : "Backend"
+                  } Stats`}</Typography>
+                  <Typography>
+                    {serverCountLoading && !serverCountData
+                      ? "..."
+                      : !serverCountData?.serverCount
+                      ? "Unable to fetch server count"
+                      : `${serverCountData.serverCount.online} of ${serverCountData.serverCount.total} Online`}
+                  </Typography>
+                </Box>
+              </>
+            )}
           </Box>
         )}
         <NodeForm
@@ -235,11 +285,11 @@ export const NodeCRUD = ({
           setState={setState}
         />
       </Box>
-      {node && type !== "create" && getHaProxyStatusError && (
+      {node && type !== "create" && getStatusError && (
         <Box sx={{ marginTop: 2 }}>
           <Alert severity="error">
             <AlertTitle>{"Error fetching HAProxy status"}</AlertTitle>
-            {getHaProxyStatusError.message}
+            {getStatusError.message}
           </Alert>
         </Box>
       )}
