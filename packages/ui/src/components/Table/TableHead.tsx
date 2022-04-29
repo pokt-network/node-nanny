@@ -1,12 +1,12 @@
-import { MouseEvent } from "react"
+import { MouseEvent } from "react";
 
-import { Order, getSortedColumns } from "./Table"
+import { Order, getSortedColumns } from "./Table";
 import { formatHeaderCell } from "utils";
 
-import MuiTableHead from "@mui/material/TableHead"
-import TableRow from "@mui/material/TableRow"
-import TableCell from "@mui/material/TableCell"
-import TableSortLabel from "@mui/material/TableSortLabel"
+import MuiTableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import TableCell from "@mui/material/TableCell";
+import TableSortLabel from "@mui/material/TableSortLabel";
 
 interface EnhancedTableProps {
   rows: any[];
@@ -14,7 +14,7 @@ interface EnhancedTableProps {
   orderBy: string;
   columnsOrder: string[];
   onRequestSort: (event: MouseEvent<unknown>, property: any) => void;
-  expandable?: boolean
+  expandable?: boolean;
 }
 
 export const TableHead = ({
@@ -23,7 +23,7 @@ export const TableHead = ({
   orderBy,
   columnsOrder,
   onRequestSort,
-  expandable
+  expandable,
 }: EnhancedTableProps) => {
   const createSortHandler = (property: any) => (event: MouseEvent<unknown>) => {
     onRequestSort(event, property);
@@ -40,23 +40,30 @@ export const TableHead = ({
         {expandable && (
           <TableCell
             align="left"
-            sx={{ backgroundColor: "transparent", color: "secondary.main", fontWeight: "bold" }}
-          >
-          </TableCell>
+            sx={{
+              backgroundColor: "#252F3A",
+              color: "secondary.main",
+              fontWeight: "bold",
+            }}
+          ></TableCell>
         )}
         {headCells.map((headCell, i) => (
           <TableCell
             key={headCell.id ?? i}
             align={!i ? "left" : "right"}
             sortDirection={orderBy === headCell.id ? order : false}
-            sx={{ backgroundColor: "transparent", color: "secondary.main", fontWeight: "bold" }}
+            sx={{
+              backgroundColor: "#252F3A",
+              color: "secondary.main",
+              fontWeight: "bold",
+            }}
           >
             <TableSortLabel
               active={orderBy === headCell.id}
               direction={orderBy === headCell.id ? order : "asc"}
               onClick={createSortHandler(headCell.id)}
               sx={{
-                whiteSpace: "nowrap"
+                whiteSpace: "nowrap",
               }}
             >
               {headCell.label}
@@ -66,6 +73,6 @@ export const TableHead = ({
       </TableRow>
     </MuiTableHead>
   );
-}
+};
 
-export default TableHead
+export default TableHead;

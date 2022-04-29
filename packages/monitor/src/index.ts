@@ -37,9 +37,8 @@ export class App {
     console.log(`📺 Monitor running. Monitoring ${nodes.length} node${s(nodes.length)}`);
 
     for await (const node of nodes) {
-      const { id, host, name } = node;
-      const ddLogGroupName = `${host.name}/${name}`;
-      const logger = this.log.init(id, ddLogGroupName);
+      const { id, name } = node;
+      const logger = this.log.init(id, name.toLowerCase());
 
       setInterval(async () => {
         /* Get Node health */
