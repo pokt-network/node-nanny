@@ -46,11 +46,13 @@ mutation UpdateNode($update: NodeUpdate!) {
 mutation DeleteHost($id: ID!) {
   deleteHost(id: $id) {
     id
+    name
   }
 }
 mutation DeleteNode($id: ID!) {
   deleteNode(id: $id) {
     id
+    name
   }
 }
 
@@ -58,12 +60,14 @@ mutation MuteMonitor($id: ID!) {
   muteMonitor(id: $id) {
     id
     muted
+    name
   }
 }
 mutation UnmuteMonitor($id: ID!) {
   unmuteMonitor(id: $id) {
     id
     muted
+    name
   }
 }
 mutation EnableHaProxyServer($id: ID!) {
