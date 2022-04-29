@@ -135,7 +135,7 @@ export const Table = <T extends unknown>({
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filter, setFilter] = useState<string>("All");
 
-  const handleRequestSort = (_event: MouseEvent<unknown>, property: any) => {
+  const handleRequestSort = (_: MouseEvent<unknown>, property: any) => {
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
@@ -171,16 +171,18 @@ export const Table = <T extends unknown>({
   }, [rows]);
 
   useEffect(() => {
-    if (allRows.length > 0) {
-      if (currRows.length === 0) {
-        setCurrRows(allRows);
-      }
-      // if we arent loading and the whole page is empty rows reset page to zero
-      if (!loading && emptyRows > 0 && emptyRows >= rowsPerPage) {
-        setPage(0);
+    if (type === "Log") {
+      if (allRows.length > 0) {
+        if (currRows.length === 0) {
+          setCurrRows(allRows);
+        }
+        // If we aren't loading and the whole page is empty rows reset page to zero
+        if (!loading && emptyRows > 0 && emptyRows >= rowsPerPage) {
+          setPage(0);
+        }
       }
     }
-  }, [currRows, allRows, page, rowsPerPage, emptyRows, loading]);
+  }, [currRows, allRows, page, rowsPerPage, emptyRows, loading, type]);
 
   useEffect(() => {
     let rows = allRows;
@@ -208,7 +210,12 @@ export const Table = <T extends unknown>({
     filterFunctions,
     filter,
     mapDisplay,
+    type,
   ]);
+
+  useEffect(() => {
+    if (type !== "Log") setPage(0);
+  }, [searchable, searchTerm, type]);
 
   const getHeaderText = (): string => {
     const filterString = !filterEnabled || filter === "All" ? "" : filter;
