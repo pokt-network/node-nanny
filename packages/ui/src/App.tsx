@@ -12,7 +12,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 
 import { Route, Routes } from "react-router-dom";
 import { Hosts, Logs, Nodes } from "./pages";
-import { Nav, RootModal } from "./components";
+import { Nav, RootModal, Snackbar } from "./components";
 
 const drawerWidth: number = 240;
 
@@ -80,6 +80,7 @@ function DashboardContent() {
   return (
     <ThemeProvider theme={mdTheme}>
       <RootModal />
+      <Snackbar />
       <Box
         sx={{
           display: "flex",

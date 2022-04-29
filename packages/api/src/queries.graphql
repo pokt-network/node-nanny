@@ -161,3 +161,10 @@ query GetNodeStatus($id: ID!) {
 query CheckValidHaProxy($input: NodeInput!) {
   validHaProxy: checkValidHaProxy(input: $input)
 }
+
+query GetServerCount($id: ID!) {
+  serverCount: getServerCount(id: $id) {
+    online
+    total
+  }
+}

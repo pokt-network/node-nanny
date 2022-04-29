@@ -60,7 +60,7 @@ export class Service extends BaseService {
 
   public async createNode(nodeInput: INodeInput, restart = true): Promise<INode> {
     let id: string;
-    const { https, ...rest } = nodeInput;
+    const { https, haProxy, frontend, ...rest } = nodeInput;
     const { fqdn } = await HostsModel.findOne({ _id: nodeInput.host });
 
     if (https && !fqdn) {
@@ -306,6 +306,17 @@ export class Service extends BaseService {
       return 0;
     }
     return 1;
+  }
+
+  async getServerCountForUi(id: string) {
+    const { backend, dispatch, frontend, loadBalancers, url } = await this.getNode(id);
+
+    return await this.getServerCount({
+      destination: frontend || backend,
+      loadBalancers,
+      dispatch,
+      frontendUrl: frontend ? url : null,
+    });
   }
 
   async checkValidHaProxy({
