@@ -19,7 +19,7 @@ export interface INode<Populated = true> {
   frontend?: string;
   server?: string;
   basicAuth?: string;
-  haProxy?: boolean;
+  automation?: boolean;
   dispatch?: boolean;
 }
 
@@ -46,7 +46,7 @@ const nodesSchema = new Schema<INode>(
     frontend: String,
     server: String,
     basicAuth: String,
-    haProxy: Boolean,
+    automation: Boolean,
     dispatch: Boolean,
   },
   { timestamps: true },
