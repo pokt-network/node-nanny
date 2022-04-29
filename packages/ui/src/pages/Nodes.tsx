@@ -34,27 +34,16 @@ export function Nodes() {
 
   /* ----- Table Options ---- */
   const filterOptions = {
-    filters: ["All", "Healthy", "Error", "Muted", "HAProxy", "Frontend"],
+    filters: ["All", "Healthy", "Error", "Muted", "Automation", "Frontend"],
     filterFunctions: {
       Healthy: ({ status }: INode) => status === "OK",
       Error: ({ status }: INode) => status === "ERROR",
       Muted: ({ muted }: INode) => Boolean(muted),
-      HAProxy: ({ haProxy }: INode) => Boolean(haProxy),
+      Automation: ({ haProxy }: INode) => Boolean(haProxy),
       Frontend: ({ frontend }: INode) => Boolean(frontend),
     } as any,
   };
-  const columnsOrder = [
-    "name",
-    "chain",
-    "host",
-    // "port",
-    // "status",
-    "conditions",
-    // "url",
-    // "server",
-    "haProxy",
-    "muted",
-  ];
+  const columnsOrder = ["name", "chain", "host", "conditions", "haProxy", "muted"];
   if (env("PNF")) {
     filterOptions.filters.push("Dispatch");
     filterOptions.filterFunctions.Dispatch = ({ dispatch }: INode) => Boolean(dispatch);

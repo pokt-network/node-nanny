@@ -69,6 +69,11 @@ const typeDefs = gql`
     dispatch: Boolean
   }
 
+  type ServerCount {
+    online: Int!
+    total: Int!
+  }
+
   # EVM chains only
   type Oracle {
     id: ID!
@@ -183,7 +188,8 @@ const typeDefs = gql`
 
     getHaProxyStatus(id: ID!): Int!
     checkValidHaProxy(input: NodeInput!): Boolean!
-    nodeStatus(id: String): String!
+    nodeStatus(id: ID!): String!
+    getServerCount(id: ID!): ServerCount!
   }
 
   type Mutation {

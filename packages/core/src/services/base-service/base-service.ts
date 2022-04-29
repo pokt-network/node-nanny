@@ -120,6 +120,13 @@ export class Service {
   }: IRotationParams): Promise<{ online: number; total: number }> {
     const results: { online: number; total: number }[] = [];
 
+    console.log("INSIDE SERVER COUNT!!!", {
+      destination,
+      loadBalancers,
+      frontendUrl,
+      dispatch,
+    });
+
     if (frontendUrl) {
       const domain = frontendUrl.split("//")[1].split(":")[0];
 
