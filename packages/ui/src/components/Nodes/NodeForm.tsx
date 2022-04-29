@@ -697,7 +697,7 @@ export const NodeForm = ({
               variant="contained"
               onClick={handleSubmit as any}
               disabled={frontend && frontendExists}
-              sx={{ width: 125, height: 36.5 }}
+              sx={{ width: frontend ? 160 : 125, height: 36.5 }}
             >
               {loading ? (
                 <CircularProgress size={20} />
@@ -722,7 +722,7 @@ export const NodeForm = ({
               onClick={() => setState(NodeActionsState.Edit)}
               variant="contained"
               color="primary"
-              sx={{ width: 125, height: 36.5 }}
+              sx={{ width: frontend ? 160 : 125, height: 36.5 }}
             >
               Update Node
             </Button>
