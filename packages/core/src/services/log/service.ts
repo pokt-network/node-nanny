@@ -16,8 +16,7 @@ export class Service {
         collection: "logs",
         leaveConnectionOpen: false,
         capped: true,
-        cappedMax: env("MONGO_MAX_LOG_NUMBER"),
-        cappedSize: env("MONGO_MAX_LOG_SIZE"),
+        cappedSize: env("MONGO_MAX_LOG_GB"),
       }),
       datadog: new transports.Http({
         host: "http-intake.logs.datadoghq.eu",
