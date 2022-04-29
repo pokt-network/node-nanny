@@ -65,7 +65,7 @@ const typeDefs = gql`
     frontend: String
     server: String
     ssl: Boolean
-    haProxy: Boolean
+    automation: Boolean
     dispatch: Boolean
   }
 
@@ -97,7 +97,7 @@ const typeDefs = gql`
     url: String!
     port: String!
     loadBalancers: [ID!]!
-    haProxy: Boolean!
+    automation: Boolean!
     backend: String
     frontend: String
     server: String
@@ -119,7 +119,7 @@ const typeDefs = gql`
     name: String!
     loadBalancers: [String!]!
     port: String!
-    haProxy: Boolean!
+    automation: Boolean!
     backend: String
     frontend: String
     server: String
@@ -142,7 +142,7 @@ const typeDefs = gql`
     url: String
     loadBalancers: [ID]
     port: String
-    haProxy: Boolean
+    automation: Boolean
     backend: String
     frontend: String
     server: String
