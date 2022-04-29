@@ -182,7 +182,7 @@ export class Service extends BaseService {
   }
 
   private async toggleServer({ node, enable }: IToggleServerParams): Promise<void> {
-    const { backend, chain, host, loadBalancers, server } = node;
+    const { backend, chain, dispatch, host, loadBalancers, server } = node;
 
     /* PNF Internal handling to prevent trying to pull mainnet nodes out of HAProxy */
     if (env("PNF") && chain.name === ESupportedBlockchains["POKT-MAIN"]) {
@@ -198,6 +198,7 @@ export class Service extends BaseService {
         const { online: nodesOnline, total: nodesTotal } = await this.getServerCount({
           destination: backend,
           loadBalancers,
+          dispatch,
         });
 
         const { title, message } = this.alert.getRotationMessage(
