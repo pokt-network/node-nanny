@@ -21,7 +21,9 @@ export enum NodeActionsState {
 export function Nodes() {
   const [selectedNode, setSelectedNode] = useState<INode>(undefined);
   const [state, setState] = useState<NodeActionsState>(NodeActionsState.Info);
-  const { data, error, loading, refetch } = useNodesQuery();
+  const { data, error, loading, refetch } = useNodesQuery({
+    pollInterval: 1000 * 20,
+  });
   const {
     data: formData,
     error: formError,
