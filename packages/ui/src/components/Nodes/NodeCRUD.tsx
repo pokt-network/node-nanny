@@ -73,10 +73,10 @@ export const NodeCRUD = ({
   });
 
   useEffect(() => {
-    if (node?.haProxy && !node?.frontend) {
+    if (node?.automation && !node?.frontend) {
       getStatus({ variables: { id: node.id } });
     }
-    if (node?.haProxy || node?.frontend) {
+    if (node?.automation || node?.frontend) {
       getServerCount({ variables: { id: node.id } });
     }
   }, [node, getStatus, getServerCount]);
@@ -85,7 +85,10 @@ export const NodeCRUD = ({
     String(data?.haProxyStatus)
   ];
   const haProxyButtonDisabled =
-    !node?.haProxy || loading || !!getStatusError || typeof haProxyOnline !== "boolean";
+    !node?.automation ||
+    loading ||
+    !!getStatusError ||
+    typeof haProxyOnline !== "boolean";
   const haProxyButtonText = `${haProxyOnline ? "Remove" : "Add"} Node ${
     haProxyOnline ? "from" : "to"
   } Rotation`;
@@ -195,7 +198,7 @@ export const NodeCRUD = ({
                   <CircularProgress size={20} style={{ marginRight: 8 }} />
                   Checking HAProxy Status
                 </>
-              ) : !node?.haProxy || haProxyOnline === "n/a" ? (
+              ) : !node?.automation || haProxyOnline === "n/a" ? (
                 "No HAProxy"
               ) : (
                 haProxyButtonText
@@ -236,9 +239,9 @@ export const NodeCRUD = ({
                 <Typography>{node.conditions}</Typography>
               </Box>
             </Box>
-            {(node.haProxy || node.frontend) && (
+            {(node.automation || node.frontend) && (
               <>
-                {node.haProxy && (
+                {node.automation && (
                   <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                     <Typography>Load Balancer Status</Typography>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

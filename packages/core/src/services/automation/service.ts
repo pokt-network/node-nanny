@@ -60,7 +60,7 @@ export class Service extends BaseService {
 
   public async createNode(nodeInput: INodeInput, restart = true): Promise<INode> {
     let id: string;
-    const { https, haProxy, frontend, ...rest } = nodeInput;
+    const { https, automation, frontend, ...rest } = nodeInput;
     const { fqdn } = await HostsModel.findOne({ _id: nodeInput.host });
 
     if (https && !fqdn) {
@@ -291,8 +291,8 @@ export class Service extends BaseService {
 
   /* ----- Status Check Methods ----- */
   async getHaProxyStatus(id: string): Promise<-1 | 0 | 1> {
-    const { backend, haProxy, server, loadBalancers } = await this.getNode(id);
-    if (haProxy === false) {
+    const { backend, automation, server, loadBalancers } = await this.getNode(id);
+    if (automation === false) {
       return -1;
     }
 

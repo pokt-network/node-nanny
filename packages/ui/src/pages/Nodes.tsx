@@ -39,11 +39,11 @@ export function Nodes() {
       Healthy: ({ status }: INode) => status === "OK",
       Error: ({ status }: INode) => status === "ERROR",
       Muted: ({ muted }: INode) => Boolean(muted),
-      Automation: ({ haProxy }: INode) => Boolean(haProxy),
+      Automation: ({ automation }: INode) => Boolean(automation),
       Frontend: ({ frontend }: INode) => Boolean(frontend),
     } as any,
   };
-  const columnsOrder = ["name", "chain", "host", "conditions", "haProxy", "muted"];
+  const columnsOrder = ["name", "chain", "host", "conditions", "automation", "muted"];
   if (env("PNF")) {
     filterOptions.filters.push("Dispatch");
     filterOptions.filterFunctions.Dispatch = ({ dispatch }: INode) => Boolean(dispatch);
