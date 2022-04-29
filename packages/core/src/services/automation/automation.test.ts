@@ -34,7 +34,7 @@ const createMocks = async () => {
     loadBalancers: [host.id],
     backend: "testtestmainnet",
     server: "2a",
-    haProxy: true,
+    automation: true,
   };
   const node = await NodesModel.create(mockNode);
   return { chain, location, host, node };

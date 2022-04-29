@@ -6,11 +6,11 @@ import { Service as HAProxyService } from "../haproxy";
 import env from "../../environment";
 
 export class Service {
-  private haProxy: HAProxyService;
+  private automation: HAProxyService;
   public alert: AlertService;
 
   constructor() {
-    this.haProxy = new HAProxyService();
+    this.automation = new HAProxyService();
     this.alert = new AlertService();
   }
 
@@ -43,7 +43,7 @@ export class Service {
 
       const loadBalancerResponse = await Promise.all(
         loadBalancers.map(({ fqdn, ip }) =>
-          this.haProxy.enableServer({
+          this.automation.enableServer({
             destination,
             server,
             domain: this.getLoadBalancerDomain(fqdn || ip, true),
@@ -87,7 +87,7 @@ export class Service {
 
       const loadBalancerResponse = await Promise.all(
         loadBalancers.map(({ fqdn, ip }) =>
-          this.haProxy.disableServer({
+          this.automation.disableServer({
             destination,
             server,
             domain: this.getLoadBalancerDomain(fqdn || ip, true),
@@ -131,14 +131,14 @@ export class Service {
       const domain = frontendUrl.split("//")[1].split(":")[0];
 
       try {
-        return await this.haProxy.getServerCount({ destination, domain, dispatch });
+        return await this.automation.getServerCount({ destination, domain, dispatch });
       } catch (error) {
         throw `Could not get frontend count.\nURL: ${domain} Frontend: ${destination} ${error}`;
       }
     } else {
       for await (const { fqdn, ip } of loadBalancers) {
         try {
-          const count = await this.haProxy.getServerCount({
+          const count = await this.automation.getServerCount({
             destination,
             domain: this.getLoadBalancerDomain(fqdn || ip),
             dispatch,
@@ -166,7 +166,7 @@ export class Service {
 
     for await (const { fqdn, ip } of loadBalancers) {
       try {
-        const status = await this.haProxy.getServerStatus({
+        const status = await this.automation.getServerStatus({
           destination,
           server,
           domain: this.getLoadBalancerDomain(fqdn || ip),
@@ -192,13 +192,13 @@ export class Service {
     loadBalancers,
   }: IRotationParams): Promise<boolean> {
     if (frontendUrl) {
-      return await this.haProxy.getValidHaProxy({ destination, domain: frontendUrl });
+      return await this.automation.getValidHaProxy({ destination, domain: frontendUrl });
     } else {
       const results: boolean[] = [];
 
       for await (const { fqdn, ip } of loadBalancers) {
         try {
-          const status = await this.haProxy.getValidHaProxy({
+          const status = await this.automation.getValidHaProxy({
             destination,
             domain: this.getLoadBalancerDomain(fqdn || ip),
           });

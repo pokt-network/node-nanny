@@ -80,7 +80,7 @@ export const NodeForm = ({
     try {
       setLoading(true);
 
-      if (values.haProxy || frontend) {
+      if (values.automation || frontend) {
         const { data } = await checkValidHaProxy();
 
         if (data?.validHaProxy) {
@@ -121,12 +121,15 @@ export const NodeForm = ({
     if (hostPortCombos.includes(`${values.host}/${values.port}`)) {
       errors.port = "Host/port combination is already taken";
     }
-    if (values.haProxy) {
+    if (values.automation) {
       if (!values.backend) {
         errors.backend = "Backend is required";
       }
       if (!values.loadBalancers?.length) {
         errors.loadBalancers = "At least one load balancer is required";
+      }
+      if (!values.server) {
+        errors.loadBalancers = "Server is required";
       }
     }
     if (frontend) {
@@ -160,7 +163,7 @@ export const NodeForm = ({
       name: "",
       url: "",
       port: "",
-      haProxy: true,
+      automation: true,
       backend: "",
       loadBalancers: [],
       server: "",
@@ -181,7 +184,7 @@ export const NodeForm = ({
   };
 
   useEffect(() => {
-    if (!values.haProxy || frontend) {
+    if (!values.automation || frontend) {
       setFieldValue("backend", "");
       setFieldValue("loadBalancers", []);
       setFieldValue("server", "");
@@ -190,7 +193,7 @@ export const NodeForm = ({
       setFieldValue("frontend", "");
       setFieldValue("basicAuth", "");
     }
-  }, [values.haProxy, frontend, setFieldValue]);
+  }, [values.automation, frontend, setFieldValue]);
 
   useEffect(() => {
     if (formData?.hosts && values.host) {
@@ -265,8 +268,8 @@ export const NodeForm = ({
     setFieldValue("frontend", selectedNode.frontend);
     setFieldValue("server", selectedNode.server);
     setFieldValue(
-      "haProxy",
-      typeof selectedNode.haProxy === "boolean" ? selectedNode.haProxy : false,
+      "automation",
+      typeof selectedNode.automation === "boolean" ? selectedNode.automation : false,
     );
   }, [setFieldValue, selectedNode]);
 
@@ -536,20 +539,20 @@ export const NodeForm = ({
                   <></>
                 ) : (
                   <Switch
-                    name="haProxy"
-                    checked={values.haProxy}
+                    name="automation"
+                    checked={values.automation}
                     onChange={handleChange}
                   />
                 )}
               </Box>
             </FormControl>
-            {values.haProxy && (
+            {values.automation && (
               <>
                 <TextField
                   name="backend"
                   value={values.backend}
                   onChange={handleChange}
-                  disabled={read ?? (!!values.frontend || !values.haProxy)}
+                  disabled={read ?? (!!values.frontend || !values.automation)}
                   label="Backend"
                   variant="outlined"
                   size="small"
@@ -570,14 +573,14 @@ export const NodeForm = ({
                     variant="outlined"
                     error={!!errors.loadBalancers}
                     helperText={errors.loadBalancers}
-                    disabled={read ?? (!!values.frontend || !values.haProxy)}
+                    disabled={read ?? (!!values.frontend || !values.automation)}
                     size="small"
                   />
                 )}
                 {!read && (
                   <FormControl
                     fullWidth
-                    disabled={read ?? (!!values.frontend || !values.haProxy)}
+                    disabled={read ?? (!!values.frontend || !values.automation)}
                     error={!!errors.loadBalancers}
                   >
                     <InputLabel id="lb-label">Load Balancers</InputLabel>
@@ -617,7 +620,7 @@ export const NodeForm = ({
                   onChange={handleChange}
                   label="Server"
                   variant="outlined"
-                  disabled={read ?? (!!values.frontend || !values.haProxy)}
+                  disabled={read ?? (!!values.frontend || !values.automation)}
                   size="small"
                   fullWidth
                 />
