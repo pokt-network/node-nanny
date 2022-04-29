@@ -16,11 +16,16 @@ import Title from "components/Title";
 import { HostActionsState } from "pages/Hosts";
 import { NodeActionsState } from "pages/Nodes";
 
-import { INodeCsvInput, useCreateNodesCsvMutation } from "types";
+import {
+  IHostCsvInput,
+  INodeCsvInput,
+  useCreateHostsCsvMutation,
+  useCreateNodesCsvMutation,
+} from "types";
 import { ModalHelper, parseBackendError, s } from "utils";
 
 export interface ConfirmationModalProps {
-  data: INodeCsvInput[];
+  data: (IHostCsvInput | INodeCsvInput)[];
   type: "Node" | "Host";
   dataError: string;
   columnsOrder: string[];
@@ -43,7 +48,19 @@ export function CSVConfirmationModal({
     onCompleted: () => {
       refetch();
       ModalHelper.close();
-      type === "Node" ? setState(NodeActionsState.Info) : setState(HostActionsState.Info);
+      setState(NodeActionsState.Info);
+    },
+    onError: (error) => {
+      setBackendError(parseBackendError(error));
+    },
+  });
+
+  /* ----- SubmitHosts Mutation ----- */
+  const [submitHosts, { loading: hostsLoading }] = useCreateHostsCsvMutation({
+    onCompleted: () => {
+      refetch();
+      ModalHelper.close();
+      setState(HostActionsState.Info);
     },
     onError: (error) => {
       setBackendError(parseBackendError(error));
@@ -60,10 +77,8 @@ export function CSVConfirmationModal({
       });
       const submitFunction = {
         Node: () => submitNodes({ variables: { nodes: dataWithoutId } }),
-        Host: () => undefined,
+        Host: () => submitHosts({ variables: { hosts: dataWithoutId } }),
       }[type];
-
-      console.log({ data });
 
       submitFunction();
     }
@@ -84,9 +99,8 @@ export function CSVConfirmationModal({
             <Typography>{dataError}</Typography>
           )}
         </Alert>
-      ) : (
+      ) : type === "Node" ? (
         <>
-          {" "}
           <Typography variant="subtitle1" mb={1}>
             Batch creation of nodes via CSV import can take a long time.
           </Typography>
@@ -101,13 +115,16 @@ export function CSVConfirmationModal({
             Please do not navigate away, refresh or close this window during this time.
           </Alert>
         </>
+      ) : (
+        <></>
       )}
+
       {backendError && (
         <Alert severity="error">
           <AlertTitle>Backend error: {backendError}</AlertTitle>
         </Alert>
       )}
-      {nodesLoading && (
+      {(nodesLoading || hostsLoading) && (
         <div style={{ width: "100%" }}>
           <LinearProgress />
         </div>
@@ -133,7 +150,7 @@ export function CSVConfirmationModal({
           disabled={!!dataError}
           sx={{ width: 160, height: 36.5 }}
         >
-          {nodesLoading ? (
+          {nodesLoading || hostsLoading ? (
             <CircularProgress size={20} color={"secondary"} />
           ) : (
             `Create ${data.length} ${type}${s(data.length)}`
