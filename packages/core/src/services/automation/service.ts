@@ -29,6 +29,7 @@ export class Service extends BaseService {
   /* ----- CRUD Methods ----- */
   public async createHost(hostInput: IHostInput, restart = true): Promise<IHost> {
     const sanitizedInput = this.sanitizeCreate(hostInput);
+
     const host = await HostsModel.create(sanitizedInput);
 
     if (restart) await this.restartMonitor();
@@ -46,7 +47,7 @@ export class Service extends BaseService {
           location: (await LocationsModel.findOne({ name: hostInput.location }))._id,
         };
 
-        const host = await HostsModel.create(hostInputObj);
+        const host = await this.createHost(hostInputObj, false);
         createdHosts.push(host);
       }
 

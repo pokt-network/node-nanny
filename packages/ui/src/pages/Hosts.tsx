@@ -20,7 +20,7 @@ export enum HostActionsState {
 export function Hosts() {
   const [selectedHost, setSelectedHost] = useState<IHost>(undefined);
   const [state, setState] = useState<HostActionsState>(HostActionsState.Info);
-  const { data, error, loading, refetch } = useHostsQuery();
+  const { data, error, loading, refetch } = useHostsQuery({ pollInterval: 1000 * 20 });
   const {
     data: locationsData,
     error: locationsError,
