@@ -26,7 +26,7 @@ export class Service extends BaseService {
       title,
       dispatchFrontendDown,
     } = await this.parseEvent(eventJson, EAlertTypes.TRIGGER);
-    const { chain, host, backend, frontend, muted } = node;
+    const { automation, chain, host, backend, frontend, muted } = node;
 
     /* Send alert message to Discord */
     if (!muted) {
@@ -43,7 +43,7 @@ export class Service extends BaseService {
     }
 
     /* Remove backend node from rotation if NOT_SYNCHRONIZED */
-    if (backend && !frontend && notSynced) {
+    if (automation && backend && !frontend && notSynced) {
       await this.toggleServer({ node, enable: false });
     }
 
@@ -62,7 +62,7 @@ export class Service extends BaseService {
       nodesOnline,
       dispatchFrontendDown,
     } = await this.parseEvent(eventJson, EAlertTypes.RETRIGGER);
-    const { backend, chain, host, frontend, muted } = node;
+    const { automation, backend, chain, host, frontend, muted } = node;
 
     /* Send alert message to Discord */
     if (!muted) {
@@ -81,7 +81,7 @@ export class Service extends BaseService {
 
     /* Remove backend node from rotation if NOT_SYNCHRONIZED and there are at least 2 healthy nodes.
     This covers the case where the only node in rotation was out of sync and its peers catch up. */
-    if (nodesOnline >= 2 && backend && !frontend && notSynced) {
+    if (automation && nodesOnline >= 2 && backend && !frontend && notSynced) {
       await this.toggleServer({ node, enable: false });
     }
 
@@ -96,7 +96,7 @@ export class Service extends BaseService {
       eventJson,
       EAlertTypes.RESOLVED,
     );
-    const { chain, host, frontend, backend, muted } = node;
+    const { automation, chain, host, frontend, backend, muted } = node;
 
     /* Send alert message to Discord */
     if (!muted) {
@@ -113,7 +113,7 @@ export class Service extends BaseService {
     }
 
     /* Add backend node to rotation if HEALTHY */
-    if (backend && !frontend && healthy) {
+    if (automation && backend && !frontend && healthy) {
       await this.toggleServer({ node, enable: true });
     }
   };
@@ -128,8 +128,9 @@ export class Service extends BaseService {
 
     const node = await this.getNode(id);
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
-    const { backend, frontend, loadBalancers, dispatch, url } = node;
-    const pnfDispatch = env("PNF") && dispatch;
+    const { backend, chain, frontend, loadBalancers, dispatch, url } = node;
+    const pnfDispatch =
+      env("PNF") && dispatch && chain.name === ESupportedBlockchains["POKT-DIS"];
 
     const healthy = conditions === EErrorConditions.HEALTHY;
     const notSynced = pnfDispatch
@@ -183,11 +184,6 @@ export class Service extends BaseService {
 
   private async toggleServer({ node, enable }: IToggleServerParams): Promise<void> {
     const { backend, chain, dispatch, host, loadBalancers, server } = node;
-
-    /* PNF Internal handling to prevent trying to pull mainnet nodes out of HAProxy */
-    if (env("PNF") && chain.name === ESupportedBlockchains["POKT-MAIN"]) {
-      return;
-    }
 
     try {
       const serverToggled = enable /* Enable or Disable Server */
