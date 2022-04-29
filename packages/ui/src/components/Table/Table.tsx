@@ -76,7 +76,7 @@ const CellContents = ({ cell }): JSX.Element => {
 
 interface TableProps<T> {
   rows: T[];
-  height?: number;
+  height?: number | string;
   searchable?: boolean;
   paginate?: boolean;
   expandable?: boolean;
@@ -236,16 +236,19 @@ export const Table = <T extends unknown>({
   return (
     <Paper>
       {type && <Title>{getHeaderText()}</Title>}
-      <TableFilter
-        type={type}
-        filters={filters}
-        filter={filter}
-        setFilter={setFilter}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        searchEnabled={true}
-        filterEnabled={true}
-      />
+      {!!filterOptions ||
+        (searchable && (
+          <TableFilter
+            type={type}
+            filters={filters}
+            filter={filter}
+            setFilter={setFilter}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            searchEnabled={searchable}
+            filterEnabled={!!filterOptions}
+          />
+        ))}
       <TableContainer sx={{ maxHeight: height || "none" }}>
         <MUITable stickyHeader aria-labelledby="tableTitle" size="small">
           <TableHead
