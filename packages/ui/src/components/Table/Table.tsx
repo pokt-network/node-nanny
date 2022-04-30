@@ -236,19 +236,18 @@ export const Table = <T extends unknown>({
   return (
     <Paper>
       {type && <Title>{getHeaderText()}</Title>}
-      {!!filterOptions ||
-        (searchable && (
-          <TableFilter
-            type={type}
-            filters={filters}
-            filter={filter}
-            setFilter={setFilter}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            searchEnabled={searchable}
-            filterEnabled={!!filterOptions}
-          />
-        ))}
+      {(!!filterOptions || searchable) && (
+        <TableFilter
+          type={type}
+          filters={filters}
+          filter={filter}
+          setFilter={setFilter}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          searchEnabled={searchable}
+          filterEnabled={!!filterOptions}
+        />
+      )}
       <TableContainer sx={{ maxHeight: height || "none" }}>
         <MUITable stickyHeader aria-labelledby="tableTitle" size="small">
           <TableHead
