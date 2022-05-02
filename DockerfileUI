@@ -2,7 +2,7 @@ FROM node:16
 
 WORKDIR /usr/src/node-nanny-ui
 
-RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm
+RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm@6
 
 COPY ./packages/ui ./
 
