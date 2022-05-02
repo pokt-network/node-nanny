@@ -63,7 +63,7 @@ export const LogsSelectNodes = ({ nodes, nodeIds, setNodeIds }: LogsSelectNodesP
           value={nodeIds.map((nodeId) => sortedNodes.find(({ id }) => id === nodeId))}
           options={sortedNodes}
           disableCloseOnSelect
-          getOptionLabel={(node) => node.name}
+          getOptionLabel={({ name }: any) => name}
           renderOption={(props, node: any, { selected }) => (
             <li {...props}>
               <Checkbox

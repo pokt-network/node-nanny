@@ -229,11 +229,7 @@ export const NodesCSV = ({
             onFileLoaded={parseNodesCSV}
             parserOptions={{ header: true, skipEmptyLines: true }}
           />
-          <Button
-            onClick={() => setState(NodeActionsState.Info)}
-            variant="outlined"
-            color="error"
-          >
+          <Button onClick={() => setState(NodeActionsState.Info)} color="error">
             Cancel
           </Button>
         </Box>
