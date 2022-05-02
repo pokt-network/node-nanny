@@ -8,12 +8,20 @@ import {
   Button,
   CircularProgress,
   FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
   TextField,
 } from "@mui/material";
 
-import Paper from "components/Paper"
-import Title from "components/Title"
-import { ILocationsQuery, useCreateLocationMutation } from "types";
+import Paper from "components/Paper";
+import Title from "components/Title";
+import {
+  ILocation,
+  ILocationsQuery,
+  useCreateLocationMutation,
+  useDeleteLocationMutation,
+} from "types";
 import { ModalHelper } from "utils";
 import { HostActionsState } from "pages/Hosts";
 
@@ -22,14 +30,20 @@ interface ILocationInput {
 }
 
 export interface NodesFormProps {
-  locationNames: string[];
+  locations: ILocation[];
   refetchLocations: (variables?: any) => Promise<ApolloQueryResult<ILocationsQuery>>;
-  setState: Dispatch<HostActionsState>
+  setState: Dispatch<HostActionsState>;
 }
 
-export const HostLocation = ({ locationNames, refetchLocations, setState }: NodesFormProps) => {
+export const HostLocation = ({
+  locations,
+  refetchLocations,
+  setState,
+}: NodesFormProps) => {
   const [loading, setLoading] = useState(false);
-  const [backendError, setBackendError] = useState("");
+  const [locationId, setLocationId] = useState("");
+
+  const locationNames = locations.map(({ name }) => name);
 
   /* ----- Form Validation ----- */
   const validate = (values: { name: string }): FormikErrors<ILocationInput> => {
@@ -39,7 +53,7 @@ export const HostLocation = ({ locationNames, refetchLocations, setState }: Node
     return errors;
   };
 
-  const { values, errors, handleChange, handleSubmit } = useFormik({
+  const { values, handleChange, handleSubmit } = useFormik({
     initialValues: { name: "" },
     validate,
     validateOnChange: false,
@@ -50,62 +64,156 @@ export const HostLocation = ({ locationNames, refetchLocations, setState }: Node
   });
 
   /* ----- Create Location----- */
-  const [createLocation] = useCreateLocationMutation({
+  const [createLocation, { error: addLocationError }] = useCreateLocationMutation({
     onCompleted: () => {
       refetchLocations();
       ModalHelper.close();
     },
-    onError: (error) => {
-      setLoading(false);
-      setBackendError(error.message);
-    },
+    onError: () => setLoading(false),
   });
+  const [deleteLocation, { error: deleteLocationError }] = useDeleteLocationMutation({
+    onCompleted: () => {
+      refetchLocations();
+      ModalHelper.close();
+    },
+    onError: () => setLoading(false),
+  });
+
+  const handleOpenConfirmModal = () => {
+    ModalHelper.open({
+      modalType: "confirmation",
+      modalProps: {
+        handleOk: () => deleteLocation({ variables: { id: locationId } }),
+        confirmText: `Confirm Delete Location`,
+        okText: "Delete Location",
+        promptText: `This will delete the location ${
+          locations.find(({ id }) => id === locationId).name
+        } from the inventory database. Confirm?`,
+        error: deleteLocationError?.message,
+      },
+    });
+  };
 
   /* ----- Layout ----- */
   return (
     <Paper>
-      <Title>Add New Location</Title>
-      <FormControl fullWidth style={{ marginBottom: 8 }}>
-        <TextField
-          name="name"
-          value={values.name.toUpperCase()}
-          onChange={handleChange}
-          label="Name"
-          variant="outlined"
-          error={!!errors.name}
-          helperText={errors.name}
-        />
-      </FormControl>
-      <Box
-        sx={{ 
-          marginTop: 4,
-          textAlign: "center",
-          '& button': { margin: 1 }
-        }}
-      >
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSubmit as any}
+      <>
+        <Box
+          sx={{
+            width: "auto",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "space-between",
+            justifyContent: "flex-end",
+            gap: 1,
+            p: 2,
+            mb: 2,
+            borderRadius: 1,
+            backgroundColor: "background.default",
+          }}
         >
-          {loading ? <CircularProgress size={20} /> : "Add New Location"}
-        </Button>
-        <Button
-          onClick={() => setState(HostActionsState.Info)}
-          variant="outlined"
-          color="error"
+          <Title>Add New Location</Title>
+          <FormControl fullWidth>
+            <TextField
+              name="name"
+              value={values.name.toUpperCase()}
+              onChange={handleChange}
+              label="Name"
+              variant="outlined"
+              error={!!addLocationError}
+              helperText={addLocationError}
+            />
+          </FormControl>
+          <Box
+            sx={{
+              textAlign: "center",
+              "& button": { margin: 1 },
+              display: "flex",
+              justifyContent: "flex-end",
+            }}
+          >
+            <Button variant="contained" color="primary" onClick={handleSubmit as any}>
+              {loading ? <CircularProgress size={20} /> : "Add New Location"}
+            </Button>
+            <Button
+              onClick={() => setState(HostActionsState.Info)}
+              color="error"
+              variant="outlined"
+            >
+              Cancel
+            </Button>
+          </Box>
+          {addLocationError && (
+            <Alert severity="error">
+              <AlertTitle>{"Error Adding Location"}</AlertTitle>
+              {addLocationError}
+            </Alert>
+          )}
+        </Box>
+        <Box
+          sx={{
+            width: "auto",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "space-between",
+            justifyContent: "center",
+            gap: 1,
+            p: 2,
+            mb: 2,
+            borderRadius: 1,
+            backgroundColor: "background.default",
+          }}
         >
-          Cancel
-        </Button>
-      </Box>
-      {backendError && (
-        <Alert severity="error">
-          <AlertTitle>{"Error Adding Location"}</AlertTitle>
-          {backendError}
-        </Alert>
-      )}
+          <Title>Delete Location</Title>
+          <FormControl fullWidth>
+            <InputLabel id="location-label">Location</InputLabel>
+            <Select
+              name="location"
+              labelId="location-label"
+              value={locationId}
+              label="Location"
+              onChange={({ target }) => setLocationId((target as any).value)}
+              disabled={!locations?.length}
+            >
+              {locations?.map(({ id, name }) => (
+                <MenuItem value={id}>{name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Box
+            sx={{
+              textAlign: "center",
+              "& button": { margin: 1 },
+              display: "flex",
+              justifyContent: "flex-end",
+            }}
+          >
+            <Button
+              variant="contained"
+              color="primary"
+              disabled={!locations?.length}
+              onClick={handleOpenConfirmModal}
+            >
+              Delete Location
+            </Button>
+            <Button
+              onClick={() => setState(HostActionsState.Info)}
+              color="error"
+              variant="outlined"
+            >
+              Cancel
+            </Button>
+          </Box>
+          {deleteLocationError && (
+            <Alert severity="error">
+              <AlertTitle>{"Error Adding Location"}</AlertTitle>
+              {deleteLocationError}
+            </Alert>
+          )}
+        </Box>
+      </>
     </Paper>
   );
-}
+};
 
-export default HostLocation
+export default HostLocation;

@@ -156,7 +156,7 @@ export function CSVConfirmationModal({
             `Create ${data.length} ${type}${s(data.length)}`
           )}
         </Button>
-        <Button onClick={() => ModalHelper.close()} variant="outlined" color={"inherit"}>
+        <Button onClick={() => ModalHelper.close()} color={"inherit"}>
           Cancel
         </Button>
       </Box>

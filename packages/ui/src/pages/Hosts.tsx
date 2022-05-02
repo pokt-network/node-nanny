@@ -43,7 +43,6 @@ export function Hosts() {
   };
   const columnsOrder = ["name", "location", "loadBalancer"];
   const hostNames = data?.hosts.map(({ name }) => name);
-  const locationNames = locationsData?.locations.map(({ name }) => name);
 
   const handleSelectedHost = (host: IHostsQuery["hosts"][0]) => {
     setState(HostActionsState.Info);
@@ -96,7 +95,7 @@ export function Hosts() {
           {state === "location" && (
             <Grid item sm={12} lg={6} order={{ lg: 2 }}>
               <HostLocation
-                locationNames={locationNames}
+                locations={locationsData?.locations}
                 refetchLocations={refetchLocations}
                 setState={setState}
               ></HostLocation>

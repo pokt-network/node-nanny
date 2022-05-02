@@ -201,6 +201,7 @@ const typeDefs = gql`
     updateNode(update: NodeUpdate!): Node
 
     deleteHost(id: ID!): Host
+    deleteLocation(id: ID!): Boolean
     deleteNode(id: ID!): Node
 
     muteMonitor(id: ID!): Node!

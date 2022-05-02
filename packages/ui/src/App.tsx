@@ -140,7 +140,7 @@ function DashboardContent() {
             overflow: "auto",
           }}
         >
-          <Container sx={{ maxWidth: "1680px" }} maxWidth={false}>
+          <Container sx={{ maxWidth: "1800px" }} maxWidth={false}>
             <Box sx={{ mt: 2, mb: 6 }}>
               <Typography
                 flex="1"
