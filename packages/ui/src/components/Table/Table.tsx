@@ -22,6 +22,7 @@ import {
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
@@ -62,14 +63,30 @@ export function getSortedColumns(row: any, header: boolean, columnsOrder: string
   }
 }
 
-const CellContents = ({ cell }): JSX.Element => {
+const CellContents = ({ cell, column }): JSX.Element => {
+  console.log({ cell, column });
   if (Array.isArray(cell)) {
     return <>{cell.join(", ")}</>;
   } else if (typeof cell === "boolean") {
-    return cell ? <CheckIcon color="success" /> : <CloseIcon color="error" />;
+    if (cell) {
+      return column === "muted" ? (
+        <VolumeOffIcon color="primary" />
+      ) : (
+        <CheckIcon color="primary" />
+      );
+    } else {
+      return <>{"--"}</>;
+    }
   } else if (cell === null) {
     return <>{"--"}</>;
   } else {
+    if (column === "conditions") {
+      return (
+        <Typography color={cell === "HEALTHY" ? "success.main" : "error"}>
+          {String(cell)}
+        </Typography>
+      );
+    }
     return <>{String(cell)}</>;
   }
 };
@@ -271,17 +288,13 @@ export const Table = <T extends unknown>({
                         sx={{
                           "&:last-child td, &:last-child th": { border: 0 },
                           cursor: `${onSelectRow ? "pointer" : "default"}`,
+                          height: 42,
                         }}
                         hover={!!onSelectRow}
                         selected={selectedRow === String(row.id)}
                       >
                         {expandable && (
-                          <TableCell
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                            }}
-                          >
+                          <TableCell sx={{ display: "flex", alignItems: "center" }}>
                             {typeof (row as any).status === "string" && (
                               <Chip
                                 sx={{
@@ -324,7 +337,7 @@ export const Table = <T extends unknown>({
                                 align={!i ? "left" : "right"}
                                 onClick={() => handleOnSelect(row)}
                               >
-                                <CellContents cell={value} />
+                                <CellContents cell={value} column={columnsOrder[i]} />
                               </TableCell>
                             );
                           })}
