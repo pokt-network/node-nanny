@@ -49,6 +49,9 @@ mutation DeleteHost($id: ID!) {
     name
   }
 }
+mutation DeleteLocation($id: ID!) {
+  deleteLocation(id: $id)
+}
 mutation DeleteNode($id: ID!) {
   deleteNode(id: $id) {
     id
