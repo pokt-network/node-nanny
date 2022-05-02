@@ -45,7 +45,7 @@ export default function LogsMongo() {
   }, [nodeIds, refetch]);
 
   const onPageChange = (page: number) => {
-    if (logsData.logs?.hasNextPage) {
+    if (logsData?.logs?.hasNextPage) {
       setLogsLoading(true);
       fetchMore({
         variables: {
@@ -63,15 +63,11 @@ export default function LogsMongo() {
     return logs.map(({ message, timestamp }, i) => {
       const parsedMessage = JSON.parse(message);
       const stamp = new Date(Number(timestamp)).toISOString();
-      return {
-        id: `${stamp}_${i}`,
-        timestamp: stamp,
-        ...parsedMessage,
-      };
+      return { id: `${stamp}_${i}`, timestamp: stamp, ...parsedMessage };
     });
   };
 
-  let parsedRows = parseLogsForTable(logsData?.logs.docs || []);
+  let parsedRows = parseLogsForTable(logsData?.logs?.docs || []);
 
   if (nodesLoading) return <LinearProgress />;
   if (nodesError || logsError)
@@ -98,7 +94,7 @@ export default function LogsMongo() {
         expandable
         loading={logsLoading}
         serverLoading
-        serverHasNextPage={logsData.logs.hasNextPage}
+        serverHasNextPage={logsData?.logs?.hasNextPage}
         expandKey="health"
         filterOptions={filterOptions}
         columnsOrder={columnsOrder}

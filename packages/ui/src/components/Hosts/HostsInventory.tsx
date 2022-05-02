@@ -57,11 +57,11 @@ export const HostsInventory = ({ hosts, locations, setState }: HostsInventoryPro
             </Grid>
             <Grid item>
               <Chip label={loadBalancerTotal} variant="outlined" color="primary"></Chip>
-              <Typography>Load Balancers</Typography>
+              <Typography color="primary.main">Load Balancers</Typography>
             </Grid>
             <Grid item>
               <Chip label={locationsTotal} variant="outlined" color="secondary"></Chip>
-              <Typography>Locations</Typography>
+              <Typography color="secondary">Locations</Typography>
             </Grid>
           </Grid>
         </Grid>
