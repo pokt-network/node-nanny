@@ -146,11 +146,7 @@ export const HostsCSV = ({
       <Title>Upload Hosts CSV</Title>
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
         <CSVReader onFileLoaded={parseHostsCsv} parserOptions={{ header: true }} />
-        <Button
-          onClick={() => setState(HostActionsState.Info)}
-          variant="outlined"
-          color="error"
-        >
+        <Button onClick={() => setState(HostActionsState.Info)} color="error">
           Cancel
         </Button>
       </Box>

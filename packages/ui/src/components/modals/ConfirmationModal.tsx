@@ -52,11 +52,7 @@ export function ConfirmationModal({
         <Button onClick={handleOk} variant="contained" color={okColor || "primary"}>
           {okText || "OK"}
         </Button>
-        <Button
-          onClick={() => ModalHelper.close()}
-          variant="outlined"
-          color={cancelColor || "inherit"}
-        >
+        <Button onClick={() => ModalHelper.close()} color={cancelColor || "inherit"}>
           Cancel
         </Button>
       </Box>

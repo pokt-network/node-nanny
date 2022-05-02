@@ -11,7 +11,9 @@ import {
   Log as LogService,
 } from "@pokt-foundation/node-nanny-core/dist/services";
 
-const resolvers = {
+const resolvers: {
+  [queryType: string]: { [queryName: string]: (_: any, args: any) => any };
+} = {
   Query: {
     chains: async () => await ChainsModel.find({}).exec(),
     hosts: async (_, { loadBalancer }) => {
@@ -75,6 +77,9 @@ const resolvers = {
 
     deleteHost: async (_, { id }) => {
       return await new AutomationService().deleteHost(id);
+    },
+    deleteLocation: async (_, { id }) => {
+      return !!(await LocationsModel.deleteOne({ id }));
     },
     deleteNode: async (_, { id }) => {
       return await new AutomationService().deleteNode(id);
