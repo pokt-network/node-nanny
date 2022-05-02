@@ -97,6 +97,7 @@ export type IMutation = {
   createNode?: Maybe<INode>;
   createNodesCSV: Array<Maybe<INode>>;
   deleteHost?: Maybe<IHost>;
+  deleteLocation?: Maybe<Scalars['Boolean']>;
   deleteNode?: Maybe<INode>;
   disableHaProxyServer: Scalars['Boolean'];
   enableHaProxyServer: Scalars['Boolean'];
@@ -133,6 +134,11 @@ export type IMutationCreateNodesCsvArgs = {
 
 
 export type IMutationDeleteHostArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type IMutationDeleteLocationArgs = {
   id: Scalars['ID'];
 };
 
@@ -374,6 +380,13 @@ export type IDeleteHostMutationVariables = Exact<{
 
 
 export type IDeleteHostMutation = { deleteHost?: { id: string, name: string } | null };
+
+export type IDeleteLocationMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type IDeleteLocationMutation = { deleteLocation?: boolean | null };
 
 export type IDeleteNodeMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -759,6 +772,37 @@ export function useDeleteHostMutation(baseOptions?: Apollo.MutationHookOptions<I
 export type DeleteHostMutationHookResult = ReturnType<typeof useDeleteHostMutation>;
 export type DeleteHostMutationResult = Apollo.MutationResult<IDeleteHostMutation>;
 export type DeleteHostMutationOptions = Apollo.BaseMutationOptions<IDeleteHostMutation, IDeleteHostMutationVariables>;
+export const DeleteLocationDocument = gql`
+    mutation DeleteLocation($id: ID!) {
+  deleteLocation(id: $id)
+}
+    `;
+export type IDeleteLocationMutationFn = Apollo.MutationFunction<IDeleteLocationMutation, IDeleteLocationMutationVariables>;
+
+/**
+ * __useDeleteLocationMutation__
+ *
+ * To run a mutation, you first call `useDeleteLocationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteLocationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteLocationMutation, { data, loading, error }] = useDeleteLocationMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteLocationMutation(baseOptions?: Apollo.MutationHookOptions<IDeleteLocationMutation, IDeleteLocationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<IDeleteLocationMutation, IDeleteLocationMutationVariables>(DeleteLocationDocument, options);
+      }
+export type DeleteLocationMutationHookResult = ReturnType<typeof useDeleteLocationMutation>;
+export type DeleteLocationMutationResult = Apollo.MutationResult<IDeleteLocationMutation>;
+export type DeleteLocationMutationOptions = Apollo.BaseMutationOptions<IDeleteLocationMutation, IDeleteLocationMutationVariables>;
 export const DeleteNodeDocument = gql`
     mutation DeleteNode($id: ID!) {
   deleteNode(id: $id) {

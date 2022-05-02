@@ -291,7 +291,7 @@ export const HostForm = ({
               `${update ? "Save" : "Create"} Host`
             )}
           </Button>
-          <Button onClick={handleCancel} variant="outlined" color="inherit">
+          <Button onClick={handleCancel} color="inherit">
             Cancel
           </Button>
         </Box>
@@ -312,7 +312,7 @@ export const HostForm = ({
           >
             Update Host
           </Button>
-          <Button onClick={handleOpenDeleteModal} variant="outlined" color="error">
+          <Button onClick={handleOpenDeleteModal} color="error" variant="outlined">
             Delete Host
           </Button>
         </Box>

@@ -45,12 +45,23 @@ export function Nodes() {
       Frontend: ({ frontend }: INode) => Boolean(frontend),
     } as any,
   };
-  const columnsOrder = ["name", "chain", "host", "conditions", "automation", "muted"];
+  const columnsOrder = ["name", "conditions", "automation", "muted"];
   if (env("PNF")) {
     filterOptions.filters.push("Dispatch");
     filterOptions.filterFunctions.Dispatch = ({ dispatch }: INode) => Boolean(dispatch);
     columnsOrder.push("dispatch");
   }
+
+  const getConditionsString = (condition: string) =>
+    ({
+      HEALTHY: "Healthy",
+      OFFLINE: "Offline",
+      NO_RESPONSE: "No Response",
+      NOT_SYNCHRONIZED: "Not Synced",
+      NO_PEERS: "No Peers",
+      PEER_NOT_SYNCHRONIZED: "Peer Not Synced",
+      PENDING: "Pending",
+    }[condition]);
 
   const nodeNames = data?.nodes.map(({ name }) => name);
   const hostPortCombos = data?.nodes.map(({ host, port }) => `${host.id}/${port}`);
@@ -123,6 +134,7 @@ export function Nodes() {
                 chain: node.chain.name,
                 host: node.host.name,
                 loadBalancers: node.loadBalancers?.map(({ name }) => name),
+                conditions: getConditionsString(node.conditions),
               })}
               selectedRow={selectedNode?.id}
               onSelectRow={handleSelectRow}

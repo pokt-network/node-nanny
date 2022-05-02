@@ -178,20 +178,20 @@ export const NodeCRUD = ({
         {node && type !== "create" && type !== "createFrontend" && (
           <Grid item sm={12} md="auto" sx={{ "& button": { marginLeft: 1 } }}>
             <Button
-              variant="outlined"
               onClick={handleOpenMuteModal}
               disabled={!node}
               color="secondary"
               size="small"
+              variant="outlined"
             >
               {node?.muted ? "Unmute Node" : "Mute Node"}
             </Button>
             <Button
-              variant="outlined"
               onClick={handleOpenRotationModal}
               disabled={haProxyButtonDisabled}
               color="warning"
               size="small"
+              variant="outlined"
             >
               {loading ? (
                 <>
