@@ -702,7 +702,7 @@ export const NodeForm = ({
                 `${update ? "Save" : "Create"} ${frontend ? "Frontend" : "Node"}`
               )}
             </Button>
-            <Button onClick={handleCancel} variant="outlined" color="inherit">
+            <Button onClick={handleCancel} color="inherit">
               Cancel
             </Button>
           </Box>
@@ -723,7 +723,7 @@ export const NodeForm = ({
             >
               Update Node
             </Button>
-            <Button onClick={handleOpenDeleteModal} variant="outlined" color="error">
+            <Button onClick={handleOpenDeleteModal} color="error" variant="outlined">
               Delete Node
             </Button>
           </Box>
