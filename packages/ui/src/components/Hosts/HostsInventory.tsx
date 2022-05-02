@@ -85,7 +85,7 @@ export const HostsInventory = ({ hosts, locations, setState }: HostsInventoryPro
             size="small"
             variant="contained"
           >
-            Add Location
+            Edit Locations
           </Button>
         </Grid>
       </Grid>
