@@ -1,12 +1,37 @@
 # Pocket Network | Node Nanny
 
-Monitoring system for PNF internal nodes and associated infrastructure
+Currently
 
-## Installation
+A monitoring system that automates blockchain availability and alerts
+for critical events that may require manual intervention by the node runner.
 
-### [Node Nanny Docker Image](https://hub.docker.com/repository/docker/pocketfoundation/node-nanny)
+# Table of contents
 
-Before pulling the Docker image a number of steps are required.
+1. [Overview](#overview)
+2. [Installation](#installation)
+3. [How To Use](#how-to-use)
+   1. [Adding Data](#adding-data)
+
+# Overview
+
+Node Nanny will perform periodic health checks on all nodes entered into the inventory database.
+
+The application is composed of the following main components:
+
+- Monitor - Performs periodic health checks on node inventory
+- Event Consumer - Handles the automation and alerting in response to health events
+- API - GraphQL API that services the user interface for handling the inventory DB
+- User Interface - React app to handle inventory and logs
+
+## Currently Supported Technologies
+
+The application is currently opinionated and works with the following technologies:
+
+- Load Balancer: [HAProxy](http://www.haproxy.org/)
+- Load Balancer: [HAProxy](http://www.haproxy.org/)
+- Load Balancer: [HAProxy](http://www.haproxy.org/)
+
+# Installation
 
 ### 1. Setup Discord
 
@@ -20,14 +45,7 @@ Take note of your server's ID, which you can find in `Server Settings > Widget`.
 
 [...and add it to your server.](https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links)
 
-The bot will need the following:
-
-Scopes
-
-- `bot`
-- `applications.commands`
-
-Permissions
+The bot will need the following permissions:
 
 - `Manage Channels`
 - `Manage Webhooks`
@@ -36,84 +54,92 @@ Permissions
 
 On your chosen host, you will have to set the following environment variables in either a `.env` file in same location as your `docker-compose.yml` file or in your shell environment.
 
-#### Required Variables
-
-- **DISCORD_SERVER_ID** - The server ID for the server you wish to receive alerts in.
-- **DISCORD_TOKEN** - The secret token for your server's bot application.
-- **MONGO_USER** - The user that will be used for your inventory database.
-- **MONGO_PASSWORD** - The password that will be used for your inventory database.
-- **MONGO_DATABASE** - The name of the inventory database.
-
-#### Optional Variables
-
-- **ALERT_TRIGGER_THRESHOLD** - The number of times a health check should fail before triggering. **Defaults to `6`**
-- **ALERT_RETRIGGER_THRESHOLD** - The number of times a health check should fail before retriggering. **Defaults to `60`**
-- **FRONTEND_PORT** - The port the React UI will run on. **Defaults to `3000`**
-- **BACKEND_HOST** - If the backend is hosted on a different host than the UI, this variable will need to be set to the hostname.
+## [Example .env](.env.example)
 
 ### 3. Setup Docker Compose
 
-[First install Docker Compose on your host machine.](https://docs.docker.com/compose/install/)
+[First ensure Docker Compose is installed on your host machine.](https://docs.docker.com/compose/install/)
 
-Then create a `docker-compose.yml` file with the following contents:
+## [Example Docker Compose](docker-compose.yml)
 
-```
-version: "3.7"
-services:
-  nn_backend:
-    image: pocketfoundation/node-nanny:latest
-    container_name: nn_backend
-    ports:
-      - "4000:4000"
-    hostname: nn_backend
-    depends_on:
-      - nn_db
-      - nn_redis
-    environment:
-      # Hardcoded Docker Compose vars
-      REDIS_HOST: nn_redis
+Ensure the filepath `/data/db` exists on your machine; this is where your inventory database will be located. Otherwise, if you would like to use a directory other than `/data/db` for your database location, you must set the `nn_db.volumes` property to the path you would like to store your inventory DB and logs.
 
-      # Required Environment Variables
-      DISCORD_SERVER_ID: ${DISCORD_SERVER_ID:?Discord Server ID not set.}
-      DISCORD_TOKEN: ${DISCORD_TOKEN:?Discord token not set.}
+Then, run `docker-compose up -d` from the same directory as this file. This will pull down the latest Node Nanny images, as well as setup the MongoDB and Redis containers and start everything up.
 
-      # Optional Environment Variables
-      ALERT_TRIGGER_THRESHOLD: ${ALERT_TRIGGER_THRESHOLD}
-      ALERT_RETRIGGER_THRESHOLD: ${ALERT_RETRIGGER_THRESHOLD}
-      MONITOR_LOGGER: ${MONITOR_LOGGER:-mongodb}
+You are now ready to start adding inventory data. The Node Nanny UI will be available on port 3000 on your host machine; it is highly recommended to configure your access settings to prevent access from unauthorized IPs.
 
-      MONGO_URI: "mongodb://${MONGO_USER:?Mongo user not set.}:${MONGO_PASSWORD:?Mongo password not set.}@nn_db:27017/${MONGO_DATABASE:?Mongo database name not set.}?authSource=admin"
-
-  nn_frontend:
-    image: pocketfoundation/node-nanny-ui:latest
-    container_name: nn_frontend
-    ports:
-      - "3000:3000"
-    hostname: nn_frontend
-    depends_on:
-      - nn_backend
-      - nn_db
-      - nn_redis
-
-  nn_db:
-    image: mongo:latest
-    container_name: nn_db
-    environment:
-      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:?Mongo database name not set.}
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?Mongo user not set.}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Mongo password not set.}
-    volumes:
-      - /data/db:/data/db
-    ports:
-      - "27017:27017"
-
-  nn_redis:
-    image: "redis:latest"
-    container_name: nn_redis
-```
-
-Set the `nn_db.volumes` property to the path you would like to store your inventory DB and logs.
-
-Then, run `docker-compose up -d` from the same directory as this file. This will pull down the latest Node Nanny images, as well as setup the MongoDB and Redis containers and start everything up. You are now ready to start adding inventory data.
+# How To Use
 
 ## Adding Data
+
+Node Nanny supports adding Host and Node data through the included UI; either one at a time via form input or as batches using CSV upload.
+
+### 1. Chains/Oracles
+
+Both Chains and Oracles are autopopulated to the database on initialization of the application and updated on an hourly basis from a database maintained by Pocket. There is no need to manually create Chains or Oracles in the inventory database.
+
+### 2. Locations
+
+Locations are added on the Hosts screen; all that's needed is to add a string code. This code can be whatever you want but it must be unique.
+
+### 3. Hosts
+
+Hosts can be added on the Hosts screen, either by form input or in batches by CSV.
+
+| field        | type    | required |
+| ------------ | ------- | -------- |
+| name         | string  | Y        |
+| location     | string  | Y        |
+| loadBalancer | boolean | Y        |
+| ip           | string  |          |
+| fqdn         | string  |          |
+
+Notes
+
+- Either IP or FQDN is required for each host, but cannot enter both.
+- FQDN is required if the nodes on the host wish to use HTTPS.
+
+#### Example CSV Format
+
+| name      | location | loadBalancer | ip          | fqdn                             |
+| --------- | -------- | ------------ | ----------- | -------------------------------- |
+| eth-1-2a  | USW2     | false        | 12.43.5.123 |                                  |
+| eth-1-2b  | USE2     | false        |             | eth-instance-2.nodes.eth.network |
+| shared-2a | USE2     | true         | 10.0.0.33   |                                  |
+
+Note: Location must exactly match a Location code that exists in your inventory database; the CSV import cannot be submitted otherwise.
+
+### 4. Nodes
+
+Nodes can be added on the Nodes screen, either by form input or in batches by CSV.
+
+| field         | type         | required |
+| ------------- | ------------ | -------- |
+| https         | boolean      | Y        |
+| chain         | string       | Y        |
+| host          | string       | Y        |
+| port          | number       | Y        |
+| automation    | boolean      | Y        |
+| backend       | string       |          |
+| loadBalancers | string array |          |
+| server        | string       |          |
+
+Notes
+
+- `https` may only be enabled if the Node's Host has an FQDN.
+- `backend`, `loadBalancers` and `server` are required if `automation` is true.
+- `backend` and `server` must match the fields defined in your `haproxy.cfg` file.
+  - For further information in setting up HAProxy, see here.
+
+#### Example CSV Format
+
+| https | chain | host      | port | automation | backend    | loadBalancers       | server |
+| ----- | ----- | --------- | ---- | ---------- | ---------- | ------------------- | ------ |
+| false | ETH   | eth-1-2a  | 4001 | true       | ethmainnet | shared2a, shared-2b | 2a     |
+| true  | ETH   | eth-1-2b  | 4230 | true       | ethmainnet | shared2a, shared-2b | 2b     |
+| false | POKT  | pokt-1-1c | 5008 | false      |            |                     |        |
+
+Notes
+
+- `chain` & `host` must exactly match chain/hosts codes that exist in your inventory database; the CSV import cannot be submitted otherwise.
+- `loadBalancers` is a list of load balancer host names comma separated and must also match host naems in your inventory database.
