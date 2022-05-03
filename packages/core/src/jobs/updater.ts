@@ -18,16 +18,19 @@ interface IChainsAndOraclesResponse {
   await connect();
 
   /* ----- 1) Get newest local Chain and Oracle records' timestamps ---- */
-  const [{ updatedAt: latestChain }] = await ChainsModel.find()
-    .sort({ updatedAt: -1 })
-    .limit(1)
-    .select("updatedAt")
-    .exec();
-  const [{ updatedAt: latestOracle }] = await OraclesModel.find()
-    .sort({ updatedAt: -1 })
-    .limit(1)
-    .select("updatedAt")
-    .exec();
+  const nodeNannysBirthday = new Date("2022-02-14").toISOString();
+
+  const [{ updatedAt: latestChain }] = (await ChainsModel.exists({}))
+    ? await ChainsModel.find().sort({ updatedAt: -1 }).limit(1).select("updatedAt").exec()
+    : [{ updatedAt: nodeNannysBirthday }];
+
+  const [{ updatedAt: latestOracle }] = (await OraclesModel.exists({}))
+    ? await OraclesModel.find()
+        .sort({ updatedAt: -1 })
+        .limit(1)
+        .select("updatedAt")
+        .exec()
+    : [{ updatedAt: nodeNannysBirthday }];
 
   /* ----- 2) Fetch any newer remote Chain and Oracle records from Infrastructure Support Lambda ---- */
   const {
