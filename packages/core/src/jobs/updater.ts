@@ -3,6 +3,7 @@ import axios from "axios";
 import { connect, disconnect } from "../db";
 import { ChainsModel, OraclesModel, IChain, IOracle } from "../models";
 import { getTimestamp } from "../utils";
+import { createFrontendAlertChannel } from "./create-frontend-alert-channel";
 
 import env from "../environment";
 
@@ -16,6 +17,8 @@ interface IChainsAndOraclesResponse {
   if (env("PNF")) return;
 
   await connect();
+
+  await createFrontendAlertChannel();
 
   /* ----- 1) Get newest local Chain and Oracle records' timestamps ---- */
   const nodeNannysBirthday = new Date("2022-02-14").toISOString();
