@@ -1,9 +1,22 @@
-# Pocket Network | Node Nanny
+<div align="center">
+  <a href="https://www.pokt.network">
+    <img src=".github/portal_logo.png" alt="Pocket Network logo" width="200"/>
+  </a>
+  <h1>Node Nanny</h1>
+</div>
 
-**Currently in open beta**
+Babysits your nodes, so you don't have to. 🧸
 
-A monitoring system that automates blockchain availability and alerts
-for critical events that may require manual intervention by the node runner.
+## **Currently in open beta**
+
+[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors)
+
+<div>
+    <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg"/></a>
+    <a href="https://github.com/pokt-foundation/node-nanny/pulse"><img src="https://img.shields.io/github/last-commit/pokt-foundation/node-nanny.svg"/></a>
+    <a href="https://github.com/pokt-foundation/node-nanny/pulls"><img src="https://img.shields.io/github/issues-pr/pokt-foundation/node-nanny.svg"/></a>
+    <a href="https://github.com/pokt-foundation/node-nanny/issues"><img src="https://img.shields.io/github/issues-closed/pokt-foundation/node-nanny.svg"/></a>
+</div>
 
 # Table of contents
 
@@ -11,10 +24,15 @@ for critical events that may require manual intervention by the node runner.
 2. [Installation](#installation)
 3. [How To Use](#how-to-use)
    1. [Adding Data](#adding-data)
+   2. [Automation](#automation)
+4. [Support and Contact](#support-and-contact)
+5. [License](#license)
 
 # Overview
 
 Node Nanny will perform periodic health checks on all nodes entered into the inventory database.
+
+Automation is enabled for nodes that are configured to run through HAProxy.
 
 The application is composed of the following main components:
 
@@ -23,13 +41,16 @@ The application is composed of the following main components:
 - API - GraphQL API that services the user interface for handling the inventory DB
 - User Interface - React app to handle inventory and logs
 
-## Currently Supported Technologies
+## Supported Technologies
 
 The application is currently opinionated and works with the following technologies:
 
 - Load Balancer: [HAProxy](http://www.haproxy.org/)
 - Alerting: [Discord](https://discord.com/developers/docs/intro)
 - Logging: [Winston](https://github.com/winstonjs/winston)
+
+  Supported Log Transports
+
   - [MongoDB](https://www.npmjs.com/package/winston-mongodb)
   - [Datadog](https://docs.datadoghq.com/logs/log_collection/nodejs/?tab=winston30)
 
@@ -78,15 +99,15 @@ You are now ready to start adding inventory data. The Node Nanny UI will be avai
 
 Node Nanny supports adding Host and Node data through the included UI; either one at a time via form input or as batches using CSV upload.
 
-### 1. Chains/Oracles
+## 1. Chains/Oracles
 
 Both Chains and Oracles are autopopulated to the database on initialization of the application and updated on an hourly basis from a database maintained by Pocket. There is no need to manually create Chains or Oracles in the inventory database.
 
-### 2. Locations
+## 2. Locations
 
 Locations are added on the Hosts screen; all that's needed is to add a string code. This code can be whatever you want but it must be unique.
 
-### 3. Hosts
+## 3. Hosts
 
 Hosts can be added on the Hosts screen, either by form input or in batches by CSV.
 
@@ -100,10 +121,11 @@ Hosts can be added on the Hosts screen, either by form input or in batches by CS
 
 Notes
 
-- Either IP or FQDN is required for each host, but cannot enter both.
-- FQDN is required if the nodes on the host wish to use HTTPS.
+- `loadBalancer` indicates whether or not the host is running load balancer software to manage the availability of blockchain nodes.
+- Either `IP` or `FQDN` is required for each host, but cannot enter both.
+- `FQDN` is required if the nodes on the host wish to use HTTPS.
 
-#### Example CSV Format
+### Example CSV Format
 
 | name      | location | loadBalancer | ip          | fqdn                             |
 | --------- | -------- | ------------ | ----------- | -------------------------------- |
@@ -113,7 +135,7 @@ Notes
 
 Note: Location must exactly match a Location code that exists in your inventory database; the CSV import cannot be submitted otherwise.
 
-### 4. Nodes
+## 4. Nodes
 
 Nodes can be added on the Nodes screen, either by form input or in batches by CSV.
 
@@ -133,9 +155,9 @@ Notes
 - `https` may only be enabled if the Node's Host has an FQDN.
 - `backend`, `loadBalancers` and `server` are required if `automation` is true.
 - `backend` and `server` must match the fields defined in your `haproxy.cfg` file.
-  - For further information in setting up HAProxy, see here.
+  - For further information in setting up HAProxy, [see below](#automation).
 
-#### Example CSV Format
+### Example CSV Format
 
 | https | chain | host      | port | automation | backend    | loadBalancers       | server |
 | ----- | ----- | --------- | ---- | ---------- | ---------- | ------------------- | ------ |
@@ -146,4 +168,35 @@ Notes
 Notes
 
 - `chain` & `host` must exactly match chain/hosts codes that exist in your inventory database; the CSV import cannot be submitted otherwise.
-- `loadBalancers` is a list of load balancer host names comma separated and must also match host naems in your inventory database.
+- `loadBalancers` is a list of load balancer host names comma separated and must also match host names in your inventory database.
+
+# Automation
+
+Node Nanny can automatically manage the availabilty of your blockchain nodes, pulling them in and out of rotation. This feature is only available if HAProxy is configured and the node has the `automation` field set to true.
+
+## HAProxy
+
+Currently the only load balancer supported is HAProxy; as mentioned above, pull requests to support additional load balancers are welcome.
+
+### [HAProxy configuration basics guide](https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/) _(Pocket specific HAProxy setup guide coming soon...)_
+
+# Support and Contact
+
+## **Currently in open beta**
+
+If you come across an issue with Node Nanny, do a search in the [Issues](https://github.com/pokt-foundation/node-nanny/issues) tab of this repo to make sure it hasn't been reported before. Follow these steps to help us prevent duplicate issues and unnecessary notifications going to the many people watching this repo:
+
+- If the issue you found has been reported and is still open, and the details match your issue, give a "thumbs up" to the relevant posts in the issue thread to signal that you have the same issue. No further action is required on your part.
+- If the issue you found has been reported and is still open, but the issue is missing some details, you can add a comment to the issue thread describing the additional details.
+- If the issue you found has been reported but has been closed, you can comment on the closed issue thread and ask to have the issue reopened because you are still experiencing the issue. Alternatively, you can open a new issue, reference the closed issue by number or link, and state that you are still experiencing the issue. Provide any additional details in your post so we can better understand the issue and how to fix it.
+
+<div>
+  <a  href="https://twitter.com/poktnetwork" ><img src="https://img.shields.io/twitter/url/http/shields.io.svg?style=social"></a>
+  <a href="https://t.me/POKTnetwork"><img src="https://img.shields.io/badge/Telegram-blue.svg"></a>
+  <a href="https://www.facebook.com/POKTnetwork" ><img src="https://img.shields.io/badge/Facebook-red.svg"></a>
+  <a href="https://research.pokt.network"><img src="https://img.shields.io/discourse/https/research.pokt.network/posts.svg"></a>
+</div>
+
+# License
+
+This project is licensed under the MIT License; see the [LICENSE.md](LICENSE.md) file for details.
