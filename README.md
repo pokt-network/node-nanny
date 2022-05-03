@@ -1,12 +1,62 @@
-# Pocket Network | Node Nanny
+<div align="center">
+  <a href="https://www.pokt.network">
+    <img src=".github/portal_logo.png" alt="Pocket Network logo" width="200"/>
+  </a>
+  <h1>Node Nanny</h1>
+</div>
 
-Monitoring system for PNF internal nodes and associated infrastructure
+Babysits your nodes, so you don't have to. 🧸
 
-## Installation
+## **Currently in open beta**
 
-### [Node Nanny Docker Image](https://hub.docker.com/repository/docker/pocketfoundation/node-nanny)
+[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors)
 
-Before pulling the Docker image a number of steps are required.
+<div>
+    <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg"/></a>
+    <a href="https://github.com/pokt-foundation/node-nanny/pulse"><img src="https://img.shields.io/github/last-commit/pokt-foundation/node-nanny.svg"/></a>
+    <a href="https://github.com/pokt-foundation/node-nanny/pulls"><img src="https://img.shields.io/github/issues-pr/pokt-foundation/node-nanny.svg"/></a>
+    <a href="https://github.com/pokt-foundation/node-nanny/issues"><img src="https://img.shields.io/github/issues-closed/pokt-foundation/node-nanny.svg"/></a>
+</div>
+
+# Table of contents
+
+1. [Overview](#overview)
+2. [Installation](#installation)
+3. [How To Use](#how-to-use)
+   1. [Adding Data](#adding-data)
+   2. [Automation](#automation)
+4. [Support and Contact](#support-and-contact)
+5. [License](#license)
+
+# Overview
+
+Node Nanny will perform periodic health checks on all nodes entered into the inventory database.
+
+Automation is enabled for nodes that are configured to run through HAProxy.
+
+The application is composed of the following main components:
+
+- Monitor - Performs periodic health checks on node inventory
+- Event Consumer - Handles the automation and alerting in response to health events
+- API - GraphQL API that services the user interface for handling the inventory DB
+- User Interface - React app to handle inventory and logs
+
+## Supported Technologies
+
+The application is currently opinionated and works with the following technologies:
+
+- Load Balancer: [HAProxy](http://www.haproxy.org/)
+- Alerting: [Discord](https://discord.com/developers/docs/intro)
+- Logging: [Winston](https://github.com/winstonjs/winston)
+
+  Supported Log Transports
+
+  - [MongoDB](https://www.npmjs.com/package/winston-mongodb)
+  - [Datadog](https://docs.datadoghq.com/logs/log_collection/nodejs/?tab=winston30)
+
+Pull requests to support additional technologies are welcome.
+
+# Installation
 
 ### 1. Setup Discord
 
@@ -20,100 +70,135 @@ Take note of your server's ID, which you can find in `Server Settings > Widget`.
 
 [...and add it to your server.](https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links)
 
-The bot will need the following:
-
-Scopes
-
-- `bot`
-- `applications.commands`
-
-Permissions
+The bot will need the following permissions:
 
 - `Manage Channels`
 - `Manage Webhooks`
 
 ### 2. Set Environment Variables
 
+### **[Example .env File](.env.example)**
+
 On your chosen host, you will have to set the following environment variables in either a `.env` file in same location as your `docker-compose.yml` file or in your shell environment.
-
-#### Required Variables
-
-- **DISCORD_SERVER_ID** - The server ID for the server you wish to receive alerts in.
-- **DISCORD_TOKEN** - The secret token for your server's bot application.
-- **MONGO_USER** - The user that will be used for your inventory database.
-- **MONGO_PASSWORD** - The password that will be used for your inventory database.
-- **MONGO_DATABASE** - The name of the inventory database.
-
-#### Optional Variables
-
-- **ALERT_TRIGGER_THRESHOLD** - The number of times a health check should fail before triggering. **Defaults to `6`**
-- **ALERT_RETRIGGER_THRESHOLD** - The number of times a health check should fail before retriggering. **Defaults to `60`**
-- **FRONTEND_PORT** - The port the React UI will run on. **Defaults to `3000`**
-- **BACKEND_HOST** - If the backend is hosted on a different host than the UI, this variable will need to be set to the hostname.
 
 ### 3. Setup Docker Compose
 
-[First install Docker Compose on your host machine.](https://docs.docker.com/compose/install/)
+### **[Example Docker Compose File](docker-compose.yml)**
 
-Then create a `docker-compose.yml` file with the following contents:
+[First ensure Docker Compose is installed on your host machine.](https://docs.docker.com/compose/install/)
 
-```
-version: "3.7"
-services:
-  nn_backend:
-    image: pocketfoundation/node-nanny:latest
-    container_name: nn_backend
-    ports:
-      - "4000:4000"
-    hostname: nn_backend
-    depends_on:
-      - nn_db
-      - nn_redis
-    environment:
-      # Hardcoded Docker Compose vars
-      REDIS_HOST: nn_redis
+Ensure the filepath `/data/db` exists on your machine; this is where your inventory database will be located. Otherwise, if you would like to use a directory other than `/data/db` for your database location, you must set the `nn_db.volumes` property to the path you would like to store your inventory DB and logs.
 
-      # Required Environment Variables
-      DISCORD_SERVER_ID: ${DISCORD_SERVER_ID:?Discord Server ID not set.}
-      DISCORD_TOKEN: ${DISCORD_TOKEN:?Discord token not set.}
+Then, run `docker-compose up -d` from the same directory as this file. This will pull down the latest Node Nanny images, as well as setup the MongoDB and Redis containers and start everything up.
 
-      # Optional Environment Variables
-      ALERT_TRIGGER_THRESHOLD: ${ALERT_TRIGGER_THRESHOLD}
-      ALERT_RETRIGGER_THRESHOLD: ${ALERT_RETRIGGER_THRESHOLD}
-      MONITOR_LOGGER: ${MONITOR_LOGGER:-mongodb}
+You are now ready to start adding inventory data. The Node Nanny UI will be available on port 3000 on your host machine; it is highly recommended to configure your access settings to prevent access from unauthorized IPs.
 
-      MONGO_URI: "mongodb://${MONGO_USER:?Mongo user not set.}:${MONGO_PASSWORD:?Mongo password not set.}@nn_db:27017/${MONGO_DATABASE:?Mongo database name not set.}?authSource=admin"
-
-  nn_frontend:
-    image: pocketfoundation/node-nanny-ui:latest
-    container_name: nn_frontend
-    ports:
-      - "3000:3000"
-    hostname: nn_frontend
-    depends_on:
-      - nn_backend
-      - nn_db
-      - nn_redis
-
-  nn_db:
-    image: mongo:latest
-    container_name: nn_db
-    environment:
-      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:?Mongo database name not set.}
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?Mongo user not set.}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Mongo password not set.}
-    volumes:
-      - /data/db:/data/db
-    ports:
-      - "27017:27017"
-
-  nn_redis:
-    image: "redis:latest"
-    container_name: nn_redis
-```
-
-Set the `nn_db.volumes` property to the path you would like to store your inventory DB and logs.
-
-Then, run `docker-compose up -d` from the same directory as this file. This will pull down the latest Node Nanny images, as well as setup the MongoDB and Redis containers and start everything up. You are now ready to start adding inventory data.
+# How To Use
 
 ## Adding Data
+
+Node Nanny supports adding Host and Node data through the included UI; either one at a time via form input or as batches using CSV upload.
+
+## 1. Chains/Oracles
+
+Both Chains and Oracles are autopopulated to the database on initialization of the application and updated on an hourly basis from a database maintained by Pocket. There is no need to manually create Chains or Oracles in the inventory database.
+
+## 2. Locations
+
+Locations are added on the Hosts screen; all that's needed is to add a string code. This code can be whatever you want but it must be unique.
+
+## 3. Hosts
+
+Hosts can be added on the Hosts screen, either by form input or in batches by CSV.
+
+| field        | type    | required |
+| ------------ | ------- | -------- |
+| name         | string  | Y        |
+| location     | string  | Y        |
+| loadBalancer | boolean | Y        |
+| ip           | string  |          |
+| fqdn         | string  |          |
+
+Notes
+
+- `loadBalancer` indicates whether or not the host is running load balancer software; this field must be enabled in order to make the host available to a node as a load balancer.
+- Either `IP` or `FQDN` is required for each host, but cannot enter both.
+- `FQDN` is required if the nodes on the host wish to use HTTPS.
+
+### Example CSV Format
+
+| name      | location | loadBalancer | ip          | fqdn                             |
+| --------- | -------- | ------------ | ----------- | -------------------------------- |
+| eth-1-2a  | USW2     | false        | 12.43.5.123 |                                  |
+| eth-1-2b  | USE2     | false        |             | eth-instance-2.nodes.eth.network |
+| shared-2a | USE2     | true         | 10.0.0.33   |                                  |
+
+Note: Location must exactly match a Location code that exists in your inventory database; the CSV import cannot be submitted otherwise.
+
+## 4. Nodes
+
+Nodes can be added on the Nodes screen, either by form input or in batches by CSV.
+
+| field         | type         | required |
+| ------------- | ------------ | -------- |
+| https         | boolean      | Y        |
+| chain         | string       | Y        |
+| host          | string       | Y        |
+| port          | number       | Y        |
+| automation    | boolean      | Y        |
+| backend       | string       |          |
+| loadBalancers | string array |          |
+| server        | string       |          |
+
+Notes
+
+- `https` may only be enabled if the Node's Host has an FQDN.
+- `backend`, `loadBalancers` and `server` are required if `automation` is true.
+- `backend` and `server` must match the fields defined in your `haproxy.cfg` file.
+  - For further information in setting up HAProxy, [see below](#automation).
+
+### Example CSV Format
+
+| https | chain | host      | port | automation | backend    | loadBalancers       | server |
+| ----- | ----- | --------- | ---- | ---------- | ---------- | ------------------- | ------ |
+| false | ETH   | eth-1-2a  | 4001 | true       | ethmainnet | shared2a, shared-2b | 2a     |
+| true  | ETH   | eth-1-2b  | 4230 | true       | ethmainnet | shared2a, shared-2b | 2b     |
+| false | POKT  | pokt-1-1c | 5008 | false      |            |                     |        |
+
+Notes
+
+- `chain` & `host` must exactly match chain/hosts codes that exist in your inventory database; the CSV import cannot be submitted otherwise.
+- `loadBalancers` is a list of load balancer host names comma separated and must also match host names in your inventory database.
+
+# Automation
+
+Node Nanny can automatically manage the availabilty of your blockchain nodes, pulling them in and out of rotation. This feature is only available if HAProxy is configured and the node has the `automation` field set to true.
+
+## HAProxy
+
+Currently the only load balancer supported is HAProxy; as mentioned above, pull requests to support additional load balancers are welcome.
+
+### [HAProxy configuration basics guide](https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/)
+
+_(Pocket specific HAProxy setup guide coming soon...)_
+
+# Support and Contact
+
+## **Currently in open beta**
+
+If you come across an issue with Node Nanny, do a search in the [Issues](https://github.com/pokt-foundation/node-nanny/issues) tab of this repo to make sure it hasn't been reported before. Follow these steps to help us prevent duplicate issues and unnecessary notifications going to the many people watching this repo:
+
+- If the issue you found has been reported and is still open, and the details match your issue, give a "thumbs up" to the relevant posts in the issue thread to signal that you have the same issue. No further action is required on your part.
+- If the issue you found has been reported and is still open, but the issue is missing some details, you can add a comment to the issue thread describing the additional details.
+- If the issue you found has been reported but has been closed, you can comment on the closed issue thread and ask to have the issue reopened because you are still experiencing the issue. Alternatively, you can open a new issue, reference the closed issue by number or link, and state that you are still experiencing the issue. Provide any additional details in your post so we can better understand the issue and how to fix it.
+
+<div>
+  <a  href="https://twitter.com/poktnetwork" ><img src="https://img.shields.io/twitter/url/http/shields.io.svg?style=social"></a>
+  <a href="https://t.me/POKTnetwork"><img src="https://img.shields.io/badge/Telegram-blue.svg"></a>
+  <a href="https://www.facebook.com/POKTnetwork" ><img src="https://img.shields.io/badge/Facebook-red.svg"></a>
+  <a href="https://research.pokt.network"><img src="https://img.shields.io/discourse/https/research.pokt.network/posts.svg"></a>
+</div>
+
+# License
+
+This project is licensed under the MIT License; see the [LICENSE.md](LICENSE.md) file for details.

@@ -93,9 +93,11 @@ export type ILogParams = {
 export type IMutation = {
   createHost?: Maybe<IHost>;
   createHostsCSV: Array<Maybe<IHost>>;
+  createLocation: ILocation;
   createNode?: Maybe<INode>;
   createNodesCSV: Array<Maybe<INode>>;
   deleteHost?: Maybe<IHost>;
+  deleteLocation?: Maybe<Scalars['Boolean']>;
   deleteNode?: Maybe<INode>;
   disableHaProxyServer: Scalars['Boolean'];
   enableHaProxyServer: Scalars['Boolean'];
@@ -116,6 +118,11 @@ export type IMutationCreateHostsCsvArgs = {
 };
 
 
+export type IMutationCreateLocationArgs = {
+  name: Scalars['String'];
+};
+
+
 export type IMutationCreateNodeArgs = {
   input: INodeInput;
 };
@@ -127,6 +134,11 @@ export type IMutationCreateNodesCsvArgs = {
 
 
 export type IMutationDeleteHostArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type IMutationDeleteLocationArgs = {
   id: Scalars['ID'];
 };
 
@@ -166,12 +178,12 @@ export type IMutationUpdateNodeArgs = {
 };
 
 export type INode = {
+  automation?: Maybe<Scalars['Boolean']>;
   backend?: Maybe<Scalars['String']>;
   chain: IChain;
   conditions: Scalars['String'];
   dispatch?: Maybe<Scalars['Boolean']>;
   frontend?: Maybe<Scalars['String']>;
-  haProxy?: Maybe<Scalars['Boolean']>;
   host: IHost;
   id: Scalars['ID'];
   loadBalancers?: Maybe<Array<IHost>>;
@@ -185,40 +197,45 @@ export type INode = {
 };
 
 export type INodeCsvInput = {
+  automation: Scalars['Boolean'];
   backend?: InputMaybe<Scalars['String']>;
   chain: Scalars['String'];
-  haProxy: Scalars['Boolean'];
   host: Scalars['String'];
   https: Scalars['Boolean'];
   loadBalancers: Array<Scalars['String']>;
   name: Scalars['String'];
-  port: Scalars['Int'];
+  port: Scalars['String'];
   server?: InputMaybe<Scalars['String']>;
 };
 
 export type INodeInput = {
+  automation: Scalars['Boolean'];
   backend?: InputMaybe<Scalars['String']>;
+  basicAuth?: InputMaybe<Scalars['String']>;
   chain: Scalars['ID'];
-  haProxy: Scalars['Boolean'];
+  frontend?: InputMaybe<Scalars['String']>;
   host: Scalars['ID'];
   https: Scalars['Boolean'];
   loadBalancers: Array<Scalars['ID']>;
   name: Scalars['String'];
-  port: Scalars['Int'];
+  port: Scalars['String'];
   server?: InputMaybe<Scalars['String']>;
+  url: Scalars['String'];
 };
 
 export type INodeUpdate = {
+  automation?: InputMaybe<Scalars['Boolean']>;
   backend?: InputMaybe<Scalars['String']>;
   chain?: InputMaybe<Scalars['ID']>;
   frontend?: InputMaybe<Scalars['String']>;
-  haProxy?: InputMaybe<Scalars['Boolean']>;
   host?: InputMaybe<Scalars['ID']>;
+  https?: InputMaybe<Scalars['Boolean']>;
   id: Scalars['ID'];
   loadBalancers?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   name?: InputMaybe<Scalars['String']>;
-  port?: InputMaybe<Scalars['Int']>;
+  port?: InputMaybe<Scalars['String']>;
   server?: InputMaybe<Scalars['String']>;
+  url?: InputMaybe<Scalars['String']>;
 };
 
 export type IOracle = {
@@ -242,7 +259,9 @@ export type IPaginatedLogs = {
 
 export type IQuery = {
   chains: Array<IChain>;
+  checkValidHaProxy: Scalars['Boolean'];
   getHaProxyStatus: Scalars['Int'];
+  getServerCount: IServerCount;
   hosts: Array<IHost>;
   locations: Array<ILocation>;
   logs: IPaginatedLogs;
@@ -255,7 +274,17 @@ export type IQuery = {
 };
 
 
+export type IQueryCheckValidHaProxyArgs = {
+  input: INodeInput;
+};
+
+
 export type IQueryGetHaProxyStatusArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type IQueryGetServerCountArgs = {
   id: Scalars['ID'];
 };
 
@@ -281,7 +310,12 @@ export type IQueryNodeArgs = {
 
 
 export type IQueryNodeStatusArgs = {
-  id?: InputMaybe<Scalars['String']>;
+  id: Scalars['ID'];
+};
+
+export type IServerCount = {
+  online: Scalars['Int'];
+  total: Scalars['Int'];
 };
 
 export type IWebhook = {
@@ -305,12 +339,19 @@ export type ICreateHostsCsvMutationVariables = Exact<{
 
 export type ICreateHostsCsvMutation = { createHostsCSV: Array<{ id: string } | null> };
 
+export type ICreateLocationMutationVariables = Exact<{
+  name: Scalars['String'];
+}>;
+
+
+export type ICreateLocationMutation = { createLocation: { name: string } };
+
 export type ICreateNodeMutationVariables = Exact<{
   input: INodeInput;
 }>;
 
 
-export type ICreateNodeMutation = { createNode?: { id: string, url: string } | null };
+export type ICreateNodeMutation = { createNode?: { id: string, url: string, name: string } | null };
 
 export type ICreateNodesCsvMutationVariables = Exact<{
   nodes: Array<INodeCsvInput> | INodeCsvInput;
@@ -324,42 +365,49 @@ export type IUpdateHostMutationVariables = Exact<{
 }>;
 
 
-export type IUpdateHostMutation = { updateHost?: { id: string } | null };
+export type IUpdateHostMutation = { updateHost?: { id: string, name: string } | null };
 
 export type IUpdateNodeMutationVariables = Exact<{
   update: INodeUpdate;
 }>;
 
 
-export type IUpdateNodeMutation = { updateNode?: { id: string } | null };
+export type IUpdateNodeMutation = { updateNode?: { id: string, name: string } | null };
 
 export type IDeleteHostMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type IDeleteHostMutation = { deleteHost?: { id: string } | null };
+export type IDeleteHostMutation = { deleteHost?: { id: string, name: string } | null };
+
+export type IDeleteLocationMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type IDeleteLocationMutation = { deleteLocation?: boolean | null };
 
 export type IDeleteNodeMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type IDeleteNodeMutation = { deleteNode?: { id: string } | null };
+export type IDeleteNodeMutation = { deleteNode?: { id: string, name: string } | null };
 
 export type IMuteMonitorMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type IMuteMonitorMutation = { muteMonitor: { id: string, muted: boolean } };
+export type IMuteMonitorMutation = { muteMonitor: { id: string, muted: boolean, name: string } };
 
 export type IUnmuteMonitorMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type IUnmuteMonitorMutation = { unmuteMonitor: { id: string, muted: boolean } };
+export type IUnmuteMonitorMutation = { unmuteMonitor: { id: string, muted: boolean, name: string } };
 
 export type IEnableHaProxyServerMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -395,12 +443,12 @@ export type INodeQueryVariables = Exact<{
 }>;
 
 
-export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, haProxy?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } } };
+export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } } };
 
 export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, haProxy?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } }> };
+export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } }> };
 
 export type ILogsQueryVariables = Exact<{
   input: ILogParams;
@@ -429,7 +477,7 @@ export type IWebhooksQuery = { webhooks: Array<{ id: string, location: string, c
 export type IGetHostsChainsAndLoadBalancersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, fqdn?: string | null, ip?: string | null, location: { id: string, name: string } }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string }> };
+export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, fqdn?: string | null, location: { id: string, name: string } }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string, ip?: string | null, fqdn?: string | null, location: { id: string, name: string } }> };
 
 export type IGetNodeStatusQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -437,6 +485,20 @@ export type IGetNodeStatusQueryVariables = Exact<{
 
 
 export type IGetNodeStatusQuery = { haProxyStatus: number };
+
+export type ICheckValidHaProxyQueryVariables = Exact<{
+  input: INodeInput;
+}>;
+
+
+export type ICheckValidHaProxyQuery = { validHaProxy: boolean };
+
+export type IGetServerCountQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type IGetServerCountQuery = { serverCount: { online: number, total: number } };
 
 
 export const CreateHostDocument = gql`
@@ -507,11 +569,45 @@ export function useCreateHostsCsvMutation(baseOptions?: Apollo.MutationHookOptio
 export type CreateHostsCsvMutationHookResult = ReturnType<typeof useCreateHostsCsvMutation>;
 export type CreateHostsCsvMutationResult = Apollo.MutationResult<ICreateHostsCsvMutation>;
 export type CreateHostsCsvMutationOptions = Apollo.BaseMutationOptions<ICreateHostsCsvMutation, ICreateHostsCsvMutationVariables>;
+export const CreateLocationDocument = gql`
+    mutation CreateLocation($name: String!) {
+  createLocation(name: $name) {
+    name
+  }
+}
+    `;
+export type ICreateLocationMutationFn = Apollo.MutationFunction<ICreateLocationMutation, ICreateLocationMutationVariables>;
+
+/**
+ * __useCreateLocationMutation__
+ *
+ * To run a mutation, you first call `useCreateLocationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateLocationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createLocationMutation, { data, loading, error }] = useCreateLocationMutation({
+ *   variables: {
+ *      name: // value for 'name'
+ *   },
+ * });
+ */
+export function useCreateLocationMutation(baseOptions?: Apollo.MutationHookOptions<ICreateLocationMutation, ICreateLocationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ICreateLocationMutation, ICreateLocationMutationVariables>(CreateLocationDocument, options);
+      }
+export type CreateLocationMutationHookResult = ReturnType<typeof useCreateLocationMutation>;
+export type CreateLocationMutationResult = Apollo.MutationResult<ICreateLocationMutation>;
+export type CreateLocationMutationOptions = Apollo.BaseMutationOptions<ICreateLocationMutation, ICreateLocationMutationVariables>;
 export const CreateNodeDocument = gql`
     mutation CreateNode($input: NodeInput!) {
   createNode(input: $input) {
     id
     url
+    name
   }
 }
     `;
@@ -578,6 +674,7 @@ export const UpdateHostDocument = gql`
     mutation UpdateHost($update: HostUpdate!) {
   updateHost(update: $update) {
     id
+    name
   }
 }
     `;
@@ -611,6 +708,7 @@ export const UpdateNodeDocument = gql`
     mutation UpdateNode($update: NodeUpdate!) {
   updateNode(update: $update) {
     id
+    name
   }
 }
     `;
@@ -644,6 +742,7 @@ export const DeleteHostDocument = gql`
     mutation DeleteHost($id: ID!) {
   deleteHost(id: $id) {
     id
+    name
   }
 }
     `;
@@ -673,10 +772,42 @@ export function useDeleteHostMutation(baseOptions?: Apollo.MutationHookOptions<I
 export type DeleteHostMutationHookResult = ReturnType<typeof useDeleteHostMutation>;
 export type DeleteHostMutationResult = Apollo.MutationResult<IDeleteHostMutation>;
 export type DeleteHostMutationOptions = Apollo.BaseMutationOptions<IDeleteHostMutation, IDeleteHostMutationVariables>;
+export const DeleteLocationDocument = gql`
+    mutation DeleteLocation($id: ID!) {
+  deleteLocation(id: $id)
+}
+    `;
+export type IDeleteLocationMutationFn = Apollo.MutationFunction<IDeleteLocationMutation, IDeleteLocationMutationVariables>;
+
+/**
+ * __useDeleteLocationMutation__
+ *
+ * To run a mutation, you first call `useDeleteLocationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteLocationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteLocationMutation, { data, loading, error }] = useDeleteLocationMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteLocationMutation(baseOptions?: Apollo.MutationHookOptions<IDeleteLocationMutation, IDeleteLocationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<IDeleteLocationMutation, IDeleteLocationMutationVariables>(DeleteLocationDocument, options);
+      }
+export type DeleteLocationMutationHookResult = ReturnType<typeof useDeleteLocationMutation>;
+export type DeleteLocationMutationResult = Apollo.MutationResult<IDeleteLocationMutation>;
+export type DeleteLocationMutationOptions = Apollo.BaseMutationOptions<IDeleteLocationMutation, IDeleteLocationMutationVariables>;
 export const DeleteNodeDocument = gql`
     mutation DeleteNode($id: ID!) {
   deleteNode(id: $id) {
     id
+    name
   }
 }
     `;
@@ -711,6 +842,7 @@ export const MuteMonitorDocument = gql`
   muteMonitor(id: $id) {
     id
     muted
+    name
   }
 }
     `;
@@ -745,6 +877,7 @@ export const UnmuteMonitorDocument = gql`
   unmuteMonitor(id: $id) {
     id
     muted
+    name
   }
 }
     `;
@@ -967,7 +1100,7 @@ export const NodeDocument = gql`
       id
       name
     }
-    haProxy
+    automation
     dispatch
     chain {
       id
@@ -1026,7 +1159,7 @@ export const NodesDocument = gql`
       id
       name
     }
-    haProxy
+    automation
     dispatch
     chain {
       id
@@ -1225,7 +1358,6 @@ export const GetHostsChainsAndLoadBalancersDocument = gql`
   hosts {
     id
     name
-    fqdn
     ip
     fqdn
     location {
@@ -1240,6 +1372,12 @@ export const GetHostsChainsAndLoadBalancersDocument = gql`
   loadBalancers: hosts(loadBalancer: true) {
     id
     name
+    ip
+    fqdn
+    location {
+      id
+      name
+    }
   }
 }
     `;
@@ -1303,3 +1441,72 @@ export function useGetNodeStatusLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
 export type GetNodeStatusQueryHookResult = ReturnType<typeof useGetNodeStatusQuery>;
 export type GetNodeStatusLazyQueryHookResult = ReturnType<typeof useGetNodeStatusLazyQuery>;
 export type GetNodeStatusQueryResult = Apollo.QueryResult<IGetNodeStatusQuery, IGetNodeStatusQueryVariables>;
+export const CheckValidHaProxyDocument = gql`
+    query CheckValidHaProxy($input: NodeInput!) {
+  validHaProxy: checkValidHaProxy(input: $input)
+}
+    `;
+
+/**
+ * __useCheckValidHaProxyQuery__
+ *
+ * To run a query within a React component, call `useCheckValidHaProxyQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCheckValidHaProxyQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCheckValidHaProxyQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCheckValidHaProxyQuery(baseOptions: Apollo.QueryHookOptions<ICheckValidHaProxyQuery, ICheckValidHaProxyQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ICheckValidHaProxyQuery, ICheckValidHaProxyQueryVariables>(CheckValidHaProxyDocument, options);
+      }
+export function useCheckValidHaProxyLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ICheckValidHaProxyQuery, ICheckValidHaProxyQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ICheckValidHaProxyQuery, ICheckValidHaProxyQueryVariables>(CheckValidHaProxyDocument, options);
+        }
+export type CheckValidHaProxyQueryHookResult = ReturnType<typeof useCheckValidHaProxyQuery>;
+export type CheckValidHaProxyLazyQueryHookResult = ReturnType<typeof useCheckValidHaProxyLazyQuery>;
+export type CheckValidHaProxyQueryResult = Apollo.QueryResult<ICheckValidHaProxyQuery, ICheckValidHaProxyQueryVariables>;
+export const GetServerCountDocument = gql`
+    query GetServerCount($id: ID!) {
+  serverCount: getServerCount(id: $id) {
+    online
+    total
+  }
+}
+    `;
+
+/**
+ * __useGetServerCountQuery__
+ *
+ * To run a query within a React component, call `useGetServerCountQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetServerCountQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetServerCountQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetServerCountQuery(baseOptions: Apollo.QueryHookOptions<IGetServerCountQuery, IGetServerCountQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<IGetServerCountQuery, IGetServerCountQueryVariables>(GetServerCountDocument, options);
+      }
+export function useGetServerCountLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<IGetServerCountQuery, IGetServerCountQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<IGetServerCountQuery, IGetServerCountQueryVariables>(GetServerCountDocument, options);
+        }
+export type GetServerCountQueryHookResult = ReturnType<typeof useGetServerCountQuery>;
+export type GetServerCountLazyQueryHookResult = ReturnType<typeof useGetServerCountLazyQuery>;
+export type GetServerCountQueryResult = Apollo.QueryResult<IGetServerCountQuery, IGetServerCountQueryVariables>;

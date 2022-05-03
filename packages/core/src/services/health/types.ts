@@ -18,7 +18,9 @@ export enum ESupportedBlockchains {
   KOV = "KOV",
   HEI = "HEI",
   POKT = "POKT",
+  /* PNF Internal only */
   "POKT-DIS" = "POKT-DIS",
+  "POKT-MAIN" = "POKT-MAIN",
 }
 
 export enum ESupportedBlockchainTypes {
@@ -38,6 +40,7 @@ export enum EErrorConditions {
   NOT_SYNCHRONIZED = "NOT_SYNCHRONIZED",
   NO_PEERS = "NO_PEERS",
   PEER_NOT_SYNCHRONIZED = "PEER_NOT_SYNCHRONIZED",
+  PENDING = "PENDING",
 }
 
 export enum EErrorStatus {
@@ -45,6 +48,7 @@ export enum EErrorStatus {
   OK = "OK",
   INFO = "INFO",
   WARNING = "WARNING",
+  PENDING = "PENDING",
 }
 
 export interface IBlockHeight {
@@ -66,17 +70,17 @@ export interface IHealthResponse {
   details?: IHealthResponseDetails;
   health?: any;
   id?: string;
-  ethSyncing?: boolean;
+  ethSyncing?: string;
   delta?: number;
   refNodeUrls?: string[];
   highest?: any;
-  sendWarning?: boolean;
 }
 
 export interface IHealthResponseDetails {
   noOracle?: boolean;
   numPeers?: number;
   badOracles?: string[];
+  nodeIsAheadOfPeer?: number;
 }
 
 export interface IReferenceURL {
