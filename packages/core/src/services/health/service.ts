@@ -496,6 +496,7 @@ export class Service {
         height: { internalHeight: nodeHeight, externalHeight: peerHeight, delta },
       };
     }
+
     return {
       name,
       status: EErrorStatus.OK,
@@ -528,7 +529,7 @@ export class Service {
           $match: {
             chain: { $in: pocketChainIds },
             _id: { $ne: nodeId },
-            conditions: EErrorConditions.HEALTHY,
+            status: { $ne: EErrorStatus.ERROR },
           },
         },
         { $sample: { size: 20 } },
