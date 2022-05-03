@@ -25,7 +25,7 @@ export class Publish {
   private initPublish(nodes: INode[]): Map<string, number> {
     const map = new Map<string, number>();
     nodes.forEach(({ id, status: prevStatus }) => {
-      if (prevStatus === HealthTypes.EErrorStatus.ERROR) {
+      if (prevStatus !== HealthTypes.EErrorStatus.OK) {
         map.set(id.toString(), this.threshold);
       }
     });
