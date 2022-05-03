@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, AlertTitle, Grid, LinearProgress } from "@mui/material";
 
 import HostCRUD from "components/Hosts/HostCRUD";
@@ -43,6 +43,17 @@ export function Hosts() {
   };
   const columnsOrder = ["name", "location", "loadBalancer"];
   const hostNames = data?.hosts.map(({ name }) => name);
+  const locationsWithHost: { [id: string]: number } = useMemo(
+    () =>
+      data?.hosts?.reduce(
+        (list: { [id: string]: number }, { location: { id } }) => ({
+          ...list,
+          [id]: (list[id] || 0) + 1,
+        }),
+        {},
+      ),
+    [data?.hosts],
+  );
 
   const handleSelectedHost = (host: IHostsQuery["hosts"][0]) => {
     setState(HostActionsState.Info);
@@ -96,6 +107,7 @@ export function Hosts() {
             <Grid item sm={12} lg={6} order={{ lg: 2 }}>
               <HostLocation
                 locations={locationsData?.locations}
+                locationsWithHost={locationsWithHost}
                 refetchLocations={refetchLocations}
                 setState={setState}
               ></HostLocation>
