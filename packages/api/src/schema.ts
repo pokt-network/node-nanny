@@ -65,8 +65,13 @@ const typeDefs = gql`
     frontend: String
     server: String
     ssl: Boolean
-    haProxy: Boolean
+    automation: Boolean
     dispatch: Boolean
+  }
+
+  type ServerCount {
+    online: Int!
+    total: Int!
   }
 
   # EVM chains only
@@ -89,11 +94,14 @@ const typeDefs = gql`
     chain: ID!
     host: ID!
     name: String!
-    port: Int!
+    url: String!
+    port: String!
     loadBalancers: [ID!]!
-    haProxy: Boolean!
+    automation: Boolean!
     backend: String
+    frontend: String
     server: String
+    basicAuth: String
   }
 
   input HostInput {
@@ -109,10 +117,10 @@ const typeDefs = gql`
     chain: String!
     host: String!
     name: String!
-    loadBalancers: [String!]!
-    port: Int!
-    haProxy: Boolean!
+    port: String!
+    automation: Boolean!
     backend: String
+    loadBalancers: [String!]!
     server: String
   }
 
@@ -129,12 +137,14 @@ const typeDefs = gql`
     chain: ID
     host: ID
     name: String
+    url: String
     loadBalancers: [ID]
-    port: Int
-    haProxy: Boolean
+    port: String
+    automation: Boolean
     backend: String
     frontend: String
     server: String
+    https: Boolean
   }
 
   input HostUpdate {
@@ -175,12 +185,15 @@ const typeDefs = gql`
     logsForChart(input: LogChartParams!): [LogForChart!]!
 
     getHaProxyStatus(id: ID!): Int!
-    nodeStatus(id: String): String!
+    checkValidHaProxy(input: NodeInput!): Boolean!
+    nodeStatus(id: ID!): String!
+    getServerCount(id: ID!): ServerCount!
   }
 
   type Mutation {
     createHost(input: HostInput!): Host
     createHostsCSV(hosts: [HostCSVInput!]!): [Host]!
+    createLocation(name: String!): Location!
     createNode(input: NodeInput!): Node
     createNodesCSV(nodes: [NodeCSVInput!]!): [Node]!
 
@@ -188,6 +201,7 @@ const typeDefs = gql`
     updateNode(update: NodeUpdate!): Node
 
     deleteHost(id: ID!): Host
+    deleteLocation(id: ID!): Boolean
     deleteNode(id: ID!): Node
 
     muteMonitor(id: ID!): Node!

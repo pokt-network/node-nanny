@@ -11,7 +11,9 @@ import {
   Log as LogService,
 } from "@pokt-foundation/node-nanny-core/dist/services";
 
-const resolvers = {
+const resolvers: {
+  [queryType: string]: { [queryName: string]: (_: any, args: any) => any };
+} = {
   Query: {
     chains: async () => await ChainsModel.find({}).exec(),
     hosts: async (_, { loadBalancer }) => {
@@ -41,11 +43,20 @@ const resolvers = {
     getHaProxyStatus: async (_, { id }) => {
       return await new AutomationService().getHaProxyStatus(id);
     },
+    checkValidHaProxy: async (_, { input }) => {
+      return await new AutomationService().checkValidHaProxy(input);
+    },
+    getServerCount: async (_, { id }) => {
+      return await new AutomationService().getServerCountForUi(id);
+    },
   },
 
   Mutation: {
     createHost: async (_, { input }) => {
       return await new AutomationService().createHost(input);
+    },
+    createLocation: async (_, { name }) => {
+      return await LocationsModel.create({ name });
     },
     createNode: async (_, { input }) => {
       return await new AutomationService().createNode(input);
@@ -66,6 +77,9 @@ const resolvers = {
 
     deleteHost: async (_, { id }) => {
       return await new AutomationService().deleteHost(id);
+    },
+    deleteLocation: async (_, { id }) => {
+      return !!(await LocationsModel.deleteOne({ id }));
     },
     deleteNode: async (_, { id }) => {
       return await new AutomationService().deleteNode(id);

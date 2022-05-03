@@ -5,12 +5,14 @@ export interface INodeInput {
   chain: Types.ObjectId;
   host: Types.ObjectId;
   name: string;
+  url: string;
   loadBalancers: Types.ObjectId[];
   port: number;
-  haProxy: boolean;
+  automation: boolean;
   backend?: string;
   frontend?: string;
   server?: string;
+  basicAuth?: string;
 }
 
 export interface INodeCsvInput {
@@ -20,9 +22,11 @@ export interface INodeCsvInput {
   name: string;
   loadBalancers: string[];
   port: number;
-  haProxy: boolean;
+  automation: boolean;
   backend?: string;
+  frontend?: string;
   server?: string;
+  basicAuth?: string;
 }
 
 export interface IHostInput {
@@ -43,12 +47,14 @@ export interface IHostCsvInput {
 
 export interface INodeUpdate {
   id: string;
+  https?: boolean;
   chain?: string;
   host?: string;
   name?: string;
+  url?: string;
   loadBalancers?: string[];
   port?: number;
-  haProxy?: boolean;
+  automation?: boolean;
   backend?: string;
   frontend?: string;
   server?: string;
