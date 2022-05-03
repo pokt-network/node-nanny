@@ -1,5 +1,4 @@
 import { connect, disconnect } from "@pokt-foundation/node-nanny-core/dist/db";
-import { createFrontendAlertChannel } from "@pokt-foundation/node-nanny-core/dist/jobs";
 import { NodesModel } from "@pokt-foundation/node-nanny-core/dist/models";
 import { Health, Log } from "@pokt-foundation/node-nanny-core/dist/services";
 import { HealthTypes } from "@pokt-foundation/node-nanny-core/dist/types";
@@ -24,7 +23,6 @@ export class App {
    * Events are published to REDIS and logs written to MongoDB. */
   async main() {
     await connect();
-    await createFrontendAlertChannel();
 
     const nodes = await NodesModel.find({}).populate("host").populate("chain").exec();
     const publish = new Publish(nodes);
