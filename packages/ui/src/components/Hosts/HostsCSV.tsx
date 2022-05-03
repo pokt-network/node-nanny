@@ -1,22 +1,15 @@
-import { Dispatch, useEffect, useState } from "react";
+import { Dispatch, useState } from "react";
 import { ApolloQueryResult } from "@apollo/client";
 import CSVReader from "react-csv-reader";
-import {
-  Alert,
-  AlertTitle,
-  Box,
-  Button,
-  CircularProgress,
-  Typography,
-} from "@mui/material";
+import { Box, Button } from "@mui/material";
 
-import { Table, Title } from "components";
+import { Title } from "components";
 import Paper from "components/Paper";
 import { ConfirmationModalProps } from "components/modals/CSVConfirmationModal";
 import { HostActionsState } from "pages/Hosts";
 
-import { IHostCsvInput, IHostsQuery, ILocation, useCreateHostsCsvMutation } from "types";
-import { ModalHelper, parseBackendError, regexTest, s } from "utils";
+import { IHostCsvInput, IHostsQuery, ILocation } from "types";
+import { ModalHelper, regexTest } from "utils";
 
 interface ICSVHost {
   name: string;
@@ -39,9 +32,7 @@ export const HostsCSV = ({
   refetchHosts,
   setState,
 }: NodesCSVProps) => {
-  const [hosts, setHosts] = useState<IHostCsvInput[]>(undefined);
   const [hostsError, setHostsError] = useState<string>("");
-  const [backendError, setBackendError] = useState<string>("");
 
   /* ----- Table Options ---- */
   const columnsOrder = ["name", "location", "ip", "fqdn", "loadBalancer"];
@@ -90,7 +81,6 @@ export const HostsCSV = ({
   /* ----- CSV Parsing ----- */
   const parseHostsCsv = (hostsData: ICSVHost[]) => {
     setHostsError("");
-    setBackendError("");
     const hostsWithRequiredFields = hostsData.filter((host) =>
       ["name", "location"].every((key) => Object.keys(host).includes(key)),
     );
