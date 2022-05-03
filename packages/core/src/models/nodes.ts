@@ -19,7 +19,7 @@ export interface INode<Populated = true> {
   frontend?: string;
   server?: string;
   basicAuth?: string;
-  haProxy?: boolean;
+  automation?: boolean;
   dispatch?: boolean;
 }
 
@@ -34,24 +34,25 @@ const nodesSchema = new Schema<INode>(
     status: {
       type: String,
       enum: Object.values(HealthTypes.EErrorStatus),
-      default: HealthTypes.EErrorStatus.OK,
+      default: HealthTypes.EErrorStatus.PENDING,
     },
     conditions: {
       type: String,
       enum: Object.values(HealthTypes.EErrorConditions),
-      default: HealthTypes.EErrorConditions.HEALTHY,
+      default: HealthTypes.EErrorConditions.PENDING,
     },
     loadBalancers: [{ type: Schema.Types.ObjectId, ref: "Hosts" }],
     backend: String,
     frontend: String,
     server: String,
     basicAuth: String,
-    haProxy: Boolean,
+    automation: Boolean,
     dispatch: Boolean,
   },
   { timestamps: true },
 );
 
+nodesSchema.index({ name: 1 });
 nodesSchema.index(
   { host: 1, port: 1, server: 1 },
   { unique: true, partialFilterExpression: { server: { $type: "string" } } },

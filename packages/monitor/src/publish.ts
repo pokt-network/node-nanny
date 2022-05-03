@@ -2,6 +2,8 @@ import Redis from "ioredis";
 import { INode } from "@pokt-foundation/node-nanny-core/dist/models";
 import { EventTypes, HealthTypes } from "@pokt-foundation/node-nanny-core/dist/types";
 
+import env from "@pokt-foundation/node-nanny-core/dist/environment";
+
 interface IMonitorEvent {
   message: HealthTypes.IHealthResponse;
   id: string;
@@ -14,16 +16,16 @@ export class Publish {
   private map: Map<string, number>;
 
   constructor(nodes: INode[]) {
-    this.redis = new Redis({ host: process.env.REDIS_HOST });
-    this.threshold = Number(process.env.ALERT_TRIGGER_THRESHOLD || 6);
-    this.retriggerThreshold = Number(process.env.ALERT_RETRIGGER_THRESHOLD || 60);
+    this.redis = new Redis({ host: env("REDIS_HOST") });
+    this.threshold = env("ALERT_TRIGGER_THRESHOLD");
+    this.retriggerThreshold = env("ALERT_RETRIGGER_THRESHOLD");
     this.map = this.initPublish(nodes);
   }
 
   private initPublish(nodes: INode[]): Map<string, number> {
     const map = new Map<string, number>();
     nodes.forEach(({ id, status: prevStatus }) => {
-      if (prevStatus === HealthTypes.EErrorStatus.ERROR) {
+      if (prevStatus !== HealthTypes.EErrorStatus.OK) {
         map.set(id.toString(), this.threshold);
       }
     });

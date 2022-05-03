@@ -1,7 +1,11 @@
 import axios from "axios";
+
 import { connect, disconnect } from "../db";
-import { ChainsModel, OraclesModel, IChain, IOracle, WebhookModel } from "../models";
+import { ChainsModel, OraclesModel, IChain, IOracle } from "../models";
 import { getTimestamp } from "../utils";
+import { createFrontendAlertChannel } from "./create-frontend-alert-channel";
+
+import env from "../environment";
 
 interface IChainsAndOraclesResponse {
   chains: IChain[];
@@ -10,23 +14,28 @@ interface IChainsAndOraclesResponse {
 
 /* ----- Script Runs Every Hour ----- */
 (async () => {
-  if (process.env.PNF === "1") return;
+  if (env("PNF")) return;
 
   await connect();
 
-  /* ---- 1) Get newest local Chain and Oracle records' timestamps ---- */
-  const [{ updatedAt: latestChain }] = await ChainsModel.find()
-    .sort({ updatedAt: -1 })
-    .limit(1)
-    .select("updatedAt")
-    .exec();
-  const [{ updatedAt: latestOracle }] = await OraclesModel.find()
-    .sort({ updatedAt: -1 })
-    .limit(1)
-    .select("updatedAt")
-    .exec();
+  await createFrontendAlertChannel();
 
-  /* ---- 2) Fetch any newer remote Chain and Oracle records from Infrastructure Support Lambda ---- */
+  /* ----- 1) Get newest local Chain and Oracle records' timestamps ---- */
+  const nodeNannysBirthday = new Date("2022-02-14").toISOString();
+
+  const [{ updatedAt: latestChain }] = (await ChainsModel.exists({}))
+    ? await ChainsModel.find().sort({ updatedAt: -1 }).limit(1).select("updatedAt").exec()
+    : [{ updatedAt: nodeNannysBirthday }];
+
+  const [{ updatedAt: latestOracle }] = (await OraclesModel.exists({}))
+    ? await OraclesModel.find()
+        .sort({ updatedAt: -1 })
+        .limit(1)
+        .select("updatedAt")
+        .exec()
+    : [{ updatedAt: nodeNannysBirthday }];
+
+  /* ----- 2) Fetch any newer remote Chain and Oracle records from Infrastructure Support Lambda ---- */
   const {
     data: { chains, oracles },
   } = await axios.post<IChainsAndOraclesResponse>(
@@ -41,7 +50,7 @@ interface IChainsAndOraclesResponse {
       } newer oracles ...`,
     );
 
-    /* ---- 3) Add newer Chains and Oracles to local database ---- */
+    /* ----- 3) Add newer Chains and Oracles to local database ---- */
     if (chains?.length) {
       for await (const chain of chains) {
         const { name, type, allowance } = chain;

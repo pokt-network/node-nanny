@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     netcat
 RUN curl -sL https://deb.nodesource.com/setup_16.x  | bash -
 RUN apt-get install nodejs -y
-RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm
+RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm@6
 
 COPY ./ .
 RUN rm -rf ./packages/ui
