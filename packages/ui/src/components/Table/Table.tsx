@@ -64,7 +64,6 @@ export function getSortedColumns(row: any, header: boolean, columnsOrder: string
 }
 
 const CellContents = ({ cell, column }): JSX.Element => {
-  console.log({ cell, column });
   if (Array.isArray(cell)) {
     return <>{cell.join(", ")}</>;
   } else if (typeof cell === "boolean") {

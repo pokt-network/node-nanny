@@ -145,7 +145,7 @@ export const NodeCRUD = ({
         promptText: (haProxyOnline
           ? text.removeFromRotation
           : text.addToRotation
-        ).replaceAll("{node}", node.name),
+        ).replaceAll("{selectedNode}", node.name),
         error: (enableHaProxyError || disableHaProxyError)?.message,
       },
     });
