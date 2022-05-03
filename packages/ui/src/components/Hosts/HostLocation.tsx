@@ -22,7 +22,7 @@ import {
   useCreateLocationMutation,
   useDeleteLocationMutation,
 } from "types";
-import { ModalHelper } from "utils";
+import { ModalHelper, s } from "utils";
 import { HostActionsState } from "pages/Hosts";
 
 interface ILocationInput {
@@ -31,17 +31,20 @@ interface ILocationInput {
 
 export interface NodesFormProps {
   locations: ILocation[];
+  locationsWithHost: { [id: string]: number };
   refetchLocations: (variables?: any) => Promise<ApolloQueryResult<ILocationsQuery>>;
   setState: Dispatch<HostActionsState>;
 }
 
 export const HostLocation = ({
   locations,
+  locationsWithHost,
   refetchLocations,
   setState,
 }: NodesFormProps) => {
   const [loading, setLoading] = useState(false);
   const [locationId, setLocationId] = useState("");
+  const [deleteLocationError, setDeleteLocationError] = useState("");
 
   const locationNames = locations.map(({ name }) => name);
 
@@ -71,27 +74,50 @@ export const HostLocation = ({
     },
     onError: () => setLoading(false),
   });
-  const [deleteLocation, { error: deleteLocationError }] = useDeleteLocationMutation({
+  const [deleteLocation] = useDeleteLocationMutation({
+    variables: { id: locationId },
     onCompleted: () => {
       refetchLocations();
       ModalHelper.close();
+      setLocationId("");
     },
-    onError: () => setLoading(false),
+    onError: (error) => {
+      setDeleteLocationError(error.message);
+      setLoading(false);
+      ModalHelper.close();
+    },
   });
 
   const handleOpenConfirmModal = () => {
+    console.log({ locationId });
     ModalHelper.open({
       modalType: "confirmation",
       modalProps: {
-        handleOk: () => deleteLocation({ variables: { id: locationId } }),
+        handleOk: deleteLocation,
         confirmText: `Confirm Delete Location`,
         okText: "Delete Location",
         promptText: `This will delete the location ${
           locations.find(({ id }) => id === locationId).name
         } from the inventory database. Confirm?`,
-        error: deleteLocationError?.message,
       },
     });
+  };
+
+  const handleDeleteChange = ({ target }) => {
+    setDeleteLocationError("");
+    const { value: locationId } = target;
+
+    if (locationId in locationsWithHost) {
+      const { name } = locations.find(({ id }) => id === locationId);
+      const num = locationsWithHost[locationId];
+      setDeleteLocationError(
+        `Location ${name} has ${num} host${s(
+          num,
+        )}; to delete this location first delete all hosts associated with it.`,
+      );
+    }
+
+    setLocationId(locationId);
   };
 
   /* ----- Layout ----- */
@@ -172,7 +198,7 @@ export const HostLocation = ({
               labelId="location-label"
               value={locationId}
               label="Location"
-              onChange={({ target }) => setLocationId((target as any).value)}
+              onChange={handleDeleteChange}
               disabled={!locations?.length}
             >
               {locations?.map(({ id, name }) => (
@@ -191,7 +217,7 @@ export const HostLocation = ({
             <Button
               variant="contained"
               color="primary"
-              disabled={!locations?.length}
+              disabled={!locations?.length || !!deleteLocationError}
               onClick={handleOpenConfirmModal}
             >
               Delete Location
