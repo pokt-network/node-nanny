@@ -121,7 +121,7 @@ Hosts can be added on the Hosts screen, either by form input or in batches by CS
 
 Notes
 
-- `loadBalancer` indicates whether or not the host is running load balancer software to manage the availability of blockchain nodes.
+- `loadBalancer` indicates whether or not the host is running load balancer software; this field must be enabled in order to make the host available to a node as a load balancer.
 - Either `IP` or `FQDN` is required for each host, but cannot enter both.
 - `FQDN` is required if the nodes on the host wish to use HTTPS.
 
@@ -178,7 +178,9 @@ Node Nanny can automatically manage the availabilty of your blockchain nodes, pu
 
 Currently the only load balancer supported is HAProxy; as mentioned above, pull requests to support additional load balancers are welcome.
 
-### [HAProxy configuration basics guide](https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/) _(Pocket specific HAProxy setup guide coming soon...)_
+### [HAProxy configuration basics guide](https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/)
+
+_(Pocket specific HAProxy setup guide coming soon...)_
 
 # Support and Contact
 
