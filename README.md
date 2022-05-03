@@ -77,15 +77,15 @@ The bot will need the following permissions:
 
 ### 2. Set Environment Variables
 
-On your chosen host, you will have to set the following environment variables in either a `.env` file in same location as your `docker-compose.yml` file or in your shell environment.
+### **[Example .env File](.env.example)**
 
-## [Example .env](.env.example)
+On your chosen host, you will have to set the following environment variables in either a `.env` file in same location as your `docker-compose.yml` file or in your shell environment.
 
 ### 3. Setup Docker Compose
 
-[First ensure Docker Compose is installed on your host machine.](https://docs.docker.com/compose/install/)
+### **[Example Docker Compose File](docker-compose.yml)**
 
-## [Example Docker Compose](docker-compose.yml)
+[First ensure Docker Compose is installed on your host machine.](https://docs.docker.com/compose/install/)
 
 Ensure the filepath `/data/db` exists on your machine; this is where your inventory database will be located. Otherwise, if you would like to use a directory other than `/data/db` for your database location, you must set the `nn_db.volumes` property to the path you would like to store your inventory DB and logs.
 
