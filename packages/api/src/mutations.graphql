@@ -11,10 +11,17 @@ mutation CreateHostsCSV($hosts: [HostCSVInput!]!) {
   }
 }
 
+mutation CreateLocation($name: String!) {
+  createLocation(name: $name) {
+    name
+  }
+}
+
 mutation CreateNode($input: NodeInput!) {
   createNode(input: $input) {
     id
     url
+    name
   }
 }
 mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
@@ -26,22 +33,29 @@ mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
 mutation UpdateHost($update: HostUpdate!) {
   updateHost(update: $update) {
     id
+    name
   }
 }
 mutation UpdateNode($update: NodeUpdate!) {
   updateNode(update: $update) {
     id
+    name
   }
 }
 
 mutation DeleteHost($id: ID!) {
   deleteHost(id: $id) {
     id
+    name
   }
+}
+mutation DeleteLocation($id: ID!) {
+  deleteLocation(id: $id)
 }
 mutation DeleteNode($id: ID!) {
   deleteNode(id: $id) {
     id
+    name
   }
 }
 
@@ -49,12 +63,14 @@ mutation MuteMonitor($id: ID!) {
   muteMonitor(id: $id) {
     id
     muted
+    name
   }
 }
 mutation UnmuteMonitor($id: ID!) {
   unmuteMonitor(id: $id) {
     id
     muted
+    name
   }
 }
 mutation EnableHaProxyServer($id: ID!) {

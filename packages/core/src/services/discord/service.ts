@@ -2,6 +2,8 @@ import { Client, Intents, CategoryChannel, Guild as Server } from "discord.js";
 
 import { INode, WebhookModel } from "../../models";
 
+import env from "../../environment";
+
 export class Service {
   private client: Client;
   private token: string;
@@ -15,8 +17,8 @@ export class Service {
         return true;
       },
     });
-    this.token = process.env.DISCORD_TOKEN;
-    this.serverId = process.env.DISCORD_SERVER_ID;
+    this.token = env("DISCORD_TOKEN");
+    this.serverId = env("DISCORD_SERVER_ID");
   }
 
   private async initServer(): Promise<Server> {
@@ -29,34 +31,42 @@ export class Service {
   }
 
   public async addWebhookForNode({ chain, host }: INode): Promise<void> {
-    const { name } = chain;
-    const { location } = host;
+    try {
+      const { name } = chain;
+      const {
+        location: { name: location },
+      } = host;
 
-    if (await WebhookModel.exists({ chain: name, location: location.name })) {
-      return;
-    }
+      const noDiscordVars = !this.token || !this.serverId;
+      const webhookExists = await WebhookModel.exists({ chain: name, location });
+      if (noDiscordVars || webhookExists) {
+        return;
+      }
 
-    const categoryName = `NODE-NANNY-${location.name}`;
-    const channelName = `${name}-${location.name}`.toLowerCase();
+      const categoryName = `NODE-NANNY-${location}`;
+      const channelName = `${name}-${location}`.toLowerCase();
 
-    const server = await this.initServer();
-    const allChannels = await server.channels.fetch();
-    const categories = allChannels.filter(({ type }) => type === "GUILD_CATEGORY");
-    const channels = allChannels.filter(({ type }) => type === "GUILD_TEXT");
+      const server = await this.initServer();
+      const allChannels = await server.channels.fetch();
+      const categories = allChannels.filter(({ type }) => type === "GUILD_CATEGORY");
+      const channels = allChannels.filter(({ type }) => type === "GUILD_TEXT");
 
-    const category =
-      categories?.find(({ name }) => name === categoryName) ||
-      (await server.channels.create(categoryName, { type: "GUILD_CATEGORY" }));
+      const category =
+        categories?.find(({ name }) => name === categoryName) ||
+        (await server.channels.create(categoryName, { type: "GUILD_CATEGORY" }));
 
-    const channelExists = channels?.some(({ name }) => name === channelName);
-    if (!channelExists) {
-      const channel = await server.channels.create(channelName, {
-        type: "GUILD_TEXT",
-        parent: category as CategoryChannel,
-      });
+      const channelExists = channels?.some(({ name }) => name === channelName);
+      if (!channelExists) {
+        const channel = await server.channels.create(channelName, {
+          type: "GUILD_TEXT",
+          parent: category as CategoryChannel,
+        });
 
-      const { url } = await channel.createWebhook(`${channelName}-alert`);
-      await WebhookModel.create({ chain: name, location: location.name, url });
+        const { url } = await channel.createWebhook(`${channelName}-alert`);
+        await WebhookModel.create({ chain: name, location, url });
+      }
+    } catch (error) {
+      throw new Error(`Discord webhook creation error: ${error.message}`);
     }
   }
 

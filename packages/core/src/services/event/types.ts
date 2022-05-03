@@ -12,15 +12,15 @@ export interface IRedisEvent extends HealthTypes.IHealthResponse {
 
 export interface IRotationParams {
   destination: string;
-  loadBalancers: IHost[];
+  loadBalancers?: IHost[];
   frontendUrl?: string;
   server?: string;
   manual?: boolean;
+  dispatch?: boolean;
 }
 
 export interface IToggleServerParams {
   node: INode;
-  title: string;
   enable: boolean;
 }
 
@@ -31,9 +31,9 @@ export interface IRedisEventParams {
   healthy: boolean;
   notSynced: boolean;
   status: HealthTypes.EErrorStatus;
-  serverCount: number;
-  warningMessage?: string;
-  downDispatchers?: string[];
+  nodesOnline: number;
+  nodesTotal: number;
+  dispatchFrontendDown?: boolean;
 }
 
 export enum PocketTypes {

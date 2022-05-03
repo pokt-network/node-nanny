@@ -44,7 +44,7 @@ query Node($id: ID!) {
       id
       name
     }
-    haProxy
+    automation
     dispatch
     chain {
       id
@@ -74,7 +74,7 @@ query Nodes {
       id
       name
     }
-    haProxy
+    automation
     dispatch
     chain {
       id
@@ -131,7 +131,6 @@ query GetHostsChainsAndLoadBalancers {
   hosts {
     id
     name
-    fqdn
     ip
     fqdn
     location {
@@ -146,9 +145,26 @@ query GetHostsChainsAndLoadBalancers {
   loadBalancers: hosts(loadBalancer: true) {
     id
     name
+    ip
+    fqdn
+    location {
+      id
+      name
+    }
   }
 }
 
 query GetNodeStatus($id: ID!) {
   haProxyStatus: getHaProxyStatus(id: $id)
+}
+
+query CheckValidHaProxy($input: NodeInput!) {
+  validHaProxy: checkValidHaProxy(input: $input)
+}
+
+query GetServerCount($id: ID!) {
+  serverCount: getServerCount(id: $id) {
+    online
+    total
+  }
 }
