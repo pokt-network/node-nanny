@@ -192,6 +192,7 @@ export const NodeCRUD = ({
               color="warning"
               size="small"
               variant="outlined"
+              sx={{ width: 222 }}
             >
               {loading ? (
                 <>
