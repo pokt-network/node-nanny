@@ -81,7 +81,7 @@ const CellContents = ({ cell, column }): JSX.Element => {
   } else {
     if (column === "conditions") {
       return (
-        <Typography color={cell === "Healthy" ? "success.main" : "error"}>
+        <Typography color={cell.toLowerCase() === "healthy" ? "success.main" : "error"}>
           {String(cell)}
         </Typography>
       );

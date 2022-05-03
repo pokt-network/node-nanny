@@ -128,7 +128,7 @@ export class Service extends BaseService {
 
     const node = await this.getNode(id);
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
-    const { backend, chain, frontend, loadBalancers, dispatch, url } = node;
+    const { automation, backend, chain, frontend, loadBalancers, dispatch, url } = node;
     const pnfDispatch =
       env("PNF") && dispatch && chain.name === ESupportedBlockchains["POKT-DIS"];
 
@@ -140,12 +140,15 @@ export class Service extends BaseService {
       : conditions === EErrorConditions.NOT_SYNCHRONIZED;
     const dispatchFrontendDown = Boolean(pnfDispatch && frontend && notSynced);
 
-    const { online: nodesOnline, total: nodesTotal } = await this.getServerCount({
-      destination: frontend || backend,
-      loadBalancers,
-      frontendUrl: frontend ? url : null,
-      dispatch: pnfDispatch,
-    });
+    const { online: nodesOnline, total: nodesTotal } =
+      automation && (frontend || backend)
+        ? await this.getServerCount({
+            destination: frontend || backend,
+            loadBalancers,
+            frontendUrl: frontend ? url : null,
+            dispatch: pnfDispatch,
+          })
+        : { online: 0, total: 0 };
 
     const { message, statusStr } = this.alert.getAlertMessage(
       event,
