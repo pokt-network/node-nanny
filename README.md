@@ -1,6 +1,6 @@
 # Pocket Network | Node Nanny
 
-Currently
+**Currently in open beta**
 
 A monitoring system that automates blockchain availability and alerts
 for critical events that may require manual intervention by the node runner.
@@ -28,8 +28,12 @@ The application is composed of the following main components:
 The application is currently opinionated and works with the following technologies:
 
 - Load Balancer: [HAProxy](http://www.haproxy.org/)
-- Load Balancer: [HAProxy](http://www.haproxy.org/)
-- Load Balancer: [HAProxy](http://www.haproxy.org/)
+- Alerting: [Discord](https://discord.com/developers/docs/intro)
+- Logging: [Winston](https://github.com/winstonjs/winston)
+  - [MongoDB](https://www.npmjs.com/package/winston-mongodb)
+  - [Datadog](https://docs.datadoghq.com/logs/log_collection/nodejs/?tab=winston30)
+
+Pull requests to support additional technologies are welcome.
 
 # Installation
 
