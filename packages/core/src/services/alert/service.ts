@@ -201,12 +201,12 @@ export class Service {
         }`
       : "";
     let nodeCountStr =
-      typeof nodesOnline === "number" && nodesOnline >= 0
+      typeof nodesOnline === "number" && nodesTotal >= 1
         ? `${nodesOnline} of ${nodesTotal} node${s(nodesTotal)} ${is(
             nodesTotal,
           )} in rotation for ${destination}.`
         : "";
-    if (nodesOnline <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
+    if (nodeCountStr && nodesOnline <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
     const badOracleStr = badOracles?.length
       ? `\nWarning - Bad Oracle${s(badOracles.length)}\n${badOracles}`
       : "";
@@ -255,12 +255,12 @@ export class Service {
           error: `[Error] - Could not remove ${name} from rotation`,
         }[mode];
     let nodeCountStr =
-      nodesOnline && nodesOnline >= 0
+      typeof nodesOnline === "number" && nodesTotal >= 1
         ? `${nodesOnline} of ${nodesTotal} node${s(nodesTotal)} ${is(
             nodesOnline,
           )} in rotation for ${backend}.`
         : "";
-    if (nodesOnline <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
+    if (nodeCountStr && nodesOnline <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
     const message = [haProxyMessage, nodeCountStr, error].filter(Boolean).join("\n");
 
     return { title, message };
