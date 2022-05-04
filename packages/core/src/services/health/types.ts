@@ -81,6 +81,7 @@ export interface IHealthResponseDetails {
   numPeers?: number;
   badOracles?: string[];
   nodeIsAheadOfPeer?: number;
+  secondsToRecover?: number;
 }
 
 export interface IReferenceURL {

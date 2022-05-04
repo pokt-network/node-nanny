@@ -185,6 +185,7 @@ export class Service {
   ): { message: string; statusStr: string } {
     const badOracles = details?.badOracles?.join("\n");
     const noOracle = details?.noOracle;
+    const secondsToRecover = details?.secondsToRecover;
     const nodeIsAheadOfPeer = details?.nodeIsAheadOfPeer;
 
     const statusStr = `${name} is ${conditions}.`;
@@ -200,6 +201,10 @@ export class Service {
             : `Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
         }`
       : "";
+    const secondsToRecoverStr =
+      secondsToRecover && typeof secondsToRecover === "number"
+        ? this.getSecondsToRecoverString(secondsToRecover)
+        : "";
     let nodeCountStr =
       typeof nodesOnline === "number" && nodesTotal >= 1
         ? `${nodesOnline} of ${nodesTotal} node${s(nodesTotal)} ${is(
@@ -221,6 +226,7 @@ export class Service {
       message: [
         countStr,
         heightStr,
+        secondsToRecoverStr,
         ethSyncStr,
         badOracleStr,
         noOracleStr,
@@ -231,6 +237,18 @@ export class Service {
         .join("\n"),
       statusStr,
     };
+  }
+
+  private getSecondsToRecoverString(secondsToRecover: number): string {
+    if (secondsToRecover === -1) {
+      return "Delta has increased over the past 5 health checks.";
+    }
+    if (secondsToRecover === 0) {
+      return "Delta has not changed over the past 5 health checks.";
+    }
+
+    const minutesToRecover = Math.round(secondsToRecover / 60);
+    return `Node is recovering. Estimated time to synchronized: approximately ${minutesToRecover} minutes.`;
   }
 
   getRotationMessage(
