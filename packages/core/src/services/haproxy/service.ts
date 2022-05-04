@@ -59,7 +59,6 @@ export class Service {
       if (response.includes("Can't find backend")) return false;
       return true;
     } catch {
-      console.log("ERROR");
       return false;
     }
   }
