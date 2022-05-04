@@ -148,7 +148,7 @@ export class Service extends BaseService {
             frontendUrl: frontend ? url : null,
             dispatch: pnfDispatch,
           })
-        : { online: 0, total: 0 };
+        : { online: null, total: null };
 
     const { message, statusStr } = this.alert.getAlertMessage(
       event,
@@ -170,6 +170,10 @@ export class Service extends BaseService {
       dispatchFrontendDown,
     };
     return parsedEvent;
+  }
+
+  private getNodeHeightArray({ height }: IRedisEvent) {
+    const nodeHeight = typeof height === "number" ? height : height.internalHeight;
   }
 
   private async sendMessage(
