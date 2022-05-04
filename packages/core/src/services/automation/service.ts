@@ -30,11 +30,11 @@ export class Service extends BaseService {
   public async createHost(hostInput: IHostInput, restart = true): Promise<IHost> {
     const sanitizedInput = this.sanitizeCreate(hostInput);
 
-    const host = await HostsModel.create(sanitizedInput);
+    const { _id } = await HostsModel.create(sanitizedInput);
 
     if (restart) await this.restartMonitor();
 
-    return host;
+    return await HostsModel.findOne({ _id }).populate("location").exec();
   }
 
   public async createHostsCSV(hosts: IHostCsvInput[]): Promise<IHost[]> {

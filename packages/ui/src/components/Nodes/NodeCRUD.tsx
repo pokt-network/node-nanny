@@ -285,6 +285,7 @@ export const NodeCRUD = ({
           frontendHostChainCombos={frontendHostChainCombos}
           refetchNodes={refetch}
           selectedNode={type !== "create" ? node : null}
+          setSelectedNode={setSelectedNode}
           onCancel={() => setState(NodeActionsState.Info)}
           setState={setState}
         />
