@@ -1,8 +1,14 @@
 mutation CreateHost($input: HostInput!) {
   createHost(input: $input) {
+    id
     name
     ip
+    fqdn
     loadBalancer
+    location {
+      id
+      name
+    }
   }
 }
 mutation CreateHostsCSV($hosts: [HostCSVInput!]!) {
@@ -20,8 +26,30 @@ mutation CreateLocation($name: String!) {
 mutation CreateNode($input: NodeInput!) {
   createNode(input: $input) {
     id
-    url
+    backend
+    frontend
+    port
     name
+    server
+    url
+    muted
+    status
+    conditions
+    loadBalancers {
+      id
+      name
+    }
+    automation
+    dispatch
+    chain {
+      id
+      name
+      type
+    }
+    host {
+      id
+      name
+    }
   }
 }
 mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
@@ -34,12 +62,42 @@ mutation UpdateHost($update: HostUpdate!) {
   updateHost(update: $update) {
     id
     name
+    ip
+    fqdn
+    loadBalancer
+    location {
+      id
+      name
+    }
   }
 }
 mutation UpdateNode($update: NodeUpdate!) {
   updateNode(update: $update) {
     id
+    backend
+    frontend
+    port
     name
+    server
+    url
+    muted
+    status
+    conditions
+    loadBalancers {
+      id
+      name
+    }
+    automation
+    dispatch
+    chain {
+      id
+      name
+      type
+    }
+    host {
+      id
+      name
+    }
   }
 }
 
