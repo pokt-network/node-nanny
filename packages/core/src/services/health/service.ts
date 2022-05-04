@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import axiosRetry from "axios-retry";
 import { exec } from "child_process";
-import { Types } from "mongoose";
+import { Types, UpdateQuery } from "mongoose";
 import util from "util";
 
 import { IChain, INode, ChainsModel, NodesModel, OraclesModel } from "../../models";
@@ -19,6 +19,7 @@ import {
   IRPCSyncResponse,
 } from "./types";
 import { camelToTitle, hexToDec } from "../../utils";
+import env from "../../environment";
 
 export class Service {
   private rpc: AxiosInstance;
@@ -72,6 +73,7 @@ export class Service {
         `${url}/health`,
         this.getAxiosRequestConfig(basicAuth),
       );
+
       if (status === 200) {
         return {
           name,
@@ -218,14 +220,18 @@ export class Service {
       if (nodeIsAheadOfPeer) {
         healthResponse = {
           ...healthResponse,
-          details: {
-            ...healthResponse.details,
-            nodeIsAheadOfPeer: delta,
-          },
+          details: { ...healthResponse.details, nodeIsAheadOfPeer: delta },
         };
       }
 
       if (internalBh.error?.code) {
+        const secondsToRecover = await this.updateNodeNotSynced(nodeHeight, node);
+        if (secondsToRecover !== null) {
+          healthResponse = {
+            ...healthResponse,
+            details: { ...healthResponse.details, secondsToRecover },
+          };
+        }
         return {
           ...healthResponse,
           status: EErrorStatus.ERROR,
@@ -235,6 +241,13 @@ export class Service {
       }
 
       if (difference > allowance) {
+        const secondsToRecover = await this.updateNodeNotSynced(nodeHeight, node);
+        if (secondsToRecover !== null) {
+          healthResponse = {
+            ...healthResponse,
+            details: { ...healthResponse.details, secondsToRecover },
+          };
+        }
         healthResponse = {
           ...healthResponse,
           status: EErrorStatus.ERROR,
@@ -481,6 +494,7 @@ export class Service {
         height: nodeHeight,
       };
     }
+
     if (nodeHeight === 0) {
       return {
         name,
@@ -488,13 +502,19 @@ export class Service {
         conditions: EErrorConditions.NO_RESPONSE,
       };
     }
+
     if (notSynced) {
-      return {
+      const healthResponse: IHealthResponse = {
         name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.NOT_SYNCHRONIZED,
         height: { internalHeight: nodeHeight, externalHeight: peerHeight, delta },
       };
+      const secondsToRecover = await this.updateNodeNotSynced(nodeHeight, node);
+      if (secondsToRecover !== null) {
+        healthResponse.details = { secondsToRecover };
+      }
+      return healthResponse;
     }
 
     return {
@@ -596,7 +616,9 @@ export class Service {
         `${url}/status`,
         this.getAxiosRequestConfig(basicAuth),
       );
+
       const { catching_up } = data.result.sync_info;
+
       if (!catching_up) {
         return {
           name,
@@ -621,4 +643,54 @@ export class Service {
       };
     }
   };
+
+  /* ----- Estimate Seconds to Recover for Not Synced ----- */
+
+  /** Updates the Node's time to recover fields if it's not synced.
+   * When the node becomes healthy again, heightArray and secondsToRecover
+   * are reset inside the Event service */
+  private async updateNodeNotSynced(height: number, node: INode): Promise<number> {
+    const { id, heightArray } = node;
+    const newHeightArray = this.getNodeHeightArray(height, heightArray);
+
+    const update: UpdateQuery<INode> = { heightArray: newHeightArray };
+
+    const secondsToRecover = this.getSecondsToRecover(newHeightArray);
+    if (secondsToRecover !== null) {
+      update.secondsToRecover = secondsToRecover;
+    }
+
+    await NodesModel.updateOne({ _id: id }, update);
+
+    return secondsToRecover;
+  }
+
+  /** Saves the last 5 recorded block heights to the node model if not synced */
+  private getNodeHeightArray(height: number, heightArray: number[]): number[] {
+    return heightArray?.length ? [height, ...heightArray].slice(0, 5) : [height];
+  }
+
+  /** Gets an estimated time to recover based on the last 5 recorded block heights */
+  private getSecondsToRecover(heightArray: number[]): number {
+    if (heightArray?.length < 2) return null;
+
+    /* If Delta is increasing return -1 */
+    if (heightArray[0] > heightArray[heightArray.length - 1]) {
+      return -1;
+    }
+    /* If Delta is stuck return 0 */
+    if (heightArray[0] === heightArray[heightArray.length - 1]) {
+      return 0;
+    }
+
+    /* Calculate estimated time to recover in seconds */
+    const deltaArray = heightArray.map((height, i, a) => a[i + 1] - height).slice(0, -1);
+    const avgDelta = deltaArray.reduce((acc, curr) => acc + curr) / deltaArray.length;
+    const numOfIntervals = heightArray[0] / avgDelta;
+    const secondsToRecover = Math.floor(
+      numOfIntervals * (env("MONITOR_INTERVAL") / 1000),
+    );
+
+    return secondsToRecover;
+  }
 }
