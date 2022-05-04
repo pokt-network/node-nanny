@@ -1,7 +1,7 @@
 import { Dispatch, useState } from "react";
 import { ApolloQueryResult } from "@apollo/client";
 import CSVReader from "react-csv-reader";
-import { Alert, Box, Button, Typography } from "@mui/material";
+import { Alert, AlertTitle, Box, Button, Typography } from "@mui/material";
 
 import { IGetHostsChainsAndLoadBalancersQuery, INodesQuery } from "types";
 import { ModalHelper, regexTest, s } from "utils";
@@ -179,7 +179,6 @@ export const NodesCSV = ({
     const modalProps: ConfirmationModalProps = {
       type: "Node",
       data: parsedNodes,
-      dataError: nodesError,
       columnsOrder,
       refetch: refetchNodes,
       setState,
@@ -229,11 +228,22 @@ export const NodesCSV = ({
             onFileLoaded={parseNodesCSV}
             parserOptions={{ header: true, skipEmptyLines: true }}
           />
-          <Button onClick={() => setState(NodeActionsState.Info)} color="error">
+          <Button
+            onClick={() => setState(NodeActionsState.Info)}
+            color="error"
+            variant="outlined"
+          >
             Cancel
           </Button>
         </Box>
       </Box>
+
+      {nodesError && (
+        <Alert severity="error">
+          <AlertTitle>{`CSV Format Error`}</AlertTitle>
+          {nodesError}
+        </Alert>
+      )}
     </Paper>
   );
 };
