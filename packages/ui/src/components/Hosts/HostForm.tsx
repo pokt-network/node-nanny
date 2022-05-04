@@ -1,4 +1,11 @@
-import { useState, useEffect, Dispatch, useRef, useCallback } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { useFormik, FormikErrors } from "formik";
 import { ApolloQueryResult } from "@apollo/client";
 import {
@@ -20,6 +27,7 @@ import {
   IHost,
   IHostInput,
   IHostsQuery,
+  IHostUpdate,
   ILocation,
   useCreateHostMutation,
   useDeleteHostMutation,
@@ -34,6 +42,7 @@ interface HostsFormProps {
   hostNames: string[];
   refetchHosts: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>;
   selectedHost?: IHost;
+  setSelectedHost: Dispatch<SetStateAction<IHost>>;
   update?: boolean;
   read?: boolean;
   onCancel?: Dispatch<any>;
@@ -45,6 +54,7 @@ export const HostForm = ({
   hostNames,
   refetchHosts,
   selectedHost,
+  setSelectedHost,
   update,
   read,
   onCancel,
@@ -80,7 +90,11 @@ export const HostForm = ({
       validateOnChange: false,
       onSubmit: async () => {
         setLoading(true);
-        update ? submitUpdate() : submitCreate();
+        update
+          ? submitUpdate({
+              variables: { update: getUpdateValues(selectedHost, values as IHostUpdate) },
+            })
+          : submitCreate({ variables: { input: values } });
       },
     });
 
@@ -126,6 +140,22 @@ export const HostForm = ({
     hostNames = hostNames.filter((name) => name !== selectedHost.name);
   }
 
+  const getUpdateValues = (selectedHost: IHost, values: IHostUpdate): IHostUpdate => {
+    const newValues: IHostUpdate = { id: selectedHost?.id };
+
+    Object.entries(selectedHost).forEach(([key, value]) => {
+      if (key === "location") {
+        if ((value as ILocation)?.id !== values[key]) {
+          newValues[key] = values[key];
+        }
+      } else if (!!values[key]?.length && values[key] !== value) {
+        newValues[key] = values[key];
+      }
+    });
+
+    return newValues;
+  };
+
   useEffect(() => {
     if (update && selectedHost) {
       handleResetFormState();
@@ -139,13 +169,14 @@ export const HostForm = ({
 
   /* ----- Mutations ----- */
   const [submitCreate] = useCreateHostMutation({
-    variables: { input: values },
     onCompleted: ({ createHost }) => {
       SnackbarHelper.open({ text: `Host ${createHost.name} successfully created!` });
       resetForm();
       refetchHosts();
       ModalHelper.close();
       setLoading(false);
+      setState(HostActionsState.Info);
+      setSelectedHost({ ...createHost } as IHost);
     },
     onError: (backendError) => {
       setBackendError(backendError.message);
@@ -154,13 +185,14 @@ export const HostForm = ({
   });
 
   const [submitUpdate] = useUpdateHostMutation({
-    variables: { update: { id: selectedHost?.id, ...values } },
     onCompleted: ({ updateHost }) => {
       SnackbarHelper.open({ text: `Host ${updateHost.name} successfully updated!` });
       resetForm();
       refetchHosts();
       ModalHelper.close();
       setLoading(false);
+      setState(HostActionsState.Info);
+      setSelectedHost({ ...updateHost } as IHost);
     },
     onError: (backendError) => {
       setBackendError(backendError.message);

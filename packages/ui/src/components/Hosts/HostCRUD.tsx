@@ -1,4 +1,4 @@
-import { Dispatch, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import Paper from "components/Paper";
 import Title from "components/Title";
@@ -15,6 +15,7 @@ interface HostCRUDProps {
   host: IHost;
   type: HostActionsState;
   setState: Dispatch<HostActionsState>;
+  setSelectedHost: Dispatch<SetStateAction<IHost>>;
   refetch: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>;
 }
 
@@ -24,6 +25,7 @@ export const HostCRUD = ({
   hostNames,
   type,
   setState,
+  setSelectedHost,
   refetch,
 }: HostCRUDProps) => {
   const [title, setTitle] = useState("Select Host To View Status");
@@ -65,6 +67,7 @@ export const HostCRUD = ({
           locations={locations}
           hostNames={hostNames}
           refetchHosts={refetch}
+          setSelectedHost={setSelectedHost}
           selectedHost={type !== "create" ? host : null}
           onCancel={() => setState(HostActionsState.Info)}
           setState={setState}
