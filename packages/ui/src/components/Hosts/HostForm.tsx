@@ -70,6 +70,11 @@ export const HostForm = ({
 
   const locationRef = useRef<HTMLInputElement>();
 
+  useEffect(() => {
+    setBackendError("");
+    setDeleteHostError("");
+  }, [selectedHost]);
+
   /* ----- Form Validation ----- */
   const validate = (values: IHostInput): FormikErrors<IHostInput> => {
     const errors: FormikErrors<IHostInput> = {};
