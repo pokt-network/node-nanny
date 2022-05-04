@@ -161,7 +161,7 @@ export const NodeForm = ({
         errors.loadBalancers = "At least one load balancer is required";
       }
       if (!values.server) {
-        errors.loadBalancers = "Server is required";
+        errors.server = "Server is required";
       }
     }
     if (frontend) {
@@ -287,34 +287,36 @@ export const NodeForm = ({
     );
   }
 
-  const getUpdateValues = (selectedNode: INode, values: INodeUpdate): INodeUpdate => {
-    const newValues: INodeUpdate = { id: selectedNode?.id };
+  const getUpdateValues = useCallback(
+    (selectedNode: INode, values: INodeUpdate): INodeUpdate => {
+      const newValues: INodeUpdate = { id: selectedNode?.id };
 
-    Object.entries(selectedNode).forEach(([key, value]) => {
-      if (key === "chain" || key === "host") {
-        if ((value as IChain | IHost)?.id !== values[key]) {
-          newValues[key] = values[key];
-        }
-      } else if (key === "url") {
-        const https = (value as string).includes("https");
-        if (values.https !== https) {
-          newValues.https = values.https;
-        }
-      } else if (!!values[key]?.length && values[key] !== value) {
-        newValues[key] = values[key];
+      Object.entries({ ...selectedNode, port: String(selectedNode?.port) }).forEach(
+        ([key, value]) => {
+          if (key === "chain" || key === "host") {
+            if ((value as IChain | IHost)?.id !== values[key]) {
+              newValues[key] = values[key];
+            }
+          } else if (key === "url") {
+            const https = (value as string).includes("https");
+            if (values.https !== https) {
+              newValues.https = values.https;
+            }
+          } else if ((values[key]?.length ?? values[key]) && values[key] !== value) {
+            newValues[key] = values[key];
+          }
+        },
+      );
+      if (newValues.chain || newValues.host) {
+        newValues.name = getNodeName();
       }
-    });
-    if (newValues.chain || newValues.host) {
-      newValues.name = getNodeName();
-    }
-    if (newValues.host || newValues.port || newValues.https) {
-      newValues.url = getNodeUrl();
-    }
-
-    console.log("TYPE IS RIGHT HERE", typeof newValues.port);
-
-    return newValues;
-  };
+      if (newValues.host || newValues.port || newValues.https) {
+        newValues.url = getNodeUrl();
+      }
+      return newValues;
+    },
+    [getNodeName, getNodeUrl],
+  );
 
   const handleResetFormState = useCallback(() => {
     setFieldValue("chain", selectedNode.chain.id);
@@ -325,7 +327,7 @@ export const NodeForm = ({
       selectedNode.loadBalancers.map(({ id }) => id),
     );
     setFieldValue("name", selectedNode.name);
-    setFieldValue("port", selectedNode.port);
+    setFieldValue("port", String(selectedNode.port));
     setFieldValue("backend", selectedNode.backend);
     setFieldValue("frontend", selectedNode.frontend);
     setFieldValue("server", selectedNode.server);
@@ -671,6 +673,8 @@ export const NodeForm = ({
                   disabled={read ?? (!!values.frontend || !values.automation)}
                   size="small"
                   fullWidth
+                  error={!!errors.server}
+                  helperText={errors.server}
                 />
               </>
             )}
@@ -744,7 +748,13 @@ export const NodeForm = ({
               type="submit"
               variant="contained"
               onClick={handleSubmit as any}
-              disabled={frontend && frontendExists}
+              disabled={
+                (frontend && frontendExists) ||
+                (update &&
+                  !Object.keys(
+                    getUpdateValues(selectedNode, values as INodeUpdate),
+                  ).filter((key) => key !== "id")?.length)
+              }
               sx={{ width: frontend ? 160 : 125, height: 36.5 }}
             >
               {loading ? (
@@ -753,7 +763,7 @@ export const NodeForm = ({
                 `${update ? "Save" : "Create"} ${frontend ? "Frontend" : "Node"}`
               )}
             </Button>
-            <Button onClick={handleCancel} color="inherit">
+            <Button onClick={handleCancel} color="error" variant="outlined">
               Cancel
             </Button>
           </Box>
