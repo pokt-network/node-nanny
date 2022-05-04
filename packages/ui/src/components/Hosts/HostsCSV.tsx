@@ -1,4 +1,4 @@
-import { Dispatch, useState } from "react";
+import { Dispatch } from "react";
 import { ApolloQueryResult } from "@apollo/client";
 import CSVReader from "react-csv-reader";
 import { Box, Button } from "@mui/material";
@@ -8,7 +8,7 @@ import Paper from "components/Paper";
 import { ConfirmationModalProps } from "components/modals/CSVConfirmationModal";
 import { HostActionsState } from "pages/Hosts";
 
-import { IHostCsvInput, IHostsQuery, ILocation } from "types";
+import { IHostsQuery, ILocation } from "types";
 import { ModalHelper, regexTest } from "utils";
 
 interface ICSVHost {
@@ -32,8 +32,6 @@ export const HostsCSV = ({
   refetchHosts,
   setState,
 }: NodesCSVProps) => {
-  const [hostsError, setHostsError] = useState<string>("");
-
   /* ----- Table Options ---- */
   const columnsOrder = ["name", "location", "ip", "fqdn", "loadBalancer"];
 
@@ -80,7 +78,6 @@ export const HostsCSV = ({
 
   /* ----- CSV Parsing ----- */
   const parseHostsCsv = (hostsData: ICSVHost[]) => {
-    setHostsError("");
     const hostsWithRequiredFields = hostsData.filter((host) =>
       ["name", "location"].every((key) => Object.keys(host).includes(key)),
     );
@@ -109,14 +106,13 @@ export const HostsCSV = ({
     const modalProps: ConfirmationModalProps = {
       type: "Host",
       data: parsedHosts,
-      dataError: hostsError,
       columnsOrder,
       refetch: refetchHosts,
       setState,
     };
 
     if (invalidHosts.length) {
-      setHostsError(invalidHosts.join("\n"));
+      modalProps.dataError = invalidHosts.join("\n");
       handleOpenCSVConfirmationModal(modalProps);
     } else {
       handleOpenCSVConfirmationModal(modalProps);
@@ -136,7 +132,11 @@ export const HostsCSV = ({
       <Title>Upload Hosts CSV</Title>
       <Box sx={{ display: "flex", justifyContent: "space-between" }}>
         <CSVReader onFileLoaded={parseHostsCsv} parserOptions={{ header: true }} />
-        <Button onClick={() => setState(HostActionsState.Info)} color="error">
+        <Button
+          onClick={() => setState(HostActionsState.Info)}
+          color="error"
+          variant="outlined"
+        >
           Cancel
         </Button>
       </Box>

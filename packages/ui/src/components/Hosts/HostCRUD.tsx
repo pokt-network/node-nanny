@@ -1,4 +1,4 @@
-import { Dispatch, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import Paper from "components/Paper";
 import Title from "components/Title";
@@ -12,9 +12,11 @@ import { ApolloQueryResult } from "@apollo/client";
 interface HostCRUDProps {
   locations: ILocation[];
   hostNames: string[];
+  hostsWithNode: { [id: string]: number };
   host: IHost;
   type: HostActionsState;
   setState: Dispatch<HostActionsState>;
+  setSelectedHost: Dispatch<SetStateAction<IHost>>;
   refetch: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>;
 }
 
@@ -22,8 +24,10 @@ export const HostCRUD = ({
   host,
   locations,
   hostNames,
+  hostsWithNode,
   type,
   setState,
+  setSelectedHost,
   refetch,
 }: HostCRUDProps) => {
   const [title, setTitle] = useState("Select Host To View Status");
@@ -51,9 +55,7 @@ export const HostCRUD = ({
           justifyContent: "space-between",
           alignItems: "flex-start",
           width: "100%",
-          "& h3": {
-            textTransform: "capitalize",
-          },
+          "& h3": { textTransform: "capitalize" },
         }}
       >
         <Title>{title}</Title>
@@ -64,7 +66,9 @@ export const HostCRUD = ({
           update={type === "info" || type === "edit"}
           locations={locations}
           hostNames={hostNames}
+          hostsWithNode={hostsWithNode}
           refetchHosts={refetch}
+          setSelectedHost={setSelectedHost}
           selectedHost={type !== "create" ? host : null}
           onCancel={() => setState(HostActionsState.Info)}
           setState={setState}
