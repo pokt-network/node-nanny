@@ -33,13 +33,14 @@ import {
   useDeleteHostMutation,
   useUpdateHostMutation,
 } from "types";
-import { ModalHelper, regexTest, SnackbarHelper } from "utils";
+import { ModalHelper, regexTest, s, SnackbarHelper } from "utils";
 import { HostActionsState } from "pages/Hosts";
 import Form from "components/Form";
 
 interface HostsFormProps {
   locations: ILocation[];
   hostNames: string[];
+  hostsWithNode: { [id: string]: number };
   refetchHosts: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>;
   selectedHost?: IHost;
   setSelectedHost: Dispatch<SetStateAction<IHost>>;
@@ -52,6 +53,7 @@ interface HostsFormProps {
 export const HostForm = ({
   locations,
   hostNames,
+  hostsWithNode,
   refetchHosts,
   selectedHost,
   setSelectedHost,
@@ -64,6 +66,7 @@ export const HostForm = ({
   const [fqdnDisabled, setFQDNDisabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [backendError, setBackendError] = useState("");
+  const [deleteHostError, setDeleteHostError] = useState("");
 
   const locationRef = useRef<HTMLInputElement>();
 
@@ -200,27 +203,42 @@ export const HostForm = ({
     },
   });
 
-  const [submitDelete, { error: deleteHostError }] = useDeleteHostMutation({
+  const [submitDelete] = useDeleteHostMutation({
     onCompleted: ({ deleteHost }) => {
       SnackbarHelper.open({ text: `Host ${deleteHost.name} successfully deleted!` });
       refetchHosts();
       ModalHelper.close();
     },
+    onError: (error) => {
+      setDeleteHostError(error.message);
+      ModalHelper.close();
+    },
   });
 
   const handleOpenDeleteModal = () => {
-    ModalHelper.open({
-      modalType: "confirmation",
-      modalProps: {
-        handleOk: () => submitDelete({ variables: { id: selectedHost?.id } }),
-        confirmText: `Delete: ${selectedHost?.name}`,
-        promptText: `Are you sure you wish to remove host ${selectedHost?.name} from the inventory database?`,
-        okText: "Delete Host",
-        okColor: "error",
-        cancelColor: "inherit",
-        error: deleteHostError?.message,
-      },
-    });
+    setDeleteHostError("");
+    const { id: hostId, name } = selectedHost;
+
+    if (hostId in hostsWithNode) {
+      const num = hostsWithNode[hostId];
+      setDeleteHostError(
+        `Host ${name} has ${num} Node${s(
+          num,
+        )}; to delete this host first delete all nodes associated with it.`,
+      );
+    } else {
+      ModalHelper.open({
+        modalType: "confirmation",
+        modalProps: {
+          handleOk: () => submitDelete({ variables: { id: hostId } }),
+          confirmText: `Delete: ${name}`,
+          promptText: `Are you sure you wish to remove host ${name} from the inventory database?`,
+          okText: "Delete Host",
+          okColor: "error",
+          cancelColor: "inherit",
+        },
+      });
+    }
   };
 
   /* ----- Layout ----- */
@@ -306,6 +324,13 @@ export const HostForm = ({
           />
         </Box>
       </FormControl>
+      <TextField
+        name="nodes"
+        value={hostsWithNode[selectedHost?.id] || 0}
+        label="Nodes"
+        disabled={true}
+        size="small"
+      />
       {!read && (
         <Box
           sx={{
@@ -353,6 +378,13 @@ export const HostForm = ({
             Delete Host
           </Button>
         </Box>
+      )}
+
+      {deleteHostError && (
+        <Alert severity="error">
+          <AlertTitle>{"Cannot delete Host with Nodes"}</AlertTitle>
+          {deleteHostError}
+        </Alert>
       )}
 
       {backendError && (
