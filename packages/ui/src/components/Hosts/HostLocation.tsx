@@ -89,7 +89,6 @@ export const HostLocation = ({
   });
 
   const handleOpenConfirmModal = () => {
-    console.log({ locationId });
     ModalHelper.open({
       modalType: "confirmation",
       modalProps: {
