@@ -66,7 +66,6 @@ export function Hosts() {
       {},
     );
   }, [nodesData?.nodes]);
-  console.log({ hostsWithNode });
   const locationsWithHost: { [id: string]: number } = useMemo(
     () =>
       data?.hosts?.reduce(
