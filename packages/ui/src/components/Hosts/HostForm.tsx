@@ -284,7 +284,12 @@ export const HostForm = ({
             height: 36.5,
           }}
         >
-          <Button type="submit" variant="contained" onClick={handleSubmit as any}>
+          <Button
+            type="submit"
+            variant="contained"
+            onClick={handleSubmit as any}
+            sx={{ width: 125, height: 36.5 }}
+          >
             {loading ? (
               <CircularProgress size={20} />
             ) : (
