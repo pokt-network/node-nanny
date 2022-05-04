@@ -332,7 +332,7 @@ export type ICreateHostMutationVariables = Exact<{
 }>;
 
 
-export type ICreateHostMutation = { createHost?: { name: string, ip?: string | null, loadBalancer: boolean } | null };
+export type ICreateHostMutation = { createHost?: { id: string, name: string, ip?: string | null, fqdn?: string | null, loadBalancer: boolean, location: { id: string, name: string } } | null };
 
 export type ICreateHostsCsvMutationVariables = Exact<{
   hosts: Array<IHostCsvInput> | IHostCsvInput;
@@ -353,7 +353,7 @@ export type ICreateNodeMutationVariables = Exact<{
 }>;
 
 
-export type ICreateNodeMutation = { createNode?: { id: string, url: string, name: string } | null };
+export type ICreateNodeMutation = { createNode?: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } } | null };
 
 export type ICreateNodesCsvMutationVariables = Exact<{
   nodes: Array<INodeCsvInput> | INodeCsvInput;
@@ -367,14 +367,14 @@ export type IUpdateHostMutationVariables = Exact<{
 }>;
 
 
-export type IUpdateHostMutation = { updateHost?: { id: string, name: string } | null };
+export type IUpdateHostMutation = { updateHost?: { id: string, name: string, ip?: string | null, fqdn?: string | null, loadBalancer: boolean, location: { id: string, name: string } } | null };
 
 export type IUpdateNodeMutationVariables = Exact<{
   update: INodeUpdate;
 }>;
 
 
-export type IUpdateNodeMutation = { updateNode?: { id: string, name: string } | null };
+export type IUpdateNodeMutation = { updateNode?: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } } | null };
 
 export type IDeleteHostMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -506,9 +506,15 @@ export type IGetServerCountQuery = { serverCount: { online: number, total: numbe
 export const CreateHostDocument = gql`
     mutation CreateHost($input: HostInput!) {
   createHost(input: $input) {
+    id
     name
     ip
+    fqdn
     loadBalancer
+    location {
+      id
+      name
+    }
   }
 }
     `;
@@ -608,8 +614,30 @@ export const CreateNodeDocument = gql`
     mutation CreateNode($input: NodeInput!) {
   createNode(input: $input) {
     id
-    url
+    backend
+    frontend
+    port
     name
+    server
+    url
+    muted
+    status
+    conditions
+    loadBalancers {
+      id
+      name
+    }
+    automation
+    dispatch
+    chain {
+      id
+      name
+      type
+    }
+    host {
+      id
+      name
+    }
   }
 }
     `;
@@ -677,6 +705,13 @@ export const UpdateHostDocument = gql`
   updateHost(update: $update) {
     id
     name
+    ip
+    fqdn
+    loadBalancer
+    location {
+      id
+      name
+    }
   }
 }
     `;
@@ -710,7 +745,30 @@ export const UpdateNodeDocument = gql`
     mutation UpdateNode($update: NodeUpdate!) {
   updateNode(update: $update) {
     id
+    backend
+    frontend
+    port
     name
+    server
+    url
+    muted
+    status
+    conditions
+    loadBalancers {
+      id
+      name
+    }
+    automation
+    dispatch
+    chain {
+      id
+      name
+      type
+    }
+    host {
+      id
+      name
+    }
   }
 }
     `;

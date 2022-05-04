@@ -27,10 +27,10 @@ import { ModalHelper, parseBackendError, s } from "utils";
 export interface ConfirmationModalProps {
   data: (IHostCsvInput | INodeCsvInput)[];
   type: "Node" | "Host";
-  dataError: string;
   columnsOrder: string[];
   refetch: (variables?: any) => Promise<ApolloQueryResult<any>>;
   setState: Dispatch<any>;
+  dataError?: string;
 }
 
 export function CSVConfirmationModal({
