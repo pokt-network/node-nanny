@@ -184,12 +184,14 @@ export type INode = {
   conditions: Scalars['String'];
   dispatch?: Maybe<Scalars['Boolean']>;
   frontend?: Maybe<Scalars['String']>;
+  heightArray?: Maybe<Array<Scalars['Int']>>;
   host: IHost;
   id: Scalars['ID'];
   loadBalancers?: Maybe<Array<IHost>>;
   muted: Scalars['Boolean'];
   name: Scalars['String'];
   port: Scalars['Int'];
+  secondsToRecover?: Maybe<Scalars['Int']>;
   server?: Maybe<Scalars['String']>;
   ssl?: Maybe<Scalars['Boolean']>;
   status: Scalars['String'];
@@ -443,7 +445,7 @@ export type INodeQueryVariables = Exact<{
 }>;
 
 
-export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } } };
+export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, heightArray?: Array<number> | null, secondsToRecover?: number | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } } };
 
 export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1111,6 +1113,8 @@ export const NodeDocument = gql`
       id
       name
     }
+    heightArray
+    secondsToRecover
   }
 }
     `;
