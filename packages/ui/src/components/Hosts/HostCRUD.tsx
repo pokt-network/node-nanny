@@ -12,6 +12,7 @@ import { ApolloQueryResult } from "@apollo/client";
 interface HostCRUDProps {
   locations: ILocation[];
   hostNames: string[];
+  hostsWithNode: { [id: string]: number };
   host: IHost;
   type: HostActionsState;
   setState: Dispatch<HostActionsState>;
@@ -23,6 +24,7 @@ export const HostCRUD = ({
   host,
   locations,
   hostNames,
+  hostsWithNode,
   type,
   setState,
   setSelectedHost,
@@ -53,9 +55,7 @@ export const HostCRUD = ({
           justifyContent: "space-between",
           alignItems: "flex-start",
           width: "100%",
-          "& h3": {
-            textTransform: "capitalize",
-          },
+          "& h3": { textTransform: "capitalize" },
         }}
       >
         <Title>{title}</Title>
@@ -66,6 +66,7 @@ export const HostCRUD = ({
           update={type === "info" || type === "edit"}
           locations={locations}
           hostNames={hostNames}
+          hostsWithNode={hostsWithNode}
           refetchHosts={refetch}
           setSelectedHost={setSelectedHost}
           selectedHost={type !== "create" ? host : null}
