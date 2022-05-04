@@ -85,6 +85,7 @@ export function Hosts() {
             <Grid item sm={12} lg={6} order={{ lg: 2 }}>
               <HostCRUD
                 host={selectedHost}
+                setSelectedHost={setSelectedHost}
                 type={state}
                 locations={locationsData.locations}
                 hostNames={hostNames}
