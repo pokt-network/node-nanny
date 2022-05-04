@@ -1,4 +1,11 @@
-import { Dispatch, useCallback, useEffect, useRef, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useFormik, FormikErrors } from "formik";
 import { ApolloQueryResult } from "@apollo/client";
 import {
@@ -21,9 +28,12 @@ import {
 } from "@mui/material";
 
 import {
+  IChain,
+  IHost,
   INode,
   INodeInput,
   INodesQuery,
+  INodeUpdate,
   IGetHostsChainsAndLoadBalancersQuery,
   useCheckValidHaProxyLazyQuery,
   useCreateNodeMutation,
@@ -40,6 +50,7 @@ export interface NodesFormProps {
   hostPortCombos: string[];
   frontendHostChainCombos: string[];
   selectedNode?: INode;
+  setSelectedNode: Dispatch<SetStateAction<INode>>;
   frontend?: boolean;
   update?: boolean;
   read?: boolean;
@@ -55,6 +66,7 @@ export const NodeForm = ({
   frontendHostChainCombos,
   refetchNodes,
   selectedNode,
+  setSelectedNode,
   frontend,
   update,
   read,
@@ -74,6 +86,10 @@ export const NodeForm = ({
   const hostRef = useRef<HTMLInputElement>();
   const loadBalancersRef = useRef<HTMLInputElement>();
 
+  useEffect(() => {
+    setBackendError("");
+  }, [selectedNode]);
+
   /* ----- Form Validation ----- */
   const handleFormSubmit = async () => {
     if (frontend && passwordNoMatch) return;
@@ -84,7 +100,17 @@ export const NodeForm = ({
         const { data } = await checkValidHaProxy();
 
         if (data?.validHaProxy) {
-          update ? submitUpdate() : submitCreate();
+          update
+            ? submitUpdate({
+                variables: {
+                  update: getUpdateValues(selectedNode, values as INodeUpdate),
+                },
+              })
+            : submitCreate({
+                variables: {
+                  input: { ...values, name: getNodeName(), url: getNodeUrl() },
+                },
+              });
         } else {
           setLoading(false);
           const newErrors = frontend
@@ -103,7 +129,13 @@ export const NodeForm = ({
           setErrors(newErrors);
         }
       } else {
-        update ? submitUpdate() : submitCreate();
+        update
+          ? submitUpdate({
+              variables: { update: getUpdateValues(selectedNode, values as INodeUpdate) },
+            })
+          : submitCreate({
+              variables: { input: { ...values, name: getNodeName(), url: getNodeUrl() } },
+            });
       }
     } catch (error: any) {
       setBackendError(error.message);
@@ -129,7 +161,7 @@ export const NodeForm = ({
         errors.loadBalancers = "At least one load balancer is required";
       }
       if (!values.server) {
-        errors.loadBalancers = "Server is required";
+        errors.server = "Server is required";
       }
     }
     if (frontend) {
@@ -255,6 +287,37 @@ export const NodeForm = ({
     );
   }
 
+  const getUpdateValues = useCallback(
+    (selectedNode: INode, values: INodeUpdate): INodeUpdate => {
+      const newValues: INodeUpdate = { id: selectedNode?.id };
+
+      Object.entries({ ...selectedNode, port: String(selectedNode?.port) }).forEach(
+        ([key, value]) => {
+          if (key === "chain" || key === "host") {
+            if ((value as IChain | IHost)?.id !== values[key]) {
+              newValues[key] = values[key];
+            }
+          } else if (key === "url") {
+            const https = (value as string).includes("https");
+            if (values.https !== https) {
+              newValues.https = values.https;
+            }
+          } else if ((values[key]?.length ?? values[key]) && values[key] !== value) {
+            newValues[key] = values[key];
+          }
+        },
+      );
+      if (newValues.chain || newValues.host) {
+        newValues.name = getNodeName();
+      }
+      if (newValues.host || newValues.port || newValues.https) {
+        newValues.url = getNodeUrl();
+      }
+      return newValues;
+    },
+    [getNodeName, getNodeUrl],
+  );
+
   const handleResetFormState = useCallback(() => {
     setFieldValue("chain", selectedNode.chain.id);
     setFieldValue("host", selectedNode.host.id);
@@ -264,7 +327,7 @@ export const NodeForm = ({
       selectedNode.loadBalancers.map(({ id }) => id),
     );
     setFieldValue("name", selectedNode.name);
-    setFieldValue("port", selectedNode.port);
+    setFieldValue("port", String(selectedNode.port));
     setFieldValue("backend", selectedNode.backend);
     setFieldValue("frontend", selectedNode.frontend);
     setFieldValue("server", selectedNode.server);
@@ -328,18 +391,13 @@ export const NodeForm = ({
 
   /* ----- Mutations ----- */
   const [submitCreate] = useCreateNodeMutation({
-    variables: {
-      input: {
-        ...values,
-        name: getNodeName(),
-        url: getNodeUrl(),
-      },
-    },
     onCompleted: ({ createNode }) => {
       SnackbarHelper.open({ text: `Node ${createNode.name} successfully created!` });
       resetForm();
       refetchNodes();
       setLoading(false);
+      setState(NodeActionsState.Info);
+      setSelectedNode({ ...createNode } as INode);
     },
     onError: (error) => {
       setBackendError(error.message);
@@ -348,19 +406,13 @@ export const NodeForm = ({
   });
 
   const [submitUpdate] = useUpdateNodeMutation({
-    variables: {
-      update: {
-        id: selectedNode?.id,
-        ...values,
-        name: getNodeName(),
-        url: getNodeUrl(),
-      },
-    },
     onCompleted: ({ updateNode }) => {
       SnackbarHelper.open({ text: `Node ${updateNode.name} successfully updated!` });
       resetForm();
       refetchNodes();
       setLoading(false);
+      setState(NodeActionsState.Info);
+      setSelectedNode({ ...updateNode } as INode);
     },
     onError: (error) => {
       setBackendError(error.message);
@@ -373,6 +425,7 @@ export const NodeForm = ({
       SnackbarHelper.open({ text: `Node ${deleteNode.name} successfully deleted!` });
       refetchNodes();
       ModalHelper.close();
+      setState(NodeActionsState.Info);
     },
   });
 
@@ -620,6 +673,8 @@ export const NodeForm = ({
                   disabled={read ?? (!!values.frontend || !values.automation)}
                   size="small"
                   fullWidth
+                  error={!!errors.server}
+                  helperText={errors.server}
                 />
               </>
             )}
@@ -693,7 +748,13 @@ export const NodeForm = ({
               type="submit"
               variant="contained"
               onClick={handleSubmit as any}
-              disabled={frontend && frontendExists}
+              disabled={
+                (frontend && frontendExists) ||
+                (update &&
+                  !Object.keys(
+                    getUpdateValues(selectedNode, values as INodeUpdate),
+                  ).filter((key) => key !== "id")?.length)
+              }
               sx={{ width: frontend ? 160 : 125, height: 36.5 }}
             >
               {loading ? (
@@ -702,7 +763,7 @@ export const NodeForm = ({
                 `${update ? "Save" : "Create"} ${frontend ? "Frontend" : "Node"}`
               )}
             </Button>
-            <Button onClick={handleCancel} color="inherit">
+            <Button onClick={handleCancel} color="error" variant="outlined">
               Cancel
             </Button>
           </Box>
