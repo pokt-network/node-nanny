@@ -157,8 +157,8 @@ function DashboardContent() {
             </Box>
             <Routes>
               <Route path="/" element={<Logs />} />
-              <Route path="/nodes" element={<Nodes />} />
               <Route path="/hosts" element={<Hosts />} />
+              <Route path="/nodes" element={<Nodes />} />
             </Routes>
             <Box mb={6} />
           </Container>
