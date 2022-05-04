@@ -307,6 +307,8 @@ export const NodeForm = ({
       newValues.url = getNodeUrl();
     }
 
+    console.log("TYPE IS RIGHT HERE", typeof newValues.port);
+
     return newValues;
   };
 
