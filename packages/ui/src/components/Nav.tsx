@@ -15,14 +15,14 @@ const data = [
     icon: BarChartIcon,
   },
   {
-    label: "Nodes",
-    to: "/nodes",
-    icon: LayersIcon,
-  },
-  {
     label: "Hosts",
     to: "/hosts",
     icon: PeopleIcon,
+  },
+  {
+    label: "Nodes",
+    to: "/nodes",
+    icon: LayersIcon,
   },
 ];
 
