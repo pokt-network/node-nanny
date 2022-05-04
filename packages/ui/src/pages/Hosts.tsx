@@ -149,12 +149,12 @@ export function Hosts() {
               numPerPage={10}
               rows={data.hosts.map((host) => ({
                 ...host,
-                nodes: hostsWithNode[host.id] || null,
+                nodes: hostsWithNode[host.id] || 0,
               }))}
               mapDisplay={(host: IHost) => ({
                 ...host,
                 location: host.location.name,
-                nodes: hostsWithNode[host.id] || null,
+                nodes: hostsWithNode[host.id] || 0,
               })}
               selectedRow={selectedHost?.id}
               onSelectRow={handleSelectedHost}
