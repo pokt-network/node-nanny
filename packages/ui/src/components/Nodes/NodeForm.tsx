@@ -86,6 +86,10 @@ export const NodeForm = ({
   const hostRef = useRef<HTMLInputElement>();
   const loadBalancersRef = useRef<HTMLInputElement>();
 
+  useEffect(() => {
+    setBackendError("");
+  }, [selectedNode]);
+
   /* ----- Form Validation ----- */
   const handleFormSubmit = async () => {
     if (frontend && passwordNoMatch) return;
