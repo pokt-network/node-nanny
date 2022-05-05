@@ -96,10 +96,10 @@ export const NodeCRUD = ({
   const { minsToSync, height, delta } = useMemo(() => {
     if (node?.conditions === "NOT_SYNCHRONIZED") {
       console.log({ node });
-      const { deltaArray, secondsToRecover } = node;
-      const minsToSync = Math.round(secondsToRecover / 60 || 0);
-      const height = deltaArray?.[0];
-      const delta = height - deltaArray?.[deltaArray.length - 1];
+      const { heightArray } = node;
+      // const minsToSync = Math.round(secondsToRecover / 60 || 0);
+      const height = heightArray?.[0];
+      const delta = height - heightArray?.[heightArray.length - 1];
 
       return { minsToSync, height, delta };
     }
