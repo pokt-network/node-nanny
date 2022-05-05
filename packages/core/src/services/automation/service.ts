@@ -19,6 +19,8 @@ import {
   INodeCsvInput,
   INodeUpdate,
 } from "./types";
+import { HealthTypes } from "../../types";
+import { Service as HealthService } from "../health";
 import { Service as BaseService } from "../base-service/base-service";
 
 export class Service extends BaseService {
@@ -256,6 +258,16 @@ export class Service extends BaseService {
       }
     });
     return update;
+  }
+
+  /* ----- Health Check Method ----- */
+  async getHealthCheck(nodeId: string): Promise<HealthTypes.IHealthResponse> {
+    const node = await NodesModel.findOne({ _id: nodeId })
+      .populate("host")
+      .populate("chain")
+      .exec();
+
+    return await new HealthService().getNodeHealth(node);
   }
 
   /* ----- Rotation Methods ----- */
