@@ -97,9 +97,11 @@ The bot will need the following permissions:
 
 ### 4. Start the App
 
-- Then, run `docker-compose up -d` from the same directory as this file. This will pull down the latest Node Nanny images, as well as setup the MongoDB and Redis containers and start the Node Nanny application.
+- Then, run `docker-compose up -d` from the same directory as this file. This will pull down the latest Node Nanny images, as well as the MongoDB and Redis containers and start the Node Nanny application.
 
-You are now ready to start adding inventory data. The Node Nanny UI will be available on port 3000 on your host machine; it is highly recommended to configure your access settings to prevent access from unauthorized IPs.
+You are now ready to start adding inventory data. 
+
+The Node Nanny UI will be available on port 3000 on your host machine; **it is highly recommended to configure your access settings to prevent access from unauthorized IPs.**
 
 # How To Use
 
@@ -174,6 +176,29 @@ Notes
 | false | ETH   | eth-1-2a  | 4001 | true       | ethmainnet | shared2a, shared-2b | 2a     |
 | true  | ETH   | eth-1-2b  | 4230 | true       | ethmainnet | shared2a, shared-2b | 2b     |
 | false | POKT  | pokt-1-1c | 5008 | false      |            |                     |        |
+
+Notes
+
+- `chain` & `host` must exactly match chain/hosts codes that exist in your inventory database; the CSV import cannot be submitted otherwise.
+- `loadBalancers` is a list of load balancer host names comma separated and must also match host names in your inventory database.
+
+## 4. Frontends
+
+A frontend is a record of the host that is running your load balancer software for a given chain. Monitoring your frontend is a convenient way to ensure there is any service available for a given chain; if health check cannot return a healthy response for any of the backends for a given frontend it means there is no service available for that chain through the frontend. 
+
+| field         | type         | required |
+| ------------- | ------------ | -------- |
+| https         | boolean      | Y        |
+| chain         | string       | Y        |
+| host          | string       | Y        |
+| port          | number       | Y        |
+| frontend      | string       | Y        |
+| username      | string       | Y        |
+| password      | string       | Y        |
+
+- `frontend` must match the field defined in your `haproxy.cfg` file.
+  - For further information in setting up HAProxy, [see below](#automation).
+- Only one frontend record may be created for a given host/chain combination, and only load balancer hosts may be selected.
 
 Notes
 
