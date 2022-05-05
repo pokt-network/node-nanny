@@ -62,13 +62,13 @@ Pull requests to support additional technologies are welcome.
 
 Monitor alerts are sent to a Discord channel. In order to receive alerts, you will need a Discord server as well as a bot that can create channels in that server.
 
-[If you don't have a Discord Server you will have to create one.](https://support.discord.com/hc/en-us/articles/204849977-How-do-I-create-a-server-)
+- [If you don't have a Discord Server you will have to create one.](https://support.discord.com/hc/en-us/articles/204849977-How-do-I-create-a-server-)
 
 Take note of your server's ID, which you can find in `Server Settings > Widget`.
 
-[Now, create a bot application...](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot) _(make sure to save your bot's token as once this token is generated it cannot be viewed again.)_
+- [Now, create a bot application...](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot) _(make sure to save your bot's token as once this token is generated it cannot be viewed again.)_
 
-[...and add it to your server.](https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links)
+- [...and add it to your server.](https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links)
 
 The bot will need the following permissions:
 
@@ -77,23 +77,25 @@ The bot will need the following permissions:
 
 ### 2. Setup Docker Compose
 
-[First ensure Docker Compose is installed on your host machine.](https://docs.docker.com/compose/install/)
+[Ensure Docker Compose is installed on your host machine.](https://docs.docker.com/compose/install/)
 
 **It is not necessary to pull the repo to run Node Nanny; all that is required are the `docker-compose.yml` and `.env` files.**
 
 ### **[Example Docker Compose File](docker-compose.yml)**
 
-Ensure the filepath `/data/db` exists on your machine; this is where your inventory database will be located. Otherwise, if you would like to use a directory other than `/data/db` for your database location, you must set the `nn_db.volumes` property to the path you would like to store your inventory DB and logs.
+- Create a `docker-compose.yml` file with the above contents from the example file.
+
+- _Database location: Ensure the filepath `/data/db` exists on your machine; this is where your inventory database will be located. Otherwise, if you would like to use a directory other than `/data/db` for your database location, you must set the `nn_db.volumes` property to the path you would like to store your inventory DB and logs._
 
 ### 3. Set Environment Variables
 
 ### **[Example .env File](.env.example)**
 
-On your chosen host, you will have to set all required environment variables listed in the example file, in either a `.env` file in same location as your `docker-compose.yml` file or in your shell environment.
+- On your chosen host, you will have to set all required environment variables listed in the example file, in either a `.env` file in same location as your `docker-compose.yml` file or in your shell environment.
 
 ### 4. Start the App
 
-Then, run `docker-compose up -d` from the same directory as this file. This will pull down the latest Node Nanny images, as well as setup the MongoDB and Redis containers and start the Node Nanny application.
+- Then, run `docker-compose up -d` from the same directory as this file. This will pull down the latest Node Nanny images, as well as setup the MongoDB and Redis containers and start the Node Nanny application.
 
 You are now ready to start adding inventory data. The Node Nanny UI will be available on port 3000 on your host machine; it is highly recommended to configure your access settings to prevent access from unauthorized IPs.
 
