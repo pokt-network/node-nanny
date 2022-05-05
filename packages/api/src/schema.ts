@@ -67,8 +67,7 @@ const typeDefs = gql`
     ssl: Boolean
     automation: Boolean
     dispatch: Boolean
-    deltaArray: [Int!]
-    secondsToRecover: Int
+    heightArray: [Int!]
   }
 
   type ServerCount {
