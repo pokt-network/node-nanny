@@ -264,7 +264,7 @@ backend ethmainnet
  timeout server 120s
  server  2a ethereum-use2a.pocketblockchains.com:8545 check resolve-prefer ipv4
 ```
-_(This example is intended to provide a general example only; exact configuration will vary based on your environment.)_
+_(This is intended to provide a general example only; exact configuration will vary based on your environment.)_
 
 In the example above, there is one single Ethereum node configured to run through a single load balancer, defined on the final line.
 
@@ -285,7 +285,7 @@ If desired, a frontend record could be created as follows:
 #### Load Balancer Frontend
 | host           | port  | frontend   | username      | password         |
 | ---------      | ----  | ---------- | ------------- | ---------------- |
-| ethereum-use2a | 18545 | ethmainnet | nodenannyuser | 1234password5678 |
+| ethereum-use2a | 18545 | ethmainnet | nodenannyuser | 1234password |
 
 ### HAProxy Stats Page
 
