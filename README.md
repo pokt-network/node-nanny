@@ -214,13 +214,13 @@ Node Nanny automatically manages the availabilty of your blockchain nodes, pulli
 
 ## HAProxy
 
-_Currently the only supported load balancer software is HAProxy; as mentioned above, pull requests to support additional load balancers are welcome._
+_Currently the only supported load balancer software is HAProxy; pull requests to support additional load balancers are welcome._
 
-IF you are not familiar with HAProxy, the following two guides should be helpful:
+If you are not familiar with HAProxy, the following two guides should be helpful:
 ### [HAProxy configuration basics guide](https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/)
 
-### Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely
-### [![Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely](http://img.youtube.com/vi/JjXUH0VORnE/0.jpg)](https://www.youtube.com/watch?v=JjXUH0VORnE "Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely")
+[![Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely](http://img.youtube.com/vi/JjXUH0VORnE/0.jpg)](https://www.youtube.com/watch?v=JjXUH0VORnE "Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely")
+### [Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely](https://www.youtube.com/watch?v=JjXUH0VORnE)
 
 ### Example haproxy.cfg File
 ```
@@ -238,14 +238,14 @@ defaults
   log global
 
 userlist credentials
-   user nodenannyuser  password 1234password5678
+   user nodenannyuser  password password1234
 
 frontend stats
    bind *:8050
    stats enable
    stats uri /stats
    stats refresh 10s
-   stats auth nodenannyuser:1234password5678
+   stats auth nodenannystats:password5678
 
 frontend ethmainnet
  bind *:18545
@@ -262,13 +262,13 @@ backend ethmainnet
  filter compression
  compression algo gzip
  timeout server 120s
- http-request set-header Authorization "Basic totallysecureuathorizationheader123"
  server  2a ethereum-use2a.pocketblockchains.com:8545 check resolve-prefer ipv4
 ```
+_(This example is intended to be provide a general example only; exact configuration will vary based on your environment.)_
 
 In the example above, there is one single Ethereum node configured to run through a single load balancer, defined on the final line.
 
-The load balancer host and node records that correspond to this `haproxy.cfg` file would look like this:
+The load balancer host and node records that correspond to this `haproxy.cfg` file would require the foillowing values in the associated inventory records:
 
 #### Load Balancer Host
 | name           | location | loadBalancer | ip | fqdn                                 |
@@ -276,20 +276,20 @@ The load balancer host and node records that correspond to this `haproxy.cfg` fi
 | ethereum-use2a | USE2     | true         |    | ethereum-use2a.pocketblockchains.com |
 
 #### Load Balanced Node
-| https | chain | host      | port | automation | backend    | loadBalancers       | server |
-| ----- | ----- | --------- | ---- | ---------- | ---------- | ------------------- | ------ |
-| true  | ETH   | shared-2a | 8545 | true       | ethmainnet | ethereum-use2a      | 2a     |
+| port | automation | backend    | loadBalancers       | server |
+| ---- | ---------- | ---------- | ------------------- | ------ |
+| 8545 | true       | ethmainnet | ethereum-use2a      | 2a     |
 
 If desired, a frontend record could be created as follows:
 
 #### Load Balancer Frontend
-| https | chain | host           | port  | frontend   | username      | password         |
-| ----- | ----- | ---------      | ----  | ---------- | ------------- | ---------------- |
-| true  | ETH   | ethereum-use2a | 18545 | ethmainnet | nodenannyuser | 1234password5678 |
+| host           | port  | frontend   | username      | password         |
+| ---------      | ----  | ---------- | ------------- | ---------------- |
+| ethereum-use2a | 18545 | ethmainnet | nodenannyuser | 1234password5678 |
 
 ### HAProxy Stats Page
 
-In the example above, the HAProxy stats page is available on port `8050` on the load balancer host. This page provides an easy to understand overview of the status of all nodes on a given load balancer. In short, green nodes are healthy, red are offline and orange have been removed by Node Nanny due to being out of sync.
+In the example above, the HAProxy stats page is available on port `8050` with the credentials `nodenannystats:password5678` on the load balancer host. This page provides an easy to understand overview of the status of all backends on a given load balancer. In short, green nodes are healthy, red are offline and orange have been removed by Node Nanny due to being out of sync.
 
 [For more info on the HAProxy stats page, click here.](https://www.haproxy.com/blog/exploring-the-haproxy-stats-page/)
 
