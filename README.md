@@ -196,14 +196,11 @@ A frontend is a record of the host that is running your load balancer software f
 | username      | string       | Y        |
 | password      | string       | Y        |
 
+Notes
+
 - `frontend` must match the field defined in your `haproxy.cfg` file.
   - For further information in setting up HAProxy, [see below](#automation).
 - Only one frontend record may be created for a given host/chain combination, and only load balancer hosts may be selected.
-
-Notes
-
-- `chain` & `host` must exactly match chain/hosts codes that exist in your inventory database; the CSV import cannot be submitted otherwise.
-- `loadBalancers` is a list of load balancer host names comma separated and must also match host names in your inventory database.
 
 **CSV import of frontend records is not supported.**
 
