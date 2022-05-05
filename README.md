@@ -264,7 +264,7 @@ backend ethmainnet
  timeout server 120s
  server  2a ethereum-use2a.pocketblockchains.com:8545 check resolve-prefer ipv4
 ```
-_(This example is intended to be provide a general example only; exact configuration will vary based on your environment.)_
+_(This example is intended to provide a general example only; exact configuration will vary based on your environment.)_
 
 In the example above, there is one single Ethereum node configured to run through a single load balancer, defined on the final line.
 
