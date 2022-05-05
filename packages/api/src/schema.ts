@@ -67,7 +67,7 @@ const typeDefs = gql`
     ssl: Boolean
     automation: Boolean
     dispatch: Boolean
-    heightArray: [Int!]
+    deltaArray: [Int!]
     secondsToRecover: Int
   }
 
