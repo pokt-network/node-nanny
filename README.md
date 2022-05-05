@@ -217,10 +217,10 @@ Node Nanny automatically manages the availabilty of your blockchain nodes, pulli
 _Currently the only supported load balancer software is HAProxy; pull requests to support additional load balancers are welcome._
 
 If you are not familiar with HAProxy, the following two guides should be helpful:
-### [HAProxy configuration basics guide](https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/)
+### 1. [HAProxy configuration basics guide](https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/)
 
 [![Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely](http://img.youtube.com/vi/JjXUH0VORnE/0.jpg)](https://www.youtube.com/watch?v=JjXUH0VORnE "Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely")
-### [Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely](https://www.youtube.com/watch?v=JjXUH0VORnE)
+### 2. [Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely](https://www.youtube.com/watch?v=JjXUH0VORnE)
 
 ### Example haproxy.cfg File
 ```
