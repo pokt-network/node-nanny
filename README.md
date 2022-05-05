@@ -205,6 +205,8 @@ Notes
 - `chain` & `host` must exactly match chain/hosts codes that exist in your inventory database; the CSV import cannot be submitted otherwise.
 - `loadBalancers` is a list of load balancer host names comma separated and must also match host names in your inventory database.
 
+**CSV import of frontend records is not supported.**
+
 # Automation
 
 Node Nanny can automatically manage the availabilty of your blockchain nodes, pulling them in and out of rotation. This feature is only available if HAProxy is configured and the node has the `automation` field set to true.
