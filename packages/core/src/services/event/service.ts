@@ -132,7 +132,7 @@ export class Service extends BaseService {
     const node = await this.getNode(id);
     const update: UpdateQuery<INode> = { status, conditions };
     if (alertType === EAlertTypes.RESOLVED) {
-      update.$unset = { heightArray: 1, secondsToRecover: 1 };
+      update.$unset = { deltaArray: 1, secondsToRecover: 1 };
     }
     await NodesModel.updateOne({ _id: node.id }, update);
     const { automation, backend, chain, frontend, loadBalancers, dispatch, url } = node;

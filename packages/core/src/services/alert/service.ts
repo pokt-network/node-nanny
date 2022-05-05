@@ -241,14 +241,14 @@ export class Service {
 
   private getSecondsToRecoverString(secondsToRecover: number): string {
     if (secondsToRecover === -1) {
-      return "Delta has increased over the past 5 health checks.";
+      return "Delta has increased over the past 12 health checks.";
     }
     if (secondsToRecover === 0) {
-      return "Delta has not changed over the past 5 health checks.";
+      return "Delta has not changed over the past 12 health checks.";
     }
 
     const minutesToRecover = Math.round(secondsToRecover / 60);
-    return `Node is recovering. Estimated time to synchronized: approximately ${minutesToRecover} minutes.`;
+    return `Node is recovering. At the current rate the estimated time to sync is approximately ${minutesToRecover} minutes.`;
   }
 
   getRotationMessage(
