@@ -30,9 +30,11 @@ Babysits your nodes, so you don't have to. 🧸
 
 # Overview
 
-Node Nanny is a node monitoring system for automating the availability of Pocket blockchain nodes. It uses an inventory database of hosts and nodes on which it performs periodic health checks and automatically prevents out of sync nodes from receiving traffic by removing them from load balancer rotation.
+Node Nanny is a node monitoring system for automating the availability of Pocket blockchain nodes. It uses an inventory database of hosts and nodes on which it performs periodic health checks. Out of sync nodes are automatically prevented from receiving traffic by removing them from load balancer rotation.
 
-In order for this automation functionality to work, [HAProxy will need to be configured](https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/) to handle routing traffic to your nodes. Without HAProxy configured, Node Nanny can still provide real time node health monitoring; however the main benefit of this application to node runners lies in its ability to automatically add and remove nodes from rotation as they go in and out of sync.
+In order for this automation functionality to work, [HAProxy will need to be configured](https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/) to handle routing traffic to your nodes. 
+
+Without HAProxy configured, Node Nanny can still provide real time node health monitoring; however the main benefit of this application to node runners lies in its ability to automatically add and remove nodes from rotation as they go in and out of sync.
 
 ## Architecture
 
@@ -182,7 +184,7 @@ Notes
 - `chain` & `host` must exactly match chain/hosts codes that exist in your inventory database; the CSV import cannot be submitted otherwise.
 - `loadBalancers` is a list of load balancer host names comma separated and must also match host names in your inventory database.
 
-## 4. Frontends
+## 5. Frontends
 
 A frontend is a record of the host that is running your load balancer software for a given chain. Monitoring your frontend is a convenient way to ensure there is any service available for a given chain; if health check cannot return a healthy response for any of the backends for a given frontend it means there is no service available for that chain through the frontend. 
 
