@@ -91,7 +91,7 @@ The bot will need the following permissions:
 
 ### **[Example .env File](.env.example)**
 
-- On your chosen host, you will have to set all required environment variables listed in the example file, in either a `.env` file in same location as your `docker-compose.yml` file or in your shell environment.
+- Set all required environment variables listed in the example file, in either a `.env` file in same location as your `docker-compose.yml` file or in your shell environment.
 
 ### 4. Start the App
 
