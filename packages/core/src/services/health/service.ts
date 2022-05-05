@@ -656,47 +656,44 @@ export class Service {
   /* ----- Estimate Seconds to Recover for Not Synced ----- */
 
   /** Updates the Node's time to recover fields if it's not synced.
-   * When the node becomes healthy again, deltaArray and secondsToRecover
+   * When the node becomes healthy again, heightArray and secondsToRecover
    * are reset inside the Event service */
   private async updateNodeNotSynced(height: number, nodeId: string): Promise<number> {
-    const { deltaArray } = await NodesModel.findOne({ _id: nodeId })
-      .select("deltaArray")
+    const { heightArray } = await NodesModel.findOne({ _id: nodeId })
+      .select("heightArray")
       .exec();
-    const newHeightArray = this.getNodeHeightArray(height, deltaArray);
+    const newHeightArray = this.getNodeHeightArray(height, heightArray);
 
-    const update: UpdateQuery<INode> = { deltaArray: newHeightArray };
+    await NodesModel.updateOne({ _id: nodeId }, { heightArray: newHeightArray });
 
-    const secondsToRecover = this.getSecondsToRecover(newHeightArray);
-    if (secondsToRecover !== null) {
-      update.secondsToRecover = secondsToRecover;
-    }
-    await NodesModel.updateOne({ _id: nodeId }, update);
-
-    return secondsToRecover;
+    return this.getSecondsToRecover(newHeightArray);
   }
 
   /** Saves the last 5 recorded block heights to the node model if not synced */
-  private getNodeHeightArray(height: number, deltaArray: number[]): number[] {
-    return deltaArray?.length ? [height, ...deltaArray].slice(0, 12) : [height];
+  private getNodeHeightArray(height: number, heightArray: number[]): number[] {
+    return heightArray?.length ? [height, ...heightArray].slice(0, 12) : [height];
   }
 
   /** Gets an estimated time to recover based on the last 5 recorded block heights */
-  private getSecondsToRecover(deltaArray: number[]): number {
-    if (deltaArray?.length < 2) return null;
+  private getSecondsToRecover(heightArray: number[]): number {
+    if (heightArray?.length < 2) return null;
 
     /* If Delta is increasing return -1 */
-    if (deltaArray[0] > deltaArray[deltaArray.length - 1]) {
+    if (heightArray[0] > heightArray[heightArray.length - 1]) {
       return -1;
     }
     /* If Delta is stuck return 0 */
-    if (deltaArray[0] === deltaArray[deltaArray.length - 1]) {
+    if (heightArray[0] === heightArray[heightArray.length - 1]) {
       return 0;
     }
 
     /* Calculate estimated time to recover in seconds */
-    const deltaArray = deltaArray.map((height, i, a) => a[i + 1] - height).slice(0, -1);
-    const avgDelta = deltaArray.reduce((acc, curr) => acc + curr) / deltaArray.length;
-    const numOfIntervals = deltaArray[0] / avgDelta;
+    const deltaDiffArray = heightArray
+      .map((height, i, a) => a[i + 1] - height)
+      .slice(0, -1);
+    const avgDeltaDiff =
+      deltaDiffArray.reduce((acc, curr) => acc + curr) / heightArray.length;
+    const numOfIntervals = deltaDiffArray[0] / avgDeltaDiff;
     const secondsToRecover = Math.floor(
       numOfIntervals * (env("MONITOR_INTERVAL") / 1000),
     );
