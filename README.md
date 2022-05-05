@@ -7,7 +7,7 @@
 
 Babysits your nodes, so you don't have to. 🧸
 
-## **Currently in open beta**
+### **Currently in open beta**
 
 [![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors)
 
@@ -174,9 +174,11 @@ Notes
 
 Node Nanny can automatically manage the availabilty of your blockchain nodes, pulling them in and out of rotation. This feature is only available if HAProxy is configured and the node has the `automation` field set to true.
 
+**In order to use the automation feature, ensure port 9999 on your load balancer Host is open to Node Nanny's IP.**
+
 ## HAProxy
 
-Currently the only load balancer supported is HAProxy; as mentioned above, pull requests to support additional load balancers are welcome.
+Currently the only supported load balancer software is HAProxy; as mentioned above, pull requests to support additional load balancers are welcome.
 
 ### [HAProxy configuration basics guide](https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/)
 
@@ -184,7 +186,7 @@ _(Pocket specific HAProxy setup guide coming soon...)_
 
 # Support and Contact
 
-## **Currently in open beta**
+### **Currently in open beta**
 
 If you come across an issue with Node Nanny, do a search in the [Issues](https://github.com/pokt-foundation/node-nanny/issues) tab of this repo to make sure it hasn't been reported before. Follow these steps to help us prevent duplicate issues and unnecessary notifications going to the many people watching this repo:
 
