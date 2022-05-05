@@ -55,7 +55,7 @@ query Node($id: ID!) {
       id
       name
     }
-    heightArray
+    deltaArray
     secondsToRecover
   }
 }
@@ -87,6 +87,8 @@ query Nodes {
       id
       name
     }
+    deltaArray
+    secondsToRecover
   }
 }
 

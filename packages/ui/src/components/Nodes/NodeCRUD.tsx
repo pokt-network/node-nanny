@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   AlertTitle,
@@ -92,6 +92,19 @@ export const NodeCRUD = ({
   const haProxyButtonText = `${haProxyOnline ? "Remove" : "Add"} Node ${
     haProxyOnline ? "from" : "to"
   } Rotation`;
+
+  const { minsToSync, height, delta } = useMemo(() => {
+    if (node?.conditions === "NOT_SYNCHRONIZED") {
+      console.log({ node });
+      const { deltaArray, secondsToRecover } = node;
+      const minsToSync = Math.round(secondsToRecover / 60 || 0);
+      const height = deltaArray?.[0];
+      const delta = height - deltaArray?.[deltaArray.length - 1];
+
+      return { minsToSync, height, delta };
+    }
+    return { minsToSync: 0, height: 0, delta: 0 };
+  }, [node]);
 
   const handleHaProxyButtonClick = (id: string) => {
     haProxyOnline ? disable({ variables: { id } }) : enable({ variables: { id } });
@@ -272,6 +285,12 @@ export const NodeCRUD = ({
                   </Typography>
                 </Box>
               </>
+            )}
+            {node.conditions === "NOT_SYNCHRONIZED" && (
+              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                <Typography>Time to Sync</Typography>
+                <Typography>{minsToSync}</Typography>
+              </Box>
             )}
           </Box>
         )}
