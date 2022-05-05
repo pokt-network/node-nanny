@@ -30,7 +30,9 @@ Babysits your nodes, so you don't have to. 🧸
 
 # Overview
 
-Node Nanny is a node monitoring system for automating the availability of Pocket blockchain nodes. It uses an inventory database of hosts and nodes on which it performs periodic health checks. Out of sync nodes are automatically prevented from receiving traffic by removing them from load balancer rotation.
+Node Nanny is a node monitoring system for automating the availability of Pocket blockchain nodes. 
+
+It uses an inventory database to perform periodic node health checks. Out of sync nodes are automatically prevented from receiving traffic by removing them from load balancer rotation.
 
 In order for this automation functionality to work, HAProxy will need to be configured to handle routing traffic to your nodes _[(more details)](#automation)_.
 
@@ -66,18 +68,16 @@ Pull requests to support additional technologies are welcome.
 
 Monitor alerts are sent to a Discord channel. In order to receive alerts, you will need a Discord server as well as a bot that can create channels in that server.
 
-- [If you don't have a Discord Server you will have to create one.](https://support.discord.com/hc/en-us/articles/204849977-How-do-I-create-a-server-)
+- [If you don't have a Discord Server you will have to create one.](https://support.discord.com/hc/en-us/articles/204849977-How-do-I-create-a-server-) _(Take note of your server's ID, which you can find in `Server Settings > Widget`.)_
 
-Take note of your server's ID, which you can find in `Server Settings > Widget`.
-
-- [Now, create a bot application...](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot) _(make sure to save your bot's token as once this token is generated it cannot be viewed again.)_
+- [Create a bot application...](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot) _(make sure to save your bot's token as once this token is generated it cannot be viewed again.)_
 
 - [...and add it to your server.](https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links)
 
 The bot will need the following permissions:
 
-- `Manage Channels`
-- `Manage Webhooks`
+  - `Manage Channels`
+  - `Manage Webhooks`
 
 ### 2. Setup Docker Compose
 
@@ -89,7 +89,7 @@ The bot will need the following permissions:
 
 - Create a `docker-compose.yml` file with the above contents from the example file.
 
-- _Database location: Ensure the filepath `/data/db` exists on your machine; this is where your inventory database will be located. Otherwise, if you would like to use a directory other than `/data/db` for your database location, you must set the `nn_db.volumes` property to the path you would like to store your inventory DB and logs._
+- _Database location: Ensure the filepath `/data/db` exists on your machine; this is where your inventory database will be located. If you would like to use a directory other than `/data/db` for your database location, you must set the `nn_db.volumes` property to the path you would like to store your inventory DB and logs._
 
 ### 3. Set Environment Variables
 
@@ -169,7 +169,7 @@ Notes
 - `https` may only be enabled if the Node's Host has an FQDN.
 - `backend`, `loadBalancers` and `server` are required if `automation` is true.
 - `backend` and `server` must match the fields defined in your `haproxy.cfg` file.
-  - For further information in setting up HAProxy, [see below](#automation).
+  - For further information in setting up HAProxy, including an example of where `backend` and`server` are defined, [see below](#automation).
 
 ### Example CSV Format
 
@@ -186,7 +186,7 @@ Notes
 
 ## 5. Frontends
 
-A frontend is a record of the host that is running your load balancer software for a given chain. Monitoring your frontend is a convenient way to ensure there is any service available for a given chain; if health check cannot return a healthy response for any of the backends for a given frontend it means there is no service available for that chain through the frontend. 
+A frontend is a record of the host that is running your load balancer software for a given chain. Monitoring your frontend is a convenient way to ensure there is any service available for a given chain; if a health check cannot return a healthy response for any of the backends for a given frontend it means there is no service available for that chain through the load balancer frontend. 
 
 | field         | type         | required |
 | ------------- | ------------ | -------- |
@@ -208,17 +208,89 @@ Notes
 
 # Automation
 
-Node Nanny can automatically manage the availabilty of your blockchain nodes, pulling them in and out of rotation. This feature is only available if HAProxy is configured and the node has the `automation` field set to true.
+Node Nanny automatically manages the availabilty of your blockchain nodes, pulling them in and out of rotation. This feature is only available HAProxy for nodes configured to run through HAProxy.
 
 **In order to use the automation feature, ensure port 9999 on your load balancer Host is open to Node Nanny's IP.**
 
 ## HAProxy
 
-Currently the only supported load balancer software is HAProxy; as mentioned above, pull requests to support additional load balancers are welcome.
+_Currently the only supported load balancer software is HAProxy; as mentioned above, pull requests to support additional load balancers are welcome._
 
+IF you are not familiar with HAProxy, the following guides should be helpful:
 ### [HAProxy configuration basics guide](https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/)
 
-_(Pocket specific HAProxy setup guide coming soon...)_
+### [![Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely](http://img.youtube.com/vi/JjXUH0VORnE/0.jpg)](https://www.youtube.com/watch?v=JjXUH0VORnE "Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely")
+
+### Example haproxy.cfg File
+```
+global
+  stats socket /var/run/api.sock user haproxy group haproxy mode 660 level admin expose-fd listeners
+  stats socket ipv4@*:9999  level admin  expose-fd listeners
+  log stdout format raw local0 notice emerg
+
+defaults
+  mode http
+  timeout client 120s
+  timeout connect 5s
+  timeout server 10s
+  timeout http-request 120s
+  log global
+
+userlist credentials
+   user nodenannyuser  password 1234password5678
+
+frontend stats
+   bind *:8050
+   stats enable
+   stats uri /stats
+   stats refresh 10s
+   stats auth nodenannyuser:1234password5678
+
+frontend ethmainnet
+ bind *:18545
+ default_backend ethmainnet
+ timeout client 120s
+ timeout http-request 120s
+ http-request auth unless { http_auth(credentials) }
+
+# Backends
+backend ethmainnet
+ option httpchk
+ balance leastconn
+ mode http
+ filter compression
+ compression algo gzip
+ timeout server 120s
+ http-request set-header Authorization "Basic totallysecureuathorizationheader123"
+ server  2a ethereum-use2a.pocketblockchains.com:8545 check resolve-prefer ipv4
+```
+
+In the example above, there is one single Ethereum node configured to run through a single load balancer, defined on the final line.
+
+The load balancer host and node records that correspond to this `haproxy.cfg` file would look like this:
+
+#### Load Balancer Host
+| name           | location | loadBalancer | ip | fqdn                                 |
+| -------------- | -------- | ------------ | -- | ------------------------------------ |
+| ethereum-use2a | USE2     | true         |    | ethereum-use2a.pocketblockchains.com |
+
+#### Load Balanced Node
+| https | chain | host      | port | automation | backend    | loadBalancers       | server |
+| ----- | ----- | --------- | ---- | ---------- | ---------- | ------------------- | ------ |
+| true  | ETH   | shared-2a | 8545 | true       | ethmainnet | ethereum-use2a      | 2a     |
+
+If desired, a frontend record could be created as follows:
+
+#### Load Balancer Frontend
+| https | chain | host           | port  | frontend   | username      | password         |
+| ----- | ----- | ---------      | ----  | ---------- | ------------- | ---------------- |
+| true  | ETH   | ethereum-use2a | 18545 | ethmainnet | nodenannyuser | 1234password5678 |
+
+### HAProxy Stats Page
+
+In the example above, the HAProxy stats page is available on port `8050` on the load balancer host. This page provides an easy to understand overview of the status of all nodes on a given load balancer. In short, green nodes are healthy, red are offline and orange have been removed by Node Nanny due to being out of sync.
+
+[For more info on the HAProxy stats page, click here.](https://www.haproxy.com/blog/exploring-the-haproxy-stats-page/)
 
 # Support and Contact
 
