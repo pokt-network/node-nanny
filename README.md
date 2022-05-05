@@ -32,7 +32,7 @@ Babysits your nodes, so you don't have to. 🧸
 
 Node Nanny is a node monitoring system for automating the availability of Pocket blockchain nodes. It uses an inventory database of hosts and nodes on which it performs periodic health checks. Out of sync nodes are automatically prevented from receiving traffic by removing them from load balancer rotation.
 
-In order for this automation functionality to work, HAProxy will need to be configured to handle routing traffic to your nodes. [See below](#automation)
+In order for this automation functionality to work, HAProxy will need to be configured to handle routing traffic to your nodes. [More details.](#automation)
 
 Without HAProxy configured, Node Nanny can still provide real time node health monitoring; however the main benefit of this application to node runners lies in its ability to automatically add and remove nodes from rotation as they go in and out of sync.
 
