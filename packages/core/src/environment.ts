@@ -29,7 +29,7 @@ const ENV_VARS: { [variable: string]: () => string | number | boolean } = {
   PAGER_DUTY_API_KEY: () => process.env.PAGER_DUTY_API_KEY,
   REDIS_HOST: () => process.env.REDIS_HOST,
 
-  ALERT_RETRIGGER_THRESHOLD: () => Number(process.env.ALERT_RETRIGGER_THRESHOLD || 60),
+  ALERT_RETRIGGER_THRESHOLD: () => Number(process.env.ALERT_RETRIGGER_THRESHOLD || 120),
   ALERT_TRIGGER_THRESHOLD: () => Number(process.env.ALERT_TRIGGER_THRESHOLD || 6),
   BACKEND_PORT: () => Number(process.env.BACKEND_PORT || 4000),
   MONGO_MAX_LOG_DAYS: () => Number(process.env.MONGO_MAX_LOG_DAYS || 30) * (60 * 60 * 24),
