@@ -32,6 +32,7 @@ export type IHealthCheck = {
   details?: Maybe<IHealthResponseDetails>;
   ethSyncing?: Maybe<Scalars['String']>;
   height?: Maybe<IBlockHeight>;
+  node?: Maybe<INode>;
 };
 
 export type IHealthResponseDetails = {
@@ -532,7 +533,7 @@ export type IGetHealthCheckQueryVariables = Exact<{
 }>;
 
 
-export type IGetHealthCheckQuery = { healthCheck: { ethSyncing?: string | null, height?: { internalHeight: number, delta?: number | null, externalHeight?: number | null } | null, details?: { noOracle?: boolean | null, numPeers?: number | null, badOracles?: Array<string | null> | null, nodeIsAheadOfPeer?: boolean | null, secondsToRecover?: number | null } | null } };
+export type IGetHealthCheckQuery = { healthCheck: { node?: { status: string, conditions: string } | null, height?: { internalHeight: number, delta?: number | null, externalHeight?: number | null } | null, details?: { noOracle?: boolean | null, numPeers?: number | null, badOracles?: Array<string | null> | null, nodeIsAheadOfPeer?: boolean | null, secondsToRecover?: number | null } | null } };
 
 
 export const CreateHostDocument = gql`
@@ -1607,7 +1608,10 @@ export type GetServerCountQueryResult = Apollo.QueryResult<IGetServerCountQuery,
 export const GetHealthCheckDocument = gql`
     query GetHealthCheck($id: ID!) {
   healthCheck: getHealthCheck(id: $id) {
-    ethSyncing
+    node {
+      status
+      conditions
+    }
     height {
       internalHeight
       delta

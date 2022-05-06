@@ -696,14 +696,6 @@ export class Service {
     const numIntervals = newestHeight / avgHeightDiff;
     const secondsToRecover = Math.ceil(numIntervals * (env("MONITOR_INTERVAL") / 1000));
 
-    console.debug({
-      newestHeight,
-      heightDiffArr,
-      avgHeightDiff,
-      numIntervals,
-      secondsToRecover,
-    });
-
     return secondsToRecover;
   }
 }
