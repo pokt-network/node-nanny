@@ -49,12 +49,6 @@ afterAll(async () => {
 });
 
 describe("Automation Service Tests", () => {
-  describe("Health Check Tests", () => {
-    test("Should perform one single health check on a single node programmatically", async () => {
-      const testNodeId = "";
-    });
-  });
-
   describe("Node Tests", () => {
     beforeAll(async () => {
       ({ chain, location, host, node } = await createMocks());
