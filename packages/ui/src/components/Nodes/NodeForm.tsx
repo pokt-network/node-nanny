@@ -420,13 +420,14 @@ export const NodeForm = ({
     },
   });
 
-  const [submitDelete, { error: deleteNodeError }] = useDeleteNodeMutation({
+  const [submitDelete] = useDeleteNodeMutation({
     onCompleted: ({ deleteNode }) => {
       SnackbarHelper.open({ text: `Node ${deleteNode.name} successfully deleted!` });
       refetchNodes();
       ModalHelper.close();
       setState(NodeActionsState.Info);
     },
+    onError: (error) => ModalHelper.setError(error.message),
   });
 
   const handleOpenDeleteModal = () => {
@@ -439,7 +440,6 @@ export const NodeForm = ({
         okText: "Delete Host",
         okColor: "error",
         cancelColor: "inherit",
-        error: deleteNodeError?.message,
       },
     });
   };
