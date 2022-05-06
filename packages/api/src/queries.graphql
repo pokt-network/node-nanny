@@ -55,7 +55,6 @@ query Node($id: ID!) {
       id
       name
     }
-    heightArray
   }
 }
 
@@ -86,7 +85,6 @@ query Nodes {
       id
       name
     }
-    heightArray
   }
 }
 
