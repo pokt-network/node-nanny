@@ -329,13 +329,15 @@ export const HostForm = ({
           />
         </Box>
       </FormControl>
-      <TextField
-        name="nodes"
-        value={hostsWithNode[selectedHost?.id] || 0}
-        label="Nodes"
-        disabled={true}
-        size="small"
-      />
+      {read && (
+        <TextField
+          name="nodes"
+          value={hostsWithNode[selectedHost?.id] || 0}
+          label="Nodes"
+          disabled={true}
+          size="small"
+        />
+      )}
       {!read && (
         <Box
           sx={{
