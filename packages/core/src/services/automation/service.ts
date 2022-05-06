@@ -293,7 +293,7 @@ export class Service extends BaseService {
       title: "[Manually Added to Rotation] - Success",
       message: `${host.name}/${chain.name}/${server} added to ${backend}.`,
       chain: chain.name,
-      location: host.name,
+      location: host.location.name,
     });
   }
 
@@ -311,7 +311,7 @@ export class Service extends BaseService {
       title: "[Manually Removed from Rotation] - Success",
       message: `${host.name}/${chain.name}/${server} removed from ${backend}.`,
       chain: chain.name,
-      location: host.name,
+      location: host.location.name,
     });
   }
 
