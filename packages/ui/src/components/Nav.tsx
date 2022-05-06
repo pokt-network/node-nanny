@@ -33,38 +33,37 @@ interface NavProps {
   open: boolean;
 }
 
-export const Nav = ({ open }) => {
+export const Nav = ({ open }: NavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
   return (
     <List>
-      {data &&
-        data.map((navItem) => (
-          <Tooltip title={!open ? navItem.label : ""} placement="right">
-            <ListItemButton
-              key={navItem.label}
-              component={Link}
-              href={navItem.to}
-              color="inherit"
-              onClick={() => navigate(navItem.to)}
-              selected={navItem.to === location.pathname}
-              sx={{
-                "&.Mui-selected": {
-                  backgroundColor: "#2E3643",
-                },
-                "&.Mui-selected:hover": {
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
-                },
-              }}
-            >
-              <ListItemIcon>
-                <navItem.icon />
-              </ListItemIcon>
-              <ListItemText primary={navItem.label} />
-            </ListItemButton>
-          </Tooltip>
-        ))}
+      {data?.map((navItem) => (
+        <Tooltip title={!open ? navItem.label : ""} placement="right">
+          <ListItemButton
+            key={navItem.label}
+            component={Link}
+            href={navItem.to}
+            color="inherit"
+            onClick={() => navigate(navItem.to)}
+            selected={navItem.to === location.pathname}
+            sx={{
+              "&.Mui-selected": {
+                backgroundColor: "#2E3643",
+              },
+              "&.Mui-selected:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.08)",
+              },
+            }}
+          >
+            <ListItemIcon>
+              <navItem.icon />
+            </ListItemIcon>
+            <ListItemText primary={navItem.label} />
+          </ListItemButton>
+        </Tooltip>
+      ))}
     </List>
   );
 };

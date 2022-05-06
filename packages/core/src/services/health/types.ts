@@ -1,3 +1,5 @@
+import { INode } from "../../models";
+
 export enum ENCResponse {
   SUCCESS = "succeeded!",
 }
@@ -77,6 +79,7 @@ export interface IHealthResponse {
 }
 
 export interface IHealthCheck {
+  node: INode;
   height?: IBlockHeight;
   details?: IHealthResponseDetails;
   ethSyncing?: string;

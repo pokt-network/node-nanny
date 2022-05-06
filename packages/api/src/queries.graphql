@@ -173,7 +173,10 @@ query GetServerCount($id: ID!) {
 
 query GetHealthCheck($id: ID!) {
   healthCheck: getHealthCheck(id: $id) {
-    ethSyncing
+    node {
+      status
+      conditions
+    }
     height {
       internalHeight
       delta
