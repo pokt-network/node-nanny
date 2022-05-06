@@ -65,7 +65,7 @@ export interface IHealthResponse {
   name: string;
   status: EErrorStatus;
   conditions?: EErrorConditions;
-  height?: IBlockHeight | number;
+  height?: IBlockHeight;
   peers?: number;
   details?: IHealthResponseDetails;
   health?: any;
