@@ -28,13 +28,10 @@ export type IChain = {
   type: Scalars['String'];
 };
 
-export type IHealthResponse = {
-  conditions: Scalars['String'];
+export type IHealthCheck = {
   details?: Maybe<IHealthResponseDetails>;
   ethSyncing?: Maybe<Scalars['String']>;
   height?: Maybe<IBlockHeight>;
-  name: Scalars['String'];
-  status: Scalars['String'];
 };
 
 export type IHealthResponseDetails = {
@@ -285,7 +282,7 @@ export type IQuery = {
   chains: Array<IChain>;
   checkValidHaProxy: Scalars['Boolean'];
   getHaProxyStatus: Scalars['Int'];
-  getHealthCheck: IHealthResponse;
+  getHealthCheck: IHealthCheck;
   getServerCount: IServerCount;
   hosts: Array<IHost>;
   locations: Array<ILocation>;
@@ -535,7 +532,7 @@ export type IGetHealthCheckQueryVariables = Exact<{
 }>;
 
 
-export type IGetHealthCheckQuery = { healthCheck: { name: string, status: string, conditions: string, ethSyncing?: string | null, height?: { internalHeight: number, delta?: number | null, externalHeight?: number | null } | null, details?: { noOracle?: boolean | null, numPeers?: number | null, badOracles?: Array<string | null> | null, nodeIsAheadOfPeer?: boolean | null, secondsToRecover?: number | null } | null } };
+export type IGetHealthCheckQuery = { healthCheck: { ethSyncing?: string | null, height?: { internalHeight: number, delta?: number | null, externalHeight?: number | null } | null, details?: { noOracle?: boolean | null, numPeers?: number | null, badOracles?: Array<string | null> | null, nodeIsAheadOfPeer?: boolean | null, secondsToRecover?: number | null } | null } };
 
 
 export const CreateHostDocument = gql`
@@ -1610,9 +1607,6 @@ export type GetServerCountQueryResult = Apollo.QueryResult<IGetServerCountQuery,
 export const GetHealthCheckDocument = gql`
     query GetHealthCheck($id: ID!) {
   healthCheck: getHealthCheck(id: $id) {
-    name
-    status
-    conditions
     ethSyncing
     height {
       internalHeight
