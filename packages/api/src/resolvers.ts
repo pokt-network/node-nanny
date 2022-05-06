@@ -49,6 +49,9 @@ const resolvers: {
     getServerCount: async (_, { id }) => {
       return await new AutomationService().getServerCountForUi(id);
     },
+    getHealthCheck: async (_, { id }) => {
+      return await new AutomationService().getHealthCheck(id);
+    },
   },
 
   Mutation: {

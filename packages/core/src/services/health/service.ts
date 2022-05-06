@@ -497,7 +497,7 @@ export class Service {
         delta,
         refNodeUrls: refNodeUrls.map((url) => `${url}\n`),
         highest: peerHeight,
-        height: nodeHeight,
+        height: { internalHeight: nodeHeight, externalHeight: peerHeight, delta },
       };
     }
 
