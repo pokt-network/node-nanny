@@ -280,7 +280,8 @@ export class Service extends BaseService {
       await NodesModel.updateOne({ _id: id }, { status, conditions });
     }
 
-    return { height, details, ethSyncing };
+    const updatedNodeHealth = { ...node, status, conditions };
+    return { height, details, ethSyncing, node: updatedNodeHealth };
   }
 
   /* ----- Rotation Methods ----- */
