@@ -671,32 +671,30 @@ export class Service {
 
   /** Saves the last 5 recorded block heights to the node model if not synced */
   private getNodeHeightArray(height: number, heightArray: number[]): number[] {
-    return heightArray?.length ? [height, ...heightArray].slice(0, 12) : [height];
+    return heightArray?.length ? [height, ...heightArray].slice(0, 120) : [height];
   }
 
   /** Gets an estimated time to recover based on the last 5 recorded block heights */
   private getSecondsToRecover(heightArray: number[]): number {
     if (heightArray?.length < 2) return null;
 
+    const [newestHeight] = heightArray;
+    const oldestHeight = heightArray[heightArray.length - 1];
+
     /* If Delta is increasing return -1 */
-    if (heightArray[0] > heightArray[heightArray.length - 1]) {
+    if (newestHeight > oldestHeight) {
       return -1;
     }
     /* If Delta is stuck return 0 */
-    if (heightArray[0] === heightArray[heightArray.length - 1]) {
+    if (newestHeight === oldestHeight) {
       return 0;
     }
 
     /* Calculate estimated time to recover in seconds */
-    const deltaDiffArray = heightArray
-      .map((height, i, a) => a[i + 1] - height)
-      .slice(0, -1);
-    const avgDeltaDiff =
-      deltaDiffArray.reduce((acc, curr) => acc + curr) / heightArray.length;
-    const numOfIntervals = deltaDiffArray[0] / avgDeltaDiff;
-    const secondsToRecover = Math.floor(
-      numOfIntervals * (env("MONITOR_INTERVAL") / 1000),
-    );
+    const heightDiffArr = heightArray.map((h, i, a) => a[i + 1] - h).slice(0, -1);
+    const avgHeightDiff = heightDiffArr.reduce((a, c) => a + c) / heightDiffArr.length;
+    const numIntervals = (oldestHeight - newestHeight) / avgHeightDiff;
+    const secondsToRecover = Math.floor(numIntervals * (env("MONITOR_INTERVAL") / 1000));
 
     return secondsToRecover;
   }
