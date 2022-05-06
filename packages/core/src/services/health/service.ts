@@ -669,9 +669,11 @@ export class Service {
     return this.getSecondsToRecover(newHeightArray);
   }
 
-  /** Saves the last 5 recorded block heights to the node model if not synced */
+  /** Saves the last X recorded block heights to the node model if not synced */
   private getNodeHeightArray(height: number, heightArray: number[]): number[] {
-    return heightArray?.length ? [height, ...heightArray].slice(0, 120) : [height];
+    return heightArray?.length
+      ? [height, ...heightArray].slice(0, env("ALERT_RETRIGGER_THRESHOLD"))
+      : [height];
   }
 
   /** Gets an estimated time to recover based on the last 5 recorded block heights */
