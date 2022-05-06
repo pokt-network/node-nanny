@@ -75,10 +75,7 @@ const typeDefs = gql`
     total: Int!
   }
 
-  type HealthResponse {
-    name: String!
-    status: String!
-    conditions: String!
+  type HealthCheck {
     height: BlockHeight
     details: HealthResponseDetails
     ethSyncing: String
@@ -212,7 +209,7 @@ const typeDefs = gql`
     checkValidHaProxy(input: NodeInput!): Boolean!
     nodeStatus(id: ID!): String!
     getServerCount(id: ID!): ServerCount!
-    getHealthCheck(id: ID!): HealthResponse!
+    getHealthCheck(id: ID!): HealthCheck!
   }
 
   type Mutation {
