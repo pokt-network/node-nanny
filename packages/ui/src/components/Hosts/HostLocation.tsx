@@ -70,7 +70,7 @@ export const HostLocation = ({
   const [createLocation, { error: addLocationError }] = useCreateLocationMutation({
     onCompleted: () => {
       refetchLocations();
-      ModalHelper.close();
+      setState(HostActionsState.Info);
     },
     onError: () => setLoading(false),
   });
@@ -80,6 +80,7 @@ export const HostLocation = ({
       refetchLocations();
       ModalHelper.close();
       setLocationId("");
+      setState(HostActionsState.Info);
     },
     onError: (error) => {
       setDeleteLocationError(error.message);
