@@ -693,8 +693,16 @@ export class Service {
     /* Calculate estimated time to recover in seconds */
     const heightDiffArr = heightArray.map((h, i, a) => a[i + 1] - h).slice(0, -1);
     const avgHeightDiff = heightDiffArr.reduce((a, c) => a + c) / heightDiffArr.length;
-    const numIntervals = (oldestHeight - newestHeight) / avgHeightDiff;
-    const secondsToRecover = Math.floor(numIntervals * (env("MONITOR_INTERVAL") / 1000));
+    const numIntervals = newestHeight / avgHeightDiff;
+    const secondsToRecover = Math.ceil(numIntervals * (env("MONITOR_INTERVAL") / 1000));
+
+    console.debug({
+      newestHeight,
+      heightDiffArr,
+      avgHeightDiff,
+      numIntervals,
+      secondsToRecover,
+    });
 
     return secondsToRecover;
   }
