@@ -170,3 +170,24 @@ query GetServerCount($id: ID!) {
     total
   }
 }
+
+query GetHealthCheck($id: ID!) {
+  healthCheck: getHealthCheck(id: $id) {
+    name
+    status
+    conditions
+    ethSyncing
+    height {
+      internalHeight
+      delta
+      externalHeight
+    }
+    details {
+      noOracle
+      numPeers
+      badOracles
+      nodeIsAheadOfPeer
+      secondsToRecover
+    }
+  }
+}

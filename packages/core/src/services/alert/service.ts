@@ -195,11 +195,7 @@ export class Service {
         : "";
     const ethSyncStr = ethSyncing ? `\nETH Syncing - ${ethSyncing}\n` : "";
     const heightStr = height
-      ? `Height - ${
-          typeof height === "number"
-            ? height
-            : `Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
-        }`
+      ? `Height - Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
       : "";
     const secondsToRecoverStr =
       secondsToRecover && typeof secondsToRecover === "number"
