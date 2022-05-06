@@ -1,6 +1,5 @@
 import { useLayoutEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
-import { useReactiveVar } from "@apollo/client";
 import {
   Box,
   Container,
@@ -14,7 +13,6 @@ import { styled, createTheme, ThemeProvider } from "@mui/material/styles";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import MenuIcon from "@mui/icons-material/Menu";
 
-import { navOpenVar } from "./apollo";
 import { Hosts, Logs, Nodes } from "./pages";
 import { Nav, RootModal, Snackbar } from "./components";
 
@@ -101,7 +99,7 @@ function DashboardContent() {
         }}
       >
         <CssBaseline />
-        <Drawer variant="permanent" open={open} ModalProps={{ keepMounted: true }}>
+        <Drawer variant="permanent" open={open} sx={{ overflow: "hidden" }}>
           <Toolbar
             sx={{
               display: "flex",
