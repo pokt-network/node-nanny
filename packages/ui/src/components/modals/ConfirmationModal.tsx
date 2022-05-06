@@ -1,8 +1,17 @@
+import { useEffect, useState } from "react";
+
 import Paper from "components/Paper";
 import Title from "components/Title";
 import { ModalHelper } from "utils";
 
-import { Alert, AlertTitle, Box, Button, Typography } from "@mui/material";
+import {
+  Alert,
+  AlertTitle,
+  Box,
+  Button,
+  CircularProgress,
+  Typography,
+} from "@mui/material";
 
 export interface ConfirmationModalProps {
   handleOk: any;
@@ -32,6 +41,14 @@ export function ConfirmationModal({
   cancelColor,
   error,
 }: ConfirmationModalProps) {
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      setLoading(false);
+    }
+  }, [error]);
+
   return (
     <Paper>
       {confirmText && <Title>{confirmText}</Title>}
@@ -49,8 +66,20 @@ export function ConfirmationModal({
           "& button": { margin: 1 },
         }}
       >
-        <Button onClick={handleOk} variant="contained" color={okColor || "primary"}>
-          {okText || "OK"}
+        <Button
+          onClick={() => {
+            setLoading(true);
+            handleOk();
+          }}
+          variant="contained"
+          color={okColor || "primary"}
+          sx={{ width: 132 }}
+        >
+          {loading ? (
+            <CircularProgress size={20} color="secondary" style={{ marginRight: 8 }} />
+          ) : (
+            okText || "OK"
+          )}
         </Button>
         <Button
           onClick={() => ModalHelper.close()}
