@@ -76,6 +76,12 @@ export interface IHealthResponse {
   highest?: any;
 }
 
+export interface IHealthCheck {
+  height?: IBlockHeight;
+  details?: IHealthResponseDetails;
+  ethSyncing?: string;
+}
+
 export interface IHealthResponseDetails {
   noOracle?: boolean;
   numPeers?: number;

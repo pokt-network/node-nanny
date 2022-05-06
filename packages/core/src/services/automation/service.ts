@@ -20,7 +20,7 @@ import {
   INodeUpdate,
 } from "./types";
 import { Service as HealthService } from "../health";
-import { IHealthResponse } from "../health/types";
+import { IHealthCheck } from "../health/types";
 import { Service as BaseService } from "../base-service/base-service";
 
 export class Service extends BaseService {
@@ -261,22 +261,26 @@ export class Service extends BaseService {
   }
 
   /* ----- Health Check Method ----- */
-  async getHealthCheck(id: string): Promise<IHealthResponse> {
+  async getHealthCheck(id: string): Promise<IHealthCheck> {
     const node = await NodesModel.findOne({ _id: id })
       .populate("host")
       .populate("chain")
       .exec();
 
     const {
-      name,
       status,
       conditions,
       height,
       details,
       ethSyncing,
-      delta,
     } = await new HealthService().getNodeHealth(node);
-    return { name, status, conditions, height, details, ethSyncing, delta };
+    const { status: nodeStatus, conditions: nodeConditions } = node;
+
+    if (status !== nodeStatus || conditions !== nodeConditions) {
+      await NodesModel.updateOne({ _id: id }, { status, conditions });
+    }
+
+    return { height, details, ethSyncing };
   }
 
   /* ----- Rotation Methods ----- */
