@@ -237,10 +237,10 @@ export class Service {
 
   private getSecondsToRecoverString(secondsToRecover: number): string {
     if (secondsToRecover === -1) {
-      return "Delta has increased over the past 12 health checks.";
+      return "Delta has increased over the past 120 health checks.";
     }
     if (secondsToRecover === 0) {
-      return "Delta has not changed over the past 12 health checks.";
+      return "Delta has not changed over the past 120 health checks.";
     }
 
     const minutesToRecover = Math.round(secondsToRecover / 60);
