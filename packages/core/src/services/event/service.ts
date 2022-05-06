@@ -127,8 +127,7 @@ export class Service extends BaseService {
     const event: IRedisEvent = JSON.parse(eventJson);
     const { conditions, id, status } = event;
 
-    /* Update node's status and condition on event trigger/retrigger.
-    Also reset seconds-to-recover fields if node has recovered from not synced */
+    /* Update node's status and condition on event trigger/retrigger. */
     const node = await this.getNode(id);
     const update: UpdateQuery<INode> = { status, conditions };
     if (alertType === EAlertTypes.RESOLVED) {
