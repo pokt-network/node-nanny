@@ -67,7 +67,6 @@ const typeDefs = gql`
     ssl: Boolean
     automation: Boolean
     dispatch: Boolean
-    heightArray: [Int!]
   }
 
   type ServerCount {
