@@ -55,21 +55,51 @@ export const NodeCRUD = ({
 }: NodeCRUDProps) => {
   const [title, setTitle] = useState("Select Node To View Status");
 
-  const [getStatus, { data, error: getStatusError, loading }] =
-    useGetNodeStatusLazyQuery();
+  /* ---- Queries/Mutations ---- */
+  const [getStatus, { data, error: getStatusError, loading }] = useGetNodeStatusLazyQuery(
+    { variables: { id: node?.id } },
+  );
   const [getServerCount, { data: serverCountData, loading: serverCountLoading }] =
-    useGetServerCountLazyQuery();
-  const [enable, { error: enableHaProxyError }] = useEnableHaProxyServerMutation({
+    useGetServerCountLazyQuery({ variables: { id: node?.id } });
+
+  const [addToRotation] = useEnableHaProxyServerMutation({
+    variables: { id: node?.id },
     onCompleted: () => {
+      ModalHelper.close();
       SnackbarHelper.open({ text: "Node successfully added to rotation." });
       getStatus();
     },
+    onError: (error) => ModalHelper.setError(error.message),
   });
-  const [disable, { error: disableHaProxyError }] = useDisableHaProxyServerMutation({
+  const [removeFromRotation] = useDisableHaProxyServerMutation({
+    variables: { id: node?.id },
     onCompleted: () => {
+      ModalHelper.close();
       SnackbarHelper.open({ text: "Node successfully removed from rotation." });
       getStatus();
     },
+    onError: (error) => ModalHelper.setError(error.message),
+  });
+
+  const [muteMonitor] = useMuteMonitorMutation({
+    variables: { id: node?.id },
+    onCompleted: ({ muteMonitor }) => {
+      SnackbarHelper.open({ text: `Node ${muteMonitor.name} successfully muted.` });
+      const { muted } = muteMonitor;
+      setSelectedNode({ ...node, muted });
+      ModalHelper.close();
+    },
+    onError: (error) => ModalHelper.setError(error.message),
+  });
+  const [unmuteMonitor] = useUnmuteMonitorMutation({
+    variables: { id: node?.id },
+    onCompleted: ({ unmuteMonitor }) => {
+      SnackbarHelper.open({ text: `Node ${muteMonitor.name} successfully unmuted.` });
+      const { muted } = unmuteMonitor;
+      setSelectedNode({ ...node, muted });
+      ModalHelper.close();
+    },
+    onError: (error) => ModalHelper.setError(error.message),
   });
 
   useEffect(() => {
@@ -80,76 +110,6 @@ export const NodeCRUD = ({
       getServerCount({ variables: { id: node.id } });
     }
   }, [node, getStatus, getServerCount]);
-
-  const haProxyOnline = { "0": true, "1": false, "-1": "n/a" }[
-    String(data?.haProxyStatus)
-  ];
-  const haProxyButtonDisabled =
-    !node?.automation ||
-    loading ||
-    !!getStatusError ||
-    typeof haProxyOnline !== "boolean";
-  const haProxyButtonText = `${haProxyOnline ? "Remove" : "Add"} Node ${
-    haProxyOnline ? "from" : "to"
-  } Rotation`;
-
-  const handleHaProxyButtonClick = (id: string) => {
-    haProxyOnline ? disable({ variables: { id } }) : enable({ variables: { id } });
-  };
-
-  const handleMuteToggle = (id: string) =>
-    node?.muted
-      ? unmuteMonitor({ variables: { id } })
-      : muteMonitor({ variables: { id } });
-
-  const [muteMonitor, { error: muteMonitorError }] = useMuteMonitorMutation({
-    onCompleted: ({ muteMonitor }) => {
-      SnackbarHelper.open({ text: `Node ${muteMonitor.name} successfully muted.` });
-      const { muted } = muteMonitor;
-      setSelectedNode({ ...node, muted });
-      ModalHelper.close();
-    },
-  });
-  const [unmuteMonitor, { error: unmuteMonitorError }] = useUnmuteMonitorMutation({
-    onCompleted: ({ unmuteMonitor }) => {
-      SnackbarHelper.open({ text: `Node ${muteMonitor.name} successfully unmuted.` });
-      const { muted } = unmuteMonitor;
-      setSelectedNode({ ...node, muted });
-      ModalHelper.close();
-    },
-  });
-
-  const handleOpenMuteModal = () => {
-    ModalHelper.open({
-      modalType: "confirmation",
-      modalProps: {
-        handleOk: () => handleMuteToggle(node?.id),
-        confirmText: `${node?.muted ? "Unmute" : "Mute"} Node: ${node?.name}`,
-        okText: `${node?.muted ? "Unmute" : "Mute"} Node`,
-        promptText: (node?.muted ? text.unmuteMonitor : text.muteMonitor).replaceAll(
-          "{selectedNode}",
-          node.name,
-        ),
-        error: (muteMonitorError || unmuteMonitorError)?.message,
-      },
-    });
-  };
-
-  const handleOpenRotationModal = () => {
-    ModalHelper.open({
-      modalType: "confirmation",
-      modalProps: {
-        handleOk: () => handleHaProxyButtonClick(node?.id),
-        confirmText: `${haProxyOnline ? "Disable" : "Enable"} Node: ${node?.name}`,
-        okText: `${haProxyOnline ? "Disable" : "Enable"} Node`,
-        promptText: (haProxyOnline
-          ? text.removeFromRotation
-          : text.addToRotation
-        ).replaceAll("{selectedNode}", node.name),
-        error: (enableHaProxyError || disableHaProxyError)?.message,
-      },
-    });
-  };
 
   useEffect(() => {
     if (type === "create") {
@@ -168,6 +128,57 @@ export const NodeCRUD = ({
       setTitle(`Selected ${node.frontend ? "Frontend" : "Node"}`);
     }
   }, [node, type]);
+
+  const handleHaProxyButtonClick = () => {
+    haProxyOnline ? removeFromRotation() : addToRotation();
+  };
+
+  const handleMuteToggle = () => (node?.muted ? unmuteMonitor() : muteMonitor());
+
+  const haProxyOnline = { "0": true, "1": false, "-1": "n/a" }[
+    String(data?.haProxyStatus)
+  ];
+  const haProxyButtonDisabled =
+    !node?.automation ||
+    loading ||
+    !!getStatusError ||
+    typeof haProxyOnline !== "boolean";
+  const haProxyButtonText = `${haProxyOnline ? "Remove" : "Add"} Node ${
+    haProxyOnline ? "from" : "to"
+  } Rotation`;
+
+  /* ---- Modal Functions ---- */
+  const handleOpenMuteModal = () => {
+    ModalHelper.open({
+      modalType: "confirmation",
+      modalProps: {
+        handleOk: handleMuteToggle,
+        confirmText: `${node?.muted ? "Unmute" : "Mute"} Node: ${node?.name}`,
+        okText: `${node?.muted ? "Unmute" : "Mute"} Node`,
+        promptText: (node?.muted ? text.unmuteMonitor : text.muteMonitor).replaceAll(
+          "{selectedNode}",
+          node.name,
+        ),
+      },
+    });
+  };
+
+  const handleOpenRotationModal = () => {
+    ModalHelper.open({
+      modalType: "confirmation",
+      modalProps: {
+        handleOk: handleHaProxyButtonClick,
+        confirmText: `${haProxyOnline ? "Remove From Rotation" : "Add to Rotation"}: ${
+          node?.name
+        }`,
+        okText: `${haProxyOnline ? "Remove" : "Add"} Node`,
+        promptText: (haProxyOnline
+          ? text.removeFromRotation
+          : text.addToRotation
+        ).replaceAll("{selectedNode}", node.name),
+      },
+    });
+  };
 
   return (
     <Paper>
