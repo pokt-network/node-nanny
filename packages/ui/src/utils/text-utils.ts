@@ -12,3 +12,9 @@ export const formatHeaderCell = (field: string): string => {
 
 export const s = (count: number): string => (count === 1 ? "" : "s");
 export const is = (count: number): string => (count === 1 ? "is" : "are");
+
+export const numWithCommas = (number: number | string): string => {
+  return Number(number)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};

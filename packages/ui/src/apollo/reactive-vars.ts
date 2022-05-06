@@ -15,6 +15,3 @@ const snackbarStateInitialValue: SnackBarProps = {
   type: undefined,
 };
 export const snackbarStateVar = makeVar(snackbarStateInitialValue);
-
-const navOpenInitialValue: boolean = true;
-export const navOpenVar = makeVar(navOpenInitialValue);

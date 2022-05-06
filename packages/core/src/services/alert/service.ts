@@ -197,7 +197,7 @@ export class Service {
         : "";
     const ethSyncStr = ethSyncing ? `\nETH Syncing - ${ethSyncing}\n` : "";
     const heightStr = height
-      ? `Height - Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
+      ? `Block Height - Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
       : "";
     const secondsToRecoverStr =
       secondsToRecover && typeof secondsToRecover === "number"
@@ -239,10 +239,10 @@ export class Service {
 
   private getSecondsToRecoverString(secondsToRecover: number): string {
     if (secondsToRecover === -1) {
-      return "Delta has increased over the past 120 health checks.";
+      return "Delta is increasing.";
     }
     if (secondsToRecover === 0) {
-      return "Delta has not changed over the past 120 health checks.";
+      return "Delta is stuck.";
     }
 
     const minutesToRecover = Math.round(secondsToRecover / 60);
