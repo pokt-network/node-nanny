@@ -44,28 +44,30 @@ export function CSVConfirmationModal({
   const [backendError, setBackendError] = useState<string>("");
 
   /* ----- Submit Nodes Mutation ----- */
-  const [submitNodes, { loading: nodesLoading }] = useCreateNodesCsvMutation({
-    onCompleted: () => {
-      refetch();
-      ModalHelper.close();
-      setState(NodeActionsState.Info);
-    },
-    onError: (error) => {
-      setBackendError(parseBackendError(error));
-    },
-  });
+  const [submitNodes, { loading: nodesLoading, error: nodesError }] =
+    useCreateNodesCsvMutation({
+      onCompleted: () => {
+        refetch();
+        ModalHelper.close();
+        setState(NodeActionsState.Info);
+      },
+      onError: (error) => {
+        setBackendError(parseBackendError(error));
+      },
+    });
 
   /* ----- SubmitHosts Mutation ----- */
-  const [submitHosts, { loading: hostsLoading }] = useCreateHostsCsvMutation({
-    onCompleted: () => {
-      refetch();
-      ModalHelper.close();
-      setState(HostActionsState.Info);
-    },
-    onError: (error) => {
-      setBackendError(parseBackendError(error));
-    },
-  });
+  const [submitHosts, { loading: hostsLoading, error: hostsError }] =
+    useCreateHostsCsvMutation({
+      onCompleted: () => {
+        refetch();
+        ModalHelper.close();
+        setState(HostActionsState.Info);
+      },
+      onError: (error) => {
+        setBackendError(parseBackendError(error));
+      },
+    });
 
   const submitCSV = () => {
     setBackendError("");
@@ -124,7 +126,7 @@ export function CSVConfirmationModal({
           <AlertTitle>Backend error: {backendError}</AlertTitle>
         </Alert>
       )}
-      {(nodesLoading || hostsLoading) && (
+      {(nodesLoading || hostsLoading) && !nodesError && !hostsError && (
         <div style={{ width: "100%" }}>
           <LinearProgress />
         </div>
