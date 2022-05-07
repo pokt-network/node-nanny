@@ -91,6 +91,7 @@ export const HostForm = ({
 
     return errors;
   };
+
   const { values, errors, handleChange, handleSubmit, setFieldValue, resetForm } =
     useFormik({
       initialValues: { location: "", name: "", ip: "", fqdn: "", loadBalancer: false },
@@ -156,7 +157,10 @@ export const HostForm = ({
         if ((value as ILocation)?.id !== values[key]) {
           newValues[key] = values[key];
         }
-      } else if (!!values[key]?.length && values[key] !== value) {
+      } else if (
+        (typeof values[key] === "boolean" || values[key]) &&
+        values[key] !== value
+      ) {
         newValues[key] = values[key];
       }
     });
