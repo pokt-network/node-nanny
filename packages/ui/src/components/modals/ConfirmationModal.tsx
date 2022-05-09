@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
-import Paper from "components/Paper";
-import Title from "components/Title";
-import { ModalHelper } from "utils";
+import Paper from 'components/Paper';
+import Title from 'components/Title';
+import { ModalHelper } from 'utils';
 
 import {
   Alert,
@@ -11,7 +11,7 @@ import {
   Button,
   CircularProgress,
   Typography,
-} from "@mui/material";
+} from '@mui/material';
 
 export interface ConfirmationModalProps {
   handleOk: any;
@@ -24,13 +24,13 @@ export interface ConfirmationModalProps {
 }
 
 type Color =
-  | "inherit"
-  | "success"
-  | "error"
-  | "primary"
-  | "secondary"
-  | "info"
-  | "warning";
+  | 'inherit'
+  | 'success'
+  | 'error'
+  | 'primary'
+  | 'secondary'
+  | 'info'
+  | 'warning';
 
 export function ConfirmationModal({
   handleOk,
@@ -53,17 +53,17 @@ export function ConfirmationModal({
     <Paper>
       {confirmText && <Title>{confirmText}</Title>}
       <Typography>
-        {promptText.includes("\n")
+        {promptText.includes('\n')
           ? promptText
-              .split("\n")
+              .split('\n')
               .map((line) => <Typography gutterBottom>{line}</Typography>)
           : promptText}
       </Typography>
       <Box
         sx={{
           marginTop: 4,
-          textAlign: "right",
-          "& button": { margin: 1 },
+          textAlign: 'right',
+          '& button': { margin: 1 },
         }}
       >
         <Button
@@ -72,26 +72,26 @@ export function ConfirmationModal({
             handleOk();
           }}
           variant="contained"
-          color={okColor || "primary"}
+          color={okColor || 'primary'}
           sx={{ width: 132 }}
         >
           {loading ? (
             <CircularProgress size={20} color="secondary" style={{ marginRight: 8 }} />
           ) : (
-            okText || "OK"
+            okText || 'OK'
           )}
         </Button>
         <Button
           onClick={() => ModalHelper.close()}
           variant="outlined"
-          color={cancelColor || "inherit"}
+          color={cancelColor || 'inherit'}
         >
           Cancel
         </Button>
       </Box>
       {error && (
         <Alert severity="error">
-          <AlertTitle>{"Error:"}</AlertTitle>
+          <AlertTitle>{'Error:'}</AlertTitle>
           {error}
         </Alert>
       )}

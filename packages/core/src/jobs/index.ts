@@ -1,1 +1,1 @@
-export { createFrontendAlertChannel } from "./create-frontend-alert-channel";
+export { createFrontendAlertChannel } from './create-frontend-alert-channel';

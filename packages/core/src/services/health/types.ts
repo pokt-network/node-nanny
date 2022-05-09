@@ -1,54 +1,57 @@
+import { INode } from '../../models';
+
 export enum ENCResponse {
-  SUCCESS = "succeeded!",
+  SUCCESS = 'succeeded!',
 }
 
 export enum ESupportedBlockchains {
-  AVA = "AVA",
-  AVATST = "AVATST",
-  ETH = "ETH",
-  BSC = "BSC",
-  BSCTST = "BSCTST",
-  POL = "POL",
-  POLTST = "POLTST",
-  FUS = "FUS",
-  XDAI = "XDAI",
-  RIN = "RIN",
-  ROP = "ROP",
-  GOE = "GOE",
-  KOV = "KOV",
-  HEI = "HEI",
-  POKT = "POKT",
+  AVA = 'AVA',
+  AVATST = 'AVATST',
+  ETH = 'ETH',
+  BSC = 'BSC',
+  BSCTST = 'BSCTST',
+  POL = 'POL',
+  POLTST = 'POLTST',
+  FUS = 'FUS',
+  XDAI = 'XDAI',
+  RIN = 'RIN',
+  ROP = 'ROP',
+  GOE = 'GOE',
+  KOV = 'KOV',
+  HEI = 'HEI',
+  POKT = 'POKT',
   /* PNF Internal only */
-  "POKT-DIS" = "POKT-DIS",
-  "POKT-MAIN" = "POKT-MAIN",
+  'POKT-DIS' = 'POKT-DIS',
+  'POKT-MAIN' = 'POKT-MAIN',
+  'POKT-TEST' = 'POKT-TEST',
 }
 
 export enum ESupportedBlockchainTypes {
-  EVM = "EVM",
-  AVA = "AVA",
-  TMT = "TMT",
-  POKT = "POKT",
-  SOL = "SOL",
-  ALG = "ALG",
-  HMY = "HMY",
+  EVM = 'EVM',
+  AVA = 'AVA',
+  TMT = 'TMT',
+  POKT = 'POKT',
+  SOL = 'SOL',
+  ALG = 'ALG',
+  HMY = 'HMY',
 }
 
 export enum EErrorConditions {
-  HEALTHY = "HEALTHY",
-  OFFLINE = "OFFLINE",
-  NO_RESPONSE = "NO_RESPONSE",
-  NOT_SYNCHRONIZED = "NOT_SYNCHRONIZED",
-  NO_PEERS = "NO_PEERS",
-  PEER_NOT_SYNCHRONIZED = "PEER_NOT_SYNCHRONIZED",
-  PENDING = "PENDING",
+  HEALTHY = 'HEALTHY',
+  OFFLINE = 'OFFLINE',
+  NO_RESPONSE = 'NO_RESPONSE',
+  NOT_SYNCHRONIZED = 'NOT_SYNCHRONIZED',
+  NO_PEERS = 'NO_PEERS',
+  PEER_NOT_SYNCHRONIZED = 'PEER_NOT_SYNCHRONIZED',
+  PENDING = 'PENDING',
 }
 
 export enum EErrorStatus {
-  ERROR = "ERROR",
-  OK = "OK",
-  INFO = "INFO",
-  WARNING = "WARNING",
-  PENDING = "PENDING",
+  ERROR = 'ERROR',
+  OK = 'OK',
+  INFO = 'INFO',
+  WARNING = 'WARNING',
+  PENDING = 'PENDING',
 }
 
 export interface IBlockHeight {
@@ -65,7 +68,7 @@ export interface IHealthResponse {
   name: string;
   status: EErrorStatus;
   conditions?: EErrorConditions;
-  height?: IBlockHeight | number;
+  height?: IBlockHeight;
   peers?: number;
   details?: IHealthResponseDetails;
   health?: any;
@@ -76,11 +79,19 @@ export interface IHealthResponse {
   highest?: any;
 }
 
+export interface IHealthCheck {
+  node: INode;
+  height?: IBlockHeight;
+  details?: IHealthResponseDetails;
+  ethSyncing?: string;
+}
+
 export interface IHealthResponseDetails {
   noOracle?: boolean;
   numPeers?: number;
   badOracles?: string[];
   nodeIsAheadOfPeer?: number;
+  secondsToRecover?: number;
 }
 
 export interface IReferenceURL {

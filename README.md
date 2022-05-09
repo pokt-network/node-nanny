@@ -30,7 +30,7 @@ Babysits your nodes, so you don't have to. 🧸
 
 # Overview
 
-Node Nanny is a node monitoring system for automating the availability of Pocket blockchain nodes. 
+Node Nanny is a node monitoring system for automating the availability of Pocket blockchain nodes.
 
 It uses an inventory database to perform periodic node health checks. Out of sync nodes are automatically prevented from receiving traffic by removing them from load balancer rotation.
 
@@ -76,8 +76,8 @@ Monitor alerts are sent to a Discord channel. In order to receive alerts, you wi
 
 The bot will need the following permissions:
 
-  - `Manage Channels`
-  - `Manage Webhooks`
+- `Manage Channels`
+- `Manage Webhooks`
 
 ### 2. Setup Docker Compose
 
@@ -103,13 +103,13 @@ The bot will need the following permissions:
 
 The Node Nanny UI will be available on port 3000 on your host machine; **it is highly recommended to configure your access settings to prevent access from unauthorized IPs.**
 
-You are now ready to start adding inventory data. 
+You are now ready to start adding inventory data.
 
 # How To Use
 
 ## Adding Data
 
-Host and Node inventory is stored in an included database; this inventory is merely a set of records for monitoring and automation purposes. 
+Host and Node inventory is stored in an included database; this inventory is merely a set of records for monitoring and automation purposes.
 
 Node Nanny supports adding Host and Node data through the included UI; either one at a time via form input or as batches using CSV upload.
 
@@ -186,17 +186,17 @@ Notes
 
 ## 5. Frontends
 
-A frontend is a record of the host that is running your load balancer software for a given chain. Monitoring your frontend is a convenient way to ensure there is any service available for a given chain; if a health check cannot return a healthy response for any of the backends for a frontend it means there is no service available for that chain through the load balancer frontend. 
+A frontend is a record of the host that is running your load balancer software for a given chain. Monitoring your frontend is a convenient way to ensure there is any service available for a given chain; if a health check cannot return a healthy response for any of the backends for a frontend it means there is no service available for that chain through the load balancer frontend.
 
-| field         | type         | required |
-| ------------- | ------------ | -------- |
-| https         | boolean      | Y        |
-| chain         | string       | Y        |
-| host          | string       | Y        |
-| port          | number       | Y        |
-| frontend      | string       | Y        |
-| username      | string       | Y        |
-| password      | string       | Y        |
+| field    | type    | required |
+| -------- | ------- | -------- |
+| https    | boolean | Y        |
+| chain    | string  | Y        |
+| host     | string  | Y        |
+| port     | number  | Y        |
+| frontend | string  | Y        |
+| username | string  | Y        |
+| password | string  | Y        |
 
 Notes
 
@@ -208,7 +208,7 @@ Notes
 
 # Automation
 
-Node Nanny automatically manages the availabilty of your blockchain nodes, pulling them in and out of rotation. This feature is only available on  nodes configured to run through HAProxy.
+Node Nanny automatically manages the availabilty of your blockchain nodes, pulling them in and out of rotation. This feature is only available on nodes configured to run through HAProxy.
 
 **In order to use the automation feature, ensure port 9999 on your load balancer Host is open to Node Nanny's IP.**
 
@@ -217,12 +217,15 @@ Node Nanny automatically manages the availabilty of your blockchain nodes, pulli
 _Currently the only supported load balancer software is HAProxy; pull requests to support additional load balancers are welcome._
 
 If you are not familiar with HAProxy, the following two guides should be helpful:
+
 ### 1. [HAProxy configuration basics guide](https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/)
 
-[![Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely](http://img.youtube.com/vi/JjXUH0VORnE/0.jpg)](https://www.youtube.com/watch?v=JjXUH0VORnE "Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely")
+[![Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely](http://img.youtube.com/vi/JjXUH0VORnE/0.jpg)](https://www.youtube.com/watch?v=JjXUH0VORnE 'Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely')
+
 ### 2. [Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely](https://www.youtube.com/watch?v=JjXUH0VORnE)
 
 ### Example haproxy.cfg File
+
 ```
 global
   stats socket /var/run/api.sock user haproxy group haproxy mode 660 level admin expose-fd listeners
@@ -264,6 +267,7 @@ backend ethmainnet
  timeout server 120s
  server  2a ethereum-use2a.pocketblockchains.com:8545 check resolve-prefer ipv4
 ```
+
 _(This is intended to provide a general example only; exact configuration will vary based on your environment.)_
 
 In the example above, there is one single Ethereum node configured to run through a single load balancer, defined on the final line.
@@ -271,20 +275,23 @@ In the example above, there is one single Ethereum node configured to run throug
 The load balancer host and node records that correspond to this `haproxy.cfg` file would require the foillowing values in the associated inventory records:
 
 #### Load Balancer Host
-| name           | location | loadBalancer | ip | fqdn                                 |
-| -------------- | -------- | ------------ | -- | ------------------------------------ |
-| ethereum-use2a | USE2     | true         |    | ethereum-use2a.pocketblockchains.com |
+
+| name           | location | loadBalancer | ip  | fqdn                                 |
+| -------------- | -------- | ------------ | --- | ------------------------------------ |
+| ethereum-use2a | USE2     | true         |     | ethereum-use2a.pocketblockchains.com |
 
 #### Load Balanced Node
-| port | automation | backend    | loadBalancers       | server |
-| ---- | ---------- | ---------- | ------------------- | ------ |
-| 8545 | true       | ethmainnet | ethereum-use2a      | 2a     |
+
+| port | automation | backend    | loadBalancers  | server |
+| ---- | ---------- | ---------- | -------------- | ------ |
+| 8545 | true       | ethmainnet | ethereum-use2a | 2a     |
 
 If desired, a frontend record could be created as follows:
 
 #### Load Balancer Frontend
-| host           | port  | frontend   | username      | password         |
-| ---------      | ----  | ---------- | ------------- | ---------------- |
+
+| host           | port  | frontend   | username      | password     |
+| -------------- | ----- | ---------- | ------------- | ------------ |
 | ethereum-use2a | 18545 | ethmainnet | nodenannyuser | 1234password |
 
 ### HAProxy Stats Page

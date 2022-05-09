@@ -1,40 +1,40 @@
-import Redis from "ioredis";
-import { Event as EventConsumer } from "@pokt-foundation/node-nanny-core/dist/services";
-import { connect, disconnect } from "@pokt-foundation/node-nanny-core/dist/db";
+import Redis from 'ioredis';
+import { Event as EventConsumer } from '@pokt-foundation/node-nanny-core/dist/services';
+import { connect, disconnect } from '@pokt-foundation/node-nanny-core/dist/db';
 
-import env from "@pokt-foundation/node-nanny-core/dist/environment";
+import env from '@pokt-foundation/node-nanny-core/dist/environment';
 
 const consumer = new EventConsumer();
-const redis = new Redis({ host: env("REDIS_HOST") });
+const redis = new Redis({ host: env('REDIS_HOST') });
 
 const main = async () => {
   await connect();
 
-  redis.subscribe("send-event-trigger", (err, count) => {
+  redis.subscribe('send-event-trigger', (err, count) => {
     if (err) console.error(err.message);
     console.log(`Subscribed to ${count} channels.`);
   });
 
-  redis.subscribe("send-event-retrigger", (err, count) => {
+  redis.subscribe('send-event-retrigger', (err, count) => {
     if (err) console.error(err.message);
     console.log(`Subscribed to ${count} channels.`);
   });
 
-  redis.subscribe("send-event-resolved", (err, count) => {
+  redis.subscribe('send-event-resolved', (err, count) => {
     if (err) console.error(err.message);
     console.log(`Subscribed to ${count} channels.`);
   });
 
-  redis.on("message", (channel: string, message: string) => {
+  redis.on('message', (channel: string, message: string) => {
     return {
-      "send-event-trigger": consumer.processTriggered,
-      "send-event-retrigger": consumer.processRetriggered,
-      "send-event-resolved": consumer.processResolved,
+      'send-event-trigger': consumer.processTriggered,
+      'send-event-retrigger': consumer.processRetriggered,
+      'send-event-resolved': consumer.processResolved,
     }[channel](message);
   });
 };
 
-process.on("SIGINT", async function () {
+process.on('SIGINT', async function () {
   await disconnect();
 });
 

@@ -1,10 +1,10 @@
-import MuiPaper, { PaperTypeMap } from "@mui/material/Paper";
+import MuiPaper, { PaperTypeMap } from '@mui/material/Paper';
 
-export const Paper = (props: PaperTypeMap["props"]) => {
+export const Paper = (props: PaperTypeMap['props']) => {
   return (
     <MuiPaper
       sx={{
-        width: "100%",
+        width: '100%',
         padding: 2,
         marginBottom: 4,
       }}
