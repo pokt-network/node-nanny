@@ -677,8 +677,8 @@ export class Service {
     }
 
     /* Calculate estimated time to recover in seconds */
-    const deltaDiffArr = deltaArray.map((d, i, a) => d - a[i + 1]).slice(0, -1);
-    const avgDeltaReduction = deltaDiffArr.reduce((a, c) => a + c) / deltaDiffArr.length;
+    const diffArray = deltaArray.map((delta, i, a) => delta - a[i + 1]).slice(0, -1);
+    const avgDeltaReduction = diffArray.reduce((sum, d) => sum + d) / diffArray.length;
     const numIntervals = newestDelta / avgDeltaReduction;
     const secondsToRecover = Math.ceil(numIntervals * (env("MONITOR_INTERVAL") / 1000));
 
