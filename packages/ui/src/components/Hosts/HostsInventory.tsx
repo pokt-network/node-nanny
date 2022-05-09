@@ -1,14 +1,14 @@
-import { Dispatch } from "react";
+import { Dispatch } from 'react';
 
-import Paper from "components/Paper";
-import Title from "components/Title";
-import { ILocation, IHost } from "types";
-import { HostActionsState } from "pages/Hosts";
+import Paper from 'components/Paper';
+import Title from 'components/Title';
+import { ILocation, IHost } from 'types';
+import { HostActionsState } from 'pages/Hosts';
 
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Button from "@mui/material/Button";
-import Chip from "@mui/material/Chip";
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
 
 interface HostsInventoryProps {
   hosts: IHost[];
@@ -28,7 +28,7 @@ export const HostsInventory = ({ hosts, locations, setState }: HostsInventoryPro
         spacing={2}
         alignItems="center"
         sx={{
-          "& h3": {
+          '& h3': {
             margin: 0,
           },
         }}
@@ -42,11 +42,11 @@ export const HostsInventory = ({ hosts, locations, setState }: HostsInventoryPro
             spacing={4}
             columns={{ xs: 12, md: 4 }}
             sx={{
-              "& .MuiGrid-item": {
-                display: "flex",
-                alignItems: "center",
+              '& .MuiGrid-item': {
+                display: 'flex',
+                alignItems: 'center',
               },
-              "& .MuiTypography-body1": {
+              '& .MuiTypography-body1': {
                 marginLeft: 1,
               },
             }}
@@ -65,7 +65,7 @@ export const HostsInventory = ({ hosts, locations, setState }: HostsInventoryPro
             </Grid>
           </Grid>
         </Grid>
-        <Grid item sm={12} md="auto" sx={{ "& button": { marginLeft: 1 } }}>
+        <Grid item sm={12} md="auto" sx={{ '& button': { marginLeft: 1 } }}>
           <Button
             onClick={() => setState(HostActionsState.Create)}
             size="small"

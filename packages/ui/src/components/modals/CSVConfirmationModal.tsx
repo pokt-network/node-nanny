@@ -1,5 +1,5 @@
-import { Dispatch, useState } from "react";
-import { ApolloQueryResult } from "@apollo/client";
+import { Dispatch, useState } from 'react';
+import { ApolloQueryResult } from '@apollo/client';
 import {
   Alert,
   AlertTitle,
@@ -8,25 +8,25 @@ import {
   CircularProgress,
   LinearProgress,
   Typography,
-} from "@mui/material";
+} from '@mui/material';
 
-import Paper from "components/Paper";
-import Table from "components/Table";
-import Title from "components/Title";
-import { HostActionsState } from "pages/Hosts";
-import { NodeActionsState } from "pages/Nodes";
+import Paper from 'components/Paper';
+import Table from 'components/Table';
+import Title from 'components/Title';
+import { HostActionsState } from 'pages/Hosts';
+import { NodeActionsState } from 'pages/Nodes';
 
 import {
   IHostCsvInput,
   INodeCsvInput,
   useCreateHostsCsvMutation,
   useCreateNodesCsvMutation,
-} from "types";
-import { ModalHelper, parseBackendError, s } from "utils";
+} from 'types';
+import { ModalHelper, parseBackendError, s } from 'utils';
 
 export interface ConfirmationModalProps {
   data: (IHostCsvInput | INodeCsvInput)[];
-  type: "Node" | "Host";
+  type: 'Node' | 'Host';
   columnsOrder: string[];
   refetch: (variables?: any) => Promise<ApolloQueryResult<any>>;
   setState: Dispatch<any>;
@@ -41,7 +41,7 @@ export function CSVConfirmationModal({
   refetch,
   setState,
 }: ConfirmationModalProps) {
-  const [backendError, setBackendError] = useState<string>("");
+  const [backendError, setBackendError] = useState<string>('');
 
   /* ----- Submit Nodes Mutation ----- */
   const [submitNodes, { loading: nodesLoading, error: nodesError }] =
@@ -70,7 +70,7 @@ export function CSVConfirmationModal({
     });
 
   const submitCSV = () => {
-    setBackendError("");
+    setBackendError('');
 
     if (!dataError) {
       const dataWithoutId = data.map((item: any) => {
@@ -90,18 +90,18 @@ export function CSVConfirmationModal({
     <Paper>
       <Title>{`Create ${type}s by CSV Import`}</Title>
       {dataError ? (
-        <Alert severity="error" style={{ overflowY: "scroll", maxHeight: 200 }}>
+        <Alert severity="error" style={{ overflowY: 'scroll', maxHeight: 200 }}>
           <AlertTitle>
             {`Warning: There were one or more issues with your CSV format. Please correct
             the following issues before attempting to create ${type.toLowerCase()}s via CSV.`}
           </AlertTitle>
-          {dataError.includes("\n") ? (
-            dataError.split("\n").map((error) => <Typography>{error}</Typography>)
+          {dataError.includes('\n') ? (
+            dataError.split('\n').map((error) => <Typography>{error}</Typography>)
           ) : (
             <Typography>{dataError}</Typography>
           )}
         </Alert>
-      ) : type === "Node" ? (
+      ) : type === 'Node' ? (
         <>
           <Typography variant="subtitle1" mb={1}>
             Batch creation of nodes via CSV import can take a long time.
@@ -111,7 +111,7 @@ export function CSVConfirmationModal({
             combination are created for each node that represents a chain/location that
             does not already exist in the inventory database. Discord imposes rate
             limiting on the automated creation of webhooks so each new channel can take
-            5-10 seconds to create.{" "}
+            5-10 seconds to create.{' '}
           </Typography>
           <Alert severity="warning" sx={{ mb: 4 }}>
             Please do not navigate away, refresh or close this window during this time.
@@ -127,7 +127,7 @@ export function CSVConfirmationModal({
         </Alert>
       )}
       {(nodesLoading || hostsLoading) && !nodesError && !hostsError && (
-        <div style={{ width: "100%" }}>
+        <div style={{ width: '100%' }}>
           <LinearProgress />
         </div>
       )}
@@ -135,14 +135,14 @@ export function CSVConfirmationModal({
         type={type}
         rows={data || []}
         columnsOrder={columnsOrder}
-        height={"40vh"}
+        height={'40vh'}
         searchable
       />
       <Box
         sx={{
           marginTop: 4,
-          textAlign: "right",
-          "& button": { margin: 1 },
+          textAlign: 'right',
+          '& button': { margin: 1 },
         }}
       >
         <Button
@@ -153,12 +153,12 @@ export function CSVConfirmationModal({
           sx={{ width: 160, height: 36.5 }}
         >
           {nodesLoading || hostsLoading ? (
-            <CircularProgress size={20} color={"secondary"} />
+            <CircularProgress size={20} color={'secondary'} />
           ) : (
             `Create ${data.length} ${type}${s(data.length)}`
           )}
         </Button>
-        <Button onClick={() => ModalHelper.close()} color={"inherit"}>
+        <Button onClick={() => ModalHelper.close()} color={'inherit'}>
           Cancel
         </Button>
       </Box>

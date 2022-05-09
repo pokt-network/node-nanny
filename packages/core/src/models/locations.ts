@@ -1,4 +1,4 @@
-import { Schema, model, Model, Types } from "mongoose";
+import { Schema, model, Model, Types } from 'mongoose';
 
 export interface ILocation {
   id: Types.ObjectId;
@@ -11,4 +11,4 @@ export const locationSchema = new Schema<ILocation>(
   },
   { timestamps: true },
 );
-export const LocationsModel: Model<ILocation> = model("Locations", locationSchema);
+export const LocationsModel: Model<ILocation> = model('Locations', locationSchema);

@@ -1,4 +1,4 @@
-import { Schema, model, Model, Types } from "mongoose";
+import { Schema, model, Model, Types } from 'mongoose';
 
 export interface IWebhook {
   id: Types.ObjectId;
@@ -18,4 +18,4 @@ const webhookSchema = new Schema<IWebhook>(
 
 webhookSchema.index({ chain: 1, location: 1 }, { unique: true });
 
-export const WebhookModel: Model<IWebhook> = model("Webhooks", webhookSchema);
+export const WebhookModel: Model<IWebhook> = model('Webhooks', webhookSchema);

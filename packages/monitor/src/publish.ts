@@ -1,8 +1,8 @@
-import Redis from "ioredis";
-import { INode } from "@pokt-foundation/node-nanny-core/dist/models";
-import { EventTypes, HealthTypes } from "@pokt-foundation/node-nanny-core/dist/types";
+import Redis from 'ioredis';
+import { INode } from '@pokt-foundation/node-nanny-core/dist/models';
+import { EventTypes, HealthTypes } from '@pokt-foundation/node-nanny-core/dist/types';
 
-import env from "@pokt-foundation/node-nanny-core/dist/environment";
+import env from '@pokt-foundation/node-nanny-core/dist/environment';
 
 interface IMonitorEvent {
   message: HealthTypes.IHealthResponse;
@@ -16,9 +16,9 @@ export class Publish {
   private map: Map<string, number>;
 
   constructor(nodes: INode[]) {
-    this.redis = new Redis({ host: env("REDIS_HOST") });
-    this.threshold = env("ALERT_TRIGGER_THRESHOLD");
-    this.retriggerThreshold = env("ALERT_RETRIGGER_THRESHOLD");
+    this.redis = new Redis({ host: env('REDIS_HOST') });
+    this.threshold = env('ALERT_TRIGGER_THRESHOLD');
+    this.retriggerThreshold = env('ALERT_RETRIGGER_THRESHOLD');
     this.map = this.initPublish(nodes);
   }
 
@@ -42,11 +42,11 @@ export class Publish {
 
       const event: EventTypes.IRedisEvent = { ...message, id, count };
       if (count === this.threshold) {
-        await this.redis.publish("send-event-trigger", JSON.stringify(event));
+        await this.redis.publish('send-event-trigger', JSON.stringify(event));
       }
 
       if (count !== 0 && count % this.retriggerThreshold === 0) {
-        await this.redis.publish("send-event-retrigger", JSON.stringify(event));
+        await this.redis.publish('send-event-retrigger', JSON.stringify(event));
       }
     }
 
@@ -58,7 +58,7 @@ export class Publish {
 
         if (count >= this.threshold) {
           const event: EventTypes.IRedisEvent = { ...message, id, count };
-          await this.redis.publish("send-event-resolved", JSON.stringify(event));
+          await this.redis.publish('send-event-resolved', JSON.stringify(event));
         }
       }
     }

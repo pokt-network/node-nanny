@@ -1,14 +1,14 @@
-import { Dispatch } from "react";
+import { Dispatch } from 'react';
 
-import Paper from "components/Paper";
-import Title from "components/Title";
-import { INode } from "types";
-import { NodeActionsState } from "pages/Nodes";
+import Paper from 'components/Paper';
+import Title from 'components/Title';
+import { INode } from 'types';
+import { NodeActionsState } from 'pages/Nodes';
 
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Button from "@mui/material/Button";
-import Chip from "@mui/material/Chip";
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
 
 interface NodesInventoryProps {
   nodes: INode[];
@@ -17,8 +17,8 @@ interface NodesInventoryProps {
 
 export const NodesInventory = ({ nodes, setState }: NodesInventoryProps) => {
   const nodesTotal = nodes.length;
-  const healthyTotal = nodes.filter(({ status }) => status === "OK").length;
-  const errorTotal = nodes.filter(({ status }) => status === "ERROR").length;
+  const healthyTotal = nodes.filter(({ status }) => status === 'OK').length;
+  const errorTotal = nodes.filter(({ status }) => status === 'ERROR').length;
   const mutedTotal = nodes.filter(({ muted }) => muted).length;
 
   return (
@@ -28,7 +28,7 @@ export const NodesInventory = ({ nodes, setState }: NodesInventoryProps) => {
         spacing={2}
         alignItems="center"
         sx={{
-          "& h3": {
+          '& h3': {
             margin: 0,
           },
         }}
@@ -42,11 +42,11 @@ export const NodesInventory = ({ nodes, setState }: NodesInventoryProps) => {
             spacing={4}
             columns={{ xs: 12, md: 3 }}
             sx={{
-              "& .MuiGrid-item": {
-                display: "flex",
-                alignItems: "center",
+              '& .MuiGrid-item': {
+                display: 'flex',
+                alignItems: 'center',
               },
-              "& .MuiTypography-body1": {
+              '& .MuiTypography-body1': {
                 marginLeft: 1,
               },
             }}
@@ -69,7 +69,7 @@ export const NodesInventory = ({ nodes, setState }: NodesInventoryProps) => {
             </Grid>
           </Grid>
         </Grid>
-        <Grid item sm={12} md="auto" sx={{ "& button": { marginLeft: 1 } }}>
+        <Grid item sm={12} md="auto" sx={{ '& button': { marginLeft: 1 } }}>
           <Button
             onClick={() => setState(NodeActionsState.Create)}
             size="small"
