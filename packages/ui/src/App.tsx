@@ -1,24 +1,22 @@
-import { useLayoutEffect, useState } from "react";
-import { Route, Routes } from "react-router-dom";
-import {
-  Box,
-  Container,
-  CssBaseline,
-  Drawer as MUIDrawer,
-  IconButton,
-  Toolbar,
-  Typography,
-} from "@mui/material";
+import * as React from "react";
 import { styled, createTheme, ThemeProvider } from "@mui/material/styles";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import CssBaseline from "@mui/material/CssBaseline";
+import MuiDrawer from "@mui/material/Drawer";
+import Box from "@mui/material/Box";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
+import IconButton from "@mui/material/IconButton";
+import Container from "@mui/material/Container";
 import MenuIcon from "@mui/icons-material/Menu";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 
+import { Route, Routes } from "react-router-dom";
 import { Hosts, Logs, Nodes } from "./pages";
 import { Nav, RootModal, Snackbar } from "./components";
 
 const drawerWidth: number = 240;
 
-const Drawer = styled(MUIDrawer, { shouldForwardProp: (prop) => prop !== "open" })(
+const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== "open" })(
   ({ theme, open }) => ({
     "& .MuiDrawer-paper": {
       position: "relative",
@@ -73,18 +71,10 @@ const mdTheme = createTheme({
 });
 
 function DashboardContent() {
-  const [open, setOpen] = useState(true);
-
-  useLayoutEffect(() => {
-    const drawerClosed = localStorage.getItem("drawerClosed") === "true";
-    setOpen(!drawerClosed);
-  }, []);
-
+  const [open, setOpen] = React.useState(true);
   const toggleDrawer = () => {
-    localStorage.setItem("drawerClosed", open ? "true" : "false");
     setOpen(!open);
   };
-
   const year = new Date().getFullYear();
 
   return (
@@ -99,7 +89,7 @@ function DashboardContent() {
         }}
       >
         <CssBaseline />
-        <Drawer variant="permanent" open={open} sx={{ overflow: "hidden" }}>
+        <Drawer variant="permanent" open={open}>
           <Toolbar
             sx={{
               display: "flex",
@@ -112,14 +102,22 @@ function DashboardContent() {
               edge="start"
               color="inherit"
               aria-label="toggle navigation drawer"
-              aria-expanded={open}
+              aria-expanded={!!open}
               onClick={toggleDrawer}
             >
-              <MenuIcon sx={{ ...(open && { display: "none" }) }} />
-              <ChevronLeftIcon sx={{ ...(!open && { display: "none" }) }} />
+              <MenuIcon
+                sx={{
+                  ...(open && { display: "none" }),
+                }}
+              />
+              <ChevronLeftIcon
+                sx={{
+                  ...(!open && { display: "none" }),
+                }}
+              />
             </IconButton>
           </Toolbar>
-          <Nav open={open} />
+          <Nav />
           {open && (
             <Box
               sx={{
@@ -135,8 +133,13 @@ function DashboardContent() {
             </Box>
           )}
         </Drawer>
-
-        <Box component="main" sx={{ flexGrow: 1, overflow: "auto" }}>
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            overflow: "auto",
+          }}
+        >
           <Container sx={{ maxWidth: "1800px" }} maxWidth={false}>
             <Box sx={{ mt: 2, mb: 6 }}>
               <Typography
@@ -152,13 +155,11 @@ function DashboardContent() {
                 Pocket Node Nanny
               </Typography>
             </Box>
-
             <Routes>
               <Route path="/" element={<Logs />} />
               <Route path="/hosts" element={<Hosts />} />
               <Route path="/nodes" element={<Nodes />} />
             </Routes>
-
             <Box mb={6} />
           </Container>
         </Box>
