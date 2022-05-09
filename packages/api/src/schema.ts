@@ -74,27 +74,6 @@ const typeDefs = gql`
     total: Int!
   }
 
-  type HealthCheck {
-    height: BlockHeight
-    details: HealthResponseDetails
-    ethSyncing: String
-    node: Node
-  }
-
-  type BlockHeight {
-    internalHeight: Int!
-    delta: Int
-    externalHeight: Int
-  }
-
-  type HealthResponseDetails {
-    noOracle: Boolean
-    numPeers: Int
-    badOracles: [String]
-    nodeIsAheadOfPeer: Boolean
-    secondsToRecover: Int
-  }
-
   # EVM chains only
   type Oracle {
     id: ID!
@@ -209,7 +188,6 @@ const typeDefs = gql`
     checkValidHaProxy(input: NodeInput!): Boolean!
     nodeStatus(id: ID!): String!
     getServerCount(id: ID!): ServerCount!
-    getHealthCheck(id: ID!): HealthCheck!
   }
 
   type Mutation {
