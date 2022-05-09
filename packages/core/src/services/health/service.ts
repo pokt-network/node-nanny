@@ -227,7 +227,7 @@ export class Service {
       if (internalBh.error?.code) {
         const secondsToRecover = await this.updateNodeNotSynced(
           nodeHeight,
-          String(node.id),
+          node.id.toString(),
         );
         if (secondsToRecover !== null) {
           healthResponse = {
@@ -246,7 +246,7 @@ export class Service {
       if (difference > allowance) {
         const secondsToRecover = await this.updateNodeNotSynced(
           nodeHeight,
-          String(node.id),
+          node.id.toString(),
         );
         if (secondsToRecover !== null) {
           healthResponse = {
@@ -518,7 +518,7 @@ export class Service {
       };
       const secondsToRecover = await this.updateNodeNotSynced(
         nodeHeight,
-        String(node.id),
+        node.id.toString(),
       );
       if (secondsToRecover !== null) {
         healthResponse.details = { secondsToRecover };
