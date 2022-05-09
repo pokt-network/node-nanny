@@ -21,7 +21,6 @@ export interface INode<Populated = true> {
   basicAuth?: string;
   automation?: boolean;
   dispatch?: boolean;
-  heightArray?: number[];
 }
 
 const nodesSchema = new Schema<INode>(
@@ -49,7 +48,6 @@ const nodesSchema = new Schema<INode>(
     basicAuth: String,
     automation: Boolean,
     dispatch: Boolean,
-    heightArray: [Number],
   },
   { timestamps: true },
 );
