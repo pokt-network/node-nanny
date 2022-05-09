@@ -200,9 +200,7 @@ export class Service {
       ? `Block Height - Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
       : "";
     const secondsToRecoverStr =
-      secondsToRecover && typeof secondsToRecover === "number"
-        ? this.getSecondsToRecoverString(secondsToRecover)
-        : "";
+      secondsToRecover !== null ? this.getSecondsToRecoverString(secondsToRecover) : "";
     let nodeCountStr =
       typeof nodesOnline === "number" && nodesTotal >= 1
         ? `${nodesOnline} of ${nodesTotal} node${s(nodesTotal)} ${is(
