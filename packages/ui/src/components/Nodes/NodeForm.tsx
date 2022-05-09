@@ -78,8 +78,6 @@ export const NodeForm = ({
   const [loading, setLoading] = useState(false);
   const [backendError, setBackendError] = useState("");
   const [frontendExists, setFrontendExists] = useState(false);
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordNoMatch, setPasswordNoMatch] = useState("");
 
   const urlRef = useRef<HTMLInputElement>();
   const chainRef = useRef<HTMLInputElement>();
@@ -92,7 +90,6 @@ export const NodeForm = ({
 
   /* ----- Form Validation ----- */
   const handleFormSubmit = async () => {
-    if (frontend && passwordNoMatch) return;
     try {
       setLoading(true);
 
@@ -170,11 +167,6 @@ export const NodeForm = ({
       }
       if (!values.basicAuth.split(":")[0] || !values.basicAuth.split(":")[1]) {
         errors.basicAuth = "Username and password are required";
-      }
-      if (values.basicAuth.split(":")[1] !== confirmPassword) {
-        setPasswordNoMatch("Password and confirm password don't match");
-      } else {
-        setPasswordNoMatch("");
       }
     }
     return errors;
@@ -364,19 +356,8 @@ export const NodeForm = ({
     if (!selectedNode) {
       handleResetRefs();
       resetForm();
-      setConfirmPassword("");
-      setPasswordNoMatch("");
     }
-  }, [
-    update,
-    selectedNode,
-    resetForm,
-    handleResetFormState,
-    handleResetRefs,
-    setConfirmPassword,
-    setPasswordNoMatch,
-    frontend,
-  ]);
+  }, [update, selectedNode, resetForm, handleResetFormState, handleResetRefs, frontend]);
 
   /* ----- Queries ----- */
   const [checkValidHaProxy] = useCheckValidHaProxyLazyQuery({
@@ -706,7 +687,6 @@ export const NodeForm = ({
             />
             <TextField
               name="password"
-              type="password"
               value={values.basicAuth?.split(":")[1]}
               onChange={handleBasicAuthChange}
               label="Password"
@@ -715,18 +695,6 @@ export const NodeForm = ({
               fullWidth
               error={!!errors.basicAuth}
               helperText={errors.basicAuth}
-            />
-            <TextField
-              name="password"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              label="Confirm Password"
-              variant="outlined"
-              size="small"
-              fullWidth
-              error={!!passwordNoMatch}
-              helperText={passwordNoMatch}
             />
           </>
         )}
