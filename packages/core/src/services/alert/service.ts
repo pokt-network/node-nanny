@@ -187,6 +187,7 @@ export class Service {
   ): { message: string; statusStr: string } {
     const badOracles = details?.badOracles?.join("\n");
     const noOracle = details?.noOracle;
+    const secondsToRecover = details?.secondsToRecover;
     const nodeIsAheadOfPeer = details?.nodeIsAheadOfPeer;
 
     const statusStr = `${name} is ${conditions}.`;
@@ -196,12 +197,10 @@ export class Service {
         : "";
     const ethSyncStr = ethSyncing ? `\nETH Syncing - ${ethSyncing}\n` : "";
     const heightStr = height
-      ? `Height - ${
-          typeof height === "number"
-            ? height
-            : `Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
-        }`
+      ? `Block Height - Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
       : "";
+    const secondsToRecoverStr =
+      secondsToRecover !== null ? this.getSecondsToRecoverString(secondsToRecover) : "";
     let nodeCountStr =
       typeof nodesOnline === "number" && nodesTotal >= 1
         ? `${nodesOnline} of ${nodesTotal} node${s(nodesTotal)} ${is(
@@ -223,6 +222,7 @@ export class Service {
       message: [
         countStr,
         heightStr,
+        secondsToRecoverStr,
         ethSyncStr,
         badOracleStr,
         noOracleStr,
@@ -233,6 +233,18 @@ export class Service {
         .join("\n"),
       statusStr,
     };
+  }
+
+  private getSecondsToRecoverString(secondsToRecover: number): string {
+    if (secondsToRecover === -1) {
+      return "Delta is increasing.";
+    }
+    if (secondsToRecover === 0) {
+      return "Delta is stuck.";
+    }
+
+    const minutesToRecover = Math.round(secondsToRecover / 60);
+    return `Node is recovering. At the current rate the estimated time to sync is approximately ${minutesToRecover} minutes.`;
   }
 
   getRotationMessage(

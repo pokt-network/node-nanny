@@ -429,18 +429,20 @@ export const NodeForm = ({
   return (
     <>
       <Form read={read}>
-        <TextField
-          name="name"
-          value={getNodeName()}
-          onChange={handleChange}
-          label="Name"
-          variant="outlined"
-          disabled
-          size="small"
-          sx={{
-            "& fieldset": { borderWidth: "0px !important" },
-          }}
-        />
+        {!read && (
+          <TextField
+            name="name"
+            value={getNodeName()}
+            onChange={handleChange}
+            label="Name"
+            variant="outlined"
+            disabled
+            size="small"
+            sx={{
+              "& fieldset": { borderWidth: "0px !important" },
+            }}
+          />
+        )}
         <TextField
           name="url"
           ref={urlRef}
