@@ -260,7 +260,7 @@ export class Service extends BaseService {
     return update;
   }
 
-  /* ----- Health Check Method ----- */
+  /* ----- Health Check Methods ----- */
   async getHealthCheck(id: string): Promise<IHealthCheck> {
     const node = await NodesModel.findOne({ _id: id })
       .populate("host")
