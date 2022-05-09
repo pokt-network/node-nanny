@@ -1,3 +1,5 @@
+import { INode } from "../../models";
+
 export enum ENCResponse {
   SUCCESS = "succeeded!",
 }
@@ -65,7 +67,7 @@ export interface IHealthResponse {
   name: string;
   status: EErrorStatus;
   conditions?: EErrorConditions;
-  height?: IBlockHeight | number;
+  height?: IBlockHeight;
   peers?: number;
   details?: IHealthResponseDetails;
   health?: any;
@@ -76,11 +78,19 @@ export interface IHealthResponse {
   highest?: any;
 }
 
+export interface IHealthCheck {
+  node: INode;
+  height?: IBlockHeight;
+  details?: IHealthResponseDetails;
+  ethSyncing?: string;
+}
+
 export interface IHealthResponseDetails {
   noOracle?: boolean;
   numPeers?: number;
   badOracles?: string[];
   nodeIsAheadOfPeer?: number;
+  secondsToRecover?: number;
 }
 
 export interface IReferenceURL {
