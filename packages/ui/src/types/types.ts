@@ -15,11 +15,32 @@ export type Scalars = {
   Float: number;
 };
 
+export type IBlockHeight = {
+  delta?: Maybe<Scalars['Int']>;
+  externalHeight?: Maybe<Scalars['Int']>;
+  internalHeight: Scalars['Int'];
+};
+
 export type IChain = {
   allowance?: Maybe<Scalars['Int']>;
   id: Scalars['ID'];
   name: Scalars['String'];
   type: Scalars['String'];
+};
+
+export type IHealthCheck = {
+  details?: Maybe<IHealthResponseDetails>;
+  ethSyncing?: Maybe<Scalars['String']>;
+  height?: Maybe<IBlockHeight>;
+  node?: Maybe<INode>;
+};
+
+export type IHealthResponseDetails = {
+  badOracles?: Maybe<Array<Maybe<Scalars['String']>>>;
+  noOracle?: Maybe<Scalars['Boolean']>;
+  nodeIsAheadOfPeer?: Maybe<Scalars['Boolean']>;
+  numPeers?: Maybe<Scalars['Int']>;
+  secondsToRecover?: Maybe<Scalars['Int']>;
 };
 
 export type IHost = {
@@ -184,6 +205,7 @@ export type INode = {
   conditions: Scalars['String'];
   dispatch?: Maybe<Scalars['Boolean']>;
   frontend?: Maybe<Scalars['String']>;
+  heightArray?: Maybe<Array<Scalars['Int']>>;
   host: IHost;
   id: Scalars['ID'];
   loadBalancers?: Maybe<Array<IHost>>;
@@ -261,6 +283,7 @@ export type IQuery = {
   chains: Array<IChain>;
   checkValidHaProxy: Scalars['Boolean'];
   getHaProxyStatus: Scalars['Int'];
+  getHealthCheck: IHealthCheck;
   getServerCount: IServerCount;
   hosts: Array<IHost>;
   locations: Array<ILocation>;
@@ -280,6 +303,11 @@ export type IQueryCheckValidHaProxyArgs = {
 
 
 export type IQueryGetHaProxyStatusArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type IQueryGetHealthCheckArgs = {
   id: Scalars['ID'];
 };
 
@@ -443,12 +471,12 @@ export type INodeQueryVariables = Exact<{
 }>;
 
 
-export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } } };
+export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, heightArray?: Array<number> | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } } };
 
 export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } }> };
+export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, heightArray?: Array<number> | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } }> };
 
 export type ILogsQueryVariables = Exact<{
   input: ILogParams;
@@ -499,6 +527,13 @@ export type IGetServerCountQueryVariables = Exact<{
 
 
 export type IGetServerCountQuery = { serverCount: { online: number, total: number } };
+
+export type IGetHealthCheckQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type IGetHealthCheckQuery = { healthCheck: { node?: { status: string, conditions: string } | null, height?: { internalHeight: number, delta?: number | null, externalHeight?: number | null } | null, details?: { noOracle?: boolean | null, numPeers?: number | null, badOracles?: Array<string | null> | null, nodeIsAheadOfPeer?: boolean | null, secondsToRecover?: number | null } | null } };
 
 
 export const CreateHostDocument = gql`
@@ -1169,6 +1204,7 @@ export const NodeDocument = gql`
       id
       name
     }
+    heightArray
   }
 }
     `;
@@ -1228,6 +1264,7 @@ export const NodesDocument = gql`
       id
       name
     }
+    heightArray
   }
 }
     `;
@@ -1568,3 +1605,53 @@ export function useGetServerCountLazyQuery(baseOptions?: Apollo.LazyQueryHookOpt
 export type GetServerCountQueryHookResult = ReturnType<typeof useGetServerCountQuery>;
 export type GetServerCountLazyQueryHookResult = ReturnType<typeof useGetServerCountLazyQuery>;
 export type GetServerCountQueryResult = Apollo.QueryResult<IGetServerCountQuery, IGetServerCountQueryVariables>;
+export const GetHealthCheckDocument = gql`
+    query GetHealthCheck($id: ID!) {
+  healthCheck: getHealthCheck(id: $id) {
+    node {
+      status
+      conditions
+    }
+    height {
+      internalHeight
+      delta
+      externalHeight
+    }
+    details {
+      noOracle
+      numPeers
+      badOracles
+      nodeIsAheadOfPeer
+      secondsToRecover
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetHealthCheckQuery__
+ *
+ * To run a query within a React component, call `useGetHealthCheckQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetHealthCheckQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetHealthCheckQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetHealthCheckQuery(baseOptions: Apollo.QueryHookOptions<IGetHealthCheckQuery, IGetHealthCheckQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<IGetHealthCheckQuery, IGetHealthCheckQueryVariables>(GetHealthCheckDocument, options);
+      }
+export function useGetHealthCheckLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<IGetHealthCheckQuery, IGetHealthCheckQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<IGetHealthCheckQuery, IGetHealthCheckQueryVariables>(GetHealthCheckDocument, options);
+        }
+export type GetHealthCheckQueryHookResult = ReturnType<typeof useGetHealthCheckQuery>;
+export type GetHealthCheckLazyQueryHookResult = ReturnType<typeof useGetHealthCheckLazyQuery>;
+export type GetHealthCheckQueryResult = Apollo.QueryResult<IGetHealthCheckQuery, IGetHealthCheckQueryVariables>;
