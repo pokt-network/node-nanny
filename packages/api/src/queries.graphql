@@ -168,3 +168,24 @@ query GetServerCount($id: ID!) {
     total
   }
 }
+
+query GetHealthCheck($id: ID!) {
+  healthCheck: getHealthCheck(id: $id) {
+    node {
+      status
+      conditions
+    }
+    height {
+      internalHeight
+      delta
+      externalHeight
+    }
+    details {
+      noOracle
+      numPeers
+      badOracles
+      nodeIsAheadOfPeer
+      secondsToRecover
+    }
+  }
+}
