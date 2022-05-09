@@ -5,7 +5,7 @@ const expressions: { [regex: string]: RegExp } = {
   url: /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/,
 };
 
-type IRegexTypes = "ip" | "fqdn" | "port" | "url";
+type IRegexTypes = 'ip' | 'fqdn' | 'port' | 'url';
 
 export const regexTest = (string: string, regex: IRegexTypes): boolean => {
   return expressions[regex].test(string);

@@ -1,8 +1,8 @@
-import { exec } from "child_process";
-import { UpdateQuery } from "mongoose";
+import { exec } from 'child_process';
+import { UpdateQuery } from 'mongoose';
 
-import { Service as DiscordService } from "../discord";
-import { ELoadBalancerStatus } from "../event/types";
+import { Service as DiscordService } from '../discord';
+import { ELoadBalancerStatus } from '../event/types';
 import {
   NodesModel,
   IHost,
@@ -10,7 +10,7 @@ import {
   ChainsModel,
   HostsModel,
   LocationsModel,
-} from "../../models";
+} from '../../models';
 import {
   IHostInput,
   IHostCsvInput,
@@ -18,8 +18,10 @@ import {
   INodeInput,
   INodeCsvInput,
   INodeUpdate,
-} from "./types";
-import { Service as BaseService } from "../base-service/base-service";
+} from './types';
+import { Service as HealthService } from '../health';
+import { IHealthCheck } from '../health/types';
+import { Service as BaseService } from '../base-service/base-service';
 
 export class Service extends BaseService {
   constructor() {
@@ -34,7 +36,7 @@ export class Service extends BaseService {
 
     if (restart) await this.restartMonitor();
 
-    return await HostsModel.findOne({ _id }).populate("location").exec();
+    return await HostsModel.findOne({ _id }).populate('location').exec();
   }
 
   public async createHostsCSV(hosts: IHostCsvInput[]): Promise<IHost[]> {
@@ -89,7 +91,7 @@ export class Service extends BaseService {
       const createdNodes: INode[] = [];
       for await (const nodeInput of nodes) {
         const host = await HostsModel.findOne({ name: nodeInput.host });
-        const https = Boolean(nodeInput.https === "true");
+        const https = Boolean(nodeInput.https === 'true');
         const { fqdn, ip } = host;
 
         const nodeInputWithIds: INodeInput = {
@@ -97,7 +99,7 @@ export class Service extends BaseService {
           https,
           chain: (await ChainsModel.findOne({ name: nodeInput.chain }))._id,
           host: host._id,
-          url: `http${https ? "s" : ""}://${fqdn || ip}:${nodeInput.port}`,
+          url: `http${https ? 's' : ''}://${fqdn || ip}:${nodeInput.port}`,
           loadBalancers: (
             await HostsModel.find({ name: { $in: nodeInput.loadBalancers } })
           ).map(({ _id }) => _id),
@@ -147,7 +149,7 @@ export class Service extends BaseService {
     await HostsModel.updateOne({ _id: id }, { ...update });
     if (restart) await this.restartMonitor();
 
-    return await HostsModel.findOne({ _id: id }).populate("location").exec();
+    return await HostsModel.findOne({ _id: id }).populate('location').exec();
   }
 
   private async updateNodeNamesIfHostNameChanges(
@@ -171,7 +173,7 @@ export class Service extends BaseService {
     const nodesForHost = NodesModel.find({ host: id });
 
     for await (const node of nodesForHost) {
-      const [protocol] = update.ip ? ["http"] : node.url.split("://");
+      const [protocol] = update.ip ? ['http'] : node.url.split('://');
       const newRootDomain = update.ip || update.fqdn;
       const newUrl = `${protocol}://${newRootDomain}:${node.port}`;
 
@@ -197,14 +199,14 @@ export class Service extends BaseService {
       update.url = `${fqdn || ip}:${port}`;
     }
     if (update.port) {
-      update.url = (newHost ? update.url : url.split("://")[1]).replace(
+      update.url = (newHost ? update.url : url.split('://')[1]).replace(
         String(port),
         String(update.port),
       );
     }
     if (update.url) {
-      const secure = typeof https === "boolean" && https;
-      update.url = `http${secure ? "s" : ""}://${update.url}`;
+      const secure = typeof https === 'boolean' && https;
+      update.url = `http${secure ? 's' : ''}://${update.url}`;
     }
 
     await NodesModel.updateOne({ _id: id }, { ...update, port: Number(update.port) });
@@ -214,7 +216,7 @@ export class Service extends BaseService {
   }
 
   public async deleteHost(id: string, restart = true): Promise<IHost> {
-    const host = await HostsModel.findOne({ _id: id }).populate("location").exec();
+    const host = await HostsModel.findOne({ _id: id }).populate('location').exec();
 
     await HostsModel.deleteOne({ _id: id });
     if (restart) await this.restartMonitor();
@@ -234,8 +236,8 @@ export class Service extends BaseService {
   private sanitizeCreate(unsanitizedCreate: { [key: string]: any }): UpdateQuery<any> {
     const input: UpdateQuery<any> = {};
     Object.entries(unsanitizedCreate).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        input[key] = typeof value === "string" ? value.trim() : value;
+      if (value !== undefined && value !== null && value !== '') {
+        input[key] = typeof value === 'string' ? value.trim() : value;
       }
     });
     return input;
@@ -244,18 +246,42 @@ export class Service extends BaseService {
   private sanitizeUpdate(unsanitizedUpdate: { [key: string]: any }): UpdateQuery<any> {
     const update: UpdateQuery<any> = {};
     Object.entries(unsanitizedUpdate).forEach(([key, value]) => {
-      if (value === undefined || value === null || value === "") {
-        if (Object.keys(update).includes("$unset")) {
+      if (value === undefined || value === null || value === '') {
+        if (Object.keys(update).includes('$unset')) {
           update.$unset[key] = 1;
         } else {
           update.$unset = {};
           update.$unset[key] = 1;
         }
       } else {
-        update[key] = typeof value === "string" ? value.trim() : value;
+        update[key] = typeof value === 'string' ? value.trim() : value;
       }
     });
     return update;
+  }
+
+  /* ----- Health Check Methods ----- */
+  async getHealthCheck(id: string): Promise<IHealthCheck> {
+    const node = await NodesModel.findOne({ _id: id })
+      .populate('host')
+      .populate('chain')
+      .exec();
+
+    const {
+      status,
+      conditions,
+      height,
+      details,
+      ethSyncing,
+    } = await new HealthService().getNodeHealth(node);
+    const { status: nodeStatus, conditions: nodeConditions } = node;
+
+    if (status !== nodeStatus || conditions !== nodeConditions) {
+      await NodesModel.updateOne({ _id: id }, { status, conditions });
+    }
+
+    const updatedNodeHealth = { ...node, status, conditions };
+    return { height, details, ethSyncing, node: updatedNodeHealth };
   }
 
   /* ----- Rotation Methods ----- */
@@ -265,7 +291,7 @@ export class Service extends BaseService {
     await this.enableServer({ destination: backend, server, loadBalancers });
 
     return await this.alert.sendInfo({
-      title: "[Manually Added to Rotation] - Success",
+      title: '[Manually Added to Rotation] - Success',
       message: `${host.name}/${chain.name}/${server} added to ${backend}.`,
       chain: chain.name,
       location: host.location.name,
@@ -283,7 +309,7 @@ export class Service extends BaseService {
     });
 
     return await this.alert.sendInfo({
-      title: "[Manually Removed from Rotation] - Success",
+      title: '[Manually Removed from Rotation] - Success',
       message: `${host.name}/${chain.name}/${server} removed from ${backend}.`,
       chain: chain.name,
       location: host.location.name,
@@ -355,13 +381,13 @@ export class Service extends BaseService {
   private async restartMonitor(): Promise<boolean> {
     try {
       return await new Promise((resolve, reject) => {
-        exec("pm2 restart monitor", (error, stdout) => {
+        exec('pm2 restart monitor', (error, stdout) => {
           if (error) reject(`error: ${error.message}`);
           resolve(!!stdout);
         });
       });
     } catch (error) {
-      console.log("Cannot restart monitor, monitor not running.");
+      console.log('Cannot restart monitor, monitor not running.');
     }
   }
 }

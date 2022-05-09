@@ -1,4 +1,4 @@
-import { Schema, model, Model, Types } from "mongoose";
+import { Schema, model, Model, Types } from 'mongoose';
 
 export interface IOracle {
   id: Types.ObjectId;
@@ -15,4 +15,4 @@ const oracleSchema = new Schema<IOracle>(
   { timestamps: true },
 );
 
-export const OraclesModel: Model<IOracle> = model("Oracles", oracleSchema);
+export const OraclesModel: Model<IOracle> = model('Oracles', oracleSchema);

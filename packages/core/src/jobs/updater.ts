@@ -1,11 +1,11 @@
-import axios from "axios";
+import axios from 'axios';
 
-import { connect, disconnect } from "../db";
-import { ChainsModel, OraclesModel, IChain, IOracle } from "../models";
-import { getTimestamp } from "../utils";
-import { createFrontendAlertChannel } from "./create-frontend-alert-channel";
+import { connect, disconnect } from '../db';
+import { ChainsModel, OraclesModel, IChain, IOracle } from '../models';
+import { getTimestamp } from '../utils';
+import { createFrontendAlertChannel } from './create-frontend-alert-channel';
 
-import env from "../environment";
+import env from '../environment';
 
 interface IChainsAndOraclesResponse {
   chains: IChain[];
@@ -14,24 +14,24 @@ interface IChainsAndOraclesResponse {
 
 /* ----- Script Runs Every Hour ----- */
 (async () => {
-  if (env("PNF")) return;
+  if (env('PNF')) return;
 
   await connect();
 
   await createFrontendAlertChannel();
 
   /* ----- 1) Get newest local Chain and Oracle records' timestamps ---- */
-  const nodeNannysBirthday = new Date("2022-02-14").toISOString();
+  const nodeNannysBirthday = new Date('2022-02-14').toISOString();
 
   const [{ updatedAt: latestChain }] = (await ChainsModel.exists({}))
-    ? await ChainsModel.find().sort({ updatedAt: -1 }).limit(1).select("updatedAt").exec()
+    ? await ChainsModel.find().sort({ updatedAt: -1 }).limit(1).select('updatedAt').exec()
     : [{ updatedAt: nodeNannysBirthday }];
 
   const [{ updatedAt: latestOracle }] = (await OraclesModel.exists({}))
     ? await OraclesModel.find()
         .sort({ updatedAt: -1 })
         .limit(1)
-        .select("updatedAt")
+        .select('updatedAt')
         .exec()
     : [{ updatedAt: nodeNannysBirthday }];
 
@@ -39,7 +39,7 @@ interface IChainsAndOraclesResponse {
   const {
     data: { chains, oracles },
   } = await axios.post<IChainsAndOraclesResponse>(
-    "https://k69ggmt3u3.execute-api.us-east-2.amazonaws.com/update",
+    'https://k69ggmt3u3.execute-api.us-east-2.amazonaws.com/update',
     { latestChain, latestOracle },
   );
 
