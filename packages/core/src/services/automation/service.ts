@@ -19,6 +19,8 @@ import {
   INodeCsvInput,
   INodeUpdate,
 } from "./types";
+import { Service as HealthService } from "../health";
+import { IHealthCheck } from "../health/types";
 import { Service as BaseService } from "../base-service/base-service";
 
 export class Service extends BaseService {
@@ -256,6 +258,30 @@ export class Service extends BaseService {
       }
     });
     return update;
+  }
+
+  /* ----- Health Check Methods ----- */
+  async getHealthCheck(id: string): Promise<IHealthCheck> {
+    const node = await NodesModel.findOne({ _id: id })
+      .populate("host")
+      .populate("chain")
+      .exec();
+
+    const {
+      status,
+      conditions,
+      height,
+      details,
+      ethSyncing,
+    } = await new HealthService().getNodeHealth(node);
+    const { status: nodeStatus, conditions: nodeConditions } = node;
+
+    if (status !== nodeStatus || conditions !== nodeConditions) {
+      await NodesModel.updateOne({ _id: id }, { status, conditions });
+    }
+
+    const updatedNodeHealth = { ...node, status, conditions };
+    return { height, details, ethSyncing, node: updatedNodeHealth };
   }
 
   /* ----- Rotation Methods ----- */
