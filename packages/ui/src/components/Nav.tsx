@@ -1,15 +1,12 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Link,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Tooltip,
-} from "@mui/material";
+import Link from "@mui/material/Link";
+import List from "@mui/material/List";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
 import PeopleIcon from "@mui/icons-material/StorageSharp";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import LayersIcon from "@mui/icons-material/ComputerSharp";
+import { useLocation } from "react-router-dom";
 
 const data = [
   {
@@ -29,24 +26,17 @@ const data = [
   },
 ];
 
-interface NavProps {
-  open: boolean;
-}
-
-export const Nav = ({ open }: NavProps) => {
-  const navigate = useNavigate();
+export const Nav = () => {
   const location = useLocation();
-
   return (
     <List>
-      {data?.map((navItem) => (
-        <Tooltip title={!open ? navItem.label : ""} placement="right">
+      {data &&
+        data.map((navItem) => (
           <ListItemButton
             key={navItem.label}
             component={Link}
             href={navItem.to}
             color="inherit"
-            onClick={() => navigate(navItem.to)}
             selected={navItem.to === location.pathname}
             sx={{
               "&.Mui-selected": {
@@ -62,8 +52,7 @@ export const Nav = ({ open }: NavProps) => {
             </ListItemIcon>
             <ListItemText primary={navItem.label} />
           </ListItemButton>
-        </Tooltip>
-      ))}
+        ))}
     </List>
   );
 };
