@@ -2,11 +2,6 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { ApolloQueryResult } from "@apollo/client";
 import { Alert, AlertTitle, Box, Button, CircularProgress, Grid } from "@mui/material";
 
-import Paper from "components/Paper";
-import Title from "components/Title";
-import { NodeActionsState } from "pages/Nodes";
-import NodeForm from "./NodeForm";
-import NodeHealth from "./NodeHealth";
 import {
   INode,
   INodesQuery,
@@ -20,8 +15,14 @@ import {
   useUnmuteMonitorMutation,
 } from "types";
 import { ModalHelper, SnackbarHelper } from "utils";
-
 import text from "utils/monitor-text";
+
+import { NodeActionsState } from "pages/Nodes";
+import Paper from "components/Paper";
+import Title from "components/Title";
+
+import NodeForm from "./NodeForm";
+import NodeHealth from "./NodeHealth";
 
 interface NodeCRUDProps {
   node: INode;
