@@ -1,5 +1,5 @@
-import { modalStateVar } from "apollo";
-import { IModalState } from "../components/modals/RootModal";
+import { modalStateVar } from 'apollo';
+import { IModalState } from '../components/modals/RootModal';
 
 export class ModalHelper {
   static open = ({ modalType, modalProps, modalOptions }: IModalState): void => {

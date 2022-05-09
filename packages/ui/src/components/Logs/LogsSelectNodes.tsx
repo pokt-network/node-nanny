@@ -1,8 +1,8 @@
-import { useState, Dispatch } from "react";
+import { useState, Dispatch } from 'react';
 
-import Paper from "components/Paper";
-import Space, { SpaceSizeEnum } from "components/Space";
-import LogsChart from "components/Logs/LogsChart";
+import Paper from 'components/Paper';
+import Space, { SpaceSizeEnum } from 'components/Space';
+import LogsChart from 'components/Logs/LogsChart';
 import {
   SelectChangeEvent,
   FormControl,
@@ -12,19 +12,19 @@ import {
   InputLabel,
   Select,
   MenuItem,
-} from "@mui/material";
-import { ITimePeriod, timePeriods } from "utils/periods";
-import { INode, INodesQuery } from "types/types";
+} from '@mui/material';
+import { ITimePeriod, timePeriods } from 'utils/periods';
+import { INode, INodesQuery } from 'types/types';
 
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
-import Title from "components/Title";
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import Title from 'components/Title';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 type LogsSelectNodesProps = {
-  nodes: INodesQuery["nodes"];
+  nodes: INodesQuery['nodes'];
   nodeIds: string[];
   setNodeIds: Dispatch<string[]>;
 };
@@ -52,8 +52,8 @@ export const LogsSelectNodes = ({ nodes, nodeIds, setNodeIds }: LogsSelectNodesP
     <Paper>
       <Title>
         {!nodeIds?.length
-          ? "Select node(s) to view logs"
-          : `Logs for ${nodeIds?.length} node${nodeIds?.length ? "s" : ""}`}
+          ? 'Select node(s) to view logs'
+          : `Logs for ${nodeIds?.length} node${nodeIds?.length ? 's' : ''}`}
       </Title>
       <FormControl fullWidth>
         <Autocomplete

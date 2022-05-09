@@ -1,6 +1,6 @@
 overwrite: true
-schema: "./src/schema.ts"
-documents: "./src/*.graphql"
+schema: './src/schema.ts'
+documents: './src/*.graphql'
 config:
   typesPrefix: I
   skipTypename: true

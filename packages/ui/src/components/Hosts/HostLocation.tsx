@@ -1,6 +1,6 @@
-import { Dispatch, useState } from "react";
-import { useFormik, FormikErrors } from "formik";
-import { ApolloQueryResult } from "@apollo/client";
+import { Dispatch, useState } from 'react';
+import { useFormik, FormikErrors } from 'formik';
+import { ApolloQueryResult } from '@apollo/client';
 import {
   Alert,
   AlertTitle,
@@ -12,18 +12,18 @@ import {
   MenuItem,
   Select,
   TextField,
-} from "@mui/material";
+} from '@mui/material';
 
-import Paper from "components/Paper";
-import Title from "components/Title";
+import Paper from 'components/Paper';
+import Title from 'components/Title';
 import {
   ILocation,
   ILocationsQuery,
   useCreateLocationMutation,
   useDeleteLocationMutation,
-} from "types";
-import { ModalHelper, s } from "utils";
-import { HostActionsState } from "pages/Hosts";
+} from 'types';
+import { ModalHelper, s } from 'utils';
+import { HostActionsState } from 'pages/Hosts';
 
 interface ILocationInput {
   name: string;
@@ -43,21 +43,21 @@ export const HostLocation = ({
   setState,
 }: NodesFormProps) => {
   const [loading, setLoading] = useState(false);
-  const [locationId, setLocationId] = useState("");
-  const [deleteLocationError, setDeleteLocationError] = useState("");
+  const [locationId, setLocationId] = useState('');
+  const [deleteLocationError, setDeleteLocationError] = useState('');
 
   const locationNames = locations.map(({ name }) => name);
 
   /* ----- Form Validation ----- */
   const validate = (values: { name: string }): FormikErrors<ILocationInput> => {
     const errors: FormikErrors<{ name: string }> = {};
-    if (!values.name) errors.name = "Name is required";
-    if (locationNames.includes(values.name)) errors.name = "Name is already taken";
+    if (!values.name) errors.name = 'Name is required';
+    if (locationNames.includes(values.name)) errors.name = 'Name is already taken';
     return errors;
   };
 
   const { values, handleChange, handleSubmit } = useFormik({
-    initialValues: { name: "" },
+    initialValues: { name: '' },
     validate,
     validateOnChange: false,
     onSubmit: async () => {
@@ -79,7 +79,7 @@ export const HostLocation = ({
     onCompleted: () => {
       refetchLocations();
       ModalHelper.close();
-      setLocationId("");
+      setLocationId('');
       setState(HostActionsState.Info);
     },
     onError: (error) => {
@@ -91,11 +91,11 @@ export const HostLocation = ({
 
   const handleOpenConfirmModal = () => {
     ModalHelper.open({
-      modalType: "confirmation",
+      modalType: 'confirmation',
       modalProps: {
         handleOk: deleteLocation,
         confirmText: `Confirm Delete Location`,
-        okText: "Delete Location",
+        okText: 'Delete Location',
         promptText: `This will delete the location ${
           locations.find(({ id }) => id === locationId).name
         } from the inventory database. Confirm?`,
@@ -104,7 +104,7 @@ export const HostLocation = ({
   };
 
   const handleDeleteChange = ({ target }) => {
-    setDeleteLocationError("");
+    setDeleteLocationError('');
     const { value: locationId } = target;
 
     if (locationId in locationsWithHost) {
@@ -126,16 +126,16 @@ export const HostLocation = ({
       <>
         <Box
           sx={{
-            width: "auto",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "space-between",
-            justifyContent: "flex-end",
+            width: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'space-between',
+            justifyContent: 'flex-end',
             gap: 1,
             p: 2,
             mb: 2,
             borderRadius: 1,
-            backgroundColor: "background.default",
+            backgroundColor: 'background.default',
           }}
         >
           <Title>Add New Location</Title>
@@ -152,14 +152,14 @@ export const HostLocation = ({
           </FormControl>
           <Box
             sx={{
-              textAlign: "center",
-              "& button": { margin: 1 },
-              display: "flex",
-              justifyContent: "flex-end",
+              textAlign: 'center',
+              '& button': { margin: 1 },
+              display: 'flex',
+              justifyContent: 'flex-end',
             }}
           >
             <Button variant="contained" color="primary" onClick={handleSubmit as any}>
-              {loading ? <CircularProgress size={20} /> : "Add New Location"}
+              {loading ? <CircularProgress size={20} /> : 'Add New Location'}
             </Button>
             <Button
               onClick={() => setState(HostActionsState.Info)}
@@ -171,23 +171,23 @@ export const HostLocation = ({
           </Box>
           {addLocationError && (
             <Alert severity="error">
-              <AlertTitle>{"Error Adding Location"}</AlertTitle>
+              <AlertTitle>{'Error Adding Location'}</AlertTitle>
               {addLocationError}
             </Alert>
           )}
         </Box>
         <Box
           sx={{
-            width: "auto",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "space-between",
-            justifyContent: "center",
+            width: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'space-between',
+            justifyContent: 'center',
             gap: 1,
             p: 2,
             mb: 2,
             borderRadius: 1,
-            backgroundColor: "background.default",
+            backgroundColor: 'background.default',
           }}
         >
           <Title>Delete Location</Title>
@@ -208,10 +208,10 @@ export const HostLocation = ({
           </FormControl>
           <Box
             sx={{
-              textAlign: "center",
-              "& button": { margin: 1 },
-              display: "flex",
-              justifyContent: "flex-end",
+              textAlign: 'center',
+              '& button': { margin: 1 },
+              display: 'flex',
+              justifyContent: 'flex-end',
             }}
           >
             <Button
@@ -232,7 +232,7 @@ export const HostLocation = ({
           </Box>
           {deleteLocationError && (
             <Alert severity="error">
-              <AlertTitle>{"Error Adding Location"}</AlertTitle>
+              <AlertTitle>{'Error Adding Location'}</AlertTitle>
               {deleteLocationError}
             </Alert>
           )}

@@ -5,9 +5,9 @@ import {
   useEffect,
   useRef,
   useCallback,
-} from "react";
-import { useFormik, FormikErrors } from "formik";
-import { ApolloQueryResult } from "@apollo/client";
+} from 'react';
+import { useFormik, FormikErrors } from 'formik';
+import { ApolloQueryResult } from '@apollo/client';
 import {
   Alert,
   AlertTitle,
@@ -21,7 +21,7 @@ import {
   Select,
   Switch,
   TextField,
-} from "@mui/material";
+} from '@mui/material';
 
 import {
   IHost,
@@ -32,10 +32,10 @@ import {
   useCreateHostMutation,
   useDeleteHostMutation,
   useUpdateHostMutation,
-} from "types";
-import { ModalHelper, regexTest, s, SnackbarHelper } from "utils";
-import { HostActionsState } from "pages/Hosts";
-import Form from "components/Form";
+} from 'types';
+import { ModalHelper, regexTest, s, SnackbarHelper } from 'utils';
+import { HostActionsState } from 'pages/Hosts';
+import Form from 'components/Form';
 
 interface HostsFormProps {
   locations: ILocation[];
@@ -65,36 +65,36 @@ export const HostForm = ({
   const [ipDisabled, setIPDisabled] = useState(false);
   const [fqdnDisabled, setFQDNDisabled] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [backendError, setBackendError] = useState("");
-  const [deleteHostError, setDeleteHostError] = useState("");
+  const [backendError, setBackendError] = useState('');
+  const [deleteHostError, setDeleteHostError] = useState('');
 
   const locationRef = useRef<HTMLInputElement>();
 
   useEffect(() => {
-    setBackendError("");
-    setDeleteHostError("");
+    setBackendError('');
+    setDeleteHostError('');
   }, [selectedHost]);
 
   /* ----- Form Validation ----- */
   const validate = (values: IHostInput): FormikErrors<IHostInput> => {
     const errors: FormikErrors<IHostInput> = {};
-    if (!values.location) errors.location = "Location is required";
-    if (!values.name) errors.name = "Name is required";
-    if (hostNames.includes(values.name)) errors.name = "Name is already taken";
+    if (!values.location) errors.location = 'Location is required';
+    if (!values.name) errors.name = 'Name is required';
+    if (hostNames.includes(values.name)) errors.name = 'Name is already taken';
     if (!values.ip && !values.fqdn) {
-      errors.ip = "Either IP or FQDN is required";
-      errors.fqdn = "Either IP or FQDN is required";
+      errors.ip = 'Either IP or FQDN is required';
+      errors.fqdn = 'Either IP or FQDN is required';
     }
-    if (values.ip && !regexTest(values.ip.trim(), "ip")) errors.ip = "Not a valid IP";
-    if (values.fqdn && !regexTest(values.fqdn.trim(), "fqdn"))
-      errors.fqdn = "Not a valid FQDN";
+    if (values.ip && !regexTest(values.ip.trim(), 'ip')) errors.ip = 'Not a valid IP';
+    if (values.fqdn && !regexTest(values.fqdn.trim(), 'fqdn'))
+      errors.fqdn = 'Not a valid FQDN';
 
     return errors;
   };
 
   const { values, errors, handleChange, handleSubmit, setFieldValue, resetForm } =
     useFormik({
-      initialValues: { location: "", name: "", ip: "", fqdn: "", loadBalancer: false },
+      initialValues: { location: '', name: '', ip: '', fqdn: '', loadBalancer: false },
       validate,
       validateOnChange: false,
       onSubmit: async () => {
@@ -124,16 +124,16 @@ export const HostForm = ({
   }, [values.ip]);
 
   const handleResetFormState = useCallback(() => {
-    setFieldValue("location", selectedHost.location.id);
-    setFieldValue("name", selectedHost.name);
-    setFieldValue("ip", selectedHost.ip ?? "");
-    setFieldValue("fqdn", selectedHost.fqdn ?? "");
-    setFieldValue("loadBalancer", selectedHost.loadBalancer);
+    setFieldValue('location', selectedHost.location.id);
+    setFieldValue('name', selectedHost.name);
+    setFieldValue('ip', selectedHost.ip ?? '');
+    setFieldValue('fqdn', selectedHost.fqdn ?? '');
+    setFieldValue('loadBalancer', selectedHost.loadBalancer);
   }, [setFieldValue, selectedHost]);
 
   const handleResetRefs = useCallback(() => {
     if (locationRef.current) {
-      locationRef.current.querySelector("input").value = "";
+      locationRef.current.querySelector('input').value = '';
     }
   }, []);
 
@@ -153,12 +153,12 @@ export const HostForm = ({
     const newValues: IHostUpdate = { id: selectedHost?.id };
 
     Object.entries(selectedHost).forEach(([key, value]) => {
-      if (key === "location") {
+      if (key === 'location') {
         if ((value as ILocation)?.id !== values[key]) {
           newValues[key] = values[key];
         }
       } else if (
-        (typeof values[key] === "boolean" || values[key]) &&
+        (typeof values[key] === 'boolean' || values[key]) &&
         values[key] !== value
       ) {
         newValues[key] = values[key];
@@ -225,7 +225,7 @@ export const HostForm = ({
   });
 
   const handleOpenDeleteModal = () => {
-    setDeleteHostError("");
+    setDeleteHostError('');
     const { id: hostId, name } = selectedHost;
 
     if (hostId in hostsWithNode) {
@@ -237,14 +237,14 @@ export const HostForm = ({
       );
     } else {
       ModalHelper.open({
-        modalType: "confirmation",
+        modalType: 'confirmation',
         modalProps: {
           handleOk: () => submitDelete({ variables: { id: hostId } }),
           confirmText: `Delete: ${name}`,
           promptText: `Are you sure you wish to remove host ${name} from the inventory database?`,
-          okText: "Delete Host",
-          okColor: "error",
-          cancelColor: "inherit",
+          okText: 'Delete Host',
+          okColor: 'error',
+          cancelColor: 'inherit',
         },
       });
     }
@@ -346,8 +346,8 @@ export const HostForm = ({
         <Box
           sx={{
             marginTop: 4,
-            textAlign: "right",
-            "& button": { margin: 1 },
+            textAlign: 'right',
+            '& button': { margin: 1 },
             width: 125,
             height: 36.5,
           }}
@@ -361,7 +361,7 @@ export const HostForm = ({
             {loading ? (
               <CircularProgress size={20} />
             ) : (
-              `${update ? "Save" : "Create"} Host`
+              `${update ? 'Save' : 'Create'} Host`
             )}
           </Button>
           <Button onClick={handleCancel} color="inherit">
@@ -373,8 +373,8 @@ export const HostForm = ({
         <Box
           sx={{
             marginTop: 4,
-            textAlign: "right",
-            "& button": { margin: 1 },
+            textAlign: 'right',
+            '& button': { margin: 1 },
           }}
         >
           <Button
@@ -393,14 +393,14 @@ export const HostForm = ({
 
       {deleteHostError && (
         <Alert severity="error">
-          <AlertTitle>{"Cannot delete Host with Nodes"}</AlertTitle>
+          <AlertTitle>{'Cannot delete Host with Nodes'}</AlertTitle>
           {deleteHostError}
         </Alert>
       )}
 
       {backendError && (
         <Alert severity="error">
-          <AlertTitle>{`Error ${update ? "Updating" : "Creating"} Host`}</AlertTitle>
+          <AlertTitle>{`Error ${update ? 'Updating' : 'Creating'} Host`}</AlertTitle>
           {backendError}
         </Alert>
       )}

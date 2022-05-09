@@ -1,26 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
-import { Alert, AlertTitle, Grid, LinearProgress } from "@mui/material";
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, AlertTitle, Grid, LinearProgress } from '@mui/material';
 
-import HostCRUD from "components/Hosts/HostCRUD";
-import HostsCSV from "components/Hosts/HostsCSV";
-import HostLocation from "components/Hosts/HostLocation";
+import HostCRUD from 'components/Hosts/HostCRUD';
+import HostsCSV from 'components/Hosts/HostsCSV';
+import HostLocation from 'components/Hosts/HostLocation';
 
-import { Table } from "components";
+import { Table } from 'components';
 import {
   IHost,
   useLocationsQuery,
   useHostsQuery,
   useNodesQuery,
   IHostsQuery,
-} from "types";
-import { HostsInventory } from "components/Hosts/HostsInventory";
+} from 'types';
+import { HostsInventory } from 'components/Hosts/HostsInventory';
 
 export enum HostActionsState {
-  Info = "info",
-  Create = "create",
-  Edit = "edit",
-  Upload = "upload",
-  Location = "location",
+  Info = 'info',
+  Create = 'create',
+  Edit = 'edit',
+  Upload = 'upload',
+  Location = 'location',
 }
 
 export function Hosts() {
@@ -47,14 +47,14 @@ export function Hosts() {
 
   /* ----- Table Options ---- */
   const filterOptions = {
-    filters: ["All", "Load Balancer", "IP", "FQDN"],
+    filters: ['All', 'Load Balancer', 'IP', 'FQDN'],
     filterFunctions: {
-      "Load Balancer": ({ loadBalancer }: IHost) => Boolean(loadBalancer),
+      'Load Balancer': ({ loadBalancer }: IHost) => Boolean(loadBalancer),
       IP: ({ ip }: IHost) => Boolean(ip),
       FQDN: ({ fqdn }: IHost) => Boolean(fqdn),
     },
   };
-  const columnsOrder = ["name", "location", "loadBalancer", "nodes"];
+  const columnsOrder = ['name', 'location', 'loadBalancer', 'nodes'];
   const hostNames = data?.hosts.map(({ name }) => name);
 
   const hostsWithNode: { [id: string]: number } = useMemo(() => {
@@ -78,7 +78,7 @@ export function Hosts() {
     [data?.hosts],
   );
 
-  const handleSelectedHost = (host: IHostsQuery["hosts"][0]) => {
+  const handleSelectedHost = (host: IHostsQuery['hosts'][0]) => {
     setState(HostActionsState.Info);
     setSelectedHost(host);
   };
@@ -89,7 +89,7 @@ export function Hosts() {
     return (
       <>
         <Alert severity="error">
-          <AlertTitle>{"Error fetching data: "}</AlertTitle>
+          <AlertTitle>{'Error fetching data: '}</AlertTitle>
           {(error || nodesError || locationsError).message}
         </Alert>
       </>
@@ -104,7 +104,7 @@ export function Hosts() {
           setState={setState}
         />
         <Grid container spacing={{ sm: 0, lg: 4 }}>
-          {(state === "info" || state === "create" || state === "edit") && (
+          {(state === 'info' || state === 'create' || state === 'edit') && (
             <Grid item sm={12} lg={6} order={{ lg: 2 }}>
               <HostCRUD
                 host={selectedHost}
@@ -118,7 +118,7 @@ export function Hosts() {
               />
             </Grid>
           )}
-          {state === "upload" && (
+          {state === 'upload' && (
             <Grid item sm={12} lg={6} order={{ lg: 2 }}>
               <HostsCSV
                 locations={locationsData?.locations}
@@ -128,7 +128,7 @@ export function Hosts() {
               ></HostsCSV>
             </Grid>
           )}
-          {state === "location" && (
+          {state === 'location' && (
             <Grid item sm={12} lg={6} order={{ lg: 2 }}>
               <HostLocation
                 locations={locationsData?.locations}

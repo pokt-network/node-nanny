@@ -5,9 +5,9 @@ import {
   useEffect,
   useRef,
   useState,
-} from "react";
-import { useFormik, FormikErrors } from "formik";
-import { ApolloQueryResult } from "@apollo/client";
+} from 'react';
+import { useFormik, FormikErrors } from 'formik';
+import { ApolloQueryResult } from '@apollo/client';
 import {
   Alert,
   AlertTitle,
@@ -25,7 +25,7 @@ import {
   Select,
   Switch,
   TextField,
-} from "@mui/material";
+} from '@mui/material';
 
 import {
   IChain,
@@ -39,10 +39,10 @@ import {
   useCreateNodeMutation,
   useUpdateNodeMutation,
   useDeleteNodeMutation,
-} from "types";
-import { ModalHelper, s, SnackbarHelper } from "utils";
-import Form from "components/Form";
-import { NodeActionsState } from "pages/Nodes";
+} from 'types';
+import { ModalHelper, s, SnackbarHelper } from 'utils';
+import Form from 'components/Form';
+import { NodeActionsState } from 'pages/Nodes';
 
 export interface NodesFormProps {
   formData: IGetHostsChainsAndLoadBalancersQuery;
@@ -76,7 +76,7 @@ export const NodeForm = ({
   const [https, setHttps] = useState(false);
   const [hostHasFqdn, setHostHasFqdn] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [backendError, setBackendError] = useState("");
+  const [backendError, setBackendError] = useState('');
   const [frontendExists, setFrontendExists] = useState(false);
 
   const urlRef = useRef<HTMLInputElement>();
@@ -85,7 +85,7 @@ export const NodeForm = ({
   const loadBalancersRef = useRef<HTMLInputElement>();
 
   useEffect(() => {
-    setBackendError("");
+    setBackendError('');
   }, [selectedNode]);
 
   /* ----- Form Validation ----- */
@@ -141,32 +141,32 @@ export const NodeForm = ({
 
   const validate = (values: INodeInput): FormikErrors<INodeInput> => {
     const errors: FormikErrors<INodeInput> = {};
-    if (!values.chain) errors.chain = "Chain is required";
-    if (!values.host) errors.host = "Host is required";
+    if (!values.chain) errors.chain = 'Chain is required';
+    if (!values.host) errors.host = 'Host is required';
     if (https && !hostHasFqdn) {
-      errors.host = "Host does not have an FQDN so HTTPS cannot be enabled";
+      errors.host = 'Host does not have an FQDN so HTTPS cannot be enabled';
     }
-    if (!values.port) errors.port = "Port is required";
+    if (!values.port) errors.port = 'Port is required';
     if (hostPortCombos.includes(`${values.host}/${values.port}`)) {
-      errors.port = "Host/port combination is already taken";
+      errors.port = 'Host/port combination is already taken';
     }
     if (values.automation) {
       if (!values.backend) {
-        errors.backend = "Backend is required";
+        errors.backend = 'Backend is required';
       }
       if (!values.loadBalancers?.length) {
-        errors.loadBalancers = "At least one load balancer is required";
+        errors.loadBalancers = 'At least one load balancer is required';
       }
       if (!values.server) {
-        errors.server = "Server is required";
+        errors.server = 'Server is required';
       }
     }
     if (frontend) {
       if (!values.frontend) {
-        errors.frontend = "Frontend is required";
+        errors.frontend = 'Frontend is required';
       }
-      if (!values.basicAuth.split(":")[0] || !values.basicAuth.split(":")[1]) {
-        errors.basicAuth = "Username and password are required";
+      if (!values.basicAuth.split(':')[0] || !values.basicAuth.split(':')[1]) {
+        errors.basicAuth = 'Username and password are required';
       }
     }
     return errors;
@@ -183,17 +183,17 @@ export const NodeForm = ({
   } = useFormik({
     initialValues: {
       https: false,
-      chain: "",
-      host: "",
-      name: "",
-      url: "",
-      port: "",
+      chain: '',
+      host: '',
+      name: '',
+      url: '',
+      port: '',
       automation: true,
-      backend: "",
+      backend: '',
       loadBalancers: [],
-      server: "",
-      frontend: "",
-      basicAuth: "",
+      server: '',
+      frontend: '',
+      basicAuth: '',
     },
     validate,
     validateOnChange: false,
@@ -202,21 +202,21 @@ export const NodeForm = ({
 
   const handleBasicAuthChange = ({ target }) => {
     const { name, value } = target;
-    const username = `${name === "username" ? value : values.basicAuth.split(":")[0]}`;
-    const password = `${name === "password" ? value : values.basicAuth.split(":")[1]}`;
+    const username = `${name === 'username' ? value : values.basicAuth.split(':')[0]}`;
+    const password = `${name === 'password' ? value : values.basicAuth.split(':')[1]}`;
     const newValue = `${username}:${password}`;
-    setFieldValue("basicAuth", newValue);
+    setFieldValue('basicAuth', newValue);
   };
 
   useEffect(() => {
     if (!values.automation || frontend) {
-      setFieldValue("backend", "");
-      setFieldValue("loadBalancers", []);
-      setFieldValue("server", "");
+      setFieldValue('backend', '');
+      setFieldValue('loadBalancers', []);
+      setFieldValue('server', '');
     }
     if (!frontend) {
-      setFieldValue("frontend", "");
-      setFieldValue("basicAuth", "");
+      setFieldValue('frontend', '');
+      setFieldValue('basicAuth', '');
     }
   }, [values.automation, frontend, setFieldValue]);
 
@@ -227,7 +227,7 @@ export const NodeForm = ({
       );
       if (!hostHasFqdn) {
         setHttps(false);
-        setFieldValue("https", false);
+        setFieldValue('https', false);
       }
       setHostHasFqdn(hostHasFqdn);
     }
@@ -244,11 +244,11 @@ export const NodeForm = ({
       } else {
         const existingNodeCount =
           nodeNames?.filter((name) => name.includes(nodeName))?.length || 0;
-        const count = String(existingNodeCount + 1).padStart(2, "0");
+        const count = String(existingNodeCount + 1).padStart(2, '0');
         return `${nodeName}/${count}`;
       }
     } else {
-      return "";
+      return '';
     }
   }, [values.chain, values.host, frontend, formData.chains, formData.hosts, nodeNames]);
 
@@ -256,10 +256,10 @@ export const NodeForm = ({
     if (values.host && values.port) {
       const host = formData?.hosts?.find(({ id }) => id === values.host);
       const hostDomain = host?.ip || host?.fqdn;
-      const protocol = `http${values.https ? "s" : ""}`;
+      const protocol = `http${values.https ? 's' : ''}`;
       return `${protocol}://${hostDomain}:${values.port}`;
     } else {
-      return "";
+      return '';
     }
   }, [values.host, values.port, values.https, formData.hosts]);
 
@@ -285,12 +285,12 @@ export const NodeForm = ({
 
       Object.entries({ ...selectedNode, port: String(selectedNode?.port) }).forEach(
         ([key, value]) => {
-          if (key === "chain" || key === "host") {
+          if (key === 'chain' || key === 'host') {
             if ((value as IChain | IHost)?.id !== values[key]) {
               newValues[key] = values[key];
             }
-          } else if (key === "url") {
-            const https = (value as string).includes("https");
+          } else if (key === 'url') {
+            const https = (value as string).includes('https');
             if (values.https !== https) {
               newValues.https = values.https;
             }
@@ -311,33 +311,33 @@ export const NodeForm = ({
   );
 
   const handleResetFormState = useCallback(() => {
-    setFieldValue("chain", selectedNode.chain.id);
-    setFieldValue("host", selectedNode.host.id);
-    setFieldValue("https", selectedNode.url.includes("https"));
+    setFieldValue('chain', selectedNode.chain.id);
+    setFieldValue('host', selectedNode.host.id);
+    setFieldValue('https', selectedNode.url.includes('https'));
     setFieldValue(
-      "loadBalancers",
+      'loadBalancers',
       selectedNode.loadBalancers.map(({ id }) => id),
     );
-    setFieldValue("name", selectedNode.name);
-    setFieldValue("port", String(selectedNode.port));
-    setFieldValue("backend", selectedNode.backend);
-    setFieldValue("frontend", selectedNode.frontend);
-    setFieldValue("server", selectedNode.server);
-    setFieldValue("automation", selectedNode.automation);
+    setFieldValue('name', selectedNode.name);
+    setFieldValue('port', String(selectedNode.port));
+    setFieldValue('backend', selectedNode.backend);
+    setFieldValue('frontend', selectedNode.frontend);
+    setFieldValue('server', selectedNode.server);
+    setFieldValue('automation', selectedNode.automation);
   }, [setFieldValue, selectedNode]);
 
   const handleResetRefs = useCallback(() => {
     if (urlRef.current) {
-      urlRef.current.querySelector("input").value = "";
+      urlRef.current.querySelector('input').value = '';
     }
     if (chainRef.current) {
-      chainRef.current.querySelector("input").value = "";
+      chainRef.current.querySelector('input').value = '';
     }
     if (hostRef.current) {
-      hostRef.current.querySelector("input").value = "";
+      hostRef.current.querySelector('input').value = '';
     }
     if (loadBalancersRef.current) {
-      loadBalancersRef.current.querySelector("input").value = "";
+      loadBalancersRef.current.querySelector('input').value = '';
     }
   }, []);
 
@@ -413,14 +413,14 @@ export const NodeForm = ({
 
   const handleOpenDeleteModal = () => {
     ModalHelper.open({
-      modalType: "confirmation",
+      modalType: 'confirmation',
       modalProps: {
         handleOk: () => submitDelete({ variables: { id: selectedNode?.id } }),
         confirmText: `Delete: ${selectedNode?.name}`,
         promptText: `Are you sure you wish to remove host ${selectedNode?.name} from the inventory database?`,
-        okText: "Delete Host",
-        okColor: "error",
-        cancelColor: "inherit",
+        okText: 'Delete Host',
+        okColor: 'error',
+        cancelColor: 'inherit',
       },
     });
   };
@@ -429,18 +429,20 @@ export const NodeForm = ({
   return (
     <>
       <Form read={read}>
-        <TextField
-          name="name"
-          value={getNodeName()}
-          onChange={handleChange}
-          label="Name"
-          variant="outlined"
-          disabled
-          size="small"
-          sx={{
-            "& fieldset": { borderWidth: "0px !important" },
-          }}
-        />
+        {!read && (
+          <TextField
+            name="name"
+            value={getNodeName()}
+            onChange={handleChange}
+            label="Name"
+            variant="outlined"
+            disabled
+            size="small"
+            sx={{
+              '& fieldset': { borderWidth: '0px !important' },
+            }}
+          />
+        )}
         <TextField
           name="url"
           ref={urlRef}
@@ -451,7 +453,7 @@ export const NodeForm = ({
           disabled
           size="small"
           sx={{
-            "& fieldset": { borderWidth: "0px !important" },
+            '& fieldset': { borderWidth: '0px !important' },
           }}
         />
         {read && (
@@ -541,10 +543,10 @@ export const NodeForm = ({
               }
               label={
                 read || !values.host
-                  ? ""
+                  ? ''
                   : hostHasFqdn
-                  ? "Selected host has a FQDN"
-                  : "Selected host does not have a FQDN"
+                  ? 'Selected host has a FQDN'
+                  : 'Selected host does not have a FQDN'
               }
             />
           </Box>
@@ -598,7 +600,7 @@ export const NodeForm = ({
                     value={formData?.loadBalancers
                       .filter((lb) => values.loadBalancers.includes(lb.id))
                       ?.map((lb) => lb.name)
-                      ?.join(", ")}
+                      ?.join(', ')}
                     onChange={handleChange}
                     label="Load Balancers"
                     variant="outlined"
@@ -629,7 +631,7 @@ export const NodeForm = ({
                               formData?.loadBalancers!.find(({ id: lb }) => lb === id)!
                                 .name,
                           )
-                          .join(", ");
+                          .join(', ');
                       }}
                       size="small"
                     >
@@ -676,7 +678,7 @@ export const NodeForm = ({
             />
             <TextField
               name="username"
-              value={values.basicAuth?.split(":")[0]}
+              value={values.basicAuth?.split(':')[0]}
               onChange={handleBasicAuthChange}
               label="Username"
               variant="outlined"
@@ -687,7 +689,7 @@ export const NodeForm = ({
             />
             <TextField
               name="password"
-              value={values.basicAuth?.split(":")[1]}
+              value={values.basicAuth?.split(':')[1]}
               onChange={handleBasicAuthChange}
               label="Password"
               variant="outlined"
@@ -708,8 +710,8 @@ export const NodeForm = ({
           <Box
             sx={{
               marginTop: 4,
-              textAlign: "right",
-              "& button": { margin: 1 },
+              textAlign: 'right',
+              '& button': { margin: 1 },
             }}
           >
             <Button
@@ -721,14 +723,14 @@ export const NodeForm = ({
                 (update &&
                   !Object.keys(
                     getUpdateValues(selectedNode, values as INodeUpdate),
-                  ).filter((key) => key !== "id")?.length)
+                  ).filter((key) => key !== 'id')?.length)
               }
               sx={{ width: frontend ? 160 : 125, height: 36.5 }}
             >
               {loading ? (
                 <CircularProgress size={20} />
               ) : (
-                `${update ? "Save" : "Create"} ${frontend ? "Frontend" : "Node"}`
+                `${update ? 'Save' : 'Create'} ${frontend ? 'Frontend' : 'Node'}`
               )}
             </Button>
             <Button onClick={handleCancel} color="error" variant="outlined">
@@ -740,8 +742,8 @@ export const NodeForm = ({
           <Box
             sx={{
               marginTop: 4,
-              textAlign: "right",
-              "& button": { margin: 1 },
+              textAlign: 'right',
+              '& button': { margin: 1 },
             }}
           >
             <Button
@@ -760,7 +762,7 @@ export const NodeForm = ({
 
         {backendError && (
           <Alert severity="error">
-            <AlertTitle>{`Error ${update ? "Updating" : "Creating"} Node`}</AlertTitle>
+            <AlertTitle>{`Error ${update ? 'Updating' : 'Creating'} Node`}</AlertTitle>
             {backendError}
           </Alert>
         )}

@@ -1,34 +1,34 @@
-import { createLogger, format, Logger, transports } from "winston";
-import "winston-mongodb";
-import { FilterQuery } from "mongoose";
+import { createLogger, format, Logger, transports } from 'winston';
+import 'winston-mongodb';
+import { FilterQuery } from 'mongoose';
 
-import { LogsModel, ILog, IPaginatedLogs } from "../../models";
-import { INodeLogParams, ILogChartParams, ILogForChart } from "./types";
+import { LogsModel, ILog, IPaginatedLogs } from '../../models';
+import { INodeLogParams, ILogChartParams, ILogForChart } from './types';
 
-import env from "../../environment";
+import env from '../../environment';
 
 export class Service {
   public init(id: string, name: string): Logger {
     const transport = {
       mongodb: new transports.MongoDB({
-        db: env("MONGO_URI"),
+        db: env('MONGO_URI'),
         label: id,
-        collection: "logs",
+        collection: 'logs',
         leaveConnectionOpen: false,
         capped: true,
-        cappedSize: env("MONGO_MAX_LOG_GB"),
+        cappedSize: env('MONGO_MAX_LOG_GB'),
       }),
       datadog: new transports.Http({
-        host: "http-intake.logs.datadoghq.eu",
+        host: 'http-intake.logs.datadoghq.eu',
         path: `/api/v2/logs?dd-api-key=${env(
-          "DD_API_KEY",
+          'DD_API_KEY',
         )}&ddsource=nodejs&service=node-nanny/${name}`,
         ssl: true,
       }),
-    }[env("MONITOR_LOGGER")];
+    }[env('MONITOR_LOGGER')];
 
     return createLogger({
-      level: "info",
+      level: 'info',
       exitOnError: false,
       format: format.json(),
       transports: [transport],
@@ -70,13 +70,13 @@ export class Service {
           _id: {
             $toDate: {
               $subtract: [
-                { $toLong: { $toDate: "$timestamp" } },
-                { $mod: [{ $toLong: { $toDate: "$timestamp" } }, increment] },
+                { $toLong: { $toDate: '$timestamp' } },
+                { $mod: [{ $toLong: { $toDate: '$timestamp' } }, increment] },
               ],
             },
           },
-          error: { $sum: { $cond: [{ $eq: ["$level", "error"] }, 1, 0] } },
-          ok: { $sum: { $cond: [{ $eq: ["$level", "info"] }, 1, 0] } },
+          error: { $sum: { $cond: [{ $eq: ['$level', 'error'] }, 1, 0] } },
+          ok: { $sum: { $cond: [{ $eq: ['$level', 'info'] }, 1, 0] } },
         },
       },
       { $sort: { _id: 1 } },
