@@ -1,7 +1,7 @@
-import { useReactiveVar } from "@apollo/client";
-import { Alert, AlertColor, Snackbar as MUISnackbar } from "@mui/material";
+import { useReactiveVar } from '@apollo/client';
+import { Alert, AlertColor, Snackbar as MUISnackbar } from '@mui/material';
 
-import { snackbarStateVar } from "apollo";
+import { snackbarStateVar } from 'apollo';
 
 export interface SnackBarProps {
   text?: string;
@@ -13,17 +13,17 @@ export const Snackbar: React.FC = () => {
   const { open, text, type } = useReactiveVar(snackbarStateVar);
 
   const close = (): void => {
-    snackbarStateVar({ open: false, type: "success" });
+    snackbarStateVar({ open: false, type: 'success' });
   };
 
   return (
     <MUISnackbar
       open={open}
       autoHideDuration={6000}
-      anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       onClose={close}
     >
-      <Alert severity={type} sx={{ width: "100%" }}>
+      <Alert severity={type} sx={{ width: '100%' }}>
         {text}
       </Alert>
     </MUISnackbar>

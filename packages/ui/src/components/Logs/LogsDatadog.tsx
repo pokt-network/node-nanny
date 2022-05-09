@@ -1,9 +1,9 @@
-import Paper from "components/Paper";
-import Title from "components/Title";
+import Paper from 'components/Paper';
+import Title from 'components/Title';
 
-import { Alert, AlertTitle, Box, Button, Grid } from "@mui/material";
+import { Alert, AlertTitle, Box, Button, Grid } from '@mui/material';
 
-import env from "environment";
+import env from 'environment';
 
 export default function LogsDatadog() {
   return (
@@ -12,10 +12,10 @@ export default function LogsDatadog() {
         <Grid item sm={12} md>
           <Title>PNF Internal</Title>
         </Grid>
-        <Grid item sm={12} md="auto" sx={{ "& button": { marginLeft: 1 } }}>
+        <Grid item sm={12} md="auto" sx={{ '& button': { marginLeft: 1 } }}>
           <Button
             variant="contained"
-            href={env("DATADOG_URL")}
+            href={env('DATADOG_URL')}
             target="_blank"
             size="small"
           >
@@ -32,11 +32,11 @@ export default function LogsDatadog() {
         component="iframe"
         height="100%"
         width="100%"
-        src={`${env("DATADOG_IFRAME_URL")}?theme=dark`}
+        src={`${env('DATADOG_IFRAME_URL')}?theme=dark`}
         sx={{
           mt: 4,
-          height: "600px",
-          border: "none",
+          height: '600px',
+          border: 'none',
         }}
       />
     </Paper>

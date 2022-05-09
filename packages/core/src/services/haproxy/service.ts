@@ -1,6 +1,6 @@
-import { exec } from "child_process";
+import { exec } from 'child_process';
 
-import { IHAProxyParams } from "./types";
+import { IHAProxyParams } from './types';
 
 export class Service {
   async disableServer({ destination, server, domain }: IHAProxyParams) {
@@ -29,10 +29,10 @@ export class Service {
 
   async getServerStatus({ destination, server, domain }: IHAProxyParams) {
     const raw = await this.getCurrentStateByChainCommand({ destination, domain });
-    const lines = raw.split("\n");
+    const lines = raw.split('\n');
     for (const line of lines) {
       if (line.includes(destination) && line.includes(server)) {
-        return Number(line.split(" ")[5]) === 2;
+        return Number(line.split(' ')[5]) === 2;
       }
     }
 
@@ -41,13 +41,13 @@ export class Service {
 
   async getServerCount({ destination, domain, dispatch }: IHAProxyParams) {
     const raw = await this.getCurrentStateByChainCommand({ destination, domain });
-    const lines = raw.split("\n").filter((line) => !line.includes("backup"));
+    const lines = raw.split('\n').filter((line) => !line.includes('backup'));
 
     const total = lines.filter((line) => {
-      return line.includes(destination) && (!dispatch || !line.includes("mainnet"));
+      return line.includes(destination) && (!dispatch || !line.includes('mainnet'));
     });
     const online = total.filter((line) => {
-      return Number(line.split(" ")[5]) === 2;
+      return Number(line.split(' ')[5]) === 2;
     });
 
     return { online: online.length, total: total.length };

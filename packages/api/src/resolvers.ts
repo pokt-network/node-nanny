@@ -5,37 +5,34 @@ import {
   OraclesModel,
   LocationsModel,
   WebhookModel,
-} from "@pokt-foundation/node-nanny-core/dist/models";
+} from '@pokt-foundation/node-nanny-core/dist/models';
 import {
   Automation as AutomationService,
   Log as LogService,
-} from "@pokt-foundation/node-nanny-core/dist/services";
+} from '@pokt-foundation/node-nanny-core/dist/services';
 
 const resolvers: {
   [queryType: string]: { [queryName: string]: (_: any, args: any) => any };
 } = {
   Query: {
-    chains: async () => await ChainsModel.find({}).exec(),
-    hosts: async (_, { loadBalancer }) => {
-      const query = loadBalancer ? { loadBalancer } : {};
-      return await HostsModel.find(query).populate("location").sort({ name: 1 }).exec();
-    },
-    locations: async () => await LocationsModel.find({}).exec(),
     node: async (_, { id }) =>
-      await NodesModel.findOne({ _id: id })
-        .populate("chain")
-        .populate({ path: "host", populate: "location" })
-        .populate("loadBalancers")
+      NodesModel.findOne({ _id: id })
+        .populate('chain')
+        .populate({ path: 'host', populate: 'location' })
+        .populate('loadBalancers')
         .exec(),
-    nodes: async () => {
-      return await NodesModel.find({})
-        .populate("chain")
-        .populate({ path: "host", populate: "location" })
-        .populate("loadBalancers")
-        .exec();
-    },
-    oracles: async () => await OraclesModel.find({}).populate("chain").exec(),
-    webhooks: async () => await WebhookModel.find({}).exec(),
+
+    chains: async () => ChainsModel.find({}).exec(),
+    hosts: async () => HostsModel.find({}).populate('location').sort({ name: 1 }).exec(),
+    locations: async () => LocationsModel.find({}).exec(),
+    nodes: async () =>
+      NodesModel.find({})
+        .populate('chain')
+        .populate({ path: 'host', populate: 'location' })
+        .populate('loadBalancers')
+        .exec(),
+    oracles: async () => OraclesModel.find({}).populate('chain').exec(),
+    webhooks: async () => WebhookModel.find({}).exec(),
 
     logs: async (_, { input }) => await new LogService().getLogsForNodes(input),
     logsForChart: async (_, { input }) => await new LogService().getLogsForChart(input),
