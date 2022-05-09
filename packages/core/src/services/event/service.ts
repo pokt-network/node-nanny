@@ -1,8 +1,7 @@
-import { UpdateQuery } from "mongoose";
 import { AlertColor } from "../alert/types";
 import { Service as BaseService } from "../base-service/base-service";
 import { EErrorConditions, EErrorStatus, ESupportedBlockchains } from "../health/types";
-import { INode, NodesModel } from "../../models";
+import { NodesModel } from "../../models";
 import {
   EAlertTypes,
   IRedisEvent,
@@ -127,15 +126,9 @@ export class Service extends BaseService {
     const event: IRedisEvent = JSON.parse(eventJson);
     const { conditions, id, status } = event;
 
-    // Update node's status and condition on event trigger/retrigger.
     const node = await this.getNode(id);
-    const update: UpdateQuery<INode> = { status, conditions };
-    if (alertType === EAlertTypes.RESOLVED) {
-      update.$unset = { heightArray: 1 };
-    }
-    await NodesModel.updateOne({ _id: node.id }, update);
+    await NodesModel.updateOne({ _id: node.id }, { status, conditions });
     const { automation, backend, chain, frontend, loadBalancers, dispatch, url } = node;
-
     const pnfDispatch =
       env("PNF") && dispatch && chain.name === ESupportedBlockchains["POKT-DIS"];
 
@@ -177,6 +170,10 @@ export class Service extends BaseService {
       dispatchFrontendDown,
     };
     return parsedEvent;
+  }
+
+  private getNodeHeightArray({ height }: IRedisEvent) {
+    const nodeHeight = typeof height === "number" ? height : height.internalHeight;
   }
 
   private async sendMessage(
