@@ -176,6 +176,7 @@ query GetHealthCheck($id: ID!) {
     node {
       status
       conditions
+      deltaArray
     }
     height {
       internalHeight
