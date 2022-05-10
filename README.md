@@ -1,7 +1,4 @@
 <div align="center">
-  <a href="https://www.pokt.network">
-    <img src=".github/portal_logo.png" alt="Pocket Network logo" width="200"/>
-  </a>
   <h1>Node Nanny</h1>
 </div>
 
