@@ -274,14 +274,14 @@ export class Service extends BaseService {
       details,
       ethSyncing,
     } = await new HealthService().getNodeHealth(node);
-    const { status: nodeStatus, conditions: nodeConditions } = node;
+    const { status: nodeStatus, conditions: nodeConditions, deltaArray } = node;
 
     if (status !== nodeStatus || conditions !== nodeConditions) {
       await NodesModel.updateOne({ _id: id }, { status, conditions });
     }
 
-    const updatedNodeHealth = { ...node, status, conditions };
-    return { height, details, ethSyncing, node: updatedNodeHealth };
+    const updatedNodeHealth = { status, conditions, deltaArray: deltaArray };
+    return { height, details, ethSyncing, node: updatedNodeHealth as INode };
   }
 
   /* ----- Rotation Methods ----- */
