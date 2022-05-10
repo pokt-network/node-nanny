@@ -635,9 +635,8 @@ export class Service {
 
   /** Saves the last X recorded block heights to the node model if not synced */
   private getDeltaArray(delta: number, deltaArray: number[]): number[] {
-    return deltaArray?.length
-      ? [...deltaArray, delta].slice(0, -env('ALERT_RETRIGGER_THRESHOLD'))
-      : [delta];
+    if (deltaArray?.length >= env('ALERT_RETRIGGER_THRESHOLD')) deltaArray.shift();
+    return deltaArray?.length ? [...deltaArray, delta] : [delta];
   }
 
   /** Gets an estimated time to recover based on average delta / height */
