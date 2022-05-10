@@ -20,7 +20,19 @@ export const NodeHealth = ({
   loading,
   haProxyOnline,
 }: NodeHealthProps) => {
-  console.log({ healthCheckData });
+  const getLastChangedDelta = (healthCheckData: IGetHealthCheckQuery) => {
+    const deltaArray = healthCheckData?.healthCheck?.node?.deltaArray;
+    if (!deltaArray?.length) return;
+
+    const latestDelta = deltaArray[deltaArray.length - 1];
+    const lastChangedDelta = [...deltaArray]
+      .reverse()
+      .find((delta) => delta !== latestDelta);
+    return latestDelta - lastChangedDelta;
+  };
+
+  const diff = getLastChangedDelta(healthCheckData);
+
   return (
     <Box
       sx={{
@@ -116,13 +128,7 @@ export const NodeHealth = ({
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography>Delta</Typography>
               <Typography
-                color={
-                  healthCheckData.healthCheck.details?.secondsToRecover <= 0
-                    ? 'error.main'
-                    : healthCheckData.healthCheck.details?.secondsToRecover > 0
-                    ? 'success.main'
-                    : 'none'
-                }
+                color={diff > 0 ? 'error.main' : diff < 0 ? 'success.main' : 'none'}
                 sx={{ display: 'flex', alignItems: 'center' }}
               >
                 {healthCheckData.healthCheck.details?.secondsToRecover < 0 ? (
@@ -130,7 +136,9 @@ export const NodeHealth = ({
                 ) : healthCheckData.healthCheck.details?.secondsToRecover > 0 ? (
                   <ArrowDownwardIcon color="success" sx={{ marginLeft: '4px' }} />
                 ) : null}
-                {numWithCommas(healthCheckData.healthCheck.height?.delta)}
+                {`${numWithCommas(healthCheckData.healthCheck.height?.delta)} (${
+                  diff > 0 ? '+' : diff < 0 ? '-' : ''
+                }${Math.abs(diff)})`}
               </Typography>
             </Box>
           )}
