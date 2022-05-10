@@ -8,6 +8,8 @@ import env from '@pokt-foundation/node-nanny-core/dist/environment';
 
 import { Publish } from './publish';
 
+const { EErrorStatus, EErrorConditions } = HealthTypes;
+
 export class App {
   private log: Log;
   private health: Health;
@@ -34,6 +36,17 @@ export class App {
     /* ----- Start Node Monitoring Interval ----- */
     console.log(`📺 Monitor running. Monitoring ${nodes.length} node${s(nodes.length)}`);
 
+    const clearQuery = {
+      status: EErrorStatus.OK,
+      conditions: EErrorConditions.HEALTHY,
+      deltaArray: { $exists: true },
+    };
+    setInterval(async () => {
+      if (await NodesModel.exists(clearQuery)) {
+        await NodesModel.updateMany(clearQuery, { $unset: { deltaArray: 1 } });
+      }
+    }, this.interval);
+
     for await (const node of nodes) {
       const { id, name } = node;
       const logger = this.log.init(id, name.toLowerCase());
@@ -41,13 +54,13 @@ export class App {
       setInterval(async () => {
         /* Get Node health */
         const healthResponse = await this.health.getNodeHealth(node);
-        const status: HealthTypes.EErrorStatus = healthResponse?.status;
+        const status = healthResponse?.status;
 
         /* Log to process console */
-        if (status === HealthTypes.EErrorStatus.OK) {
+        if (status === EErrorStatus.OK) {
           colorLog(JSON.stringify(healthResponse), 'green');
         }
-        if (status === HealthTypes.EErrorStatus.ERROR) {
+        if (status === EErrorStatus.ERROR) {
           colorLog(JSON.stringify(healthResponse), 'red');
         }
 
@@ -55,7 +68,7 @@ export class App {
         await publish.evaluate({ message: healthResponse, id });
 
         /* Log to MongoDB or Datadog */
-        const level = status === HealthTypes.EErrorStatus.ERROR ? 'error' : 'info';
+        const level = status === EErrorStatus.ERROR ? 'error' : 'info';
         logger.log({ level, message: JSON.stringify(healthResponse) });
       }, this.interval);
     }
