@@ -20,6 +20,7 @@ export const NodeHealth = ({
   loading,
   haProxyOnline,
 }: NodeHealthProps) => {
+  console.log({ healthCheckData });
   return (
     <Box
       sx={{
@@ -117,7 +118,7 @@ export const NodeHealth = ({
               <Typography
                 color={
                   healthCheckData.healthCheck.details?.secondsToRecover <= 0
-                    ? 'error'
+                    ? 'error.main'
                     : healthCheckData.healthCheck.details?.secondsToRecover > 0
                     ? 'success.main'
                     : 'none'
