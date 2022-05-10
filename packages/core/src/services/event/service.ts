@@ -128,12 +128,9 @@ export class Service extends BaseService {
     const { conditions, id, status } = event;
 
     const node = await this.getNode(id);
-    const update: UpdateQuery<INode> = { status, conditions };
-    if (alertType === EAlertTypes.RESOLVED) {
-      update.$unset = { deltaArray: 1 };
-    }
-    await NodesModel.updateOne({ _id: node.id }, update);
+    await NodesModel.updateOne({ _id: node.id }, { status, conditions });
     const { automation, backend, chain, frontend, loadBalancers, dispatch, url } = node;
+
     const pnfDispatch =
       env('PNF') && dispatch && chain.name === ESupportedBlockchains['POKT-DIS'];
 
@@ -175,10 +172,6 @@ export class Service extends BaseService {
       dispatchFrontendDown,
     };
     return parsedEvent;
-  }
-
-  private getNodeHeightArray({ height }: IRedisEvent) {
-    const nodeHeight = typeof height === 'number' ? height : height.internalHeight;
   }
 
   private async sendMessage(
