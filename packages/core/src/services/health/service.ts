@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import axiosRetry from 'axios-retry';
 import { exec } from 'child_process';
-import { Types, UpdateQuery } from 'mongoose';
+import { Types } from 'mongoose';
 import util from 'util';
 
 import { IChain, INode, ChainsModel, NodesModel, OraclesModel } from '../../models';
@@ -214,17 +214,19 @@ export class Service {
       /* Compare highest ref height with node's height */
       const delta = peerHeight - nodeHeight;
       const nodeIsAheadOfPeer = delta + allowance < 0;
+      const height = { internalHeight: nodeHeight, externalHeight: peerHeight, delta };
 
       if (nodeIsAheadOfPeer) {
-        healthResponse = {
+        return {
           ...healthResponse,
-          details: {
-            ...healthResponse.details,
-            nodeIsAheadOfPeer: Math.abs(peerHeight - nodeHeight),
-          },
+          status: EErrorStatus.ERROR,
+          conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
+          height,
+          details: { ...healthResponse.details, nodeIsAheadOfPeer: Math.abs(delta) },
         };
       }
 
+      // Not synced response
       if (delta > allowance || internalBh.error?.code) {
         const secondsToRecover = await this.updateNotSynced(delta, node.id.toString());
         if (secondsToRecover !== null) {
@@ -233,30 +235,18 @@ export class Service {
             details: { ...healthResponse.details, secondsToRecover },
           };
         }
+
         return {
           ...healthResponse,
           status: EErrorStatus.ERROR,
           conditions: EErrorConditions.NOT_SYNCHRONIZED,
           health: internalBh.error?.code ? internalBh : null,
-        };
-      }
-
-      if (nodeIsAheadOfPeer) {
-        healthResponse = {
-          ...healthResponse,
-          status: EErrorStatus.ERROR,
-          conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
+          height,
         };
       }
 
       // Healthy response
-      await this.unsetDeltaArray(node.id.toString());
-      return {
-        ...healthResponse,
-        ethSyncing,
-        peers: numPeers,
-        height: { internalHeight: nodeHeight, externalHeight: peerHeight, delta },
-      };
+      return { ...healthResponse, ethSyncing, peers: numPeers, height };
     } catch (error) {
       const isTimeout = String(error).includes(`Error: timeout of 1000ms exceeded`);
       if (isTimeout) {
@@ -502,7 +492,6 @@ export class Service {
       return healthResponse;
     }
 
-    await this.unsetDeltaArray(node.id.toString());
     return {
       name,
       status: EErrorStatus.OK,
@@ -644,14 +633,10 @@ export class Service {
     return this.getSecondsToRecover(newDeltaArray);
   }
 
-  private async unsetDeltaArray(nodeId: string): Promise<void> {
-    await NodesModel.updateOne({ _id: nodeId }, { $unset: { deltaArray: 1 } });
-  }
-
   /** Saves the last X recorded block heights to the node model if not synced */
   private getDeltaArray(delta: number, deltaArray: number[]): number[] {
     return deltaArray?.length
-      ? [delta, ...deltaArray].slice(0, env('ALERT_RETRIGGER_THRESHOLD'))
+      ? [...deltaArray, delta].slice(0, -env('ALERT_RETRIGGER_THRESHOLD'))
       : [delta];
   }
 
@@ -659,21 +644,23 @@ export class Service {
   private getSecondsToRecover(deltaArray: number[]): number {
     if (deltaArray?.length < env('ALERT_TRIGGER_THRESHOLD')) return null;
 
-    const [newestDelta] = deltaArray;
-    const oldestDelta = deltaArray[deltaArray.length - 1];
+    const newestDelta = deltaArray[deltaArray.length - 1];
+    const [oldestDelta] = deltaArray;
 
-    /* If delta is increasing return -1 */
-    if (newestDelta > oldestDelta) {
-      return -1;
-    }
     /* If delta is stuck return 0 */
     if (newestDelta === oldestDelta) {
       return 0;
     }
 
-    /* Calculate estimated time to recover in seconds */
     const diffArray = deltaArray.map((delta, i, a) => delta - a[i + 1]).slice(0, -1);
     const avgDeltaReduction = diffArray.reduce((sum, d) => sum + d) / diffArray.length;
+
+    /* If delta is increasing return -1 */
+    if (newestDelta > oldestDelta || avgDeltaReduction < 0) {
+      return -1;
+    }
+
+    /* Calculate estimated time to recover in seconds */
     const numIntervals = newestDelta / avgDeltaReduction;
     const secondsToRecover = Math.ceil(numIntervals * (env('MONITOR_INTERVAL') / 1000));
 

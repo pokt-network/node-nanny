@@ -50,6 +50,7 @@ query Node($id: ID!) {
       id
       name
       type
+      allowance
     }
     host {
       id
@@ -80,6 +81,7 @@ query Nodes {
       id
       name
       type
+      allowance
     }
     host {
       id

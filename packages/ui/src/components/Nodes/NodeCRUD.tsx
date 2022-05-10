@@ -105,14 +105,14 @@ export const NodeCRUD = ({
 
   useEffect(() => {
     let healthCheckInterval: NodeJS.Timer;
-    if (node?.conditions === 'NOT_SYNCHRONIZED') {
+    if (type === 'info' && node) {
       healthCheckInterval = setInterval(refetchHealthCheck, 10000);
     } else {
       clearInterval(healthCheckInterval);
     }
 
     return () => clearInterval(healthCheckInterval);
-  }, [node, refetchHealthCheck]);
+  }, [node, refetchHealthCheck, type]);
 
   useEffect(() => {
     if (node?.automation && !node?.frontend) {
