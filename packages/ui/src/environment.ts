@@ -1,10 +1,10 @@
 type IStringVars =
-  | "BACKEND_HOST"
-  | "MONITOR_LOGGER"
-  | "DATADOG_URL"
-  | "DATADOG_IFRAME_URL";
-type INumberVars = "BACKEND_PORT";
-type IBooleanVars = "PNF";
+  | 'BACKEND_HOST'
+  | 'MONITOR_LOGGER'
+  | 'DATADOG_URL'
+  | 'DATADOG_IFRAME_URL';
+type INumberVars = 'BACKEND_PORT';
+type IBooleanVars = 'PNF';
 
 type IEnvVars = IStringVars | INumberVars | IBooleanVars;
 
@@ -16,7 +16,7 @@ const ENV_VARS: { [variable: string]: () => string | number | boolean } = {
 
   BACKEND_PORT: () => Number(process.env.BACKEND_PORT || 4000),
 
-  PNF: () => Boolean(process.env.REACT_APP_PNF === "1" || false),
+  PNF: () => Boolean(process.env.REACT_APP_PNF === '1' || false),
 };
 
 export const env = <B extends IEnvVars>(

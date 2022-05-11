@@ -5,98 +5,62 @@ import {
   OraclesModel,
   LocationsModel,
   WebhookModel,
-} from "@pokt-foundation/node-nanny-core/dist/models";
+} from '@pokt-foundation/node-nanny-core/dist/models';
 import {
   Automation as AutomationService,
   Log as LogService,
-} from "@pokt-foundation/node-nanny-core/dist/services";
+} from '@pokt-foundation/node-nanny-core/dist/services';
 
 const resolvers: {
   [queryType: string]: { [queryName: string]: (_: any, args: any) => any };
 } = {
   Query: {
-    chains: async () => await ChainsModel.find({}).exec(),
-    hosts: async (_, { loadBalancer }) => {
-      const query = loadBalancer ? { loadBalancer } : {};
-      return await HostsModel.find(query).populate("location").sort({ name: 1 }).exec();
-    },
-    locations: async () => await LocationsModel.find({}).exec(),
-    node: async (_, { id }) =>
-      await NodesModel.findOne({ _id: id })
-        .populate("chain")
-        .populate({ path: "host", populate: "location" })
-        .populate("loadBalancers")
+    node: (_, { id }) =>
+      NodesModel.findOne({ _id: id })
+        .populate('chain')
+        .populate({ path: 'host', populate: 'location' })
+        .populate('loadBalancers')
         .exec(),
-    nodes: async () => {
-      return await NodesModel.find({})
-        .populate("chain")
-        .populate({ path: "host", populate: "location" })
-        .populate("loadBalancers")
-        .exec();
-    },
-    oracles: async () => await OraclesModel.find({}).populate("chain").exec(),
-    webhooks: async () => await WebhookModel.find({}).exec(),
 
-    logs: async (_, { input }) => await new LogService().getLogsForNodes(input),
-    logsForChart: async (_, { input }) => await new LogService().getLogsForChart(input),
+    chains: () => ChainsModel.find({}).exec(),
+    hosts: () => HostsModel.find({}).populate('location').sort({ name: 1 }).exec(),
+    locations: () => LocationsModel.find({}).exec(),
+    nodes: () =>
+      NodesModel.find({})
+        .populate('chain')
+        .populate({ path: 'host', populate: 'location' })
+        .populate('loadBalancers')
+        .exec(),
+    oracles: () => OraclesModel.find({}).populate('chain').exec(),
+    webhooks: () => WebhookModel.find({}).exec(),
 
-    getHaProxyStatus: async (_, { id }) => {
-      return await new AutomationService().getHaProxyStatus(id);
-    },
-    checkValidHaProxy: async (_, { input }) => {
-      return await new AutomationService().checkValidHaProxy(input);
-    },
-    getServerCount: async (_, { id }) => {
-      return await new AutomationService().getServerCountForUi(id);
-    },
+    logs: (_, { input }) => new LogService().getLogsForNodes(input),
+    logsForChart: (_, { input }) => new LogService().getLogsForChart(input),
+
+    getHaProxyStatus: (_, { id }) => new AutomationService().getHaProxyStatus(id),
+    checkValidHaProxy: (_, { input }) => new AutomationService().checkValidHaProxy(input),
+    getServerCount: (_, { id }) => new AutomationService().getServerCountForUi(id),
+    getHealthCheck: (_, { id }) => new AutomationService().getHealthCheck(id),
   },
 
   Mutation: {
-    createHost: async (_, { input }) => {
-      return await new AutomationService().createHost(input);
-    },
-    createLocation: async (_, { name }) => {
-      return await LocationsModel.create({ name });
-    },
-    createNode: async (_, { input }) => {
-      return await new AutomationService().createNode(input);
-    },
-    createNodesCSV: async (_, { nodes }) => {
-      return await new AutomationService().createNodesCSV(nodes);
-    },
-    createHostsCSV: async (_, { hosts }) => {
-      return await new AutomationService().createHostsCSV(hosts);
-    },
+    createHost: (_, { input }) => new AutomationService().createHost(input),
+    createLocation: (_, { name }) => LocationsModel.create({ name }),
+    createNode: (_, { input }) => new AutomationService().createNode(input),
+    createNodesCSV: (_, { nodes }) => new AutomationService().createNodesCSV(nodes),
+    createHostsCSV: (_, { hosts }) => new AutomationService().createHostsCSV(hosts),
 
-    updateHost: async (_, { update }) => {
-      return await new AutomationService().updateHost(update);
-    },
-    updateNode: async (_, { update }) => {
-      return await new AutomationService().updateNode(update);
-    },
+    updateHost: (_, { update }) => new AutomationService().updateHost(update),
+    updateNode: (_, { update }) => new AutomationService().updateNode(update),
 
-    deleteHost: async (_, { id }) => {
-      return await new AutomationService().deleteHost(id);
-    },
-    deleteLocation: async (_, { id }) => {
-      return !!(await LocationsModel.deleteOne({ id }));
-    },
-    deleteNode: async (_, { id }) => {
-      return await new AutomationService().deleteNode(id);
-    },
+    deleteHost: (_, { id }) => new AutomationService().deleteHost(id),
+    deleteLocation: async (_, { id }) => !!(await LocationsModel.deleteOne({ id })),
+    deleteNode: (_, { id }) => new AutomationService().deleteNode(id),
 
-    muteMonitor: async (_, { id }) => {
-      return await new AutomationService().muteMonitor(id);
-    },
-    unmuteMonitor: async (_, { id }) => {
-      return await new AutomationService().unmuteMonitor(id);
-    },
-    enableHaProxyServer: async (_, { id }) => {
-      return await new AutomationService().addToRotation(id);
-    },
-    disableHaProxyServer: async (_, { id }) => {
-      return await new AutomationService().removeFromRotation(id);
-    },
+    muteMonitor: (_, { id }) => new AutomationService().muteMonitor(id),
+    unmuteMonitor: (_, { id }) => new AutomationService().unmuteMonitor(id),
+    enableHaProxyServer: (_, { id }) => new AutomationService().addToRotation(id),
+    disableHaProxyServer: (_, { id }) => new AutomationService().removeFromRotation(id),
   },
 };
 

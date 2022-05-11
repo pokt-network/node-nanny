@@ -1,18 +1,18 @@
-import { memo, useCallback, useEffect, useState } from "react";
-import { Alert, AlertTitle, Box, LinearProgress } from "@mui/material";
+import { memo, useCallback, useEffect, useState } from 'react';
+import { Alert, AlertTitle, Box, LinearProgress } from '@mui/material';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
   Tooltip,
-} from "chart.js";
-import dayjs from "dayjs";
-import { Bar } from "react-chartjs-2";
+} from 'chart.js';
+import dayjs from 'dayjs';
+import { Bar } from 'react-chartjs-2';
 
-import { useLogsForChartLazyQuery, ILogsForChartQuery } from "types";
-import { ITimePeriod } from "utils/periods";
-import { deepEqual } from "../../utils";
+import { useLogsForChartLazyQuery, ILogsForChartQuery } from 'types';
+import { ITimePeriod } from 'utils/periods';
+import { deepEqual } from '../../utils';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
@@ -28,7 +28,7 @@ interface LogsChartProps {
 
 function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
   const { format, increment, numPeriods, timePeriod } = logPeriod;
-  const [logData, setLogData] = useState<ILogsForChartQuery["logsForChart"]>(undefined);
+  const [logData, setLogData] = useState<ILogsForChartQuery['logsForChart']>(undefined);
 
   const getQueryVars = useCallback(() => {
     const endDate = dayjs().toISOString();
@@ -64,23 +64,23 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
     { labels: [], errors: [], oks: [] },
   ) || { labels: [], errors: [], oks: [] };
 
-  const arbitraryStackKey = "stack";
+  const arbitraryStackKey = 'stack';
   const data = {
     labels,
     datasets: [
       {
-        label: "Healthy",
+        label: 'Healthy',
         stack: arbitraryStackKey,
         data: oks,
-        backgroundColor: "#1D8AED",
-        hoverBackgroundColor: "#1565ad",
+        backgroundColor: '#1D8AED',
+        hoverBackgroundColor: '#1565ad',
       },
       {
-        label: "Error",
+        label: 'Error',
         stack: arbitraryStackKey,
         data: errors,
-        backgroundColor: "#F93232",
-        hoverBackgroundColor: "#b52222",
+        backgroundColor: '#F93232',
+        hoverBackgroundColor: '#b52222',
       },
     ],
   };
@@ -89,7 +89,7 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
   if (error) {
     return (
       <Alert severity="error">
-        <AlertTitle>{"Error fetching logs: "}</AlertTitle>
+        <AlertTitle>{'Error fetching logs: '}</AlertTitle>
         {error.message}
       </Alert>
     );
@@ -98,15 +98,15 @@ function LogsChart({ logPeriod, nodeIds }: LogsChartProps) {
   return (
     <Box
       sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        height: "200px",
-        width: "100%",
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        height: '200px',
+        width: '100%',
       }}
     >
       {!error && loading && !logData?.length && (
-        <div style={{ width: "100%" }}>
+        <div style={{ width: '100%' }}>
           <LinearProgress />
         </div>
       )}

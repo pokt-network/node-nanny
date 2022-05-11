@@ -1,13 +1,13 @@
-import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client";
-import { IPaginatedLogs } from "../types";
-import env from "environment";
+import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client';
+import { IPaginatedLogs } from '../types';
+import env from 'environment';
 
-const hostname = env("BACKEND_HOST") || window.location.hostname;
-const port = env("BACKEND_PORT");
+const hostname = env('BACKEND_HOST') || window.location.hostname;
+const port = env('BACKEND_PORT');
 const uri = `http://${hostname}:${port}`;
 
 export default new ApolloClient({
-  link: createHttpLink({ uri, credentials: "include" }),
+  link: createHttpLink({ uri, credentials: 'include' }),
   cache: new InMemoryCache({
     addTypename: true,
     typePolicies: {

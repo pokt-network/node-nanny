@@ -1,13 +1,10 @@
 <div align="center">
-  <a href="https://www.pokt.network">
-    <img src=".github/portal_logo.png" alt="Pocket Network logo" width="200"/>
-  </a>
   <h1>Node Nanny</h1>
 </div>
 
 Babysits your nodes, so you don't have to. 🧸
 
-## **Currently in open beta**
+### **Currently in open beta**
 
 [![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors)
 
@@ -30,9 +27,15 @@ Babysits your nodes, so you don't have to. 🧸
 
 # Overview
 
-Node Nanny will perform periodic health checks on all nodes entered into the inventory database.
+Node Nanny is a node monitoring system for automating the availability of Pocket blockchain nodes.
 
-Automation is enabled for nodes that are configured to run through HAProxy.
+It uses an inventory database to perform periodic node health checks. Out of sync nodes are automatically prevented from receiving traffic by removing them from load balancer rotation.
+
+In order for this automation functionality to work, HAProxy will need to be configured to handle routing traffic to your nodes _[(more details)](#automation)_.
+
+Without HAProxy configured, Node Nanny can still provide real time node health monitoring; however the main benefit of this application to node runners lies in its ability to automatically add and remove nodes from rotation as they go in and out of sync.
+
+## Architecture
 
 The application is composed of the following main components:
 
@@ -62,40 +65,48 @@ Pull requests to support additional technologies are welcome.
 
 Monitor alerts are sent to a Discord channel. In order to receive alerts, you will need a Discord server as well as a bot that can create channels in that server.
 
-[If you don't have a Discord Server you will have to create one.](https://support.discord.com/hc/en-us/articles/204849977-How-do-I-create-a-server-)
+- [If you don't have a Discord Server you will have to create one.](https://support.discord.com/hc/en-us/articles/204849977-How-do-I-create-a-server-) _(Take note of your server's ID, which you can find in `Server Settings > Widget`.)_
 
-Take note of your server's ID, which you can find in `Server Settings > Widget`.
+- [Create a bot application...](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot) _(make sure to save your bot's token as once this token is generated it cannot be viewed again.)_
 
-[Now, create a bot application...](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot) _(make sure to save your bot's token as once this token is generated it cannot be viewed again.)_
-
-[...and add it to your server.](https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links)
+- [...and add it to your server.](https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links)
 
 The bot will need the following permissions:
 
 - `Manage Channels`
 - `Manage Webhooks`
 
-### 2. Set Environment Variables
+### 2. Setup Docker Compose
 
-### **[Example .env File](.env.example)**
+[Ensure Docker Compose is installed on your host machine.](https://docs.docker.com/compose/install/)
 
-On your chosen host, you will have to set the following environment variables in either a `.env` file in same location as your `docker-compose.yml` file or in your shell environment.
-
-### 3. Setup Docker Compose
+**It is not necessary to pull the repo to run Node Nanny; all that is required are the `docker-compose.yml` and `.env` files.**
 
 ### **[Example Docker Compose File](docker-compose.yml)**
 
-[First ensure Docker Compose is installed on your host machine.](https://docs.docker.com/compose/install/)
+- Create a `docker-compose.yml` file with the above contents from the example file.
 
-Ensure the filepath `/data/db` exists on your machine; this is where your inventory database will be located. Otherwise, if you would like to use a directory other than `/data/db` for your database location, you must set the `nn_db.volumes` property to the path you would like to store your inventory DB and logs.
+- _Database location: Ensure the filepath `/data/db` exists on your machine; this is where your inventory database will be located. If you would like to use a directory other than `/data/db` for your database location, you must set the `nn_db.volumes` property to the path you would like to store your inventory DB and logs._
 
-Then, run `docker-compose up -d` from the same directory as this file. This will pull down the latest Node Nanny images, as well as setup the MongoDB and Redis containers and start everything up.
+### 3. Set Environment Variables
 
-You are now ready to start adding inventory data. The Node Nanny UI will be available on port 3000 on your host machine; it is highly recommended to configure your access settings to prevent access from unauthorized IPs.
+### **[Example .env File](.env.example)**
+
+- Set all required environment variables listed in the example file, in either a `.env` file in same location as your `docker-compose.yml` file or in your shell environment.
+
+### 4. Start the App
+
+- Then, run `docker-compose up -d` from the same directory as this file. This will pull down the latest Node Nanny images, as well as the MongoDB and Redis containers and start the Node Nanny application.
+
+The Node Nanny UI will be available on port 3000 on your host machine; **it is highly recommended to configure your access settings to prevent access from unauthorized IPs.**
+
+You are now ready to start adding inventory data.
 
 # How To Use
 
 ## Adding Data
+
+Host and Node inventory is stored in an included database; this inventory is merely a set of records for monitoring and automation purposes.
 
 Node Nanny supports adding Host and Node data through the included UI; either one at a time via form input or as batches using CSV upload.
 
@@ -155,7 +166,7 @@ Notes
 - `https` may only be enabled if the Node's Host has an FQDN.
 - `backend`, `loadBalancers` and `server` are required if `automation` is true.
 - `backend` and `server` must match the fields defined in your `haproxy.cfg` file.
-  - For further information in setting up HAProxy, [see below](#automation).
+  - For further information on setting up HAProxy, including an example of where `backend` and`server` are defined, [see below](#automation).
 
 ### Example CSV Format
 
@@ -167,24 +178,128 @@ Notes
 
 Notes
 
-- `chain` & `host` must exactly match chain/hosts codes that exist in your inventory database; the CSV import cannot be submitted otherwise.
+- `chain` & `host` must exactly match chain/host codes that exist in your inventory database; the CSV import cannot be submitted otherwise.
 - `loadBalancers` is a list of load balancer host names comma separated and must also match host names in your inventory database.
+
+## 5. Frontends
+
+A frontend is a record of the host that is running your load balancer software for a given chain. Monitoring your frontend is a convenient way to ensure there is any service available for a given chain; if a health check cannot return a healthy response for any of the backends for a frontend it means there is no service available for that chain through the load balancer frontend.
+
+| field    | type    | required |
+| -------- | ------- | -------- |
+| https    | boolean | Y        |
+| chain    | string  | Y        |
+| host     | string  | Y        |
+| port     | number  | Y        |
+| frontend | string  | Y        |
+| username | string  | Y        |
+| password | string  | Y        |
+
+Notes
+
+- `frontend` must match the field defined in your `haproxy.cfg` file.
+  - For further information on setting up HAProxy, [see below](#automation).
+- Only one frontend record may be created for a given host/chain combination, and only load balancer hosts may be selected.
+
+**CSV import of frontends is not supported.**
 
 # Automation
 
-Node Nanny can automatically manage the availabilty of your blockchain nodes, pulling them in and out of rotation. This feature is only available if HAProxy is configured and the node has the `automation` field set to true.
+Node Nanny automatically manages the availabilty of your blockchain nodes, pulling them in and out of rotation. This feature is only available on nodes configured to run through HAProxy.
+
+**In order to use the automation feature, ensure port 9999 on your load balancer Host is open to Node Nanny's IP.**
 
 ## HAProxy
 
-Currently the only load balancer supported is HAProxy; as mentioned above, pull requests to support additional load balancers are welcome.
+_Currently the only supported load balancer software is HAProxy; pull requests to support additional load balancers are welcome._
 
-### [HAProxy configuration basics guide](https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/)
+If you are not familiar with HAProxy, the following two guides should be helpful:
 
-_(Pocket specific HAProxy setup guide coming soon...)_
+### 1. [HAProxy configuration basics guide](https://www.haproxy.com/blog/haproxy-configuration-basics-load-balance-your-servers/)
+
+[![Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely](http://img.youtube.com/vi/JjXUH0VORnE/0.jpg)](https://www.youtube.com/watch?v=JjXUH0VORnE 'Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely')
+
+### 2. [Getting Started with HAProxy Runtime API to Remove Backends for Maintenance Remotely](https://www.youtube.com/watch?v=JjXUH0VORnE)
+
+### Example haproxy.cfg File
+
+```
+global
+  stats socket /var/run/api.sock user haproxy group haproxy mode 660 level admin expose-fd listeners
+  stats socket ipv4@*:9999  level admin  expose-fd listeners
+  log stdout format raw local0 notice emerg
+
+defaults
+  mode http
+  timeout client 120s
+  timeout connect 5s
+  timeout server 10s
+  timeout http-request 120s
+  log global
+
+userlist credentials
+   user nodenannyuser  password password1234
+
+frontend stats
+   bind *:8050
+   stats enable
+   stats uri /stats
+   stats refresh 10s
+   stats auth nodenannystats:password5678
+
+frontend ethmainnet
+ bind *:18545
+ default_backend ethmainnet
+ timeout client 120s
+ timeout http-request 120s
+ http-request auth unless { http_auth(credentials) }
+
+# Backends
+backend ethmainnet
+ option httpchk
+ balance leastconn
+ mode http
+ filter compression
+ compression algo gzip
+ timeout server 120s
+ server  2a ethereum-use2a.pocketblockchains.com:8545 check resolve-prefer ipv4
+```
+
+_(This is intended to provide a general example only; exact configuration will vary based on your environment.)_
+
+In the example above, there is one single Ethereum node configured to run through a single load balancer, defined on the final line.
+
+The load balancer host and node records that correspond to this `haproxy.cfg` file would require the foillowing values in the associated inventory records:
+
+#### Load Balancer Host
+
+| name           | location | loadBalancer | ip  | fqdn                                 |
+| -------------- | -------- | ------------ | --- | ------------------------------------ |
+| ethereum-use2a | USE2     | true         |     | ethereum-use2a.pocketblockchains.com |
+
+#### Load Balanced Node
+
+| port | automation | backend    | loadBalancers  | server |
+| ---- | ---------- | ---------- | -------------- | ------ |
+| 8545 | true       | ethmainnet | ethereum-use2a | 2a     |
+
+If desired, a frontend record could be created as follows:
+
+#### Load Balancer Frontend
+
+| host           | port  | frontend   | username      | password     |
+| -------------- | ----- | ---------- | ------------- | ------------ |
+| ethereum-use2a | 18545 | ethmainnet | nodenannyuser | 1234password |
+
+### HAProxy Stats Page
+
+In the example above, the HAProxy stats page is available on port `8050` with the credentials `nodenannystats:password5678` on the load balancer host. This page provides an easy to understand overview of the status of all backends on a given load balancer. In short, green nodes are healthy, red are offline and orange have been removed by Node Nanny due to being out of sync.
+
+[For more info on the HAProxy stats page, click here.](https://www.haproxy.com/blog/exploring-the-haproxy-stats-page/)
 
 # Support and Contact
 
-## **Currently in open beta**
+### **Currently in open beta**
 
 If you come across an issue with Node Nanny, do a search in the [Issues](https://github.com/pokt-foundation/node-nanny/issues) tab of this repo to make sure it hasn't been reported before. Follow these steps to help us prevent duplicate issues and unnecessary notifications going to the many people watching this repo:
 
