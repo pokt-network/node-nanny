@@ -639,7 +639,7 @@ export class Service {
     return deltaArray?.length ? [...deltaArray, delta] : [delta];
   }
 
-  /** Gets an estimated time to recover based on average delta / height */
+  /** Gets an estimated time to recover based on delta / average delta reduction per interval * # of intervals */
   private getSecondsToRecover(deltaArray: number[]): number {
     if (deltaArray?.length < env('ALERT_TRIGGER_THRESHOLD')) return null;
 
