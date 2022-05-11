@@ -1,10 +1,10 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
-import axiosRetry from "axios-retry";
-import { exec } from "child_process";
-import { Types } from "mongoose";
-import util from "util";
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axiosRetry from 'axios-retry';
+import { exec } from 'child_process';
+import { Types } from 'mongoose';
+import util from 'util';
 
-import { IChain, INode, ChainsModel, NodesModel, OraclesModel } from "../../models";
+import { IChain, INode, ChainsModel, NodesModel, OraclesModel } from '../../models';
 import {
   EErrorConditions,
   EErrorStatus,
@@ -17,8 +17,9 @@ import {
   IReferenceURL,
   IRPCResponse,
   IRPCSyncResponse,
-} from "./types";
-import { camelToTitle, hexToDec } from "../../utils";
+} from './types';
+import { camelToTitle, hexToDec } from '../../utils';
+import env from '../../environment';
 
 export class Service {
   private rpc: AxiosInstance;
@@ -28,7 +29,7 @@ export class Service {
   }
 
   private initClient(): AxiosInstance {
-    const headers = { "Content-Type": "application/json" };
+    const headers = { 'Content-Type': 'application/json' };
     const client = axios.create({ timeout: 10000, headers });
     axiosRetry(client, { retries: 5 });
     return client;
@@ -36,7 +37,7 @@ export class Service {
 
   private getAxiosRequestConfig(auth: string): AxiosRequestConfig {
     if (auth) {
-      const [username, password] = auth.split(":");
+      const [username, password] = auth.split(':');
       return { auth: { username, password } };
     }
   }
@@ -103,7 +104,7 @@ export class Service {
     try {
       const { data } = await this.rpc.post(
         `${url}/ext/health`,
-        { jsonrpc: "2.0", id: 1, method: "health.health" },
+        { jsonrpc: '2.0', id: 1, method: 'health.health' },
         this.getAxiosRequestConfig(basicAuth),
       );
 
@@ -211,51 +212,41 @@ export class Service {
       const peerHeight = externalBh;
 
       /* Compare highest ref height with node's height */
-      const difference = peerHeight - nodeHeight;
-      const nodeIsAheadOfPeer = difference + allowance < 0;
-      const delta = Math.abs(peerHeight - nodeHeight);
+      const delta = peerHeight - nodeHeight;
+      const nodeIsAheadOfPeer = delta + allowance < 0;
+      const height = { internalHeight: nodeHeight, externalHeight: peerHeight, delta };
 
       if (nodeIsAheadOfPeer) {
-        healthResponse = {
+        return {
           ...healthResponse,
-          details: {
-            ...healthResponse.details,
-            nodeIsAheadOfPeer: delta,
-          },
+          status: EErrorStatus.ERROR,
+          conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
+          height,
+          details: { ...healthResponse.details, nodeIsAheadOfPeer: Math.abs(delta) },
         };
       }
 
-      if (internalBh.error?.code) {
+      // Not synced response
+      if (delta > allowance || internalBh.error?.code) {
+        const secondsToRecover = await this.updateNotSynced(delta, node.id.toString());
+        if (secondsToRecover !== null) {
+          healthResponse = {
+            ...healthResponse,
+            details: { ...healthResponse.details, secondsToRecover },
+          };
+        }
+
         return {
           ...healthResponse,
           status: EErrorStatus.ERROR,
           conditions: EErrorConditions.NOT_SYNCHRONIZED,
-          health: internalBh,
+          health: internalBh.error?.code ? internalBh : null,
+          height,
         };
       }
 
-      if (difference > allowance) {
-        healthResponse = {
-          ...healthResponse,
-          status: EErrorStatus.ERROR,
-          conditions: EErrorConditions.NOT_SYNCHRONIZED,
-        };
-      }
-
-      if (nodeIsAheadOfPeer) {
-        healthResponse = {
-          ...healthResponse,
-          status: EErrorStatus.ERROR,
-          conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
-        };
-      }
-
-      return {
-        ...healthResponse,
-        ethSyncing,
-        peers: numPeers,
-        height: { internalHeight: nodeHeight, externalHeight: peerHeight, delta },
-      };
+      // Healthy response
+      return { ...healthResponse, ethSyncing, peers: numPeers, height };
     } catch (error) {
       const isTimeout = String(error).includes(`Error: timeout of 1000ms exceeded`);
       if (isTimeout) {
@@ -277,7 +268,7 @@ export class Service {
   private async isNodeListening({ host, port }) {
     try {
       const nc = await this.nc({ host, port });
-      let status = nc.split(" ");
+      let status = nc.split(' ');
       return status[status.length - 1].includes(ENCResponse.SUCCESS);
     } catch (error) {
       return false;
@@ -354,12 +345,12 @@ export class Service {
     auth?: string,
     harmony?: boolean,
   ): Promise<IRPCResponse> {
-    const method = harmony ? "hmyv2_blockNumber" : "eth_blockNumber";
+    const method = harmony ? 'hmyv2_blockNumber' : 'eth_blockNumber';
 
     try {
       const { data } = await this.rpc.post<IRPCResponse>(
         url,
-        { jsonrpc: "2.0", id: 1, method, params: [] },
+        { jsonrpc: '2.0', id: 1, method, params: [] },
         this.getAxiosRequestConfig(auth),
       );
       return data;
@@ -391,19 +382,19 @@ export class Service {
     auth?: string,
     harmony?: boolean,
   ): Promise<string> {
-    const method = harmony ? "hmyv2_syncing" : "eth_syncing";
+    const method = harmony ? 'hmyv2_syncing' : 'eth_syncing';
     try {
       const { data } = await this.rpc.post<IRPCSyncResponse>(
         url,
-        { jsonrpc: "2.0", id: 1, method, params: [] },
+        { jsonrpc: '2.0', id: 1, method, params: [] },
         this.getAxiosRequestConfig(auth),
       );
       return Object.entries(data.result)
         .map(([key, value]) => {
-          const syncValue = key.toLowerCase().includes("hash") ? value : hexToDec(value);
+          const syncValue = key.toLowerCase().includes('hash') ? value : hexToDec(value);
           return `${camelToTitle(key)}: ${syncValue}`;
         })
-        .join(" / ");
+        .join(' / ');
     } catch (error) {
       throw new Error(`getEthSyncing could not contact blockchain node ${error} ${url}`);
     }
@@ -413,7 +404,7 @@ export class Service {
     try {
       const { data } = await this.rpc.post<IRPCResponse>(
         url,
-        { jsonrpc: "2.0", id: 1, method: "net_peerCount", params: [] },
+        { jsonrpc: '2.0', id: 1, method: 'net_peerCount', params: [] },
         this.getAxiosRequestConfig(auth),
       );
       return data;
@@ -465,10 +456,9 @@ export class Service {
     const nodeHeight = Number((await this.getPocketHeight(url)).height);
 
     /* Compare highest ref height with node's height */
-    const difference = peerHeight - nodeHeight;
-    const notSynced = difference > allowance;
-    const nodeIsAheadOfPeer = difference + allowance < 0;
-    const delta = Math.abs(peerHeight - nodeHeight);
+    const delta = peerHeight - nodeHeight;
+    const notSynced = delta > allowance;
+    const nodeIsAheadOfPeer = delta + allowance < 0;
 
     if (nodeIsAheadOfPeer) {
       return {
@@ -478,7 +468,7 @@ export class Service {
         delta,
         refNodeUrls: refNodeUrls.map((url) => `${url}\n`),
         highest: peerHeight,
-        height: nodeHeight,
+        height: { internalHeight: nodeHeight, externalHeight: peerHeight, delta },
       };
     }
     if (nodeHeight === 0) {
@@ -489,12 +479,17 @@ export class Service {
       };
     }
     if (notSynced) {
-      return {
+      const healthResponse: IHealthResponse = {
         name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.NOT_SYNCHRONIZED,
         height: { internalHeight: nodeHeight, externalHeight: peerHeight, delta },
       };
+      const secondsToRecover = await this.updateNotSynced(delta, node.id.toString());
+      if (secondsToRecover !== null) {
+        healthResponse.details = { secondsToRecover };
+      }
+      return healthResponse;
     }
 
     return {
@@ -562,7 +557,7 @@ export class Service {
       const health = JSON.parse(stdout);
       const { result } = health;
 
-      if (result == "ok") {
+      if (result == 'ok') {
         return {
           name,
           conditions: EErrorConditions.HEALTHY,
@@ -621,4 +616,53 @@ export class Service {
       };
     }
   };
+
+  /* Estimate Seconds to Recover for Not Synced - EVM and Pocket Nodes only. */
+
+  /** Updates the Node's time to recover fields if it's not synced.
+   * When the node becomes healthy again, deltaArray and secondsToRecover
+   * are reset inside the Event service */
+  private async updateNotSynced(delta: number, nodeId: string): Promise<number> {
+    const { deltaArray } = await NodesModel.findOne({ _id: nodeId })
+      .select('deltaArray')
+      .exec();
+    const newDeltaArray = this.getDeltaArray(delta, deltaArray);
+
+    await NodesModel.updateOne({ _id: nodeId }, { deltaArray: newDeltaArray });
+
+    return this.getSecondsToRecover(newDeltaArray);
+  }
+
+  /** Saves the last X recorded block heights to the node model if not synced */
+  private getDeltaArray(delta: number, deltaArray: number[]): number[] {
+    if (deltaArray?.length >= env('ALERT_RETRIGGER_THRESHOLD')) deltaArray.shift();
+    return deltaArray?.length ? [...deltaArray, delta] : [delta];
+  }
+
+  /** Gets an estimated time to recover based on delta / average delta reduction per interval * # of intervals */
+  private getSecondsToRecover(deltaArray: number[]): number {
+    if (deltaArray?.length < env('ALERT_TRIGGER_THRESHOLD')) return null;
+
+    const newestDelta = deltaArray[deltaArray.length - 1];
+    const [oldestDelta] = deltaArray;
+
+    /* If delta is stuck return 0 */
+    if (newestDelta === oldestDelta) {
+      return 0;
+    }
+
+    const diffArray = deltaArray.map((delta, i, a) => delta - a[i + 1]).slice(0, -1);
+    const avgDeltaReduction = diffArray.reduce((sum, d) => sum + d) / diffArray.length;
+
+    /* If delta is increasing return -1 */
+    if (newestDelta > oldestDelta || avgDeltaReduction < 0) {
+      return -1;
+    }
+
+    /* Calculate estimated time to recover in seconds */
+    const numIntervals = newestDelta / avgDeltaReduction;
+    const secondsToRecover = Math.ceil(numIntervals * (env('MONITOR_INTERVAL') / 1000));
+
+    return secondsToRecover;
+  }
 }

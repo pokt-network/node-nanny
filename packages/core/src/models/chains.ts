@@ -1,4 +1,4 @@
-import { model, Model, Schema, Types } from "mongoose";
+import { model, Model, Schema, Types } from 'mongoose';
 
 export interface IChain {
   id: Types.ObjectId;
@@ -17,4 +17,4 @@ export const chainSchema = new Schema<IChain>(
   { timestamps: true },
 );
 
-export const ChainsModel: Model<IChain> = model("Chains", chainSchema);
+export const ChainsModel: Model<IChain> = model('Chains', chainSchema);

@@ -1,28 +1,28 @@
-import { useEffect, useState } from "react";
-import { Alert, AlertTitle, Grid, LinearProgress } from "@mui/material";
+import { useEffect, useState } from 'react';
+import { Alert, AlertTitle, Grid, LinearProgress } from '@mui/material';
 
-import { Table } from "components";
-import { INode, useGetHostsChainsAndLoadBalancersQuery, useNodesQuery } from "types";
+import { Table } from 'components';
+import { INode, useGetHostsChainsAndLoadBalancersQuery, useNodesQuery } from 'types';
 
-import NodesInventory from "components/Nodes/NodesInventory";
-import NodeCRUD from "components/Nodes/NodeCRUD";
-import NodesCSV from "components/Nodes/NodesCSV";
+import NodesInventory from 'components/Nodes/NodesInventory';
+import NodeCRUD from 'components/Nodes/NodeCRUD';
+import NodesCSV from 'components/Nodes/NodesCSV';
 
-import env from "environment";
+import env from 'environment';
 
 export enum NodeActionsState {
-  Info = "info",
-  Create = "create",
-  CreateFrontend = "createFrontend",
-  Edit = "edit",
-  Upload = "upload",
+  Info = 'info',
+  Create = 'create',
+  CreateFrontend = 'createFrontend',
+  Edit = 'edit',
+  Upload = 'upload',
 }
 
 export function Nodes() {
   const [selectedNode, setSelectedNode] = useState<INode>(undefined);
   const [state, setState] = useState<NodeActionsState>(NodeActionsState.Info);
   const { data, error, loading, refetch } = useNodesQuery({
-    pollInterval: 1000 * 20,
+    pollInterval: 1000 * 10,
   });
   const {
     data: formData,
@@ -36,31 +36,31 @@ export function Nodes() {
 
   /* ----- Table Options ---- */
   const filterOptions = {
-    filters: ["All", "Healthy", "Error", "Muted", "Automation", "Frontend"],
+    filters: ['All', 'Healthy', 'Error', 'Muted', 'Automation', 'Frontend'],
     filterFunctions: {
-      Healthy: ({ status }: INode) => status === "OK",
-      Error: ({ status }: INode) => status === "ERROR",
+      Healthy: ({ status }: INode) => status === 'OK',
+      Error: ({ status }: INode) => status === 'ERROR',
       Muted: ({ muted }: INode) => Boolean(muted),
       Automation: ({ automation }: INode) => Boolean(automation),
       Frontend: ({ frontend }: INode) => Boolean(frontend),
     } as any,
   };
-  const columnsOrder = ["name", "conditions", "automation", "muted"];
-  if (env("PNF")) {
-    filterOptions.filters.push("Dispatch");
+  const columnsOrder = ['name', 'conditions', 'automation', 'muted'];
+  if (env('PNF')) {
+    filterOptions.filters.push('Dispatch');
     filterOptions.filterFunctions.Dispatch = ({ dispatch }: INode) => Boolean(dispatch);
-    columnsOrder.push("dispatch");
+    columnsOrder.push('dispatch');
   }
 
   const getConditionsString = (condition: string) =>
     ({
-      HEALTHY: "Healthy",
-      OFFLINE: "Offline",
-      NO_RESPONSE: "No Response",
-      NOT_SYNCHRONIZED: "Not Synced",
-      NO_PEERS: "No Peers",
-      PEER_NOT_SYNCHRONIZED: "Peer Not Synced",
-      PENDING: "Pending",
+      HEALTHY: 'Healthy',
+      OFFLINE: 'Offline',
+      NO_RESPONSE: 'No Response',
+      NOT_SYNCHRONIZED: 'Not Synced',
+      NO_PEERS: 'No Peers',
+      PEER_NOT_SYNCHRONIZED: 'Peer Not Synced',
+      PENDING: 'Pending',
     }[condition]);
 
   const nodeNames = data?.nodes.map(({ name }) => name);
@@ -80,7 +80,7 @@ export function Nodes() {
   if (error || formError) {
     return (
       <Alert severity="error">
-        <AlertTitle>{"Error fetching data: "}</AlertTitle>
+        <AlertTitle>{'Error fetching data: '}</AlertTitle>
         {(error || formError).message}
       </Alert>
     );
@@ -91,10 +91,10 @@ export function Nodes() {
       <>
         <NodesInventory nodes={data?.nodes as INode[]} setState={setState} />
         <Grid container spacing={{ sm: 0, lg: 3 }}>
-          {(state === "info" ||
-            state === "create" ||
-            state === "createFrontend" ||
-            state === "edit") && (
+          {(state === 'info' ||
+            state === 'create' ||
+            state === 'createFrontend' ||
+            state === 'edit') && (
             <Grid item sm={12} lg={5} order={{ lg: 2 }}>
               <NodeCRUD
                 type={state}
@@ -109,7 +109,7 @@ export function Nodes() {
               />
             </Grid>
           )}
-          {state === "upload" && (
+          {state === 'upload' && (
             <Grid item sm={12} lg={5} order={{ lg: 2 }}>
               <NodesCSV
                 nodeNames={nodeNames}

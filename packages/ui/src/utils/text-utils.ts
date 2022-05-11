@@ -1,14 +1,17 @@
-const abbreviations = ["aws", "id", "ip", "ssl", "url", "fqdn"];
+const abbreviations = ['aws', 'id', 'ip', 'ssl', 'url', 'fqdn'];
 
 export const formatHeaderCell = (field: string): string => {
-  if (field === "automation") return "Automation";
   const uppercased = field[0].toUpperCase() + field.slice(1);
-  const spaced = uppercased.replace(/([A-Z])/g, " $1").trim();
+  const spaced = uppercased.replace(/([A-Z])/g, ' $1').trim();
   return spaced
-    .split(" ")
+    .split(' ')
     .map((w) => (abbreviations.includes(w.toLowerCase()) ? w.toUpperCase() : w))
-    .join(" ");
+    .join(' ');
 };
 
-export const s = (count: number): string => (count === 1 ? "" : "s");
-export const is = (count: number): string => (count === 1 ? "is" : "are");
+export const s = (count: number): string => (count === 1 ? '' : 's');
+export const is = (count: number): string => (count === 1 ? 'is' : 'are');
+
+export const numWithCommas = (number: number | string): string => {
+  return new Intl.NumberFormat().format(Number(number));
+};
