@@ -53,11 +53,11 @@ interface IChainsAndOraclesResponse {
     /* ----- 3) Add newer Chains and Oracles to local database ---- */
     if (chains?.length) {
       for await (const chain of chains) {
-        const { name, type, allowance } = chain;
+        const { name, type, allowance, chainId } = chain;
 
         try {
           if (await ChainsModel.exists({ name })) {
-            await ChainsModel.updateOne({ name }, { name, type, allowance });
+            await ChainsModel.updateOne({ name }, { name, type, allowance, chainId });
           } else {
             await ChainsModel.create({ name, type, allowance });
           }
