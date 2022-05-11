@@ -1,25 +1,32 @@
 import { Dispatch } from 'react';
+import { Box, Button, Chip, Grid, Typography } from '@mui/material';
 
+import { PNFTypeState, PNFActionsState } from 'pages/PNF';
 import Paper from 'components/Paper';
 import Title from 'components/Title';
-import { ILocation, IHost } from 'types';
-import { HostActionsState } from 'pages/Hosts';
-
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
+import { IChain, IOracle } from 'types';
 
 interface PNFInventoryProps {
-  hosts: IHost[];
-  locations: ILocation[];
-  setState: Dispatch<HostActionsState>;
+  chains: IChain[];
+  oracles: IOracle[];
+  typeState: PNFTypeState;
+  setState: Dispatch<PNFActionsState>;
+  setTypeState: Dispatch<PNFTypeState>;
 }
 
-export const PNFInventory = ({ hosts, locations, setState }: PNFInventoryProps) => {
-  const hostsTotal = hosts.length;
-  const loadBalancerTotal = hosts.filter(({ loadBalancer }) => loadBalancer).length;
-  const locationsTotal = locations.length;
+export const PNFInventory = ({
+  chains,
+  oracles,
+  typeState,
+  setState,
+  setTypeState,
+}: PNFInventoryProps) => {
+  const numChains = chains.length;
+  const numChainTypes = chains.reduce(
+    (types, chain) => (types.includes(chain.type) ? types : [...types, chain.type]),
+    [],
+  ).length;
+  const numOracles = oracles.length;
 
   return (
     <Paper>
@@ -33,10 +40,10 @@ export const PNFInventory = ({ hosts, locations, setState }: PNFInventoryProps) 
           },
         }}
       >
-        <Grid item sm={12} md={4} lg={2}>
-          <Title>Hosts Inventory</Title>
+        <Grid item sm={12} md={4} lg={4}>
+          <Title>Chains & Oracles Inventory</Title>
         </Grid>
-        <Grid item sm={12} md>
+        <Grid item sm={8} md>
           <Grid
             container
             spacing={4}
@@ -52,41 +59,69 @@ export const PNFInventory = ({ hosts, locations, setState }: PNFInventoryProps) 
             }}
           >
             <Grid item>
-              <Chip label={hostsTotal} variant="outlined"></Chip>
-              <Typography>Hosts</Typography>
+              <Chip label={numChains} variant="outlined" color="primary" />
+              <Typography color="primary.main">Chains</Typography>
             </Grid>
             <Grid item>
-              <Chip label={loadBalancerTotal} variant="outlined" color="primary"></Chip>
-              <Typography color="primary.main">Load Balancers</Typography>
+              <Chip label={numChainTypes} variant="outlined" />
+              <Typography>Chain Types</Typography>
             </Grid>
             <Grid item>
-              <Chip label={locationsTotal} variant="outlined" color="secondary"></Chip>
-              <Typography color="secondary">Locations</Typography>
+              <Chip label={numOracles} variant="outlined" color="secondary" />
+              <Typography color="secondary">Oracles</Typography>
             </Grid>
           </Grid>
         </Grid>
-        <Grid item sm={12} md="auto" sx={{ '& button': { marginLeft: 1 } }}>
+        <Grid
+          direction="row"
+          alignItems="center"
+          container
+          item
+          sm={12}
+          md="auto"
+          sx={{ '& button': { marginRight: 1 } }}
+        >
+          {' '}
           <Button
-            onClick={() => setState(HostActionsState.Create)}
+            onClick={() => setState(PNFActionsState.Create)}
             size="small"
             variant="contained"
+            color={typeState === PNFTypeState.Chains ? 'primary' : 'secondary'}
+            sx={{ width: 120 }}
           >
-            Create Host
+            {`Create ${typeState === PNFTypeState.Chains ? 'Chain' : 'Oracle'}`}
           </Button>
-          <Button
-            onClick={() => setState(HostActionsState.Upload)}
-            size="small"
-            variant="outlined"
+          <Box
+            sx={{
+              width: 'auto',
+              display: 'flex',
+              alignItems: 'space-between',
+              justifyContent: 'center',
+              gap: 1,
+              p: 1,
+              borderRadius: 1,
+              backgroundColor: 'background.default',
+            }}
           >
-            Upload CSV
-          </Button>
-          <Button
-            onClick={() => setState(HostActionsState.Location)}
-            size="small"
-            variant="contained"
-          >
-            Edit Locations
-          </Button>
+            <Button
+              onClick={() => setTypeState(PNFTypeState.Chains)}
+              size="small"
+              variant={typeState === PNFTypeState.Chains ? 'contained' : 'outlined'}
+              color="primary"
+              sx={{ width: 120 }}
+            >
+              View Chains
+            </Button>
+            <Button
+              onClick={() => setTypeState(PNFTypeState.Oracles)}
+              size="small"
+              variant={typeState === PNFTypeState.Oracles ? 'contained' : 'outlined'}
+              color="secondary"
+              sx={{ width: 120 }}
+            >
+              View Oracles
+            </Button>
+          </Box>
         </Grid>
       </Grid>
     </Paper>
