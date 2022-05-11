@@ -30,8 +30,6 @@ export class App {
     const mode = env('MONITOR_TEST') ? 'TEST' : 'PRODUCTION';
     const secs = this.interval / 1000;
     console.log(`Starting monitor in ${mode} mode with ${secs} sec interval ...`);
-
-    /* ----- Start Node Monitoring Interval ----- */
     console.log(`📺 Monitor running. Monitoring ${nodes.length} node${s(nodes.length)}`);
 
     /* Clear deltaArray from synced nodes on interval */
@@ -46,6 +44,7 @@ export class App {
       }
     }, this.interval);
 
+    /* ----- Start Node Monitoring Interval ----- */
     for await (const node of nodes) {
       const { id, name } = node;
       const logger = this.log.init(id, name.toLowerCase());

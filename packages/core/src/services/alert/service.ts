@@ -200,7 +200,9 @@ export class Service {
       ? `Block Height - Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
       : '';
     const secondsToRecoverStr =
-      secondsToRecover !== null ? this.getSecondsToRecoverString(secondsToRecover) : '';
+      typeof secondsToRecover === 'number'
+        ? this.getSecondsToRecoverString(secondsToRecover)
+        : '';
     let nodeCountStr =
       typeof nodesOnline === 'number' && nodesTotal >= 1
         ? `${nodesOnline} of ${nodesTotal} node${s(nodesTotal)} ${is(
@@ -243,8 +245,8 @@ export class Service {
       return 'Delta is stuck.';
     }
 
-    const minutesToRecover = Math.round(secondsToRecover / 60);
-    return `Node is recovering. At the current rate the estimated time to sync is approximately ${minutesToRecover} minutes.`;
+    const minutesToRecover = Math.floor(secondsToRecover / 60);
+    return `Node is syncing; the estimated time to sync is approximately ${minutesToRecover} minutes.`;
   }
 
   getRotationMessage(
