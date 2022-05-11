@@ -68,3 +68,16 @@ export interface IHostUpdate {
   ip?: string;
   fqdn?: string;
 }
+
+export interface IChainUpdate {
+  id: string;
+  name: string;
+  type: string;
+  chainId: string;
+  allowance: number;
+}
+
+export interface IOracleUpdate {
+  id: string;
+  urls: string[];
+}
