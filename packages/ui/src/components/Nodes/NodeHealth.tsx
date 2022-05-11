@@ -1,3 +1,5 @@
+import { useCallback } from 'react';
+
 import { Box, Chip, Typography } from '@mui/material';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -20,18 +22,24 @@ export const NodeHealth = ({
   loading,
   haProxyOnline,
 }: NodeHealthProps) => {
-  const getLastChangedDelta = (healthCheckData: IGetHealthCheckQuery) => {
+  const getLastChangedDelta = useCallback((healthCheckData: IGetHealthCheckQuery) => {
     const deltaArray = healthCheckData?.healthCheck?.node?.deltaArray;
-    if (!deltaArray?.length) return;
+    if (!deltaArray?.length) return null;
 
     const latestDelta = deltaArray[deltaArray.length - 1];
     const lastChangedDelta = [...deltaArray]
       .reverse()
       .find((delta) => delta !== latestDelta);
+    if (!lastChangedDelta) return null;
+
     return latestDelta - lastChangedDelta;
-  };
+  }, []);
 
   const diff = getLastChangedDelta(healthCheckData);
+  const showDeltaDetails =
+    diff !== null && healthCheckData.healthCheck.height?.delta > node.chain.allowance;
+
+  console.log({ diff });
 
   return (
     <Box
@@ -106,7 +114,7 @@ export const NodeHealth = ({
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography>Block Height</Typography>
               <Typography>
-                {healthCheckData.healthCheck.height.delta > node.chain.allowance
+                {showDeltaDetails
                   ? Object.entries(healthCheckData.healthCheck.height)
                       .filter(
                         ([key]) => key === 'externalHeight' || key === 'internalHeight',
@@ -124,16 +132,16 @@ export const NodeHealth = ({
             </Box>
           )}
 
-          {healthCheckData.healthCheck.height?.delta > node.chain.allowance && (
+          {showDeltaDetails && (
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography>Delta</Typography>
               <Typography
                 color={diff > 0 ? 'error.main' : diff < 0 ? 'success.main' : 'none'}
                 sx={{ display: 'flex', alignItems: 'center' }}
               >
-                {healthCheckData.healthCheck.details?.secondsToRecover < 0 ? (
+                {diff > 0 ? (
                   <ArrowUpwardIcon color="error" sx={{ marginLeft: '4px' }} />
-                ) : healthCheckData.healthCheck.details?.secondsToRecover > 0 ? (
+                ) : diff < 0 ? (
                   <ArrowDownwardIcon color="success" sx={{ marginLeft: '4px' }} />
                 ) : null}
                 {`${numWithCommas(healthCheckData.healthCheck.height?.delta)} (${
@@ -159,13 +167,13 @@ export const NodeHealth = ({
 
                 if (key === 'secondsToRecover') {
                   if (value === -1) {
-                    displayValue = 'Delta is increasing';
+                    displayValue = 'Average delta is increasing';
                   } else if (value === 0) {
                     displayValue = 'Delta is stuck';
                   } else {
-                    displayValue = `${numWithCommas(
-                      Math.ceil(Number(value) / 60),
-                    )} minutes`;
+                    displayValue = `< ${numWithCommas(
+                      Math.floor(Number(value) / 60),
+                    )} minute${s(Math.floor(Number(value) / 60))}`;
                   }
                 } else {
                   displayValue = value.toString();

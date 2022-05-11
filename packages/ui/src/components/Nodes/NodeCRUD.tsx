@@ -105,7 +105,7 @@ export const NodeCRUD = ({
 
   useEffect(() => {
     let healthCheckInterval: NodeJS.Timer;
-    if (type === 'info' && node) {
+    if (type === 'info' && node?.conditions === 'NOT_SYNCHRONIZED') {
       healthCheckInterval = setInterval(refetchHealthCheck, 10000);
     } else {
       clearInterval(healthCheckInterval);

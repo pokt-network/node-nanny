@@ -22,7 +22,7 @@ export function Nodes() {
   const [selectedNode, setSelectedNode] = useState<INode>(undefined);
   const [state, setState] = useState<NodeActionsState>(NodeActionsState.Info);
   const { data, error, loading, refetch } = useNodesQuery({
-    pollInterval: 1000 * 20,
+    pollInterval: 1000 * 10,
   });
   const {
     data: formData,
