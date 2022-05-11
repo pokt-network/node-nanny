@@ -15,6 +15,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 
 import { Hosts, Logs, Nodes } from './pages';
 import { Nav, RootModal, Snackbar } from './components';
+import { env } from 'environment';
 
 const drawerWidth: number = 240;
 
@@ -155,6 +156,7 @@ function DashboardContent() {
               <Route path="/" element={<Logs />} />
               <Route path="/hosts" element={<Hosts />} />
               <Route path="/nodes" element={<Nodes />} />
+              {env('PNF') && <Route path="/pnf" element={<div>"HEY HI HELLO</div>} />}
             </Routes>
             <Box mb={6} />
           </Container>
