@@ -1,9 +1,9 @@
-import { ELoadBalancerStatus, IRotationParams } from "../event/types";
-import { NodesModel, INode } from "../../models";
-import { Service as AlertService } from "../alert";
-import { Service as HAProxyService } from "../haproxy";
+import { ELoadBalancerStatus, IRotationParams } from '../event/types';
+import { NodesModel, INode } from '../../models';
+import { Service as AlertService } from '../alert';
+import { Service as HAProxyService } from '../haproxy';
 
-import env from "../../environment";
+import env from '../../environment';
 
 export class Service {
   private automation: HAProxyService;
@@ -16,9 +16,9 @@ export class Service {
 
   async getNode(id: string): Promise<INode> {
     return await NodesModel.findById(id)
-      .populate("chain")
-      .populate({ path: "host", populate: "location" })
-      .populate("loadBalancers")
+      .populate('chain')
+      .populate({ path: 'host', populate: 'location' })
+      .populate('loadBalancers')
       .exec();
   }
 
@@ -29,14 +29,14 @@ export class Service {
     loadBalancers,
     manual = false,
   }: IRotationParams): Promise<boolean> {
-    if (env("MONITOR_TEST") && !env("MONITOR_TEST_DOMAIN")) return false;
+    if (env('MONITOR_TEST') && !env('MONITOR_TEST_DOMAIN')) return false;
 
     try {
       if (!manual) {
         const status = await this.getServerStatus({ destination, server, loadBalancers });
         if (status === ELoadBalancerStatus.ONLINE) return false;
         if (status === ELoadBalancerStatus.ERROR) {
-          const message = this.alert.getErrorMessage(server, "error");
+          const message = this.alert.getErrorMessage(server, 'error');
           throw message;
         }
       }
@@ -64,7 +64,7 @@ export class Service {
     loadBalancers,
     manual = false,
   }: IRotationParams): Promise<boolean> {
-    if (env("MONITOR_TEST") && !env("MONITOR_TEST_DOMAIN")) return false;
+    if (env('MONITOR_TEST') && !env('MONITOR_TEST_DOMAIN')) return false;
 
     try {
       const { online: nodesOnline } = await this.getServerCount({
@@ -73,14 +73,14 @@ export class Service {
       });
       if (!manual) {
         if (nodesOnline <= 1) {
-          const message = this.alert.getErrorMessage(server, "count", nodesOnline);
+          const message = this.alert.getErrorMessage(server, 'count', nodesOnline);
           throw message;
         }
 
         const status = await this.getServerStatus({ destination, server, loadBalancers });
         if (status === ELoadBalancerStatus.OFFLINE) return false;
         if (status === ELoadBalancerStatus.ERROR) {
-          const message = this.alert.getErrorMessage(server, "error");
+          const message = this.alert.getErrorMessage(server, 'error');
           throw message;
         }
       }
@@ -104,8 +104,8 @@ export class Service {
   /** Ensures that the Load Balancer's IP is replaced with locahost when running in test mode.
    * This prevents the automation from taking production nodes out of protation. */
   private getLoadBalancerDomain(domain: string, automation = false): string {
-    if (automation && env("MONITOR_TEST")) {
-      return env("MONITOR_TEST_DOMAIN");
+    if (automation && env('MONITOR_TEST')) {
+      return env('MONITOR_TEST_DOMAIN');
     }
 
     return domain;
@@ -120,15 +120,8 @@ export class Service {
   }: IRotationParams): Promise<{ online: number; total: number }> {
     const results: { online: number; total: number }[] = [];
 
-    console.log("INSIDE SERVER COUNT!!!", {
-      destination,
-      loadBalancers,
-      frontendUrl,
-      dispatch,
-    });
-
     if (frontendUrl) {
-      const domain = frontendUrl.split("//")[1].split(":")[0];
+      const domain = frontendUrl.split('//')[1].split(':')[0];
 
       try {
         return await this.automation.getServerCount({ destination, domain, dispatch });
