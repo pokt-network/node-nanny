@@ -4,15 +4,17 @@ export interface IChain {
   id: Types.ObjectId;
   name: string;
   type: string;
+  chainId: string;
   updatedAt: string;
-  allowance?: number;
+  allowance: number;
 }
 
 export const chainSchema = new Schema<IChain>(
   {
     name: { type: String, unique: true, required: true },
     type: { type: String, required: true },
-    allowance: { type: Number },
+    chainId: { type: String, required: true },
+    allowance: { type: Number, required: true },
   },
   { timestamps: true },
 );
