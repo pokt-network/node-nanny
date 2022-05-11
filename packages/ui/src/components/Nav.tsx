@@ -10,6 +10,9 @@ import {
 import PeopleIcon from '@mui/icons-material/StorageSharp';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import LayersIcon from '@mui/icons-material/ComputerSharp';
+import HubIcon from '@mui/icons-material/Hub';
+
+import env from 'environment';
 
 const data = [
   {
@@ -28,6 +31,13 @@ const data = [
     icon: LayersIcon,
   },
 ];
+if (env('PNF')) {
+  data.push({
+    label: 'Chains & Oracles',
+    to: '/pnf',
+    icon: HubIcon,
+  });
+}
 
 interface NavProps {
   open: boolean;

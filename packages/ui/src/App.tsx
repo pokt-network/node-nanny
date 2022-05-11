@@ -13,8 +13,10 @@ import { styled, createTheme, ThemeProvider } from '@mui/material/styles';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import MenuIcon from '@mui/icons-material/Menu';
 
-import { Hosts, Logs, Nodes } from './pages';
-import { Nav, RootModal, Snackbar } from './components';
+import { Hosts, Logs, Nodes, PNF } from 'pages';
+import { Nav, RootModal, Snackbar } from 'components';
+import LogoFull from 'components/LogoFull';
+
 import { env } from 'environment';
 
 const drawerWidth: number = 240;
@@ -114,6 +116,7 @@ function DashboardContent() {
               aria-label="toggle navigation drawer"
               aria-expanded={!!open}
               onClick={toggleDrawer}
+              sx={{ ml: 'auto' }}
             >
               <MenuIcon sx={{ ...(open && { display: 'none' }) }} />
               <ChevronLeftIcon sx={{ ...(!open && { display: 'none' }) }} />
@@ -138,25 +141,14 @@ function DashboardContent() {
 
         <Box component="main" sx={{ flexGrow: 1, overflow: 'auto' }}>
           <Container sx={{ maxWidth: '1800px' }} maxWidth={false}>
-            <Box sx={{ mt: 2, mb: 6 }}>
-              <Typography
-                flex="1"
-                component="h1"
-                variant="h5"
-                noWrap
-                sx={{
-                  flexGrow: 1,
-                  fontWeight: '700',
-                }}
-              >
-                Pocket Node Nanny
-              </Typography>
+            <Box sx={{ mt: 2, mb: 2 }}>
+              <LogoFull width={300} />
             </Box>
             <Routes>
               <Route path="/" element={<Logs />} />
               <Route path="/hosts" element={<Hosts />} />
               <Route path="/nodes" element={<Nodes />} />
-              {env('PNF') && <Route path="/pnf" element={<div>"HEY HI HELLO</div>} />}
+              {env('PNF') && <Route path="/pnf" element={<PNF />} />}
             </Routes>
             <Box mb={6} />
           </Container>
