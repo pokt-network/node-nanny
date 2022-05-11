@@ -99,16 +99,14 @@ export const NodeCRUD = ({
 
   /* ---- Node Health Check ---- */
   const [getHealthCheck, { data: healthCheckData, refetch: refetchHealthCheck }] =
-    useGetHealthCheckLazyQuery({
-      variables: { id: node?.id },
-    });
+    useGetHealthCheckLazyQuery({ variables: { id: node?.id } });
 
   useEffect(() => {
     let healthCheckInterval: NodeJS.Timer;
-    if (type === 'info' && node?.conditions === 'NOT_SYNCHRONIZED') {
-      healthCheckInterval = setInterval(refetchHealthCheck, 10000);
-    } else {
+    clearInterval(healthCheckInterval);
+    if (type === 'info' && node) {
       clearInterval(healthCheckInterval);
+      healthCheckInterval = setInterval(refetchHealthCheck, 10000);
     }
 
     return () => clearInterval(healthCheckInterval);
@@ -121,7 +119,9 @@ export const NodeCRUD = ({
     if (node?.automation || node?.frontend) {
       getServerCount({ variables: { id: node.id } });
     }
-    getHealthCheck();
+    if (node) {
+      getHealthCheck();
+    }
   }, [node, getStatus, getServerCount, getHealthCheck]);
 
   useEffect(() => {

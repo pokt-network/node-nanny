@@ -241,9 +241,7 @@ export const Table = <T extends unknown>({
   };
 
   const handleOnSelect = (row) => {
-    if (selectedRow !== row.id) {
-      onSelectRow?.(allRows.find((r) => r.id === row.id));
-    }
+    onSelectRow?.(allRows.find((r) => r.id === row.id));
   };
 
   return (
