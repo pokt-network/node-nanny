@@ -3,10 +3,11 @@ import { Alert, AlertTitle, Grid, LinearProgress } from '@mui/material';
 
 import { Table } from 'components';
 import {
-  IHost,
+  IChain,
+  IOracle,
   useLocationsQuery,
-  useHostsQuery,
-  useNodesQuery,
+  useChainsQuery,
+  useOraclesQuery,
   IHostsQuery,
 } from 'types';
 import { PNFInventory } from 'components/PNF/PNFInventory';
@@ -14,95 +15,96 @@ import HostCRUD from 'components/Hosts/HostCRUD';
 import HostsCSV from 'components/Hosts/HostsCSV';
 import HostLocation from 'components/Hosts/HostLocation';
 
-export enum HostActionsState {
+export enum PNFTypeState {
+  Chains = 'chains',
+  Oracles = 'oracles',
+}
+export enum PNFActionsState {
   Info = 'info',
   Create = 'create',
   Edit = 'edit',
   Upload = 'upload',
-  Location = 'location',
 }
 
 export function PNF() {
-  const [selectedHost, setSelectedHost] = useState<IHost>(undefined);
-  const [state, setState] = useState<HostActionsState>(HostActionsState.Info);
-  const { data, error, loading, refetch } = useHostsQuery({ pollInterval: 1000 * 20 });
-  const {
-    data: nodesData,
-    loading: nodesLoading,
-    error: nodesError,
-    refetch: refetchNodes,
-  } = useNodesQuery();
-  const {
-    data: locationsData,
-    error: locationsError,
-    loading: locationsLoading,
-    refetch: refetchLocations,
-  } = useLocationsQuery();
+  const [selectedItem, setSelectedItem] = useState<IChain | IOracle>(undefined);
+  const [typeState, setTypeState] = useState<PNFTypeState>(PNFTypeState.Chains);
+  const [state, setState] = useState<PNFActionsState>(PNFActionsState.Info);
 
-  useEffect(() => {
-    refetch();
-    refetchNodes();
-  }, [refetch, refetchNodes]);
+  const {
+    data: chainsData,
+    loading: chainsLoading,
+    error: chainsError,
+    refetch: refetchChains,
+  } = useChainsQuery();
+  const {
+    data: oraclesData,
+    loading: oraclesLoading,
+    error: oraclesError,
+    refetch: refetchOracles,
+  } = useOraclesQuery();
 
   /* ----- Table Options ---- */
-  const filterOptions = {
-    filters: ['All', 'Load Balancer', 'IP', 'FQDN'],
-    filterFunctions: {
-      'Load Balancer': ({ loadBalancer }: IHost) => Boolean(loadBalancer),
-      IP: ({ ip }: IHost) => Boolean(ip),
-      FQDN: ({ fqdn }: IHost) => Boolean(fqdn),
-    },
-  };
-  const columnsOrder = ['name', 'location', 'loadBalancer', 'nodes'];
-  const hostNames = data?.hosts.map(({ name }) => name);
+  // const filterOptions = {
+  //   filters: ['All', 'Load Balancer', 'IP', 'FQDN'],
+  //   filterFunctions: {
+  //     'Load Balancer': ({ loadBalancer }: IHost) => Boolean(loadBalancer),
+  //     IP: ({ ip }: IHost) => Boolean(ip),
+  //     FQDN: ({ fqdn }: IHost) => Boolean(fqdn),
+  //   },
+  // };
+  // const columnsOrder = ['name', 'location', 'loadBalancer', 'nodes'];
+  // const hostNames = data?.hosts.map(({ name }) => name);
 
-  const hostsWithNode: { [id: string]: number } = useMemo(() => {
-    return nodesData?.nodes?.reduce(
-      (list: { [id: string]: number }, { host: { id } }) => ({
-        ...list,
-        [id]: (list[id] || 0) + 1,
-      }),
-      {},
-    );
-  }, [nodesData?.nodes]);
-  const locationsWithHost: { [id: string]: number } = useMemo(
-    () =>
-      data?.hosts?.reduce(
-        (list: { [id: string]: number }, { location: { id } }) => ({
-          ...list,
-          [id]: (list[id] || 0) + 1,
-        }),
-        {},
-      ),
-    [data?.hosts],
-  );
+  // const hostsWithNode: { [id: string]: number } = useMemo(() => {
+  //   return nodesData?.nodes?.reduce(
+  //     (list: { [id: string]: number }, { host: { id } }) => ({
+  //       ...list,
+  //       [id]: (list[id] || 0) + 1,
+  //     }),
+  //     {},
+  //   );
+  // }, [nodesData?.nodes]);
+  // const locationsWithHost: { [id: string]: number } = useMemo(
+  //   () =>
+  //     data?.hosts?.reduce(
+  //       (list: { [id: string]: number }, { location: { id } }) => ({
+  //         ...list,
+  //         [id]: (list[id] || 0) + 1,
+  //       }),
+  //       {},
+  //     ),
+  //   [data?.hosts],
+  // );
 
-  const handleSelectedHost = (host: IHostsQuery['hosts'][0]) => {
-    setState(HostActionsState.Info);
-    setSelectedHost(host);
-  };
+  // const handleSelectedHost = (host: IHostsQuery['hosts'][0]) => {
+  //   setState(HostActionsState.Info);
+  //   setSelectedHost(host);
+  // };
 
   /* ----- Layout ----- */
-  if (loading || nodesLoading || locationsLoading) return <LinearProgress />;
-  if (error || nodesError || locationsError)
+  if (chainsLoading || oraclesLoading) return <LinearProgress />;
+  if (chainsError || oraclesError)
     return (
       <>
         <Alert severity="error">
           <AlertTitle>{'Error fetching data: '}</AlertTitle>
-          {(error || nodesError || locationsError).message}
+          {(chainsError || oraclesError).message}
         </Alert>
       </>
     );
 
-  if (data) {
+  if (chainsData && oraclesData) {
     return (
       <>
         <PNFInventory
-          hosts={data.hosts}
-          locations={locationsData.locations}
+          chains={chainsData.chains}
+          oracles={oraclesData.oracles}
+          typeState={typeState}
           setState={setState}
+          setTypeState={setTypeState}
         />
-        <Grid container spacing={{ sm: 0, lg: 4 }}>
+        {/* <Grid container spacing={{ sm: 0, lg: 4 }}>
           {(state === 'info' || state === 'create' || state === 'edit') && (
             <Grid item sm={12} lg={6} order={{ lg: 2 }}>
               <HostCRUD
@@ -158,7 +160,7 @@ export function PNF() {
               onSelectRow={handleSelectedHost}
             />
           </Grid>
-        </Grid>
+        </Grid> */}
       </>
     );
   }

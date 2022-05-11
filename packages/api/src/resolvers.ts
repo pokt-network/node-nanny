@@ -22,7 +22,7 @@ const resolvers: {
         .populate('loadBalancers')
         .exec(),
 
-    chains: () => ChainsModel.find({}),
+    chains: () => ChainsModel.find({}).exec(),
     hosts: () => HostsModel.find({}).populate('location').sort({ name: 1 }).exec(),
     locations: () => LocationsModel.find({}).exec(),
     nodes: () =>
@@ -31,8 +31,8 @@ const resolvers: {
         .populate({ path: 'host', populate: 'location' })
         .populate('loadBalancers')
         .exec(),
-    oracles: () => OraclesModel.find({}),
-    webhooks: () => WebhookModel.find({}),
+    oracles: () => OraclesModel.find({}).exec(),
+    webhooks: () => WebhookModel.find({}).exec(),
 
     logs: (_, { input }) => new LogService().getLogsForNodes(input),
     logsForChart: (_, { input }) => new LogService().getLogsForChart(input),
