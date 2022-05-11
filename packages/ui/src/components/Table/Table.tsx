@@ -5,7 +5,7 @@ import {
   SetStateAction,
   useEffect,
   useState,
-} from "react";
+} from 'react';
 import {
   Table as MUITable,
   TableBody,
@@ -19,18 +19,17 @@ import {
   Box,
   IconButton,
   CircularProgress,
-} from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
-import VolumeOffIcon from "@mui/icons-material/VolumeOff";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+} from '@mui/material';
+import CheckIcon from '@mui/icons-material/Check';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
-import { s } from "utils";
-import Paper from "components/Paper";
-import Title from "components/Title";
-import TableHead from "./TableHead";
-import TableFilter from "./TableFilter";
+import { s } from 'utils';
+import Paper from 'components/Paper';
+import Title from 'components/Title';
+import TableHead from './TableHead';
+import TableFilter from './TableFilter';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (a[orderBy] === null) return -1;
@@ -40,13 +39,13 @@ function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   return 0;
 }
 
-export type Order = "asc" | "desc";
+export type Order = 'asc' | 'desc';
 
 function getComparator<Key extends keyof any>(
   order: Order,
   orderBy: Key,
 ): (a: { [key in Key]: any }, b: { [key in Key]: any }) => number {
-  return order === "desc"
+  return order === 'desc'
     ? (a, b) => descendingComparator(a, b, orderBy)
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
@@ -65,23 +64,23 @@ export function getSortedColumns(row: any, header: boolean, columnsOrder: string
 
 const CellContents = ({ cell, column }): JSX.Element => {
   if (Array.isArray(cell)) {
-    return <>{cell.join(", ")}</>;
-  } else if (typeof cell === "boolean") {
+    return <>{cell.join(', ')}</>;
+  } else if (typeof cell === 'boolean') {
     if (cell) {
-      return column === "muted" ? (
+      return column === 'muted' ? (
         <VolumeOffIcon color="primary" />
       ) : (
         <CheckIcon color="primary" />
       );
     } else {
-      return <>{"--"}</>;
+      return <>{'--'}</>;
     }
   } else if (cell === null) {
-    return <>{"--"}</>;
+    return <>{'--'}</>;
   } else {
-    if (column === "conditions") {
+    if (column === 'conditions') {
       return (
-        <Typography color={cell.toLowerCase() === "healthy" ? "success.main" : "error"}>
+        <Typography color={cell.toLowerCase() === 'healthy' ? 'success.main' : 'error'}>
           {String(cell)}
         </Typography>
       );
@@ -142,18 +141,18 @@ export const Table = <T extends unknown>({
 
   const [allRows, setAllRows] = useState<RowWithId[]>([]);
   const [currRows, setCurrRows] = useState(allRows);
-  const [order, setOrder] = useState<Order>("asc");
-  const [orderBy, setOrderBy] = useState("");
+  const [order, setOrder] = useState<Order>('asc');
+  const [orderBy, setOrderBy] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(
     paginate ? numPerPage || 25 : rows.length,
   );
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filter, setFilter] = useState<string>("All");
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filter, setFilter] = useState<string>('All');
 
   const handleRequestSort = (_: MouseEvent<unknown>, property: any) => {
-    const isAsc = orderBy === property && order === "asc";
-    setOrder(isAsc ? "desc" : "asc");
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
   };
 
@@ -187,7 +186,7 @@ export const Table = <T extends unknown>({
   }, [rows]);
 
   useEffect(() => {
-    if (type === "Log") {
+    if (type === 'Log') {
       if (allRows.length > 0) {
         if (currRows.length === 0) {
           setCurrRows(allRows);
@@ -205,7 +204,7 @@ export const Table = <T extends unknown>({
     if (mapDisplay) {
       rows = rows.map(mapDisplay);
     }
-    if (searchable && searchTerm !== "") {
+    if (searchable && searchTerm !== '') {
       rows = rows.filter((row) =>
         Object.values(row)
           .join()
@@ -214,7 +213,7 @@ export const Table = <T extends unknown>({
           .includes(searchTerm.toLowerCase().trim()),
       );
     }
-    if (filterEnabled && filter && filter !== "All") {
+    if (filterEnabled && filter && filter !== 'All') {
       rows = rows.filter(filterFunctions[filter]);
     }
     setCurrRows(rows);
@@ -230,21 +229,19 @@ export const Table = <T extends unknown>({
   ]);
 
   useEffect(() => {
-    if (type !== "Log") setPage(0);
+    if (type !== 'Log') setPage(0);
   }, [searchable, searchTerm, type]);
 
   const getHeaderText = (): string => {
-    const filterString = !filterEnabled || filter === "All" ? "" : filter;
-    const searchString = searchTerm ? `"${searchTerm}"` : "";
+    const filterString = !filterEnabled || filter === 'All' ? '' : filter;
+    const searchString = searchTerm ? `"${searchTerm}"` : '';
     return `${
-      currRows.length !== 0 ? currRows.length : ""
+      currRows.length !== 0 ? currRows.length : ''
     } ${searchString} ${filterString} ${type}${s(rows.length)}`;
   };
 
   const handleOnSelect = (row) => {
-    if (selectedRow === row.id) {
-      onSelectRow?.(null);
-    } else {
+    if (selectedRow !== row.id) {
       onSelectRow?.(allRows.find((r) => r.id === row.id));
     }
   };
@@ -264,7 +261,7 @@ export const Table = <T extends unknown>({
           filterEnabled={!!filterOptions}
         />
       )}
-      <TableContainer sx={{ maxHeight: height || "none" }}>
+      <TableContainer sx={{ maxHeight: height || 'none' }}>
         <MUITable stickyHeader aria-labelledby="tableTitle" size="small">
           <TableHead
             rows={rows}
@@ -285,30 +282,30 @@ export const Table = <T extends unknown>({
                       <TableRow
                         key={String(row.id) ?? index}
                         sx={{
-                          "&:last-child td, &:last-child th": { border: 0 },
-                          cursor: `${onSelectRow ? "pointer" : "default"}`,
+                          '&:last-child td, &:last-child th': { border: 0 },
+                          cursor: `${onSelectRow ? 'pointer' : 'default'}`,
                           height: 42,
                         }}
                         hover={!!onSelectRow}
                         selected={selectedRow === String(row.id)}
                       >
                         {expandable && (
-                          <TableCell sx={{ display: "flex", alignItems: "center" }}>
-                            {typeof (row as any).status === "string" && (
+                          <TableCell sx={{ display: 'flex', alignItems: 'center' }}>
+                            {typeof (row as any).status === 'string' && (
                               <Chip
                                 sx={{
-                                  height: "10px",
-                                  width: "10px",
+                                  height: '10px',
+                                  width: '10px',
                                   marginTop: 2,
                                   marginBottom: 2,
                                   marginRight: 1,
-                                  top: "-1px",
-                                  position: "relative",
+                                  top: '-1px',
+                                  position: 'relative',
                                 }}
                                 color={
-                                  ({ OK: "success", ERROR: "error" }[
+                                  ({ OK: 'success', ERROR: 'error' }[
                                     (row as any).status
-                                  ] as any) || ("default" as any)
+                                  ] as any) || ('default' as any)
                                 }
                               />
                             )}
@@ -328,12 +325,12 @@ export const Table = <T extends unknown>({
                           </TableCell>
                         )}
                         {getSortedColumns(row, false, columnsOrder)
-                          .filter(([key]) => key !== "id" && key !== "__typename")
+                          .filter(([key]) => key !== 'id' && key !== '__typename')
                           .map(([_, value], i) => {
                             return (
                               <TableCell
                                 key={`${value as any}-${i}`}
-                                align={!i ? "left" : "right"}
+                                align={!i ? 'left' : 'right'}
                                 onClick={() => handleOnSelect(row)}
                               >
                                 <CellContents cell={value} column={columnsOrder[i]} />
@@ -359,7 +356,7 @@ export const Table = <T extends unknown>({
                                   style={{ fontSize: 10 }}
                                 >
                                   <div
-                                    style={{ whiteSpace: "pre-wrap", maxWidth: "90%" }}
+                                    style={{ whiteSpace: 'pre-wrap', maxWidth: '90%' }}
                                   >
                                     {JSON.stringify(row[expandKey], null, 2)}
                                   </div>
@@ -384,9 +381,9 @@ export const Table = <T extends unknown>({
             {loading && (
               <div
                 style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  overflow: "hidden",
+                  display: 'flex',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
                   marginTop: 8,
                 }}
               >

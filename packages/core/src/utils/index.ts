@@ -5,7 +5,7 @@ export const wait = async (ms: number): Promise<void> => {
 };
 
 export const hexToDec = (resultString: number | string): number => {
-  return typeof resultString === "number" ? resultString : parseInt(resultString, 16);
+  return typeof resultString === 'number' ? resultString : parseInt(resultString, 16);
 };
 
 export const getTimestamp = (): string => {
@@ -17,8 +17,8 @@ export const getTimestamp = (): string => {
   )}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 };
 
-export const s = (count: number): string => (count === 1 ? "" : "s");
-export const is = (count: number): string => (count === 1 ? "is" : "are");
+export const s = (count: number): string => (count === 1 ? '' : 's');
+export const is = (count: number): string => (count === 1 ? 'is' : 'are');
 
 export const camelToTitle = (camelCase: string): string =>
   camelCase
@@ -27,13 +27,13 @@ export const camelToTitle = (camelCase: string): string =>
     .trim();
 
 const colorCodes = {
-  red: "\x1B[31m%s\x1B[0m",
-  green: "\x1B[32m%s\x1B[0m",
-  yellow: "\x1B[33m%s\x1B[0m",
-  blue: "\x1B[34m%s\x1B[0m",
-  purple: "\x1B[35m%s\x1B[0m",
-  teal: "\x1B[36m%s\x1B[0m",
+  red: '\x1B[31m%s\x1B[0m',
+  green: '\x1B[32m%s\x1B[0m',
+  yellow: '\x1B[33m%s\x1B[0m',
+  blue: '\x1B[34m%s\x1B[0m',
+  purple: '\x1B[35m%s\x1B[0m',
+  teal: '\x1B[36m%s\x1B[0m',
 };
-type IColors = "red" | "green" | "yellow" | "blue" | "purple" | "teal";
+type IColors = 'red' | 'green' | 'yellow' | 'blue' | 'purple' | 'teal';
 export const colorLog = (string: string, color: IColors): void =>
   console.log(colorCodes[color], string);

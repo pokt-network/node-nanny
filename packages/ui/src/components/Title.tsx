@@ -7,17 +7,17 @@ interface TitleProps {
 
 export const Title = (props: TitleProps) => {
   return (
-    <Typography 
-      component="h3" 
-      variant="h6" 
+    <Typography
+      component="h3"
+      variant="h6"
       sx={{
         marginBottom: 3,
-        fontWeight: "700"
+        fontWeight: '700',
       }}
     >
       {props.children}
     </Typography>
   );
-}
+};
 
-export default Title
+export default Title;

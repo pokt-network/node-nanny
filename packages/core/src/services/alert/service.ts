@@ -1,20 +1,20 @@
-import axios, { AxiosInstance } from "axios";
-import { FilterQuery } from "mongoose";
-import { api as pagerDutyApi } from "@pagerduty/pdjs";
+import axios, { AxiosInstance } from 'axios';
+import { FilterQuery } from 'mongoose';
+import { api as pagerDutyApi } from '@pagerduty/pdjs';
 
-import { INode, IWebhook, WebhookModel } from "../../models";
-import { AlertTypes } from "../../types";
-import { colorLog, s, is } from "../../utils";
+import { INode, IWebhook, WebhookModel } from '../../models';
+import { AlertTypes } from '../../types';
+import { colorLog, s, is } from '../../utils';
 import {
   AlertColor,
   SendMessageInput,
   PagerDutyDetails,
   IncidentLevel,
   PagerDutyServices,
-} from "./types";
-import { EAlertTypes, IRedisEvent, IRotationParams } from "../event/types";
+} from './types';
+import { EAlertTypes, IRedisEvent, IRotationParams } from '../event/types';
 
-import env from "../../environment";
+import env from '../../environment';
 
 export class Service {
   private discordClient: AxiosInstance;
@@ -22,9 +22,9 @@ export class Service {
 
   constructor() {
     this.discordClient = axios.create({
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
-    this.pagerDutyClient = pagerDutyApi({ token: env("PAGER_DUTY_API_KEY") });
+    this.pagerDutyClient = pagerDutyApi({ token: env('PAGER_DUTY_API_KEY') });
   }
 
   /* ----- Discord Alerts ----- */
@@ -35,13 +35,13 @@ export class Service {
     location,
     frontend,
   }: AlertTypes.IAlertParams) => {
-    colorLog(`${title}\n${message}`, "red");
+    colorLog(`${title}\n${message}`, 'red');
     try {
       return await this.sendDiscordMessage({
         title,
         color: AlertColor.ERROR,
         channel: await this.getWebhookUrl(chain.toUpperCase(), location, frontend),
-        fields: [{ name: "Error", value: this.trimMessage(message) }],
+        fields: [{ name: 'Error', value: this.trimMessage(message) }],
       });
     } catch (error) {
       console.error(error?.message);
@@ -57,7 +57,7 @@ export class Service {
         title,
         color: color || AlertColor.INFO,
         channel: await this.getWebhookUrl(chain.toUpperCase(), location, frontend),
-        fields: [{ name: "Info", value: this.trimMessage(message) }],
+        fields: [{ name: 'Info', value: this.trimMessage(message) }],
       });
     } catch (error) {
       console.error(error?.message);
@@ -71,13 +71,13 @@ export class Service {
     location,
     frontend,
   }: AlertTypes.IAlertParams) => {
-    colorLog(`${title}\n${message}`, "yellow");
+    colorLog(`${title}\n${message}`, 'yellow');
     try {
       return await this.sendDiscordMessage({
         title,
         color: AlertColor.WARNING,
         channel: await this.getWebhookUrl(chain.toUpperCase(), location, frontend),
-        fields: [{ name: "Warning", value: this.trimMessage(message) }],
+        fields: [{ name: 'Warning', value: this.trimMessage(message) }],
       });
     } catch (error) {
       console.error(error?.message);
@@ -92,12 +92,12 @@ export class Service {
     frontend,
   }: AlertTypes.IAlertParams) => {
     try {
-      colorLog(`${title}\n${message}`, "green");
+      colorLog(`${title}\n${message}`, 'green');
       return await this.sendDiscordMessage({
         title,
         color: AlertColor.SUCCESS,
         channel: await this.getWebhookUrl(chain.toUpperCase(), location, frontend),
-        fields: [{ name: "Success", value: this.trimMessage(message) }],
+        fields: [{ name: 'Success', value: this.trimMessage(message) }],
       });
     } catch (error) {
       console.error(error?.message);
@@ -128,12 +128,14 @@ export class Service {
     let query: FilterQuery<IWebhook>;
 
     if (frontend) {
-      query = { chain: "FRONTEND_ALERT" };
-    } else if (env("PNF") && chain === "POKT-DIS") {
+      query = { chain: 'FRONTEND_ALERT' };
+    } else if (env('PNF') && chain === 'POKT-DIS') {
       query = { chain };
     } else {
       query = { chain, location };
     }
+
+    console.log({ chain, location, frontend, query });
 
     const { url } = await WebhookModel.findOne(query);
     return url;
@@ -157,7 +159,7 @@ export class Service {
     urgency = IncidentLevel.HIGH,
   }) {
     try {
-      const { data } = await this.pagerDutyClient.post("/incidents", {
+      const { data } = await this.pagerDutyClient.post('/incidents', {
         data: {
           incident: {
             title,
@@ -183,44 +185,46 @@ export class Service {
     nodesTotal: number,
     destination: string,
   ): { message: string; statusStr: string } {
-    const badOracles = details?.badOracles?.join("\n");
+    const badOracles = details?.badOracles?.join('\n');
     const noOracle = details?.noOracle;
     const nodeIsAheadOfPeer = details?.nodeIsAheadOfPeer;
+    const secondsToRecover = details?.secondsToRecover;
 
     const statusStr = `${name} is ${conditions}.`;
     const countStr =
       alertType !== EAlertTypes.RESOLVED
         ? `This event has occurred ${count} time${s(count)} since first occurrence.`
-        : "";
-    const ethSyncStr = ethSyncing ? `\nETH Syncing - ${ethSyncing}\n` : "";
+        : '';
+    const ethSyncStr = ethSyncing ? `\nETH Syncing - ${ethSyncing}\n` : '';
     const heightStr = height
-      ? `Height - ${
-          typeof height === "number"
-            ? height
-            : `Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
-        }`
-      : "";
+      ? `Block Height - Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
+      : '';
+    const secondsToRecoverStr =
+      typeof secondsToRecover === 'number'
+        ? this.getSecondsToRecoverString(secondsToRecover)
+        : '';
     let nodeCountStr =
-      typeof nodesOnline === "number" && nodesOnline >= 0
+      typeof nodesOnline === 'number' && nodesTotal >= 1
         ? `${nodesOnline} of ${nodesTotal} node${s(nodesTotal)} ${is(
             nodesTotal,
           )} in rotation for ${destination}.`
-        : "";
-    if (nodesOnline <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
+        : '';
+    if (nodeCountStr && nodesOnline <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
     const badOracleStr = badOracles?.length
       ? `\nWarning - Bad Oracle${s(badOracles.length)}\n${badOracles}`
-      : "";
+      : '';
     const noOracleStr = noOracle
       ? `\nWarning - No Oracle for node. Node has ${details?.numPeers} peers.`
-      : "";
+      : '';
     const nodeIsAheadOfPeerStr = nodeIsAheadOfPeer
       ? `Warning - Node is ahead of peers.\nDelta: ${nodeIsAheadOfPeer}`
-      : "";
+      : '';
 
     return {
       message: [
         countStr,
         heightStr,
+        secondsToRecoverStr,
         ethSyncStr,
         badOracleStr,
         noOracleStr,
@@ -228,15 +232,27 @@ export class Service {
         nodeIsAheadOfPeerStr,
       ]
         .filter(Boolean)
-        .join("\n"),
+        .join('\n'),
       statusStr,
     };
+  }
+
+  private getSecondsToRecoverString(secondsToRecover: number): string {
+    if (secondsToRecover === -1) {
+      return 'Delta is increasing.';
+    }
+    if (secondsToRecover === 0) {
+      return 'Delta is stuck.';
+    }
+
+    const minutesToRecover = Math.floor(secondsToRecover / 60);
+    return `Node is syncing; the estimated time to sync is approximately ${minutesToRecover} minutes.`;
   }
 
   getRotationMessage(
     { backend, loadBalancers, name }: INode,
     enable: boolean,
-    mode: "success" | "error",
+    mode: 'success' | 'error',
     nodesOnline: number,
     nodesTotal: number,
     error?: any,
@@ -255,27 +271,27 @@ export class Service {
           error: `[Error] - Could not remove ${name} from rotation`,
         }[mode];
     let nodeCountStr =
-      nodesOnline && nodesOnline >= 0
+      typeof nodesOnline === 'number' && nodesTotal >= 1
         ? `${nodesOnline} of ${nodesTotal} node${s(nodesTotal)} ${is(
             nodesOnline,
           )} in rotation for ${backend}.`
-        : "";
-    if (nodesOnline <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
-    const message = [haProxyMessage, nodeCountStr, error].filter(Boolean).join("\n");
+        : '';
+    if (nodeCountStr && nodesOnline <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
+    const message = [haProxyMessage, nodeCountStr, error].filter(Boolean).join('\n');
 
     return { title, message };
   }
 
   getHAProxyMessage({ destination, loadBalancers }: IRotationParams): string {
-    if (env("MONITOR_TEST")) return "";
+    if (env('MONITOR_TEST')) return '';
 
     const urls = loadBalancers
       .map(({ url, ip }) => `http://${url || ip}:8050/stats?scope=${destination}`)
-      .join("\n");
+      .join('\n');
     return `HAProxy Status\n${urls}`;
   }
 
-  getErrorMessage(server: string, mode: "count" | "error", count?: number): string {
+  getErrorMessage(server: string, mode: 'count' | 'error', count?: number): string {
     return {
       count: `Could not remove ${server} from load balancer. ${count} server${s(
         count,

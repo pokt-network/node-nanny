@@ -50,6 +50,7 @@ query Node($id: ID!) {
       id
       name
       type
+      allowance
     }
     host {
       id
@@ -80,6 +81,7 @@ query Nodes {
       id
       name
       type
+      allowance
     }
     host {
       id
@@ -166,5 +168,27 @@ query GetServerCount($id: ID!) {
   serverCount: getServerCount(id: $id) {
     online
     total
+  }
+}
+
+query GetHealthCheck($id: ID!) {
+  healthCheck: getHealthCheck(id: $id) {
+    node {
+      status
+      conditions
+      deltaArray
+    }
+    height {
+      internalHeight
+      delta
+      externalHeight
+    }
+    details {
+      noOracle
+      numPeers
+      badOracles
+      nodeIsAheadOfPeer
+      secondsToRecover
+    }
   }
 }

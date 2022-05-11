@@ -1,9 +1,9 @@
-export { Webhooks as DiscordChannel } from "../alert/types";
-export { EErrorConditions as BlockChainMonitorEvents } from "../health/types";
-export { ESupportedBlockchains } from "../health/types";
+export { Webhooks as DiscordChannel } from '../alert/types';
+export { EErrorConditions as BlockChainMonitorEvents } from '../health/types';
+export { ESupportedBlockchains } from '../health/types';
 
-import { IHost, INode } from "../../models";
-import { HealthTypes } from "../../types";
+import { IHost, INode } from '../../models';
+import { HealthTypes } from '../../types';
 
 export interface IRedisEvent extends HealthTypes.IHealthResponse {
   id: string;
@@ -37,16 +37,16 @@ export interface IRedisEventParams {
 }
 
 export enum PocketTypes {
-  PEER = "peer",
-  MAIN = "main",
-  DISPATCH = "dis",
-  BT = "bt",
+  PEER = 'peer',
+  MAIN = 'main',
+  DISPATCH = 'dis',
+  BT = 'bt',
 }
 
 export enum ELoadBalancerStatus {
-  ONLINE = "online",
-  OFFLINE = "offline",
-  ERROR = "error",
+  ONLINE = 'online',
+  OFFLINE = 'offline',
+  ERROR = 'error',
 }
 
 export interface LoadBalancer {
@@ -57,11 +57,11 @@ export interface LoadBalancer {
 
 export enum Limits {
   MAX_LOG = 3000,
-  MAX_LOG_MSG = "Logs are too big",
+  MAX_LOG_MSG = 'Logs are too big',
 }
 
 export enum EAlertTypes {
-  TRIGGER = "Triggered",
-  RETRIGGER = "Retriggered",
-  RESOLVED = "Resolved",
+  TRIGGER = 'Triggered',
+  RETRIGGER = 'Retriggered',
+  RESOLVED = 'Resolved',
 }

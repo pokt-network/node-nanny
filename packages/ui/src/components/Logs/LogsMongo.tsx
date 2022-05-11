@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
-import Table from "components/Table";
-import { LogsSelectNodes } from "components/Logs/LogsSelectNodes";
-import { useLogsQuery, useNodesQuery, ILogsQuery, IParsedLog } from "types";
+import Table from 'components/Table';
+import { LogsSelectNodes } from 'components/Logs/LogsSelectNodes';
+import { useLogsQuery, useNodesQuery, ILogsQuery, IParsedLog } from 'types';
 
-import { Alert, AlertTitle, LinearProgress } from "@mui/material";
+import { Alert, AlertTitle, LinearProgress } from '@mui/material';
 
 interface LogWithId extends IParsedLog {
   id: string;
@@ -29,13 +29,13 @@ export default function LogsMongo() {
   });
 
   const filterOptions = {
-    filters: ["All", "OK", "Error"],
+    filters: ['All', 'OK', 'Error'],
     filterFunctions: {
-      OK: ({ conditions }) => conditions === "HEALTHY",
-      Error: ({ status }) => status === "ERROR",
+      OK: ({ conditions }) => conditions === 'HEALTHY',
+      Error: ({ status }) => status === 'ERROR',
     } as any,
   };
-  const columnsOrder = ["name", "status", "conditions", "timestamp"];
+  const columnsOrder = ['name', 'status', 'conditions', 'timestamp'];
 
   useEffect(() => {
     if (nodeIds?.length) {
@@ -59,7 +59,7 @@ export default function LogsMongo() {
     }
   };
 
-  const parseLogsForTable = (logs: ILogsQuery["logs"]["docs"]): LogWithId[] => {
+  const parseLogsForTable = (logs: ILogsQuery['logs']['docs']): LogWithId[] => {
     return logs.map(({ message, timestamp }, i) => {
       const parsedMessage = JSON.parse(message);
       const stamp = new Date(Number(timestamp)).toISOString();
@@ -74,7 +74,7 @@ export default function LogsMongo() {
     return (
       <>
         <Alert severity="error">
-          <AlertTitle>{"Error fetching data: "}</AlertTitle>
+          <AlertTitle>{'Error fetching data: '}</AlertTitle>
           {(nodesError || logsError).message}
         </Alert>
       </>
