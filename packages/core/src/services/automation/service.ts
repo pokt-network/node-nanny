@@ -10,14 +10,17 @@ import {
   ChainsModel,
   HostsModel,
   LocationsModel,
+  OraclesModel,
 } from '../../models';
 import {
+  IChainUpdate,
   IHostInput,
   IHostCsvInput,
   IHostUpdate,
   INodeInput,
   INodeCsvInput,
   INodeUpdate,
+  IOracleUpdate,
 } from './types';
 import { Service as HealthService } from '../health';
 import { IHealthCheck } from '../health/types';
@@ -258,6 +261,17 @@ export class Service extends BaseService {
       }
     });
     return update;
+  }
+
+  /* ----- PNF Internal Only ----- */
+  public async updateChain(update: IChainUpdate) {
+    const { id, ...rest } = update;
+    await ChainsModel.updateOne({ _id: id }, rest);
+  }
+
+  public async updateOracle(update: IOracleUpdate) {
+    const { id, urls } = update;
+    await OraclesModel.updateOne({ _id: id }, { urls });
   }
 
   /* ----- Health Check Methods ----- */

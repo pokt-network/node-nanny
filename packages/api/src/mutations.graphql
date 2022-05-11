@@ -58,6 +58,22 @@ mutation CreateNodesCSV($nodes: [NodeCSVInput!]!) {
   }
 }
 
+mutation CreateChain($input: ChainInput!) {
+  createChain(input: $input) {
+    name
+    type
+    allowance
+    chainId
+  }
+}
+
+mutation CreateOracle($input: OracleInput!) {
+  createOracle(input: $input) {
+    chain
+    urls
+  }
+}
+
 mutation UpdateHost($update: HostUpdate!) {
   updateHost(update: $update) {
     id
@@ -98,6 +114,22 @@ mutation UpdateNode($update: NodeUpdate!) {
       id
       name
     }
+  }
+}
+
+mutation UpdateChain($update: ChainUpdate!) {
+  updateChain(update: $update) {
+    name
+    type
+    allowance
+    chainId
+  }
+}
+
+mutation UpdateOracle($update: OracleUpdate!) {
+  updateOracle(update: $update) {
+    chain
+    urls
   }
 }
 
