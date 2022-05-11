@@ -1,13 +1,13 @@
-import { Dispatch } from "react";
+import { Dispatch } from 'react';
 
-import SearchBar from "components/SearchBar";
+import SearchBar from 'components/SearchBar';
 
-import Box from "@mui/material/Box";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import ListItemText from "@mui/material/ListItemText";
+import Box from '@mui/material/Box';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemText from '@mui/material/ListItemText';
 
 type TableFilterProps = {
   type: string;
@@ -35,7 +35,7 @@ export const TableFilter = ({
   };
 
   return (
-    <Box sx={{ display: "flex", gap: 2, marginBottom: 2 }}>
+    <Box sx={{ display: 'flex', gap: 2, marginBottom: 2 }}>
       {searchEnabled && (
         <SearchBar
           value={searchTerm}
@@ -44,7 +44,7 @@ export const TableFilter = ({
         />
       )}
       {filterEnabled && (
-        <FormControl size="small" sx={{ width: "25%" }}>
+        <FormControl size="small" sx={{ width: '25%' }}>
           <InputLabel id="filter-label">Filter</InputLabel>
           <Select
             name="filter"
@@ -52,7 +52,7 @@ export const TableFilter = ({
             value={filter}
             onChange={handleFiltersSelect}
             variant="outlined"
-            sx={{ height: "40px" }}
+            sx={{ height: '40px' }}
           >
             {filters.map((filter) => (
               <MenuItem key={filter} value={filter}>

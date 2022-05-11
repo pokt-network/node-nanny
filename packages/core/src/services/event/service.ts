@@ -1,15 +1,16 @@
-import { AlertColor } from "../alert/types";
-import { Service as BaseService } from "../base-service/base-service";
-import { EErrorConditions, EErrorStatus, ESupportedBlockchains } from "../health/types";
-import { NodesModel } from "../../models";
+import { UpdateQuery } from 'mongoose';
+import { AlertColor } from '../alert/types';
+import { Service as BaseService } from '../base-service/base-service';
+import { EErrorConditions, EErrorStatus, ESupportedBlockchains } from '../health/types';
+import { INode, NodesModel } from '../../models';
 import {
   EAlertTypes,
   IRedisEvent,
   IRedisEventParams,
   IToggleServerParams,
-} from "./types";
-import { AlertTypes } from "../../types";
-import env from "../../environment";
+} from './types';
+import { AlertTypes } from '../../types';
+import env from '../../environment';
 
 export class Service extends BaseService {
   constructor() {
@@ -48,7 +49,7 @@ export class Service extends BaseService {
     }
 
     /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
-    if (env("PNF") && dispatchFrontendDown) {
+    if (env('PNF') && dispatchFrontendDown) {
       await this.urgentAlertDispatchFrontendIsDown(message);
     }
   };
@@ -86,7 +87,7 @@ export class Service extends BaseService {
     }
 
     /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
-    if (env("PNF") && dispatchFrontendDown) {
+    if (env('PNF') && dispatchFrontendDown) {
       await this.urgentAlertDispatchFrontendIsDown(message);
     }
   };
@@ -129,8 +130,9 @@ export class Service extends BaseService {
     const node = await this.getNode(id);
     await NodesModel.updateOne({ _id: node.id }, { status, conditions });
     const { automation, backend, chain, frontend, loadBalancers, dispatch, url } = node;
+
     const pnfDispatch =
-      env("PNF") && dispatch && chain.name === ESupportedBlockchains["POKT-DIS"];
+      env('PNF') && dispatch && chain.name === ESupportedBlockchains['POKT-DIS'];
 
     const healthy = conditions === EErrorConditions.HEALTHY;
     const notSynced = pnfDispatch
@@ -148,7 +150,7 @@ export class Service extends BaseService {
             frontendUrl: frontend ? url : null,
             dispatch: pnfDispatch,
           })
-        : { online: 0, total: 0 };
+        : { online: null, total: null };
 
     const { message, statusStr } = this.alert.getAlertMessage(
       event,
@@ -203,7 +205,7 @@ export class Service extends BaseService {
         const { title, message } = this.alert.getRotationMessage(
           node,
           enable,
-          "success",
+          'success',
           nodesOnline,
           nodesTotal,
         );
@@ -216,7 +218,7 @@ export class Service extends BaseService {
       const { title, message } = this.alert.getRotationMessage(
         node,
         enable,
-        "error",
+        'error',
         null,
         error,
       );
@@ -230,8 +232,8 @@ export class Service extends BaseService {
   /* ----- PNF Internal Only ----- */
   private async urgentAlertDispatchFrontendIsDown(message: string): Promise<void> {
     await this.alert.createPagerDutyIncident({
-      title: "URGENT ALERT! Dispatch Frontend is down!",
-      details: ["Dispatchers' HAProxy frontend is down!", message].join("\n"),
+      title: 'URGENT ALERT! Dispatch Frontend is down!',
+      details: ["Dispatchers' HAProxy frontend is down!", message].join('\n'),
     });
   }
 }

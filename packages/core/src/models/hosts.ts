@@ -1,6 +1,6 @@
-import { Schema, model, Model, Types } from "mongoose";
+import { Schema, model, Model, Types } from 'mongoose';
 
-import { ILocation } from "./locations";
+import { ILocation } from './locations';
 
 export interface IHost<Populated = true> {
   id: Types.ObjectId;
@@ -18,7 +18,7 @@ export const hostsSchema = new Schema<IHost>(
   {
     name: { type: String, unique: true, required: true },
     loadBalancer: { type: Boolean, required: true },
-    location: { type: Schema.Types.ObjectId, ref: "Locations", required: true },
+    location: { type: Schema.Types.ObjectId, ref: 'Locations', required: true },
     ip: { type: String, unique: true, sparse: true },
     fqdn: { type: String, unique: true, sparse: true },
     url: { type: String, unique: true, sparse: true },
@@ -28,4 +28,4 @@ export const hostsSchema = new Schema<IHost>(
 
 hostsSchema.index({ name: 1 });
 
-export const HostsModel: Model<IHost> = model("Hosts", hostsSchema);
+export const HostsModel: Model<IHost> = model('Hosts', hostsSchema);
