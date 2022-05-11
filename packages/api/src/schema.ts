@@ -6,7 +6,8 @@ const typeDefs = gql`
     id: ID!
     name: String!
     type: String!
-    allowance: Int
+    chainId: String!
+    allowance: Int!
   }
 
   type Host {
