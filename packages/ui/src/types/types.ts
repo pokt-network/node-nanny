@@ -22,10 +22,26 @@ export type IBlockHeight = {
 };
 
 export type IChain = {
-  allowance?: Maybe<Scalars['Int']>;
+  allowance: Scalars['Int'];
+  chainId: Scalars['String'];
   id: Scalars['ID'];
   name: Scalars['String'];
   type: Scalars['String'];
+};
+
+export type IChainInput = {
+  allowance: Scalars['Int'];
+  chainId: Scalars['String'];
+  name: Scalars['String'];
+  type: Scalars['String'];
+};
+
+export type IChainUpdate = {
+  allowance?: InputMaybe<Scalars['Int']>;
+  chainId?: InputMaybe<Scalars['String']>;
+  id: Scalars['ID'];
+  name?: InputMaybe<Scalars['String']>;
+  type?: InputMaybe<Scalars['String']>;
 };
 
 export type IHealthCheck = {
@@ -112,11 +128,13 @@ export type ILogParams = {
 };
 
 export type IMutation = {
+  createChain?: Maybe<IChain>;
   createHost?: Maybe<IHost>;
   createHostsCSV: Array<Maybe<IHost>>;
   createLocation: ILocation;
   createNode?: Maybe<INode>;
   createNodesCSV: Array<Maybe<INode>>;
+  createOracle?: Maybe<IOracle>;
   deleteHost?: Maybe<IHost>;
   deleteLocation?: Maybe<Scalars['Boolean']>;
   deleteNode?: Maybe<INode>;
@@ -124,8 +142,15 @@ export type IMutation = {
   enableHaProxyServer: Scalars['Boolean'];
   muteMonitor: INode;
   unmuteMonitor: INode;
+  updateChain?: Maybe<IChain>;
   updateHost?: Maybe<IHost>;
   updateNode?: Maybe<INode>;
+  updateOracle?: Maybe<IOracle>;
+};
+
+
+export type IMutationCreateChainArgs = {
+  input: IChainInput;
 };
 
 
@@ -151,6 +176,11 @@ export type IMutationCreateNodeArgs = {
 
 export type IMutationCreateNodesCsvArgs = {
   nodes: Array<INodeCsvInput>;
+};
+
+
+export type IMutationCreateOracleArgs = {
+  input: IOracleInput;
 };
 
 
@@ -189,6 +219,11 @@ export type IMutationUnmuteMonitorArgs = {
 };
 
 
+export type IMutationUpdateChainArgs = {
+  update: IChainUpdate;
+};
+
+
 export type IMutationUpdateHostArgs = {
   update: IHostUpdate;
 };
@@ -196,6 +231,11 @@ export type IMutationUpdateHostArgs = {
 
 export type IMutationUpdateNodeArgs = {
   update: INodeUpdate;
+};
+
+
+export type IMutationUpdateOracleArgs = {
+  update: IOracleUpdate;
 };
 
 export type INode = {
@@ -264,6 +304,16 @@ export type IOracle = {
   chain: Scalars['String'];
   id: Scalars['ID'];
   urls?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+
+export type IOracleInput = {
+  chain: Scalars['String'];
+  urls: Array<InputMaybe<Scalars['String']>>;
+};
+
+export type IOracleUpdate = {
+  id: Scalars['ID'];
+  urls: Array<InputMaybe<Scalars['String']>>;
 };
 
 export type IPaginatedLogs = {
@@ -388,6 +438,20 @@ export type ICreateNodesCsvMutationVariables = Exact<{
 
 export type ICreateNodesCsvMutation = { createNodesCSV: Array<{ id: string } | null> };
 
+export type ICreateChainMutationVariables = Exact<{
+  input: IChainInput;
+}>;
+
+
+export type ICreateChainMutation = { createChain?: { name: string, type: string, allowance: number, chainId: string } | null };
+
+export type ICreateOracleMutationVariables = Exact<{
+  input: IOracleInput;
+}>;
+
+
+export type ICreateOracleMutation = { createOracle?: { chain: string, urls?: Array<string | null> | null } | null };
+
 export type IUpdateHostMutationVariables = Exact<{
   update: IHostUpdate;
 }>;
@@ -401,6 +465,20 @@ export type IUpdateNodeMutationVariables = Exact<{
 
 
 export type IUpdateNodeMutation = { updateNode?: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } } | null };
+
+export type IUpdateChainMutationVariables = Exact<{
+  update: IChainUpdate;
+}>;
+
+
+export type IUpdateChainMutation = { updateChain?: { name: string, type: string, allowance: number, chainId: string } | null };
+
+export type IUpdateOracleMutationVariables = Exact<{
+  update: IOracleUpdate;
+}>;
+
+
+export type IUpdateOracleMutation = { updateOracle?: { chain: string, urls?: Array<string | null> | null } | null };
 
 export type IDeleteHostMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -454,7 +532,7 @@ export type IDisableHaProxyServerMutation = { disableHaProxyServer: boolean };
 export type IChainsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IChainsQuery = { chains: Array<{ id: string, name: string, type: string, allowance?: number | null }> };
+export type IChainsQuery = { chains: Array<{ id: string, name: string, type: string, chainId: string, allowance: number }> };
 
 export type IHostsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -471,12 +549,12 @@ export type INodeQueryVariables = Exact<{
 }>;
 
 
-export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance?: number | null }, host: { id: string, name: string } } };
+export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number }, host: { id: string, name: string } } };
 
 export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance?: number | null }, host: { id: string, name: string } }> };
+export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number }, host: { id: string, name: string } }> };
 
 export type ILogsQueryVariables = Exact<{
   input: ILogParams;
@@ -733,6 +811,76 @@ export function useCreateNodesCsvMutation(baseOptions?: Apollo.MutationHookOptio
 export type CreateNodesCsvMutationHookResult = ReturnType<typeof useCreateNodesCsvMutation>;
 export type CreateNodesCsvMutationResult = Apollo.MutationResult<ICreateNodesCsvMutation>;
 export type CreateNodesCsvMutationOptions = Apollo.BaseMutationOptions<ICreateNodesCsvMutation, ICreateNodesCsvMutationVariables>;
+export const CreateChainDocument = gql`
+    mutation CreateChain($input: ChainInput!) {
+  createChain(input: $input) {
+    name
+    type
+    allowance
+    chainId
+  }
+}
+    `;
+export type ICreateChainMutationFn = Apollo.MutationFunction<ICreateChainMutation, ICreateChainMutationVariables>;
+
+/**
+ * __useCreateChainMutation__
+ *
+ * To run a mutation, you first call `useCreateChainMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateChainMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createChainMutation, { data, loading, error }] = useCreateChainMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateChainMutation(baseOptions?: Apollo.MutationHookOptions<ICreateChainMutation, ICreateChainMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ICreateChainMutation, ICreateChainMutationVariables>(CreateChainDocument, options);
+      }
+export type CreateChainMutationHookResult = ReturnType<typeof useCreateChainMutation>;
+export type CreateChainMutationResult = Apollo.MutationResult<ICreateChainMutation>;
+export type CreateChainMutationOptions = Apollo.BaseMutationOptions<ICreateChainMutation, ICreateChainMutationVariables>;
+export const CreateOracleDocument = gql`
+    mutation CreateOracle($input: OracleInput!) {
+  createOracle(input: $input) {
+    chain
+    urls
+  }
+}
+    `;
+export type ICreateOracleMutationFn = Apollo.MutationFunction<ICreateOracleMutation, ICreateOracleMutationVariables>;
+
+/**
+ * __useCreateOracleMutation__
+ *
+ * To run a mutation, you first call `useCreateOracleMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateOracleMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createOracleMutation, { data, loading, error }] = useCreateOracleMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateOracleMutation(baseOptions?: Apollo.MutationHookOptions<ICreateOracleMutation, ICreateOracleMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ICreateOracleMutation, ICreateOracleMutationVariables>(CreateOracleDocument, options);
+      }
+export type CreateOracleMutationHookResult = ReturnType<typeof useCreateOracleMutation>;
+export type CreateOracleMutationResult = Apollo.MutationResult<ICreateOracleMutation>;
+export type CreateOracleMutationOptions = Apollo.BaseMutationOptions<ICreateOracleMutation, ICreateOracleMutationVariables>;
 export const UpdateHostDocument = gql`
     mutation UpdateHost($update: HostUpdate!) {
   updateHost(update: $update) {
@@ -831,6 +979,76 @@ export function useUpdateNodeMutation(baseOptions?: Apollo.MutationHookOptions<I
 export type UpdateNodeMutationHookResult = ReturnType<typeof useUpdateNodeMutation>;
 export type UpdateNodeMutationResult = Apollo.MutationResult<IUpdateNodeMutation>;
 export type UpdateNodeMutationOptions = Apollo.BaseMutationOptions<IUpdateNodeMutation, IUpdateNodeMutationVariables>;
+export const UpdateChainDocument = gql`
+    mutation UpdateChain($update: ChainUpdate!) {
+  updateChain(update: $update) {
+    name
+    type
+    allowance
+    chainId
+  }
+}
+    `;
+export type IUpdateChainMutationFn = Apollo.MutationFunction<IUpdateChainMutation, IUpdateChainMutationVariables>;
+
+/**
+ * __useUpdateChainMutation__
+ *
+ * To run a mutation, you first call `useUpdateChainMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateChainMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateChainMutation, { data, loading, error }] = useUpdateChainMutation({
+ *   variables: {
+ *      update: // value for 'update'
+ *   },
+ * });
+ */
+export function useUpdateChainMutation(baseOptions?: Apollo.MutationHookOptions<IUpdateChainMutation, IUpdateChainMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<IUpdateChainMutation, IUpdateChainMutationVariables>(UpdateChainDocument, options);
+      }
+export type UpdateChainMutationHookResult = ReturnType<typeof useUpdateChainMutation>;
+export type UpdateChainMutationResult = Apollo.MutationResult<IUpdateChainMutation>;
+export type UpdateChainMutationOptions = Apollo.BaseMutationOptions<IUpdateChainMutation, IUpdateChainMutationVariables>;
+export const UpdateOracleDocument = gql`
+    mutation UpdateOracle($update: OracleUpdate!) {
+  updateOracle(update: $update) {
+    chain
+    urls
+  }
+}
+    `;
+export type IUpdateOracleMutationFn = Apollo.MutationFunction<IUpdateOracleMutation, IUpdateOracleMutationVariables>;
+
+/**
+ * __useUpdateOracleMutation__
+ *
+ * To run a mutation, you first call `useUpdateOracleMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateOracleMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateOracleMutation, { data, loading, error }] = useUpdateOracleMutation({
+ *   variables: {
+ *      update: // value for 'update'
+ *   },
+ * });
+ */
+export function useUpdateOracleMutation(baseOptions?: Apollo.MutationHookOptions<IUpdateOracleMutation, IUpdateOracleMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<IUpdateOracleMutation, IUpdateOracleMutationVariables>(UpdateOracleDocument, options);
+      }
+export type UpdateOracleMutationHookResult = ReturnType<typeof useUpdateOracleMutation>;
+export type UpdateOracleMutationResult = Apollo.MutationResult<IUpdateOracleMutation>;
+export type UpdateOracleMutationOptions = Apollo.BaseMutationOptions<IUpdateOracleMutation, IUpdateOracleMutationVariables>;
 export const DeleteHostDocument = gql`
     mutation DeleteHost($id: ID!) {
   deleteHost(id: $id) {
@@ -1068,6 +1286,7 @@ export const ChainsDocument = gql`
     id
     name
     type
+    chainId
     allowance
   }
 }

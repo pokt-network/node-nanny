@@ -22,7 +22,7 @@ const resolvers: {
         .populate('loadBalancers')
         .exec(),
 
-    chains: () => ChainsModel.find({}).exec(),
+    chains: () => ChainsModel.find({}),
     hosts: () => HostsModel.find({}).populate('location').sort({ name: 1 }).exec(),
     locations: () => LocationsModel.find({}).exec(),
     nodes: () =>
@@ -31,8 +31,8 @@ const resolvers: {
         .populate({ path: 'host', populate: 'location' })
         .populate('loadBalancers')
         .exec(),
-    oracles: () => OraclesModel.find({}).populate('chain').exec(),
-    webhooks: () => WebhookModel.find({}).exec(),
+    oracles: () => OraclesModel.find({}),
+    webhooks: () => WebhookModel.find({}),
 
     logs: (_, { input }) => new LogService().getLogsForNodes(input),
     logsForChart: (_, { input }) => new LogService().getLogsForChart(input),
@@ -50,8 +50,14 @@ const resolvers: {
     createNodesCSV: (_, { nodes }) => new AutomationService().createNodesCSV(nodes),
     createHostsCSV: (_, { hosts }) => new AutomationService().createHostsCSV(hosts),
 
+    createChain: (_, { input }) => ChainsModel.create(input),
+    createOracle: (_, { input }) => OraclesModel.create(input),
+
     updateHost: (_, { update }) => new AutomationService().updateHost(update),
     updateNode: (_, { update }) => new AutomationService().updateNode(update),
+
+    updateChain: (_, { update }) => new AutomationService().updateChain(update),
+    updateOracle: (_, { update }) => new AutomationService().updateOracle(update),
 
     deleteHost: (_, { id }) => new AutomationService().deleteHost(id),
     deleteLocation: async (_, { id }) => !!(await LocationsModel.deleteOne({ id })),
