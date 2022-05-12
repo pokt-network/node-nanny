@@ -51,23 +51,28 @@ export class App {
 
       setInterval(async () => {
         /* Get Node health */
-        const healthResponse = await this.health.getNodeHealth(node);
-        const status = healthResponse?.status;
+        try {
+          const healthResponse = await this.health.getNodeHealth(node);
+          const status = healthResponse?.status;
 
-        /* Log to process console */
-        if (status === HealthTypes.EErrorStatus.OK) {
-          colorLog(JSON.stringify(healthResponse), 'green');
+          /* Log to process console */
+          if (status === HealthTypes.EErrorStatus.OK) {
+            colorLog(JSON.stringify(healthResponse), 'green');
+          }
+          if (status === HealthTypes.EErrorStatus.ERROR) {
+            colorLog(JSON.stringify(healthResponse), 'red');
+          }
+
+          /* Publish event to Redis */
+          await publish.evaluate({ message: healthResponse, id });
+
+          /* Log to MongoDB or Datadog */
+          const level = status === HealthTypes.EErrorStatus.ERROR ? 'error' : 'info';
+          logger.log({ level, message: JSON.stringify(healthResponse) });
+        } catch ({ stack }) {
+          const [message, location] = stack.split('\n');
+          colorLog(`[MONITOR ERROR] Node: ${name} ${message} ${location}`, 'yellow');
         }
-        if (status === HealthTypes.EErrorStatus.ERROR) {
-          colorLog(JSON.stringify(healthResponse), 'red');
-        }
-
-        /* Publish event to Redis */
-        await publish.evaluate({ message: healthResponse, id });
-
-        /* Log to MongoDB or Datadog */
-        const level = status === HealthTypes.EErrorStatus.ERROR ? 'error' : 'info';
-        logger.log({ level, message: JSON.stringify(healthResponse) });
       }, this.interval);
     }
   }
