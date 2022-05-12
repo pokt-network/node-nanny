@@ -159,7 +159,11 @@ export const HostLocation = ({
             }}
           >
             <Button variant="contained" color="primary" onClick={handleSubmit as any}>
-              {loading ? <CircularProgress size={20} /> : 'Add New Location'}
+              {loading ? (
+                <CircularProgress size={20} color="secondary" />
+              ) : (
+                'Add New Location'
+              )}
             </Button>
             <Button
               onClick={() => setState(HostActionsState.Info)}

@@ -4,15 +4,18 @@ import { UpdateQuery } from 'mongoose';
 import { Service as DiscordService } from '../discord';
 import { ELoadBalancerStatus } from '../event/types';
 import {
-  NodesModel,
+  IChain,
   IHost,
   INode,
+  IOracle,
   ChainsModel,
   HostsModel,
   LocationsModel,
+  NodesModel,
   OraclesModel,
 } from '../../models';
 import {
+  IChainInput,
   IChainUpdate,
   IHostInput,
   IHostCsvInput,
@@ -23,7 +26,7 @@ import {
   IOracleUpdate,
 } from './types';
 import { Service as HealthService } from '../health';
-import { IHealthCheck } from '../health/types';
+import { ESupportedBlockchainTypes, IHealthCheck } from '../health/types';
 import { Service as BaseService } from '../base-service/base-service';
 
 export class Service extends BaseService {
@@ -264,14 +267,23 @@ export class Service extends BaseService {
   }
 
   /* ----- PNF Internal Only ----- */
-  public async updateChain(update: IChainUpdate) {
-    const { id, ...rest } = update;
-    await ChainsModel.updateOne({ _id: id }, rest);
+  public async createChain(input: IChainInput): Promise<IChain> {
+    if (input.type === ESupportedBlockchainTypes.EVM) {
+      await OraclesModel.create({ chain: input.name, urls: [] });
+    }
+    return await ChainsModel.create(input);
   }
 
-  public async updateOracle(update: IOracleUpdate) {
-    const { id, urls } = update;
-    await OraclesModel.updateOne({ _id: id }, { urls });
+  public async updateChain(update: IChainUpdate): Promise<IChain> {
+    const { id, ...rest } = update;
+    await ChainsModel.updateOne({ _id: id }, rest);
+    return await ChainsModel.findOne({ _id: id });
+  }
+
+  public async updateOracle(update: IOracleUpdate): Promise<IOracle> {
+    const { chain, urls } = update;
+    await OraclesModel.updateOne({ chain }, { urls });
+    return await OraclesModel.findOne({ chain });
   }
 
   /* ----- Health Check Methods ----- */

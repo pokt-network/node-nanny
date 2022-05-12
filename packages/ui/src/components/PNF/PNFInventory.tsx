@@ -1,7 +1,7 @@
 import { Dispatch } from 'react';
-import { Box, Button, Chip, Grid, Typography } from '@mui/material';
+import { Button, Chip, Grid, Typography } from '@mui/material';
 
-import { PNFTypeState, PNFActionsState } from 'pages/PNF';
+import { PNFActionsState } from 'pages/PNF';
 import Paper from 'components/Paper';
 import Title from 'components/Title';
 import { IChain, IOracle } from 'types';
@@ -9,18 +9,10 @@ import { IChain, IOracle } from 'types';
 interface PNFInventoryProps {
   chains: IChain[];
   oracles: IOracle[];
-  typeState: PNFTypeState;
   setState: Dispatch<PNFActionsState>;
-  setTypeState: Dispatch<PNFTypeState>;
 }
 
-export const PNFInventory = ({
-  chains,
-  oracles,
-  typeState,
-  setState,
-  setTypeState,
-}: PNFInventoryProps) => {
+export const PNFInventory = ({ chains, oracles, setState }: PNFInventoryProps) => {
   const numChains = chains.length;
   const numChainTypes = chains.reduce(
     (types, chain) => (types.includes(chain.type) ? types : [...types, chain.type]),
@@ -59,12 +51,12 @@ export const PNFInventory = ({
             }}
           >
             <Grid item>
-              <Chip label={numChains} variant="outlined" color="primary" />
-              <Typography color="primary.main">Chains</Typography>
-            </Grid>
-            <Grid item>
               <Chip label={numChainTypes} variant="outlined" />
               <Typography>Chain Types</Typography>
+            </Grid>
+            <Grid item>
+              <Chip label={numChains} variant="outlined" color="primary" />
+              <Typography color="primary.main">Chains</Typography>
             </Grid>
             <Grid item>
               <Chip label={numOracles} variant="outlined" color="secondary" />
@@ -86,42 +78,11 @@ export const PNFInventory = ({
             onClick={() => setState(PNFActionsState.Create)}
             size="small"
             variant="contained"
-            color={typeState === PNFTypeState.Chains ? 'primary' : 'secondary'}
+            color="primary"
             sx={{ width: 120 }}
           >
-            {`Create ${typeState === PNFTypeState.Chains ? 'Chain' : 'Oracle'}`}
+            Create Chain
           </Button>
-          <Box
-            sx={{
-              width: 'auto',
-              display: 'flex',
-              alignItems: 'space-between',
-              justifyContent: 'center',
-              gap: 1,
-              p: 1,
-              borderRadius: 1,
-              backgroundColor: 'background.default',
-            }}
-          >
-            <Button
-              onClick={() => setTypeState(PNFTypeState.Chains)}
-              size="small"
-              variant={typeState === PNFTypeState.Chains ? 'contained' : 'outlined'}
-              color="primary"
-              sx={{ width: 120 }}
-            >
-              View Chains
-            </Button>
-            <Button
-              onClick={() => setTypeState(PNFTypeState.Oracles)}
-              size="small"
-              variant={typeState === PNFTypeState.Oracles ? 'contained' : 'outlined'}
-              color="secondary"
-              sx={{ width: 120 }}
-            >
-              View Oracles
-            </Button>
-          </Box>
         </Grid>
       </Grid>
     </Paper>

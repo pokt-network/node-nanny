@@ -18,7 +18,6 @@ import {
   Collapse,
   Box,
   IconButton,
-  CircularProgress,
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
@@ -375,18 +374,6 @@ export const Table = <T extends unknown>({
               >
                 <TableCell colSpan={6} />
               </TableRow>
-            )}
-            {loading && (
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  overflow: 'hidden',
-                  marginTop: 8,
-                }}
-              >
-                <CircularProgress />
-              </div>
             )}
           </TableBody>
         </MUITable>
