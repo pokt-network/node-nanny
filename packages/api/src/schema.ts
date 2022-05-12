@@ -162,11 +162,6 @@ const typeDefs = gql`
     allowance: Int!
   }
 
-  input OracleInput {
-    chain: String!
-    urls: [String]!
-  }
-
   input NodeUpdate {
     id: ID!
     chain: ID
@@ -200,8 +195,8 @@ const typeDefs = gql`
   }
 
   input OracleUpdate {
-    id: ID!
-    urls: [String]!
+    chain: String!
+    urls: [String!]!
   }
 
   input LogParams {
@@ -247,7 +242,6 @@ const typeDefs = gql`
     createNodesCSV(nodes: [NodeCSVInput!]!): [Node]!
 
     createChain(input: ChainInput!): Chain
-    createOracle(input: OracleInput!): Oracle
 
     updateHost(update: HostUpdate!): Host
     updateNode(update: NodeUpdate!): Node

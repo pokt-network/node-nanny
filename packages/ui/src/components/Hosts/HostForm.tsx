@@ -359,12 +359,12 @@ export const HostForm = ({
             sx={{ width: 125, height: 36.5 }}
           >
             {loading ? (
-              <CircularProgress size={20} />
+              <CircularProgress size={20} color="secondary" />
             ) : (
               `${update ? 'Save' : 'Create'} Host`
             )}
           </Button>
-          <Button onClick={handleCancel} color="inherit">
+          <Button onClick={handleCancel} color="error" variant="outlined">
             Cancel
           </Button>
         </Box>

@@ -67,13 +67,6 @@ mutation CreateChain($input: ChainInput!) {
   }
 }
 
-mutation CreateOracle($input: OracleInput!) {
-  createOracle(input: $input) {
-    chain
-    urls
-  }
-}
-
 mutation UpdateHost($update: HostUpdate!) {
   updateHost(update: $update) {
     id
