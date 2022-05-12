@@ -1,11 +1,4 @@
-import {
-  Dispatch,
-  SetStateAction,
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-} from 'react';
+import { Dispatch, SetStateAction, useState, useEffect, useCallback } from 'react';
 import { useFormik, FormikErrors } from 'formik';
 import { ApolloQueryResult } from '@apollo/client';
 import {
@@ -14,128 +7,92 @@ import {
   Box,
   Button,
   CircularProgress,
-  FormControl,
-  FormHelperText,
-  InputLabel,
-  MenuItem,
-  Select,
-  Switch,
   TextField,
 } from '@mui/material';
 
 import {
-  IHost,
-  IHostInput,
-  IHostsQuery,
-  IHostUpdate,
-  ILocation,
-  useCreateHostMutation,
-  useDeleteHostMutation,
-  useUpdateHostMutation,
+  IChain,
+  IChainInput,
+  IChainsQuery,
+  IChainUpdate,
+  IOraclesQuery,
+  useCreateChainMutation,
+  useUpdateChainMutation,
 } from 'types';
-import { ModalHelper, regexTest, s, SnackbarHelper } from 'utils';
-import { HostActionsState } from 'pages/Hosts';
+import { SnackbarHelper } from 'utils';
+import { PNFActionsState } from 'pages/PNF';
 import Form from 'components/Form';
 
-interface HostsFormProps {
-  locations: ILocation[];
-  hostNames: string[];
-  hostsWithNode: { [id: string]: number };
-  refetchHosts: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>;
-  selectedHost?: IHost;
-  setSelectedHost: Dispatch<SetStateAction<IHost>>;
+interface ChainsFormProps {
+  selectedChain?: IChain;
+  setSelectedChain: Dispatch<SetStateAction<IChain>>;
   update?: boolean;
   read?: boolean;
+  chainNames: string[];
+  chainIds: string[];
+  refetchChains: (variables?: any) => Promise<ApolloQueryResult<IChainsQuery>>;
+  refetchOracles: (variables?: any) => Promise<ApolloQueryResult<IOraclesQuery>>;
   onCancel?: Dispatch<any>;
-  setState?: Dispatch<HostActionsState>;
+  setState?: Dispatch<PNFActionsState>;
 }
 
 export const ChainsForm = ({
-  locations,
-  hostNames,
-  hostsWithNode,
-  refetchHosts,
-  selectedHost,
-  setSelectedHost,
+  selectedChain,
+  setSelectedChain,
   update,
   read,
+  chainNames,
+  chainIds,
+  refetchChains,
+  refetchOracles,
   onCancel,
   setState,
-}: HostsFormProps) => {
-  const [ipDisabled, setIPDisabled] = useState(false);
-  const [fqdnDisabled, setFQDNDisabled] = useState(false);
+}: ChainsFormProps) => {
   const [loading, setLoading] = useState(false);
   const [backendError, setBackendError] = useState('');
-  const [deleteHostError, setDeleteHostError] = useState('');
-
-  const locationRef = useRef<HTMLInputElement>();
 
   useEffect(() => {
     setBackendError('');
-    setDeleteHostError('');
-  }, [selectedHost]);
+  }, [selectedChain]);
 
   /* ----- Form Validation ----- */
-  const validate = (values: IHostInput): FormikErrors<IHostInput> => {
-    const errors: FormikErrors<IHostInput> = {};
-    if (!values.location) errors.location = 'Location is required';
+  const validate = (values: IChainInput): FormikErrors<IChainInput> => {
+    const errors: FormikErrors<IChainInput> = {};
     if (!values.name) errors.name = 'Name is required';
-    if (hostNames.includes(values.name)) errors.name = 'Name is already taken';
-    if (!values.ip && !values.fqdn) {
-      errors.ip = 'Either IP or FQDN is required';
-      errors.fqdn = 'Either IP or FQDN is required';
+    if (!values.type) errors.type = 'Type is required';
+    if (chainNames.includes(values.name)) errors.name = 'Name is already taken';
+    if (!values.chainId) errors.chainId = 'Relay chain ID is required';
+    if (chainIds.includes(values.chainId)) {
+      errors.chainId = 'Relay chain ID is already taken';
     }
-    if (values.ip && !regexTest(values.ip.trim(), 'ip')) errors.ip = 'Not a valid IP';
-    if (values.fqdn && !regexTest(values.fqdn.trim(), 'fqdn'))
-      errors.fqdn = 'Not a valid FQDN';
 
     return errors;
   };
 
   const { values, errors, handleChange, handleSubmit, setFieldValue, resetForm } =
     useFormik({
-      initialValues: { location: '', name: '', ip: '', fqdn: '', loadBalancer: false },
+      initialValues: { name: '', type: '', allowance: 0, chainId: '' },
       validate,
       validateOnChange: false,
       onSubmit: async () => {
         setLoading(true);
+        console.log({ values });
         update
           ? submitUpdate({
-              variables: { update: getUpdateValues(selectedHost, values as IHostUpdate) },
+              variables: {
+                update: getUpdateValues(selectedChain, values as IChainUpdate),
+              },
             })
           : submitCreate({ variables: { input: values } });
       },
     });
 
-  useEffect(() => {
-    if (values.fqdn) {
-      setIPDisabled(true);
-    } else {
-      setIPDisabled(false);
-    }
-  }, [values.fqdn]);
-
-  useEffect(() => {
-    if (values.ip) {
-      setFQDNDisabled(true);
-    } else {
-      setFQDNDisabled(false);
-    }
-  }, [values.ip]);
-
   const handleResetFormState = useCallback(() => {
-    setFieldValue('location', selectedHost.location.id);
-    setFieldValue('name', selectedHost.name);
-    setFieldValue('ip', selectedHost.ip ?? '');
-    setFieldValue('fqdn', selectedHost.fqdn ?? '');
-    setFieldValue('loadBalancer', selectedHost.loadBalancer);
-  }, [setFieldValue, selectedHost]);
-
-  const handleResetRefs = useCallback(() => {
-    if (locationRef.current) {
-      locationRef.current.querySelector('input').value = '';
-    }
-  }, []);
+    setFieldValue('name', selectedChain?.name || '');
+    setFieldValue('type', selectedChain?.type || '');
+    setFieldValue('allowance', selectedChain?.allowance || 0);
+    setFieldValue('chainId', selectedChain?.chainId || '');
+  }, [setFieldValue, selectedChain]);
 
   const handleCancel = (e) => {
     if (update) {
@@ -145,50 +102,42 @@ export const ChainsForm = ({
   };
 
   /* ----- Update Mode ----- */
-  if (update && selectedHost) {
-    hostNames = hostNames.filter((name) => name !== selectedHost.name);
+  if (update && selectedChain) {
+    chainNames = chainNames.filter((name) => name !== selectedChain.name);
   }
 
-  const getUpdateValues = (selectedHost: IHost, values: IHostUpdate): IHostUpdate => {
-    const newValues: IHostUpdate = { id: selectedHost?.id };
-
-    Object.entries(selectedHost).forEach(([key, value]) => {
-      if (key === 'location') {
-        if ((value as ILocation)?.id !== values[key]) {
-          newValues[key] = values[key];
-        }
-      } else if (
-        (typeof values[key] === 'boolean' || values[key]) &&
-        values[key] !== value
-      ) {
-        newValues[key] = values[key];
-      }
+  const getUpdateValues = (selectedChain: IChain, values: IChainUpdate): IChainUpdate => {
+    const newValues: IChainUpdate = { id: selectedChain?.id };
+    Object.entries(selectedChain).forEach(([key, value]) => {
+      if (values[key] && values[key] !== value) newValues[key] = values[key];
     });
-
+    console.log({ newValues });
     return newValues;
   };
 
   useEffect(() => {
-    if (update && selectedHost) {
-      handleResetFormState();
-      handleResetRefs();
-    }
-    if (!selectedHost) {
-      handleResetRefs();
+    if (!selectedChain) {
       resetForm();
+      setFieldValue('allowance', 0);
     }
-  }, [update, selectedHost, resetForm, handleResetFormState, handleResetRefs]);
+  }, [selectedChain, resetForm, setFieldValue]);
+
+  useEffect(() => {
+    if (update && selectedChain) {
+      handleResetFormState();
+    }
+  }, [update, selectedChain, handleResetFormState]);
 
   /* ----- Mutations ----- */
-  const [submitCreate] = useCreateHostMutation({
-    onCompleted: ({ createHost }) => {
-      SnackbarHelper.open({ text: `Host ${createHost.name} successfully created!` });
+  const [submitCreate] = useCreateChainMutation({
+    onCompleted: ({ createChain }) => {
+      SnackbarHelper.open({ text: `Chain ${createChain.name} successfully created!` });
       resetForm();
-      refetchHosts();
-      ModalHelper.close();
+      refetchChains();
+      refetchOracles();
       setLoading(false);
-      setState(HostActionsState.Info);
-      setSelectedHost({ ...createHost } as IHost);
+      setState(PNFActionsState.Info);
+      setSelectedChain({ ...createChain } as IChain);
     },
     onError: (backendError) => {
       setBackendError(backendError.message);
@@ -196,101 +145,29 @@ export const ChainsForm = ({
     },
   });
 
-  const [submitUpdate] = useUpdateHostMutation({
-    onCompleted: ({ updateHost }) => {
-      SnackbarHelper.open({ text: `Host ${updateHost.name} successfully updated!` });
+  const [submitUpdate] = useUpdateChainMutation({
+    onCompleted: ({ updateChain }) => {
+      SnackbarHelper.open({ text: `Chain ${updateChain.name} successfully updated!` });
       resetForm();
-      refetchHosts();
-      ModalHelper.close();
+      refetchChains();
       setLoading(false);
-      setState(HostActionsState.Info);
-      setSelectedHost({ ...updateHost } as IHost);
+      setState(PNFActionsState.Info);
+      setSelectedChain({ ...updateChain } as IChain);
     },
     onError: (backendError) => {
       setBackendError(backendError.message);
       setLoading(false);
     },
   });
-
-  const [submitDelete] = useDeleteHostMutation({
-    onCompleted: ({ deleteHost }) => {
-      SnackbarHelper.open({ text: `Host ${deleteHost.name} successfully deleted!` });
-      refetchHosts();
-      ModalHelper.close();
-    },
-    onError: (error) => {
-      setDeleteHostError(error.message);
-      ModalHelper.close();
-    },
-  });
-
-  const handleOpenDeleteModal = () => {
-    setDeleteHostError('');
-    const { id: hostId, name } = selectedHost;
-
-    if (hostId in hostsWithNode) {
-      const num = hostsWithNode[hostId];
-      setDeleteHostError(
-        `Host ${name} has ${num} Node${s(
-          num,
-        )}; to delete this host first delete all nodes associated with it.`,
-      );
-    } else {
-      ModalHelper.open({
-        modalType: 'confirmation',
-        modalProps: {
-          handleOk: () => submitDelete({ variables: { id: hostId } }),
-          confirmText: `Delete: ${name}`,
-          promptText: `Are you sure you wish to remove host ${name} from the inventory database?`,
-          okText: 'Delete Host',
-          okColor: 'error',
-          cancelColor: 'inherit',
-        },
-      });
-    }
-  };
 
   /* ----- Layout ----- */
   return (
     <Form read={read}>
-      {read && (
-        <TextField
-          ref={locationRef}
-          name="location"
-          value={locations?.find((l) => l.id === values.location)?.name}
-          onChange={handleChange}
-          label="Location"
-          variant="outlined"
-          error={!!errors.location}
-          helperText={errors.location}
-          disabled={read}
-          size="small"
-        />
-      )}
-      {!read && (
-        <FormControl fullWidth error={!!errors.location}>
-          <InputLabel id="location-label">Location</InputLabel>
-          <Select
-            name="location"
-            labelId="location-label"
-            value={values.location}
-            label="Location"
-            onChange={handleChange}
-            disabled={read}
-            size="small"
-          >
-            {locations?.map(({ id, name }) => (
-              <MenuItem value={id}>{name}</MenuItem>
-            ))}
-          </Select>
-          {!!errors.location && <FormHelperText>{errors.location}</FormHelperText>}
-        </FormControl>
-      )}
       <TextField
         name="name"
         value={values.name}
         onChange={handleChange}
-        label="Host Name"
+        label="Chain Name"
         variant="outlined"
         error={!!errors.name}
         helperText={errors.name}
@@ -299,53 +176,48 @@ export const ChainsForm = ({
         fullWidth
       />
       <TextField
-        name="ip"
-        value={values.ip}
+        name="type"
+        value={values.type}
         onChange={handleChange}
-        label="Host IP"
+        label="Chain Type"
         variant="outlined"
-        disabled={read ? read : ipDisabled}
-        error={!!errors.ip}
-        helperText={errors.ip}
+        error={!!errors.type}
+        helperText={errors.type}
+        disabled={read}
         size="small"
         fullWidth
       />
       <TextField
-        name="fqdn"
-        value={values.fqdn}
+        name="allowance"
+        type="number"
+        InputProps={{ inputProps: { min: 0 } }}
+        value={read && !selectedChain ? null : values.allowance}
         onChange={handleChange}
-        label="Host FQDN"
+        label="Chain Allowance"
         variant="outlined"
-        disabled={read ? read : fqdnDisabled}
-        error={!!errors.fqdn}
-        helperText={errors.fqdn}
+        error={!!errors.allowance}
+        helperText={errors.allowance}
+        disabled={read}
         size="small"
         fullWidth
       />
-      <FormControl fullWidth>
-        <InputLabel disabled={read}>Load Balancer</InputLabel>
-        <Box>
-          <Switch
-            name="loadBalancer"
-            checked={values.loadBalancer}
-            onChange={handleChange}
-            disabled={read}
-          />
-        </Box>
-      </FormControl>
-      {read && (
-        <TextField
-          name="nodes"
-          value={hostsWithNode[selectedHost?.id] || 0}
-          label="Nodes"
-          disabled={true}
-          size="small"
-        />
-      )}
+      <TextField
+        name="chainId"
+        value={values.chainId}
+        onChange={handleChange}
+        label="Relay Chain ID"
+        variant="outlined"
+        error={!!errors.chainId}
+        helperText={errors.chainId}
+        disabled={read}
+        size="small"
+        fullWidth
+      />
       {!read && (
         <Box
           sx={{
-            marginTop: 4,
+            mt: 4,
+            mb: 4,
             textAlign: 'right',
             '& button': { margin: 1 },
             width: 125,
@@ -356,20 +228,20 @@ export const ChainsForm = ({
             type="submit"
             variant="contained"
             onClick={handleSubmit as any}
-            sx={{ width: 125, height: 36.5 }}
+            sx={{ width: 150, height: 36.5 }}
           >
             {loading ? (
-              <CircularProgress size={20} />
+              <CircularProgress size={20} color="secondary" />
             ) : (
-              `${update ? 'Save' : 'Create'} Host`
+              `${update ? 'Save' : 'Create'} Chain`
             )}
           </Button>
-          <Button onClick={handleCancel} color="inherit">
+          <Button onClick={handleCancel} color="error" variant="outlined">
             Cancel
           </Button>
         </Box>
       )}
-      {selectedHost && read && (
+      {selectedChain && read && (
         <Box
           sx={{
             marginTop: 4,
@@ -378,29 +250,28 @@ export const ChainsForm = ({
           }}
         >
           <Button
-            onClick={() => setState(HostActionsState.Edit)}
+            onClick={() => setState(PNFActionsState.Edit)}
             variant="contained"
             color="primary"
-            sx={{ width: 125, height: 36.5 }}
+            sx={{ width: 150, height: 36.5 }}
           >
-            Update Host
+            Update Chain
           </Button>
-          <Button onClick={handleOpenDeleteModal} color="error" variant="outlined">
-            Delete Host
+          <Button
+            onClick={() => setState(PNFActionsState.Oracles)}
+            variant="contained"
+            color="secondary"
+            disabled={selectedChain.type !== 'EVM'}
+            sx={{ width: 150, height: 36.5 }}
+          >
+            {selectedChain.type === 'EVM' ? 'Update Oracles' : 'Non-EVM Chain'}
           </Button>
         </Box>
       )}
 
-      {deleteHostError && (
-        <Alert severity="error">
-          <AlertTitle>{'Cannot delete Host with Nodes'}</AlertTitle>
-          {deleteHostError}
-        </Alert>
-      )}
-
       {backendError && (
         <Alert severity="error">
-          <AlertTitle>{`Error ${update ? 'Updating' : 'Creating'} Host`}</AlertTitle>
+          <AlertTitle>{`Error ${update ? 'Updating' : 'Creating'} Chain`}</AlertTitle>
           {backendError}
         </Alert>
       )}
