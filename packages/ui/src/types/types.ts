@@ -134,7 +134,6 @@ export type IMutation = {
   createLocation: ILocation;
   createNode?: Maybe<INode>;
   createNodesCSV: Array<Maybe<INode>>;
-  createOracle?: Maybe<IOracle>;
   deleteHost?: Maybe<IHost>;
   deleteLocation?: Maybe<Scalars['Boolean']>;
   deleteNode?: Maybe<INode>;
@@ -176,11 +175,6 @@ export type IMutationCreateNodeArgs = {
 
 export type IMutationCreateNodesCsvArgs = {
   nodes: Array<INodeCsvInput>;
-};
-
-
-export type IMutationCreateOracleArgs = {
-  input: IOracleInput;
 };
 
 
@@ -306,14 +300,9 @@ export type IOracle = {
   urls?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
-export type IOracleInput = {
-  chain: Scalars['String'];
-  urls: Array<InputMaybe<Scalars['String']>>;
-};
-
 export type IOracleUpdate = {
-  id: Scalars['ID'];
-  urls: Array<InputMaybe<Scalars['String']>>;
+  chain: Scalars['String'];
+  urls: Array<Scalars['String']>;
 };
 
 export type IPaginatedLogs = {
@@ -444,13 +433,6 @@ export type ICreateChainMutationVariables = Exact<{
 
 
 export type ICreateChainMutation = { createChain?: { name: string, type: string, allowance: number, chainId: string } | null };
-
-export type ICreateOracleMutationVariables = Exact<{
-  input: IOracleInput;
-}>;
-
-
-export type ICreateOracleMutation = { createOracle?: { chain: string, urls?: Array<string | null> | null } | null };
 
 export type IUpdateHostMutationVariables = Exact<{
   update: IHostUpdate;
@@ -847,40 +829,6 @@ export function useCreateChainMutation(baseOptions?: Apollo.MutationHookOptions<
 export type CreateChainMutationHookResult = ReturnType<typeof useCreateChainMutation>;
 export type CreateChainMutationResult = Apollo.MutationResult<ICreateChainMutation>;
 export type CreateChainMutationOptions = Apollo.BaseMutationOptions<ICreateChainMutation, ICreateChainMutationVariables>;
-export const CreateOracleDocument = gql`
-    mutation CreateOracle($input: OracleInput!) {
-  createOracle(input: $input) {
-    chain
-    urls
-  }
-}
-    `;
-export type ICreateOracleMutationFn = Apollo.MutationFunction<ICreateOracleMutation, ICreateOracleMutationVariables>;
-
-/**
- * __useCreateOracleMutation__
- *
- * To run a mutation, you first call `useCreateOracleMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateOracleMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createOracleMutation, { data, loading, error }] = useCreateOracleMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useCreateOracleMutation(baseOptions?: Apollo.MutationHookOptions<ICreateOracleMutation, ICreateOracleMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ICreateOracleMutation, ICreateOracleMutationVariables>(CreateOracleDocument, options);
-      }
-export type CreateOracleMutationHookResult = ReturnType<typeof useCreateOracleMutation>;
-export type CreateOracleMutationResult = Apollo.MutationResult<ICreateOracleMutation>;
-export type CreateOracleMutationOptions = Apollo.BaseMutationOptions<ICreateOracleMutation, ICreateOracleMutationVariables>;
 export const UpdateHostDocument = gql`
     mutation UpdateHost($update: HostUpdate!) {
   updateHost(update: $update) {
