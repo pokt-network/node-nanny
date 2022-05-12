@@ -1,8 +1,7 @@
-import { UpdateQuery } from 'mongoose';
 import { AlertColor } from '../alert/types';
 import { Service as BaseService } from '../base-service/base-service';
 import { EErrorConditions, EErrorStatus, ESupportedBlockchains } from '../health/types';
-import { INode, NodesModel } from '../../models';
+import { NodesModel } from '../../models';
 import {
   EAlertTypes,
   IRedisEvent,
@@ -10,6 +9,8 @@ import {
   IToggleServerParams,
 } from './types';
 import { AlertTypes } from '../../types';
+import { colorLog } from '../../utils';
+
 import env from '../../environment';
 
 export class Service extends BaseService {
@@ -19,103 +20,127 @@ export class Service extends BaseService {
 
   /* ----- Trigger Methods ----- */
   processTriggered = async (eventJson: string): Promise<void> => {
-    const {
-      node,
-      message,
-      notSynced,
-      status,
-      title,
-      dispatchFrontendDown,
-    } = await this.parseEvent(eventJson, EAlertTypes.TRIGGER);
-    const { automation, chain, host, backend, frontend, muted } = node;
-
-    /* Send alert message to Discord */
-    if (!muted) {
-      await this.sendMessage(
-        {
-          title,
-          message,
-          chain: chain.name,
-          location: host.location.name,
-          frontend: Boolean(frontend),
-        },
+    try {
+      const {
+        node,
+        message,
+        notSynced,
         status,
+        title,
+        dispatchFrontendDown,
+      } = await this.parseEvent(eventJson, EAlertTypes.TRIGGER);
+      const { name, automation, chain, host, backend, frontend, muted } = node;
+
+      /* Send alert message to Discord */
+      if (!muted) {
+        await this.sendMessage(
+          {
+            title,
+            message,
+            chain: chain.name,
+            location: host.location.name,
+            frontend: Boolean(frontend),
+          },
+          status,
+        );
+      }
+
+      /* Remove backend node from rotation if NOT_SYNCHRONIZED */
+      if (automation && backend && !frontend && notSynced) {
+        await this.toggleServer({ node, enable: false });
+      }
+
+      /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
+      if (env('PNF') && dispatchFrontendDown) {
+        await this.urgentAlertDispatchFrontendIsDown(message);
+      }
+    } catch ({ stack }) {
+      const [message, location] = stack.split('\n');
+      colorLog(
+        `[EVENT CONSUMER ERROR - TRIGGERED] Node: ${name} ${message} ${location}`,
+        'yellow',
       );
-    }
-
-    /* Remove backend node from rotation if NOT_SYNCHRONIZED */
-    if (automation && backend && !frontend && notSynced) {
-      await this.toggleServer({ node, enable: false });
-    }
-
-    /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
-    if (env('PNF') && dispatchFrontendDown) {
-      await this.urgentAlertDispatchFrontendIsDown(message);
     }
   };
 
   processRetriggered = async (eventJson: string): Promise<void> => {
-    const {
-      node,
-      message,
-      notSynced,
-      title,
-      nodesOnline,
-      dispatchFrontendDown,
-    } = await this.parseEvent(eventJson, EAlertTypes.RETRIGGER);
-    const { automation, backend, chain, host, frontend, muted } = node;
+    try {
+      const {
+        node,
+        message,
+        notSynced,
+        title,
+        nodesOnline,
+        dispatchFrontendDown,
+      } = await this.parseEvent(eventJson, EAlertTypes.RETRIGGER);
+      const { name, automation, backend, chain, host, frontend, muted } = node;
 
-    /* Send alert message to Discord */
-    if (!muted) {
-      await this.sendMessage(
-        {
-          title,
-          message,
-          chain: chain.name,
-          location: host.location.name,
-          frontend: Boolean(frontend),
-        },
-        EErrorStatus.INFO,
-        AlertColor.RETRIGGER,
-      );
-    }
+      /* Send alert message to Discord */
+      if (!muted) {
+        await this.sendMessage(
+          {
+            title,
+            message,
+            chain: chain.name,
+            location: host.location.name,
+            frontend: Boolean(frontend),
+          },
+          EErrorStatus.INFO,
+          AlertColor.RETRIGGER,
+        );
+      }
 
-    /* Remove backend node from rotation if NOT_SYNCHRONIZED and there are at least 2 healthy nodes.
+      /* Remove backend node from rotation if NOT_SYNCHRONIZED and there are at least 2 healthy nodes.
     This covers the case where the only node in rotation was out of sync and its peers catch up. */
-    if (automation && nodesOnline >= 2 && backend && !frontend && notSynced) {
-      await this.toggleServer({ node, enable: false });
-    }
+      if (automation && nodesOnline >= 2 && backend && !frontend && notSynced) {
+        await this.toggleServer({ node, enable: false });
+      }
 
-    /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
-    if (env('PNF') && dispatchFrontendDown) {
-      await this.urgentAlertDispatchFrontendIsDown(message);
+      /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
+      if (env('PNF') && dispatchFrontendDown) {
+        await this.urgentAlertDispatchFrontendIsDown(message);
+      }
+    } catch ({ stack }) {
+      const [message, location] = stack.split('\n');
+      colorLog(
+        `[EVENT CONSUMER ERROR - RETRIGGERED] Node: ${name} ${message} ${location}`,
+        'yellow',
+      );
     }
   };
 
   processResolved = async (eventJson: string): Promise<void> => {
-    const { node, message, healthy, status, title } = await this.parseEvent(
-      eventJson,
-      EAlertTypes.RESOLVED,
-    );
-    const { automation, chain, host, frontend, backend, muted } = node;
-
-    /* Send alert message to Discord */
-    if (!muted) {
-      await this.sendMessage(
-        {
-          title,
-          message,
-          chain: chain.name,
-          location: host.location.name,
-          frontend: Boolean(frontend),
-        },
-        status,
+    try {
+      const { node, message, healthy, status, title } = await this.parseEvent(
+        eventJson,
+        EAlertTypes.RESOLVED,
       );
-    }
+      const { name, automation, chain, host, frontend, backend, muted } = node;
 
-    /* Add backend node to rotation if HEALTHY */
-    if (automation && backend && !frontend && healthy) {
-      await this.toggleServer({ node, enable: true });
+      /* Send alert message to Discord */
+      if (!muted) {
+        await this.sendMessage(
+          {
+            title,
+            message,
+            chain: chain.name,
+            location: host.location.name,
+            frontend: Boolean(frontend),
+          },
+          status,
+        );
+      }
+
+      /* Add backend node to rotation if HEALTHY */
+      if (automation && backend && !frontend && healthy) {
+        await this.toggleServer({ node, enable: true });
+      }
+    } catch ({ stack }) {
+      const [message, location] = stack.split('\n');
+      colorLog(
+        `[EVENT CONSUMER ERROR - RESOLVED] Node: ${name} ${message} ${location}`,
+        'yellow',
+      );
     }
   };
 
