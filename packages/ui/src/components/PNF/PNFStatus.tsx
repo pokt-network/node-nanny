@@ -1,51 +1,76 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, useEffect, useState } from 'react';
+import { ApolloQueryResult } from '@apollo/client';
+import Box from '@mui/material/Box';
 
+import { PNFActionsState } from 'pages/PNF';
 import Paper from 'components/Paper';
 import Title from 'components/Title';
-import { HostActionsState } from 'pages/Hosts';
-import HostForm from './ChainsForm';
-import { IHost, IHostsQuery, ILocation } from 'types';
+import ChainsForm from 'components/PNF/ChainsForm';
+import OraclesForm from 'components/PNF/OraclesForm';
 
-import Box from '@mui/material/Box';
-import { ApolloQueryResult } from '@apollo/client';
+import { IChain, IChainsQuery, IOracle, IOraclesQuery } from 'types';
 
 interface PNFStatusProps {
-  locations: ILocation[];
-  hostNames: string[];
-  hostsWithNode: { [id: string]: number };
-  host: IHost;
-  type: HostActionsState;
-  setState: Dispatch<HostActionsState>;
-  setSelectedHost: Dispatch<SetStateAction<IHost>>;
-  refetch: (variables?: any) => Promise<ApolloQueryResult<IHostsQuery>>;
+  selectedChain: IChain;
+  type: PNFActionsState;
+  setState: Dispatch<PNFActionsState>;
+  setSelectedChain: Dispatch<React.SetStateAction<IChain>>;
+  refetchChains: (variables?: any) => Promise<ApolloQueryResult<IChainsQuery>>;
+  refetchOracles: (variables?: any) => Promise<ApolloQueryResult<IOraclesQuery>>;
+  chains: IChain[];
+  oracles: IOracle[];
 }
 
 export const PNFStatus = ({
-  host,
-  locations,
-  hostNames,
-  hostsWithNode,
+  selectedChain,
   type,
   setState,
-  setSelectedHost,
-  refetch,
+  setSelectedChain,
+  refetchChains,
+  refetchOracles,
+  chains,
+  oracles,
 }: PNFStatusProps) => {
-  const [title, setTitle] = useState('Select Host To View Status');
+  const [title, setTitle] = useState(`Select Chain To View Status`);
+  const [selectedOracle, setSelectedOracle] = useState<IOracle>(undefined);
 
   useEffect(() => {
     if (type === 'create') {
-      setTitle('Create Host');
+      setTitle(`Create Chain`);
     }
     if (type === 'edit') {
-      setTitle('Edit Host');
+      setTitle(`Edit Chain`);
     }
     if (type === 'info') {
-      setTitle('Select Host To View Status');
+      setTitle(`Select Chain To View Status`);
     }
-    if (type === 'info' && host) {
-      setTitle('Selected Host');
+    if (type === 'info' && selectedChain) {
+      setTitle(`Selected Chain`);
     }
-  }, [host, type]);
+    if (type === 'oracles' && selectedChain) {
+      setTitle(
+        `Update Oracles for ${selectedChain.name} - Enter one oracle URL per line.`,
+      );
+    }
+  }, [selectedChain, type]);
+
+  useEffect(() => {
+    if (selectedChain?.type === 'EVM') {
+      const selectedOracle = oracles.find(({ chain }) => chain === selectedChain.name);
+      setSelectedOracle(selectedOracle);
+    } else {
+      setSelectedOracle(undefined);
+    }
+  }, [selectedChain, oracles]);
+
+  useEffect(() => {
+    if (type === PNFActionsState.Create) {
+      setSelectedChain(undefined);
+    }
+  }, [type, setSelectedChain]);
+
+  const chainNames = chains?.map(({ name }) => name);
+  const chainIds = chains?.map(({ chainId }) => chainId);
 
   return (
     <Paper>
@@ -61,18 +86,27 @@ export const PNFStatus = ({
         <Title>{title}</Title>
       </Box>
       <Box>
-        <HostForm
-          read={type === 'info'}
-          update={type === 'info' || type === 'edit'}
-          locations={locations}
-          hostNames={hostNames}
-          hostsWithNode={hostsWithNode}
-          refetchHosts={refetch}
-          setSelectedHost={setSelectedHost}
-          selectedHost={type !== 'create' ? host : null}
-          onCancel={() => setState(HostActionsState.Info)}
-          setState={setState}
-        />
+        {type === PNFActionsState.Oracles ? (
+          <OraclesForm
+            selectedOracle={selectedOracle}
+            refetchOracles={refetchOracles}
+            onCancel={() => setState(PNFActionsState.Info)}
+            setState={setState}
+          />
+        ) : (
+          <ChainsForm
+            selectedChain={selectedChain}
+            setSelectedChain={setSelectedChain}
+            read={type === 'info'}
+            update={type === 'info' || type === 'edit'}
+            chainNames={chainNames}
+            chainIds={chainIds}
+            refetchChains={refetchChains}
+            refetchOracles={refetchOracles}
+            onCancel={() => setState(PNFActionsState.Info)}
+            setState={setState}
+          />
+        )}
       </Box>
     </Paper>
   );
