@@ -6,8 +6,10 @@ import {
   Guild as Server,
 } from 'discord.js';
 
-import { INode, WebhookModel } from '../../models';
+import { INode, IWebhook, WebhookModel } from '../../models';
+import { Service as AutomationService } from '../../services/automation';
 import { IServerContents } from './types';
+import { wait } from '../../utils';
 
 import env from '../../environment';
 
@@ -22,16 +24,20 @@ export class Service {
     this.client = new Client({
       intents: [Intents.FLAGS.GUILDS],
       rejectOnRateLimit: (error) => {
-        console.error(`Discord Rate Limit Error: ${error}`);
-        return true;
+        throw error;
       },
     });
     this.token = env('DISCORD_TOKEN');
     this.serverId = env('DISCORD_SERVER_ID');
   }
 
-  public async init(): Promise<Service> {
+  async init(): Promise<Service> {
     if (!this.server) {
+      const noDiscordVars = !this.token || !this.serverId;
+      if (noDiscordVars) {
+        throw new Error('Discord token and/or server ID env vars are not set.');
+      }
+
       const loggedIn = await this.client.login(this.token);
       const server = this.client.guilds.cache.get(this.serverId);
       if (!loggedIn || !server) {
@@ -39,24 +45,55 @@ export class Service {
       }
       this.server = server;
     }
+
     return this;
   }
 
-  public async logout() {
-    await this.client.destroy();
+  async logout() {
+    await new Promise<void>((res) => {
+      this.client.destroy();
+      setTimeout(() => res(), 500);
+    });
   }
 
-  public async addWebhookForNode({ chain, host }: INode): Promise<void> {
+  async createWebhooks(nodes: INode[], batch = false): Promise<IWebhook[]> {
+    const createdWebhooks: IWebhook[] = [];
+
+    /* Discord imposes a rate limit on webhook creation so the loop waits on each
+    rate limit error until all new node's channels and webhooks have been created */
+    let index = 0;
+    while (index <= nodes.length - 1) {
+      try {
+        const webhook = await this.addWebhookForNode(nodes[index], true);
+        if (webhook) createdWebhooks.push(webhook);
+        index++;
+      } catch (error) {
+        if (error?.timeout) {
+          const waitPeriod = error.timeout + 1000;
+          await wait(waitPeriod);
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    /* Restart monitor to begin monitoring newly created nodes */
+    if (batch) await new AutomationService().restartMonitor();
+
+    return createdWebhooks;
+  }
+
+  private async addWebhookForNode(
+    { chain, host }: INode,
+    batch = false,
+  ): Promise<IWebhook> {
     try {
       const { name } = chain;
       const {
         location: { name: location },
       } = host;
-
-      const noDiscordVars = !this.token || !this.serverId;
-      const webhookExists = await WebhookModel.exists({ chain: name, location });
-      if (noDiscordVars) {
-        throw new Error('Discord token and/or server ID are not set.');
+      if (await WebhookModel.exists({ chain: name, location })) {
+        return;
       }
 
       const categoryName = `NODE-NANNY-${location}`;
@@ -70,14 +107,18 @@ export class Service {
         channels,
       );
       if (channel) {
-        await this.createWebhookForChannel(channelName, channel, name, location);
+        return await this.createWebhookForChannel(channelName, channel, name, location);
       }
     } catch (error) {
-      throw new Error(`Discord webhook creation error: ${error.message}`);
+      if (batch && error?.timeout) {
+        throw error;
+      } else {
+        throw new Error(`Discord webhook creation error: ${JSON.stringify(error)}`);
+      }
     }
   }
 
-  public async addWebhookForFrontendNodes(): Promise<void> {
+  async addWebhookForFrontendNodes(): Promise<void> {
     try {
       const categoryName = 'NODE-NANNY-FRONTEND-ALERT';
       const channelName = 'frontend-alert';
@@ -139,12 +180,12 @@ export class Service {
     channel: TextChannel,
     chain: string,
     location: string,
-  ) {
+  ): Promise<IWebhook> {
     const { url } = await channel.createWebhook(`${channelName}-alert`);
-    await WebhookModel.create({ chain, location, url });
+    return await WebhookModel.create({ chain, location, url });
   }
 
-  /** DO NOT USE - Will Delete ALL Channels in Server - DO NOT USE */
+  /** DO NOT USE - Will Delete ALL Channels in Server; for testing purposes only. - DO NOT USE */
   private async clearChannels(): Promise<void> {
     const allChannels = await this.server.channels.fetch();
     for await (const [, channel] of allChannels) {
