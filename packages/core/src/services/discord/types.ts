@@ -1,6 +1,17 @@
-import { CategoryChannel, Collection, NonThreadGuildBasedChannel } from 'discord.js';
+import { CategoryChannel, Collection, TextChannel } from 'discord.js';
+import { INode } from '../../models';
 
 export interface IServerContents {
   categories: Collection<string, CategoryChannel>;
-  channels: Collection<string, NonThreadGuildBasedChannel>;
+  channels: Collection<string, TextChannel>;
+}
+
+export interface ICreateWebhooksParams {
+  nodes: INode[];
+  batch: boolean;
+}
+
+export interface ICreateWebhookParams {
+  node: INode;
+  batch: boolean;
 }
