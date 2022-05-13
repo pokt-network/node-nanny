@@ -89,7 +89,7 @@ export class Service extends BaseService {
 
       if (createWebhook && !nodeInput.frontend) {
         const discordService = await new DiscordService().init();
-        await discordService.createWebhooks([node]);
+        await discordService.createWebhooks({ nodes: [node], batch: false });
       }
 
       if (restart) await this.restartMonitor();
@@ -134,7 +134,7 @@ export class Service extends BaseService {
 
       /* Don't await the webhook creation as it takes a long time; let it run in the background. 
       Monitor is restarted in the Discord service when webhook creation is completed */
-      discordService.createWebhooks(createdNodes, true);
+      discordService.createWebhooks({ nodes: createdNodes, batch: true });
 
       return createdNodes;
     } catch (error) {
