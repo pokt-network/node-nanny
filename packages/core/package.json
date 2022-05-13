@@ -7,7 +7,7 @@
     "build": "tsc -b .",
     "build:clean": "tsc --build --clean && rm -rf ./dist",
     "build:watch": "tsc -b -w .",
-    "test": "pnpm build && jest --runInBand --detectOpenHandles"
+    "test": "pnpm build && jest"
   },
   "dependencies": {
     "@pagerduty/pdjs": "^2.2.4",

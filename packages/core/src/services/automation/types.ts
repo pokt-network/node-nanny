@@ -1,5 +1,11 @@
 import { Types } from 'mongoose';
 
+export interface INodeCreationProps {
+  nodeInput: INodeInput;
+  restart: boolean;
+  createWebhook: boolean;
+}
+
 export interface INodeInput {
   https: boolean;
   chain: Types.ObjectId;
@@ -21,7 +27,7 @@ export interface INodeCsvInput {
   host: string;
   name: string;
   loadBalancers: string[];
-  port: number;
+  port: string;
   automation: boolean;
   backend?: string;
   frontend?: string;
@@ -40,7 +46,7 @@ export interface IHostInput {
 export interface IHostCsvInput {
   name: string;
   location: string;
-  loadBalancer?: boolean;
+  loadBalancer?: string;
   ip?: string;
   fqdn?: string;
 }
@@ -61,7 +67,7 @@ export interface INodeUpdate {
   name?: string;
   url?: string;
   loadBalancers?: string[];
-  port?: number;
+  port?: string;
   automation?: boolean;
   backend?: string;
   frontend?: string;
