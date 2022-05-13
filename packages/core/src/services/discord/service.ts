@@ -6,9 +6,9 @@ import {
   Guild as Server,
 } from 'discord.js';
 
-import { INode, IWebhook, WebhookModel } from '../../models';
+import { IWebhook, WebhookModel } from '../../models';
 import { Service as AutomationService } from '../../services/automation';
-import { IServerContents } from './types';
+import { ICreateWebhookParams, ICreateWebhooksParams, IServerContents } from './types';
 import { wait } from '../../utils';
 
 import env from '../../environment';
@@ -56,7 +56,10 @@ export class Service {
     });
   }
 
-  async createWebhooks(nodes: INode[], batch = false): Promise<IWebhook[]> {
+  async createWebhooks(
+    { nodes, batch = false }: ICreateWebhooksParams,
+    test = false,
+  ): Promise<IWebhook[]> {
     const createdWebhooks: IWebhook[] = [];
 
     /* Discord imposes a rate limit on webhook creation so the loop waits on each
@@ -64,7 +67,7 @@ export class Service {
     let index = 0;
     while (index <= nodes.length - 1) {
       try {
-        const webhook = await this.addWebhookForNode(nodes[index], true);
+        const webhook = await this.addWebhookForNode({ node: nodes[index], batch }, test);
         if (webhook) createdWebhooks.push(webhook);
         index++;
       } catch (error) {
@@ -84,8 +87,8 @@ export class Service {
   }
 
   private async addWebhookForNode(
-    { chain, host }: INode,
-    batch = false,
+    { node: { chain, host }, batch }: ICreateWebhookParams,
+    test = false,
   ): Promise<IWebhook> {
     try {
       const { name } = chain;
@@ -96,8 +99,8 @@ export class Service {
         return;
       }
 
-      const categoryName = `NODE-NANNY-${location}`;
-      const channelName = `${name}-${location}`.toLowerCase();
+      const categoryName = `${test ? 'TEST_' : ''}NODE-NANNY-${location}`;
+      const channelName = `${test ? 'test-' : ''}${name}-${location}`.toLowerCase();
 
       const { categories, channels } = await this.getServerChannels();
       const category = await this.getOrCreateCategory(categoryName, categories);
@@ -185,10 +188,14 @@ export class Service {
     return await WebhookModel.create({ chain, location, url });
   }
 
-  /** DO NOT USE - Will Delete ALL Channels in Server; for testing purposes only. - DO NOT USE */
-  private async clearChannels(): Promise<void> {
+  /** DO NOT USE - For testing purposes only - DO NOT USE */
+  async clearChannelsForTest(): Promise<void> {
     const allChannels = await this.server.channels.fetch();
-    for await (const [, channel] of allChannels) {
+    const testChannels = allChannels.filter(
+      ({ name }) => name.includes('TEST_') || name.includes('test-'),
+    );
+
+    for await (const [, channel] of testChannels) {
       await channel.delete();
     }
   }
