@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Collection, NonThreadGuildBasedChannel, CategoryChannel } from 'discord.js';
+import { Collection, TextChannel, CategoryChannel } from 'discord.js';
 
 import { Service as DiscordService } from './service';
 import { INode, WebhookModel } from '../../models';
@@ -16,10 +16,11 @@ beforeAll(async () => {
   process.env.DISCORD_SERVER_ID = process.env.TEST_DISCORD_SERVER_ID;
 
   discordService = await new DiscordService().init();
-  await discordService['clearChannels']();
+  await discordService.clearChannelsForTest();
 });
 
 afterAll(async () => {
+  await discordService.clearChannelsForTest();
   await discordService.logout();
   await mongoose.disconnect();
 });
@@ -32,11 +33,14 @@ describe('Discord Service Tests', () => {
       const location = testNewNode.host.location.name;
       const existsBefore = await WebhookModel.exists({ chain, location });
 
-      const [webhook] = await discordService.createWebhooks([testNewNode]); // Method Call
+      const [webhook] = await discordService.createWebhooks(
+        { nodes: [testNewNode], batch: false },
+        true,
+      ); // Method Call
 
       const { categories, channels } = await discordService['getServerChannels']();
-      const categoryName = `NODE-NANNY-${location}`;
-      const channelName = `${chain}-${location}`.toLowerCase();
+      const categoryName = `TEST_NODE-NANNY-${location}`;
+      const channelName = `test-${chain}-${location}`.toLowerCase();
       const newCategory = categories.find(({ name }) => name === categoryName);
       const newChannel = channels.find(({ name }) => name === channelName);
 
@@ -51,7 +55,7 @@ describe('Discord Service Tests', () => {
     });
 
     test('should create a webhook for every chain/location combo for all nodes created in a CSV batch upload', async () => {
-      await discordService.createWebhooks(testNodesBatch, true); // Method Call
+      await discordService.createWebhooks({ nodes: testNodesBatch, batch: true }, true); // Method Call
 
       const { categories, channels } = await discordService['getServerChannels']();
 
@@ -70,10 +74,6 @@ describe('Discord Service Tests', () => {
       expect(webhooks.length).toEqual(8);
       expect(numOfDuplicates).toEqual(0);
     });
-
-    afterAll(async () => {
-      await wait(60000);
-    });
   });
 
   /* Private Methods */
@@ -81,7 +81,7 @@ describe('Discord Service Tests', () => {
     let categories: IServerContents['categories'], channels: IServerContents['channels'];
 
     beforeAll(async () => {
-      await discordService['clearChannels']();
+      await discordService.clearChannelsForTest();
       await WebhookModel.deleteMany({});
       /* Test setup */
       const category = await discordService['getOrCreateCategory'](
@@ -95,7 +95,7 @@ describe('Discord Service Tests', () => {
         await discordService['createChannelIfDoesntExist'](
           channelName,
           category,
-          new Collection<string, NonThreadGuildBasedChannel>(),
+          new Collection<string, TextChannel>(),
         );
       }
       ({ categories, channels } = await discordService['getServerChannels']());
