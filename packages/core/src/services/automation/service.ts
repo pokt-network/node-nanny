@@ -29,7 +29,6 @@ import {
 import { Service as HealthService } from '../health';
 import { ESupportedBlockchainTypes, IHealthCheck } from '../health/types';
 import { Service as BaseService } from '../base-service/base-service';
-import { connect } from 'http2';
 
 export class Service extends BaseService {
   constructor() {
