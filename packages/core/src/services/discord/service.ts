@@ -83,6 +83,7 @@ export class Service {
     /* Restart monitor to begin monitoring newly created nodes */
     if (batch) await new AutomationService().restartMonitor();
 
+    if (!test) await this.logout();
     return createdWebhooks;
   }
 
