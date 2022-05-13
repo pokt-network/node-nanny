@@ -110,10 +110,10 @@ export function CSVConfirmationModal({
           </Typography>
           <Typography variant="body1" mb={2}>
             Once this process is complete, the monitor will restart and the nodes in the
-            batch will begin being monitored and automated (if applicable).
+            batch will begin being monitored (and automated if applicable).
           </Typography>
           <Alert severity="warning" sx={{ mb: 4 }}>
-            Please do not stop the Node Nanny application during this time.
+            Please do not stop the Node Nanny Docker container during this time.
           </Alert>
         </>
       ) : (
