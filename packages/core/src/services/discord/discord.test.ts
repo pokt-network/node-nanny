@@ -3,7 +3,6 @@ import { Collection, TextChannel, CategoryChannel } from 'discord.js';
 
 import { Service as DiscordService } from './service';
 import { INode, WebhookModel } from '../../models';
-import { wait } from '../../utils';
 import { IServerContents } from './types';
 
 let discordService: DiscordService;
