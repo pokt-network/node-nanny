@@ -103,18 +103,17 @@ export function CSVConfirmationModal({
         </Alert>
       ) : type === 'Node' ? (
         <>
-          <Typography variant="subtitle1" mb={1}>
-            Batch creation of nodes via CSV import can take a long time.
+          <Typography variant="body1" mb={2}>
+            Discord alerting channels will be created in the background. Due to Discord's
+            rate limiting this can take anywhere from 5 to 20 minutes, depending on the
+            number of nodes in the batch.
           </Typography>
-          <Typography variant="body2" mb={2}>
-            This is because Discord channels and webhooks for each chain/location
-            combination are created for each node that represents a chain/location that
-            does not already exist in the inventory database. Discord imposes rate
-            limiting on the automated creation of webhooks so each new channel can take
-            5-10 seconds to create.{' '}
+          <Typography variant="body1" mb={2}>
+            Once this process is complete, the monitor will restart and the nodes in the
+            batch will begin being monitored and automated (if applicable).
           </Typography>
           <Alert severity="warning" sx={{ mb: 4 }}>
-            Please do not navigate away, refresh or close this window during this time.
+            Please do not stop the Node Nanny application during this time.
           </Alert>
         </>
       ) : (
@@ -158,7 +157,7 @@ export function CSVConfirmationModal({
             `Create ${data.length} ${type}${s(data.length)}`
           )}
         </Button>
-        <Button onClick={() => ModalHelper.close()} color={'inherit'}>
+        <Button onClick={() => ModalHelper.close()} color="error" variant="outlined">
           Cancel
         </Button>
       </Box>
