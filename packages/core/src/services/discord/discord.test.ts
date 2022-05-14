@@ -7,7 +7,7 @@ import { IServerContents } from './types';
 
 let discordService: DiscordService;
 
-const testCategory = 'TEST_CATEGORY';
+const testCategory = 'TEST-CATEGORY';
 
 beforeAll(async () => {
   await mongoose.connect(global.__MONGO_URI__);
@@ -25,6 +25,10 @@ afterAll(async () => {
 });
 
 describe('Discord Service Tests', () => {
+  /* Public Method
+  This test hits an actual Discord test server; this is necessary to ensure that rate-limits do not 
+  prevent the creation of the channels & webhooks in production. For this test to successfully run in 
+  the GH Actions CI workflow TEST_DISCORD_TOKEN and TEST_DISCORD_SERVER_ID must be set in the CI env. */
   describe('createWebhooks', () => {
     test('should create a channel and webhook for new chain/location combination', async () => {
       const [testNewNode] = testNodesBatch;
@@ -38,7 +42,7 @@ describe('Discord Service Tests', () => {
       ); // Method Call
 
       const { categories, channels } = await discordService['getServerChannels']();
-      const categoryName = `TEST_NODE-NANNY-${location}`;
+      const categoryName = `TEST-NODE-NANNY-${location}`;
       const channelName = `test-${chain}-${location}`.toLowerCase();
       const newCategory = categories.find(({ name }) => name === categoryName);
       const newChannel = channels.find(({ name }) => name === channelName);
@@ -68,19 +72,24 @@ describe('Discord Service Tests', () => {
           return list;
         }, []).length;
 
-      expect(categories.size).toEqual(3);
-      expect(channels.size).toEqual(8);
-      expect(webhooks.length).toEqual(8);
+      const testCategories = categories.filter(({ name }) => name.includes('TEST-'));
+      const testChannels = channels.filter(({ name }) => name.includes('test-'));
+
+      expect(testCategories.size).toEqual(6);
+      expect(testChannels.size).toEqual(14);
+      expect(webhooks.length).toEqual(14);
       expect(numOfDuplicates).toEqual(0);
     });
   });
 
-  /* Private Methods */
-  describe('Testing the individual private class methods', () => {
+  /* Private Methods 
+  All of the below methods are tested by running the createWebhooks method above; running them after
+  the above test will lead to rate-limit errors as the private methods are not wrapped by the
+  rate-limit while loop logic. Leaving them here in case they need to be tested in isolation. */
+  describe.skip('Testing the individual private class methods', () => {
     let categories: IServerContents['categories'], channels: IServerContents['channels'];
 
     beforeAll(async () => {
-      await discordService.clearChannelsForTest();
       await WebhookModel.deleteMany({});
       /* Test setup */
       const category = await discordService['getOrCreateCategory'](
@@ -91,13 +100,17 @@ describe('Discord Service Tests', () => {
         const { name } = chain;
         const { location } = host;
         const channelName = `TEST-${name}-${location.name}`.toLowerCase();
-        await discordService['createChannelIfDoesntExist'](
+        await discordService['getOrCreateChannel'](
           channelName,
           category,
           new Collection<string, TextChannel>(),
         );
       }
-      ({ categories, channels } = await discordService['getServerChannels']());
+      const { categories: allCats, channels: allChans } = await discordService[
+        'getServerChannels'
+      ]();
+      categories = allCats.filter(({ name }) => name.includes('TEST-'));
+      channels = allChans.filter(({ name }) => name.includes('test-'));
     });
 
     describe('getServerChannels', () => {
@@ -131,24 +144,24 @@ describe('Discord Service Tests', () => {
       });
     });
 
-    describe('createChannelIfDoesntExist', () => {
-      test('should return undefined if channel already exists', async () => {
+    describe('getOrCreateChannel', () => {
+      test('should return the existing channel if channel already exists', async () => {
         const category = await discordService['getOrCreateCategory'](
           testCategory,
           categories,
         );
         const existingChannelName = 'test-poltst-use2';
 
-        const channel = await discordService['createChannelIfDoesntExist'](
+        const channel = await discordService['getOrCreateChannel'](
           existingChannelName, // Method Call
           category,
           channels,
         );
 
         const { channels: channelsAfter } = await discordService['getServerChannels']();
-
-        expect(channel).toBeFalsy();
-        expect(channels.size).toEqual(channelsAfter.size);
+        expect(channel).toBeTruthy();
+        expect(channels.has(channel.id)).toEqual(true);
+        expect(channelsAfter.has(channel.id)).toEqual(true);
       });
 
       test("should return a new channel if it doesn't exist", async () => {
@@ -158,7 +171,7 @@ describe('Discord Service Tests', () => {
         );
         const newChannelName = 'test-hmy0-use2';
 
-        const channel = await discordService['createChannelIfDoesntExist'](
+        const channel = await discordService['getOrCreateChannel'](
           newChannelName, // Method Call
           category,
           channels,
@@ -168,6 +181,45 @@ describe('Discord Service Tests', () => {
         expect(channel).toBeTruthy();
         expect(channels.has(channel.id)).toEqual(false);
         expect(channelsAfter.has(channel.id)).toEqual(true);
+      });
+    });
+
+    describe('createWebhookForChannel', () => {
+      test("should create a new webhook for a channel if it doesn't already exist", async () => {
+        const existingChannelName = 'test-poltst-use2';
+        const chain = 'POLTST';
+        const location = 'USE2';
+        const [[, channel]] = Array.from(channels);
+
+        const webhook = await discordService['createWebhookForChannel'](
+          existingChannelName, // Method call
+          channel,
+          chain,
+          location,
+        );
+
+        expect(webhook).toBeTruthy();
+      });
+
+      test('should update a webhook record with a new URL if it already exists', async () => {
+        const [[, channel]] = Array.from(channels);
+        const channelName = 'test-poltst2-use2';
+        const chain = 'POLTST2';
+        const location = 'USE2';
+        await WebhookModel.create({ chain, location, url: 'http://whatever.com' });
+        const webhookRecordBefore = await WebhookModel.findOne({ chain, location });
+
+        const webhook = await discordService['createWebhookForChannel'](
+          channelName, // Method call
+          channel,
+          chain,
+          location,
+        );
+
+        const webhookRecordAfter = await WebhookModel.findOne({ chain, location });
+        expect(webhook).toBeTruthy();
+        expect(webhook.url).not.toEqual(webhookRecordBefore);
+        expect(webhookRecordAfter.url).toEqual(webhook.url);
       });
     });
   });
@@ -193,4 +245,15 @@ const testNodesBatch = ([
   { chain: { name: 'OEC' }, host: { location: { name: 'USE2' } } },
   { chain: { name: 'OEC' }, host: { location: { name: 'USE2' } } },
   { chain: { name: 'OEC' }, host: { location: { name: 'USE2' } } },
+  { chain: { name: 'FUS' }, host: { location: { name: 'USW2' } } },
+  { chain: { name: 'POKT' }, host: { location: { name: 'USE1' } } },
+  { chain: { name: 'AVA' }, host: { location: { name: 'USE2' } } },
+  { chain: { name: 'AVATST' }, host: { location: { name: 'USE2' } } },
+  { chain: { name: 'XDAI' }, host: { location: { name: 'USW2' } } },
+  { chain: { name: 'XDAI' }, host: { location: { name: 'USE1' } } },
+  { chain: { name: 'ETH' }, host: { location: { name: 'USE2' } } },
+  { chain: { name: 'ETH' }, host: { location: { name: 'CACE1' } } },
+  { chain: { name: 'OEC' }, host: { location: { name: 'APNE1' } } },
+  { chain: { name: 'OEC' }, host: { location: { name: 'APSE1' } } },
+  { chain: { name: 'OEC' }, host: { location: { name: 'CACE1' } } },
 ] as unknown) as INode[];
