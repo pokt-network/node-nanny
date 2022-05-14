@@ -1,7 +1,9 @@
 import {
   CategoryChannel,
   Client,
+  Collection,
   Intents,
+  NonThreadGuildBasedChannel,
   TextChannel,
   Guild as Server,
 } from 'discord.js';
@@ -69,6 +71,7 @@ export class Service {
       try {
         const webhook = await this.addWebhookForNode({ node: nodes[index], batch }, test);
         if (webhook) createdWebhooks.push(webhook);
+
         index++;
       } catch (error) {
         if (error?.timeout) {
@@ -82,37 +85,33 @@ export class Service {
 
     /* Restart monitor to begin monitoring newly created nodes */
     if (batch) await new AutomationService().restartMonitor();
-
     if (!test) await this.logout();
+
     return createdWebhooks;
   }
 
   private async addWebhookForNode(
-    { node: { chain, host }, batch }: ICreateWebhookParams,
+    { node, batch }: ICreateWebhookParams,
     test = false,
   ): Promise<IWebhook> {
     try {
-      const { name } = chain;
-      const {
-        location: { name: location },
-      } = host;
-      if (await WebhookModel.exists({ chain: name, location })) {
+      const { chain, host } = node;
+      const { location } = host;
+      const { name: chainName } = chain;
+      const { name: locName } = location;
+
+      if (await WebhookModel.exists({ chain: chainName, location: locName })) {
         return;
       }
 
-      const categoryName = `${test ? 'TEST_' : ''}NODE-NANNY-${location}`;
-      const channelName = `${test ? 'test-' : ''}${name}-${location}`.toLowerCase();
+      const categoryName = `${test ? 'TEST-' : ''}NODE-NANNY-${locName}`;
+      const channelName = `${test ? 'test-' : ''}${chainName}-${locName}`.toLowerCase();
 
       const { categories, channels } = await this.getServerChannels();
       const category = await this.getOrCreateCategory(categoryName, categories);
-      const channel = await this.createChannelIfDoesntExist(
-        channelName,
-        category,
-        channels,
-      );
-      if (channel) {
-        return await this.createWebhookForChannel(channelName, channel, name, location);
-      }
+      const channel = await this.getOrCreateChannel(channelName, category, channels);
+
+      return await this.createWebhookForChannel(channelName, channel, chainName, locName);
     } catch (error) {
       if (batch && error?.timeout) {
         throw error;
@@ -122,21 +121,20 @@ export class Service {
     }
   }
 
-  async addWebhookForFrontendNodes(): Promise<void> {
+  async addWebhookForFrontendNodes(): Promise<IWebhook> {
     try {
       const categoryName = 'NODE-NANNY-FRONTEND-ALERT';
       const channelName = 'frontend-alert';
 
       const { categories, channels } = await this.getServerChannels();
       const category = await this.getOrCreateCategory(categoryName, categories);
-      const channel = await this.createChannelIfDoesntExist(
+      const channel = await this.getOrCreateChannel(channelName, category, channels);
+      return await this.createWebhookForChannel(
         channelName,
-        category,
-        channels,
+        channel,
+        'FRONTEND_ALERT',
+        'n/a',
       );
-      if (channel) {
-        await this.createWebhookForChannel(channelName, channel, 'FRONTEND_ALERT', 'n/a');
-      }
     } catch (error) {
       throw new Error(`Discord frontend webhook creation error: ${error.message}`);
     }
@@ -165,18 +163,18 @@ export class Service {
     );
   }
 
-  private async createChannelIfDoesntExist(
+  private async getOrCreateChannel(
     channelName: string,
     category: CategoryChannel,
     channels: IServerContents['channels'],
   ): Promise<TextChannel> {
-    const channelExists = channels?.some(({ name }) => name === channelName);
-    if (!channelExists) {
-      return await this.server.channels.create(channelName, {
-        type: 'GUILD_TEXT',
+    return (
+      channels?.find(({ name }) => name === channelName) ||
+      (await this.server.channels.create(channelName, {
         parent: category,
-      });
-    }
+        type: 'GUILD_TEXT',
+      }))
+    );
   }
 
   private async createWebhookForChannel(
@@ -184,16 +182,35 @@ export class Service {
     channel: TextChannel,
     chain: string,
     location: string,
-  ): Promise<IWebhook> {
-    const { url } = await channel.createWebhook(`${channelName}-alert`);
-    return await WebhookModel.create({ chain, location, url });
+  ): Promise<any> {
+    const webhookName = `${channelName}-alert`;
+    const webhooks = await channel.fetchWebhooks();
+
+    const { url } =
+      webhooks?.find(({ name }) => name === webhookName) ||
+      (await channel.createWebhook(webhookName));
+
+    return WebhookModel.create({ chain, location, url });
   }
 
   /** DO NOT USE - For testing purposes only - DO NOT USE */
   async clearChannelsForTest(): Promise<void> {
-    const allChannels = await this.server.channels.fetch();
-    const testChannels = allChannels.filter(
-      ({ name }) => name.includes('TEST_') || name.includes('test-'),
+    let allChannels: Collection<string, NonThreadGuildBasedChannel>;
+
+    while (!allChannels) {
+      try {
+        allChannels = await this.server.channels.fetch();
+      } catch (error) {
+        if (error?.timeout) {
+          const waitPeriod = error.timeout + 1000;
+          await wait(waitPeriod);
+        } else {
+          throw error;
+        }
+      }
+    }
+    const testChannels = allChannels.filter(({ name }) =>
+      name.toUpperCase().includes('TEST-'),
     );
 
     for await (const [, channel] of testChannels) {
