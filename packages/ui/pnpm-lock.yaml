@@ -74,10 +74,14 @@ importers:
       typescript: 4.5.5
     dependencies:
 <<<<<<< HEAD
+<<<<<<< HEAD
       '@pnpm/make-dedicated-lockfile': 0.3.1
 =======
       '@pnpm/make-dedicated-lockfile': 0.3.2
 >>>>>>> d1919464136f3c3aa4ffd28e96382eeabf96f435
+=======
+      '@pnpm/make-dedicated-lockfile': 0.3.3
+>>>>>>> 0ae4515abff02cbdac45f64f8c56bbad7bff1685
     devDependencies:
       '@types/node': 17.0.23
       nodemon: 2.0.16
@@ -2605,12 +2609,17 @@ packages:
     dev: false
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   /@pnpm/lockfile-file/5.0.1_@pnpm+logger@4.0.0:
     resolution: {integrity: sha512-eziBEkmfP6b/vBtaPIpp9f5DIAE/vcl/cN6REDLCWQNycNq7pBgnYgwRpKH2Ju6B+rD8mIzc4p+05JFPoSsL+g==}
 =======
   /@pnpm/lockfile-file/5.0.2_@pnpm+logger@4.0.0:
     resolution: {integrity: sha512-G6PSHya+rx1X+4I/sRMFmtHHq0PpKz0hk4K+iM6NozRdWwaLXFZjF1MDqlZLpjJzLoRTo5+qtFdJRmJzmvKNTA==}
 >>>>>>> d1919464136f3c3aa4ffd28e96382eeabf96f435
+=======
+  /@pnpm/lockfile-file/5.0.3_@pnpm+logger@4.0.0:
+    resolution: {integrity: sha512-NJSGwhEpartc5NarH7wdt/t8Ri5512ZZHkERP516XvYVOWMatEtAvGu3CP1FbUtSDE50vETbm55pX/zI0vmwHg==}
+>>>>>>> 0ae4515abff02cbdac45f64f8c56bbad7bff1685
     engines: {node: '>=14.19'}
     peerDependencies:
       '@pnpm/logger': ^4.0.0
@@ -2627,7 +2636,7 @@ packages:
       '@pnpm/types': 8.0.1
       '@zkochan/rimraf': 2.1.2
       comver-to-semver: 1.0.0
-      js-yaml: /@zkochan/js-yaml/0.0.5
+      js-yaml: /@zkochan/js-yaml/0.0.6
       normalize-path: 3.0.0
       ramda: 0.27.2
       semver: 7.3.6
@@ -2652,12 +2661,17 @@ packages:
     dev: false
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   /@pnpm/make-dedicated-lockfile/0.3.1:
     resolution: {integrity: sha512-ynu+nwKHPiN3aZuiX2jZ9ZxWrA3NTvlTuWivhPYv6eIwFC0sYpmExZpTs5bP2nYWIk6UBodnj49X0I6OscS04w==}
 =======
   /@pnpm/make-dedicated-lockfile/0.3.2:
     resolution: {integrity: sha512-iAf52ViUiIloViogjW8dmvTKD2bAcFnaZE9g3uu4/Gv+X6F63e/dFFGY7gNxGYuQWHOftlYXSAI/vNXNAa9PDQ==}
 >>>>>>> d1919464136f3c3aa4ffd28e96382eeabf96f435
+=======
+  /@pnpm/make-dedicated-lockfile/0.3.3:
+    resolution: {integrity: sha512-tmMEw5e5OZ15vaoC7n6wytRvZ4GN5tFC4bgeG2Kq91zP4REvND5Gw8a2Ct8V4WS+rRFxIyFXD+Bq2kd0luoeSg==}
+>>>>>>> 0ae4515abff02cbdac45f64f8c56bbad7bff1685
     engines: {node: '>=14.19'}
     hasBin: true
     dependencies:
@@ -2674,7 +2688,7 @@ packages:
 =======
       '@pnpm/exportable-manifest': 3.0.2
       '@pnpm/find-workspace-dir': 4.0.1
-      '@pnpm/lockfile-file': 5.0.2_@pnpm+logger@4.0.0
+      '@pnpm/lockfile-file': 5.0.3_@pnpm+logger@4.0.0
       '@pnpm/logger': 4.0.0
       '@pnpm/prune-lockfile': 4.0.2
       '@pnpm/read-project-manifest': 3.0.2
@@ -3610,8 +3624,8 @@ packages:
     resolution: {integrity: sha512-uUrgZ8AxS+Lio0fZKAipJjAh415JyrOZowliZAzmnJSsf7piVL5w+G0+gFJ0KSu3QRhvui/7zuvpLz03YjXAhg==}
     dev: false
 
-  /@zkochan/js-yaml/0.0.5:
-    resolution: {integrity: sha512-/uaB1kf+t+UATNUSyzHSzy4JqKOh2Y77gdCnhQEKTX/vrpQp8qjvohvC6eG9X4spQf0a8TKL0qF5LiFNj+GrJw==}
+  /@zkochan/js-yaml/0.0.6:
+    resolution: {integrity: sha512-nzvgl3VfhcELQ8LyVrYOru+UtAy1nrygk2+AGbTm8a5YcO6o8lSjAT+pfg3vJWxIoZKOUhrK6UU7xW/+00kQrg==}
     hasBin: true
     dependencies:
       argparse: 2.0.1

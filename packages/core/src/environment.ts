@@ -13,8 +13,7 @@ type INumberVars =
   | 'BACKEND_PORT'
   | 'MONGO_MAX_LOG_DAYS'
   | 'MONGO_MAX_LOG_GB'
-  | 'MONITOR_INTERVAL'
-  | 'PNF_DISPATCH_THRESHOLD';
+  | 'MONITOR_INTERVAL';
 type IBooleanVars = 'PNF' | 'MONITOR_TEST';
 
 type IEnvVars = IStringVars | INumberVars | IBooleanVars;
@@ -35,7 +34,6 @@ const ENV_VARS: { [variable: string]: () => string | number | boolean } = {
   MONGO_MAX_LOG_DAYS: () => Number(process.env.MONGO_MAX_LOG_DAYS || 30) * (60 * 60 * 24),
   MONGO_MAX_LOG_GB: () => Number(process.env.MONGO_MAX_LOG_GB || 10) * 1073741824,
   MONITOR_INTERVAL: () => Number(process.env.MONITOR_INTERVAL || 10) * 1000,
-  PNF_DISPATCH_THRESHOLD: () => Number(process.env.PNF_DISPATCH_THRESHOLD || 5),
 
   MONITOR_TEST: () => Boolean(process.env.MONITOR_TEST === '1' || false),
   PNF: () => Boolean(process.env.PNF === '1' || false),

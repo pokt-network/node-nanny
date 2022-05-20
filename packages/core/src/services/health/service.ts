@@ -655,7 +655,7 @@ export class Service {
     const avgDeltaReduction = diffArray.reduce((sum, d) => sum + d) / diffArray.length;
 
     /* If delta is increasing return -1 */
-    if (newestDelta > oldestDelta || avgDeltaReduction < 0) {
+    if (avgDeltaReduction < 0) {
       return -1;
     }
 
