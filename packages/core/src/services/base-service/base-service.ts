@@ -147,7 +147,7 @@ export class Service {
       }
     }
 
-    return null;
+    return { online: null, total: null };
   }
 
   async getServerStatus({

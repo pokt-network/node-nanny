@@ -728,7 +728,7 @@ export const NodeForm = ({
               sx={{ width: frontend ? 160 : 125, height: 36.5 }}
             >
               {loading ? (
-                <CircularProgress size={20} />
+                <CircularProgress size={20} color="secondary" />
               ) : (
                 `${update ? 'Save' : 'Create'} ${frontend ? 'Frontend' : 'Node'}`
               )}
