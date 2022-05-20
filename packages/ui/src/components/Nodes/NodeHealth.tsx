@@ -39,8 +39,6 @@ export const NodeHealth = ({
   const showDeltaDetails =
     diff !== null && healthCheckData.healthCheck.height?.delta > node.chain.allowance;
 
-  console.log({ diff });
-
   return (
     <Box
       sx={{

@@ -45,6 +45,14 @@ export interface IHostCsvInput {
   fqdn?: string;
 }
 
+export interface IChainInput {
+  id: string;
+  name: string;
+  type: string;
+  chainId: string;
+  allowance: number;
+}
+
 export interface INodeUpdate {
   id: string;
   https?: boolean;
@@ -67,4 +75,17 @@ export interface IHostUpdate {
   loadBalancer?: boolean;
   ip?: string;
   fqdn?: string;
+}
+
+export interface IChainUpdate {
+  id: string;
+  name?: string;
+  type?: string;
+  chainId?: string;
+  allowance?: number;
+}
+
+export interface IOracleUpdate {
+  chain: string;
+  urls: string[];
 }
