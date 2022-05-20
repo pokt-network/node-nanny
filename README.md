@@ -1,5 +1,8 @@
 <div align="center">
-  <h1>Node Nanny</h1>
+<a href="https://www.pokt.network">
+    <img src=".github/Icon.svg" alt="Pocket Network logo" width="200"/>
+  </a>
+  <h1>Pocket Node Nanny</h1>
 </div>
 
 Babysits your nodes, so you don't have to. 🧸
