@@ -6,7 +6,8 @@ const typeDefs = gql`
     id: ID!
     name: String!
     type: String!
-    allowance: Int
+    chainId: String!
+    allowance: Int!
   }
 
   type Host {
@@ -154,6 +155,13 @@ const typeDefs = gql`
     ip: String
   }
 
+  input ChainInput {
+    name: String!
+    type: String!
+    chainId: String!
+    allowance: Int!
+  }
+
   input NodeUpdate {
     id: ID!
     chain: ID
@@ -176,6 +184,19 @@ const typeDefs = gql`
     loadBalancer: Boolean
     ip: String
     fqdn: String
+  }
+
+  input ChainUpdate {
+    id: ID!
+    name: String
+    type: String
+    chainId: String
+    allowance: Int
+  }
+
+  input OracleUpdate {
+    chain: String!
+    urls: [String!]!
   }
 
   input LogParams {
@@ -220,8 +241,13 @@ const typeDefs = gql`
     createNode(input: NodeInput!): Node
     createNodesCSV(nodes: [NodeCSVInput!]!): [Node]!
 
+    createChain(input: ChainInput!): Chain
+
     updateHost(update: HostUpdate!): Host
     updateNode(update: NodeUpdate!): Node
+
+    updateChain(update: ChainUpdate!): Chain
+    updateOracle(update: OracleUpdate!): Oracle
 
     deleteHost(id: ID!): Host
     deleteLocation(id: ID!): Boolean

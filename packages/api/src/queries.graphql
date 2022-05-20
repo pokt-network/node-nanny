@@ -3,6 +3,7 @@ query Chains {
     id
     name
     type
+    chainId
     allowance
   }
 }
