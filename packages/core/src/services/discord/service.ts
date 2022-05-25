@@ -47,6 +47,10 @@ export class Service {
       }
       this.server = server;
     }
+    const noDiscordVars = !this.token || !this.serverId;
+    if (noDiscordVars) {
+      throw new Error('Discord token and/or server ID env vars are not set.');
+    }
 
     return this;
   }
