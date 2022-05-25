@@ -80,7 +80,10 @@ export const HostForm = ({
     const errors: FormikErrors<IHostInput> = {};
     if (!values.location) errors.location = 'Location is required';
     if (!values.name) errors.name = 'Name is required';
-    if (hostNames.includes(values.name)) errors.name = 'Name is already taken';
+    if (
+      hostNames.filter((hostName) => hostName !== selectedHost.name).includes(values.name)
+    )
+      errors.name = 'Name is already taken';
     if (!values.ip && !values.fqdn) {
       errors.ip = 'Either IP or FQDN is required';
       errors.fqdn = 'Either IP or FQDN is required';
