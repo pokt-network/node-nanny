@@ -87,9 +87,14 @@ export class Service extends BaseService {
 
       const node = await this.getNode(id);
 
-      if (createWebhook && !nodeInput.frontend) {
+      if (createWebhook) {
         const discordService = await new DiscordService().init();
-        await discordService.createWebhooks({ nodes: [node], batch: false });
+
+        if (sanitizedInput.frontend) {
+          await discordService.addWebhookForFrontendNodes();
+        } else {
+          await discordService.createWebhooks({ nodes: [node], batch: false });
+        }
       }
 
       if (restart) await this.restartMonitor();
