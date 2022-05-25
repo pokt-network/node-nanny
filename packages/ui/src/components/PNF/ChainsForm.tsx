@@ -62,7 +62,11 @@ export const ChainsForm = ({
     if (!values.type) errors.type = 'Type is required';
     if (chainNames.includes(values.name)) errors.name = 'Name is already taken';
     if (!values.chainId) errors.chainId = 'Relay chain ID is required';
-    if (chainIds.includes(values.chainId)) {
+    if (
+      chainIds
+        .filter((chainId) => chainId !== selectedChain.chainId)
+        .includes(values.chainId)
+    ) {
       errors.chainId = 'Relay chain ID is already taken';
     }
 

@@ -115,7 +115,7 @@ Node Nanny supports adding Host and Node data through the included UI; either on
 
 ## 1. Chains/Oracles
 
-Both Chains and Oracles are autopopulated to the database on initialization of the application and updated on an hourly basis from a database maintained by Pocket. There is no need to manually create Chains or Oracles in the inventory database.
+Both Chains and Oracles are autopopulated to the database on initialization of the application and updated twice per hour from a database maintained by Pocket. There is no need to manually create Chains or Oracles in the inventory database.
 
 ## 2. Locations
 

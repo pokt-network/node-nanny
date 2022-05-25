@@ -236,7 +236,7 @@ export const Table = <T extends unknown>({
     const searchString = searchTerm ? `"${searchTerm}"` : '';
     return `${
       currRows.length !== 0 ? currRows.length : ''
-    } ${searchString} ${filterString} ${type}${s(rows.length)}`;
+    } ${searchString} ${filterString} ${type}${s(currRows.length)}`;
   };
 
   const handleOnSelect = (row) => {
