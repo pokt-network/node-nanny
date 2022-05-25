@@ -21,6 +21,7 @@ import {
   IHostCsvInput,
   IHostUpdate,
   INodeInput,
+  INodeCreationProps,
   INodeCsvInput,
   INodeUpdate,
   IOracleUpdate,
@@ -67,7 +68,11 @@ export class Service extends BaseService {
     }
   }
 
-  public async createNode(nodeInput: INodeInput, restart = true): Promise<INode> {
+  public async createNode({
+    nodeInput,
+    restart = true,
+    createWebhook = true,
+  }: INodeCreationProps): Promise<INode> {
     let id: string;
     const { https, ...rest } = nodeInput;
     const { fqdn } = await HostsModel.findOne({ _id: nodeInput.host });
@@ -82,12 +87,11 @@ export class Service extends BaseService {
 
       const node = await this.getNode(id);
 
-      if (nodeInput.frontend) {
-        // Add in other branch...
-        // await new DiscordService().addWebhookForNode(node);
-      } else {
-        await new DiscordService().addWebhookForNode(node);
+      if (createWebhook && !nodeInput.frontend) {
+        const discordService = await new DiscordService().init();
+        await discordService.createWebhooks({ nodes: [node], batch: false });
       }
+
       if (restart) await this.restartMonitor();
 
       return node;
@@ -100,6 +104,9 @@ export class Service extends BaseService {
   public async createNodesCSV(nodes: INodeCsvInput[]): Promise<INode[]> {
     try {
       const createdNodes: INode[] = [];
+
+      const discordService = await new DiscordService().init();
+
       for await (const nodeInput of nodes) {
         const host = await HostsModel.findOne({ name: nodeInput.host });
         const https = Boolean(nodeInput.https === 'true');
@@ -108,6 +115,7 @@ export class Service extends BaseService {
         const nodeInputWithIds: INodeInput = {
           ...nodeInput,
           https,
+          port: Number(nodeInput.port),
           chain: (await ChainsModel.findOne({ name: nodeInput.chain }))._id,
           host: host._id,
           url: `http${https ? 's' : ''}://${fqdn || ip}:${nodeInput.port}`,
@@ -116,11 +124,17 @@ export class Service extends BaseService {
           ).map(({ _id }) => _id),
         };
 
-        const node = await this.createNode(nodeInputWithIds, false);
+        const node = await this.createNode({
+          nodeInput: nodeInputWithIds,
+          restart: false,
+          createWebhook: false,
+        });
         createdNodes.push(node);
       }
 
-      await this.restartMonitor();
+      /* Don't await the webhook creation as it takes a long time; let it run in the background. 
+      Monitor is restarted in the Discord service when webhook creation is completed */
+      discordService.createWebhooks({ nodes: createdNodes, batch: true });
 
       return createdNodes;
     } catch (error) {
@@ -211,8 +225,8 @@ export class Service extends BaseService {
     }
     if (update.port) {
       update.url = (newHost ? update.url : url.split('://')[1]).replace(
-        String(port),
-        String(update.port),
+        port.toString(),
+        update.port,
       );
     }
     if (update.url) {
@@ -220,7 +234,7 @@ export class Service extends BaseService {
       update.url = `http${secure ? 's' : ''}://${update.url}`;
     }
 
-    await NodesModel.updateOne({ _id: id }, { ...update, port: Number(update.port) });
+    await NodesModel.updateOne({ _id: id }, update);
     if (restart) await this.restartMonitor();
 
     return await this.getNode(id);
@@ -255,7 +269,7 @@ export class Service extends BaseService {
   }
 
   private sanitizeUpdate(unsanitizedUpdate: { [key: string]: any }): UpdateQuery<any> {
-    const update: UpdateQuery<any> = {};
+    let update: UpdateQuery<any> = {};
     Object.entries(unsanitizedUpdate).forEach(([key, value]) => {
       if (value === undefined || value === null || value === '') {
         if (Object.keys(update).includes('$unset')) {
@@ -268,6 +282,7 @@ export class Service extends BaseService {
         update[key] = typeof value === 'string' ? value.trim() : value;
       }
     });
+    if (update.port) update = { ...update, port: Number(update.port) };
     return update;
   }
 
@@ -409,7 +424,7 @@ export class Service extends BaseService {
     return await this.getNode(id);
   }
 
-  private async restartMonitor(): Promise<boolean> {
+  async restartMonitor(): Promise<boolean> {
     try {
       return await new Promise((resolve, reject) => {
         exec('pm2 restart monitor', (error, stdout) => {
