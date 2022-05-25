@@ -20,6 +20,8 @@ export class Service extends BaseService {
 
   /* ----- Trigger Methods ----- */
   processTriggered = async (eventJson: string): Promise<void> => {
+    let nodeName: string;
+
     try {
       const {
         node,
@@ -30,6 +32,7 @@ export class Service extends BaseService {
         dispatchFrontendDown,
       } = await this.parseEvent(eventJson, EAlertTypes.TRIGGER);
       const { name, automation, chain, host, backend, frontend, muted } = node;
+      nodeName = name;
 
       /* Send alert message to Discord */
       if (!muted) {
@@ -56,14 +59,17 @@ export class Service extends BaseService {
       }
     } catch ({ stack }) {
       const [message, location] = stack.split('\n');
+      const nodeNameStr = nodeName ? ` Node: ${nodeName} ` : '';
       colorLog(
-        `[EVENT CONSUMER ERROR - TRIGGERED] Node: ${name} ${message} ${location}`,
+        `[EVENT CONSUMER ERROR - TRIGGERED]${nodeNameStr}${message} ${location}`,
         'yellow',
       );
     }
   };
 
   processRetriggered = async (eventJson: string): Promise<void> => {
+    let nodeName: string;
+
     try {
       const {
         node,
@@ -74,6 +80,7 @@ export class Service extends BaseService {
         dispatchFrontendDown,
       } = await this.parseEvent(eventJson, EAlertTypes.RETRIGGER);
       const { name, automation, backend, chain, host, frontend, muted } = node;
+      nodeName = name;
 
       /* Send alert message to Discord */
       if (!muted) {
@@ -102,20 +109,24 @@ export class Service extends BaseService {
       }
     } catch ({ stack }) {
       const [message, location] = stack.split('\n');
+      const nodeNameStr = nodeName ? ` Node: ${nodeName} ` : '';
       colorLog(
-        `[EVENT CONSUMER ERROR - RETRIGGERED] Node: ${name} ${message} ${location}`,
+        `[EVENT CONSUMER ERROR - RETRIGGERED]${nodeNameStr}${message} ${location}`,
         'yellow',
       );
     }
   };
 
   processResolved = async (eventJson: string): Promise<void> => {
+    let nodeName: string;
+
     try {
       const { node, message, healthy, status, title } = await this.parseEvent(
         eventJson,
         EAlertTypes.RESOLVED,
       );
       const { name, automation, chain, host, frontend, backend, muted } = node;
+      nodeName = name;
 
       /* Send alert message to Discord */
       if (!muted) {
@@ -137,8 +148,9 @@ export class Service extends BaseService {
       }
     } catch ({ stack }) {
       const [message, location] = stack.split('\n');
+      const nodeNameStr = nodeName ? ` Node: ${nodeName} ` : '';
       colorLog(
-        `[EVENT CONSUMER ERROR - RESOLVED] Node: ${name} ${message} ${location}`,
+        `[EVENT CONSUMER ERROR - RESOLVED]${nodeNameStr}${message} ${location}`,
         'yellow',
       );
     }
