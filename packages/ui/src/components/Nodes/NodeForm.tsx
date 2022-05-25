@@ -150,7 +150,7 @@ export const NodeForm = ({
     if (hostPortCombos.includes(`${values.host}/${values.port}`)) {
       errors.port = 'Host/port combination is already taken';
     }
-    if (values.automation) {
+    if (!frontend && values.automation) {
       if (!values.backend) {
         errors.backend = 'Backend is required';
       }
@@ -202,8 +202,9 @@ export const NodeForm = ({
 
   const handleBasicAuthChange = ({ target }) => {
     const { name, value } = target;
-    const username = `${name === 'username' ? value : values.basicAuth.split(':')[0]}`;
-    const password = `${name === 'password' ? value : values.basicAuth.split(':')[1]}`;
+    const [usernameVal, passwordVal] = values.basicAuth.split(':');
+    const username = `${name === 'username' ? value : usernameVal || ''}`;
+    const password = `${name === 'password' ? value : passwordVal || ''}`;
     const newValue = `${username}:${password}`;
     setFieldValue('basicAuth', newValue);
   };
@@ -717,7 +718,9 @@ export const NodeForm = ({
             <Button
               type="submit"
               variant="contained"
-              onClick={handleSubmit as any}
+              onClick={() => {
+                handleSubmit();
+              }}
               disabled={
                 (frontend && frontendExists) ||
                 (update &&
