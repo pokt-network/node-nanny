@@ -69,7 +69,7 @@ export class Service extends BaseService {
 
   public async createNode(nodeInput: INodeInput, restart = true): Promise<INode> {
     let id: string;
-    const { https, automation, frontend, ...rest } = nodeInput;
+    const { https, ...rest } = nodeInput;
     const { fqdn } = await HostsModel.findOne({ _id: nodeInput.host });
 
     if (https && !fqdn) {
@@ -82,7 +82,12 @@ export class Service extends BaseService {
 
       const node = await this.getNode(id);
 
-      if (!nodeInput.frontend) await new DiscordService().addWebhookForNode(node);
+      if (nodeInput.frontend) {
+        // Add in other branch...
+        // await new DiscordService().addWebhookForNode(node);
+      } else {
+        await new DiscordService().addWebhookForNode(node);
+      }
       if (restart) await this.restartMonitor();
 
       return node;
