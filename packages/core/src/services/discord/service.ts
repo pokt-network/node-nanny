@@ -47,6 +47,10 @@ export class Service {
       }
       this.server = server;
     }
+    const noDiscordVars = !this.token || !this.serverId;
+    if (noDiscordVars) {
+      throw new Error('Discord token and/or server ID env vars are not set.');
+    }
 
     return this;
   }
@@ -122,6 +126,8 @@ export class Service {
   }
 
   async addWebhookForFrontendNodes(): Promise<IWebhook> {
+    if (await WebhookModel.exists({ chain: 'FRONTEND_ALERT' })) return;
+
     try {
       const categoryName = 'NODE-NANNY-FRONTEND-ALERT';
       const channelName = 'frontend-alert';
@@ -129,6 +135,7 @@ export class Service {
       const { categories, channels } = await this.getServerChannels();
       const category = await this.getOrCreateCategory(categoryName, categories);
       const channel = await this.getOrCreateChannel(channelName, category, channels);
+
       return await this.createWebhookForChannel(
         channelName,
         channel,
