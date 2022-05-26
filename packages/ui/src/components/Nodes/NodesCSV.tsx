@@ -3,7 +3,7 @@ import { ApolloQueryResult } from '@apollo/client';
 import CSVReader from 'react-csv-reader';
 import { Alert, AlertTitle, Box, Button, Typography } from '@mui/material';
 
-import { IGetHostsChainsAndLoadBalancersQuery, INodesQuery } from 'types';
+import { IGetHostsChainsAndLoadBalancersQuery, IHost, INodesQuery } from 'types';
 import { ModalHelper, regexTest, s } from 'utils';
 import { NodeActionsState } from 'pages/Nodes';
 
@@ -206,26 +206,40 @@ export const NodesCSV = ({
     });
   };
 
+  console.log({ hosts });
+
   return (
     <Paper>
+      {!hosts?.length && (
+        <Alert severity="info" sx={{ marginBottom: 2 }}>
+          <AlertTitle>No Hosts in Inventory Database</AlertTitle>
+          Before creating a node, you must create at least one host using the Hosts
+          screen.
+        </Alert>
+      )}
       <Title>Upload Nodes CSV</Title>
       <Box>
-        <Typography variant="body1" mb={2}>
-          Discord alerting channels will be created in the background. Due to Discord's
-          rate limiting this can take anywhere from 5 to 20 minutes, depending on the
-          number of nodes in the batch.
-        </Typography>
-        <Typography variant="body1" mb={2}>
-          Once this process is complete, the monitor will restart and the nodes in the
-          batch will begin being monitored (and automated if applicable).
-        </Typography>
-        <Alert severity="warning" sx={{ mb: 4 }}>
-          Please do not stop the Node Nanny Docker container during this time.
-        </Alert>
+        {!!hosts.length && (
+          <>
+            <Typography variant="body1" mb={2}>
+              Discord alerting channels will be created in the background. Due to
+              Discord's rate limiting this can take anywhere from 5 to 20 minutes,
+              depending on the number of nodes in the batch.
+            </Typography>
+            <Typography variant="body1" mb={2}>
+              Once this process is complete, the monitor will restart and the nodes in the
+              batch will begin being monitored (and automated if applicable).
+            </Typography>
+            <Alert severity="warning" sx={{ mb: 4 }}>
+              Please do not stop the Node Nanny Docker container during this time.
+            </Alert>
+          </>
+        )}
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <CSVReader
             onFileLoaded={parseNodesCSV}
             parserOptions={{ header: true, skipEmptyLines: true }}
+            disabled={!hosts.length}
           />
           <Button
             onClick={() => setState(NodeActionsState.Info)}

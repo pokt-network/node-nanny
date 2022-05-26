@@ -1,14 +1,10 @@
 import { Dispatch } from 'react';
+import { Button, Chip, Grid, Typography } from '@mui/material';
 
 import Paper from 'components/Paper';
 import Title from 'components/Title';
 import { INode } from 'types';
 import { NodeActionsState } from 'pages/Nodes';
-
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
 
 interface NodesInventoryProps {
   nodes: INode[];
