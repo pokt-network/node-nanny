@@ -269,6 +269,7 @@ export type INodeInput = {
   backend?: InputMaybe<Scalars['String']>;
   basicAuth?: InputMaybe<Scalars['String']>;
   chain: Scalars['ID'];
+  dispatch?: InputMaybe<Scalars['Boolean']>;
   frontend?: InputMaybe<Scalars['String']>;
   host: Scalars['ID'];
   https: Scalars['Boolean'];
@@ -283,6 +284,7 @@ export type INodeUpdate = {
   automation?: InputMaybe<Scalars['Boolean']>;
   backend?: InputMaybe<Scalars['String']>;
   chain?: InputMaybe<Scalars['ID']>;
+  dispatch?: InputMaybe<Scalars['Boolean']>;
   frontend?: InputMaybe<Scalars['String']>;
   host?: InputMaybe<Scalars['ID']>;
   https?: InputMaybe<Scalars['Boolean']>;
