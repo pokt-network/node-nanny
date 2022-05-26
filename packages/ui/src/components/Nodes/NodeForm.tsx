@@ -16,8 +16,8 @@ import {
   Checkbox,
   CircularProgress,
   FormControl,
-  FormControlLabel,
   FormHelperText,
+  InputAdornment,
   InputLabel,
   ListItemText,
   MenuItem,
@@ -27,7 +27,7 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
-import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 import {
   IChain,
@@ -467,20 +467,39 @@ export const NodeForm = ({
   return (
     <>
       <Form read={read}>
-        {!read && (
-          <TextField
-            name="name"
-            value={getNodeName()}
-            onChange={handleChange}
-            label="Name"
-            variant="outlined"
-            disabled
-            size="small"
-            sx={{
-              '& fieldset': { borderWidth: '0px !important' },
-            }}
-          />
+        {!read && !formData?.hosts?.length && (
+          <Alert severity="info" sx={{ marginBottom: 2 }}>
+            <AlertTitle>No Hosts in Inventory Database</AlertTitle>
+            Before creating a node, you must create at least one host using the Hosts
+            screen.
+          </Alert>
         )}
+        <TextField
+          name="name"
+          value={getNodeName()}
+          onChange={handleChange}
+          label="Name"
+          variant="outlined"
+          disabled
+          size="small"
+          sx={{
+            '& fieldset': { borderWidth: '0px !important' },
+          }}
+          InputProps={{
+            sx: { paddingRight: 0 },
+            endAdornment: read ? null : (
+              <InputAdornment position="start">
+                <Tooltip
+                  title="Node name is derived from host name/chain/number"
+                  placement="left"
+                  arrow
+                >
+                  <HelpOutlineIcon fontSize="small" />
+                </Tooltip>
+              </InputAdornment>
+            ),
+          }}
+        />
         <TextField
           name="url"
           ref={urlRef}
@@ -492,6 +511,30 @@ export const NodeForm = ({
           size="small"
           sx={{
             '& fieldset': { borderWidth: '0px !important' },
+          }}
+          InputProps={{
+            sx: { paddingRight: 0 },
+            endAdornment: read ? null : (
+              <InputAdornment position="start">
+                <Tooltip
+                  title={
+                    <>
+                      <div>
+                        Node URL is derived from the host's IP/FQDN and the port field.
+                      </div>
+                      <div>
+                        If you wish to update the IP/FQDN portion of the URL, update the
+                        field on the node's host in the Hosts screen.
+                      </div>
+                    </>
+                  }
+                  placement="left"
+                  arrow
+                >
+                  <HelpOutlineIcon fontSize="small" />
+                </Tooltip>
+              </InputAdornment>
+            ),
           }}
         />
         {read && (
@@ -508,7 +551,12 @@ export const NodeForm = ({
         )}
         {!read && (
           <FormControl fullWidth error={!!errors.chain}>
-            <InputLabel id="chain-label">Chain</InputLabel>
+            <InputLabel
+              id="chain-label"
+              disabled={values.dispatch || !formData?.hosts?.length}
+            >
+              Chain
+            </InputLabel>
             <Select
               name="chain"
               labelId="chain-label"
@@ -516,11 +564,11 @@ export const NodeForm = ({
               label="Chain"
               onChange={handleChange}
               size="small"
-              disabled={values.dispatch}
+              disabled={values.dispatch || !formData?.hosts?.length}
             >
-              {formData?.chains.map(({ name, id }) => (
+              {formData?.chains.map(({ name, id, chainId }) => (
                 <MenuItem key={id} value={id}>
-                  {name}
+                  {`${name} - ${chainId}`}
                 </MenuItem>
               ))}
             </Select>
@@ -544,7 +592,9 @@ export const NodeForm = ({
         )}
         {!read && (
           <FormControl fullWidth error={!!errors.host}>
-            <InputLabel id="host-label">{frontend ? 'Load Balancer' : 'Host'}</InputLabel>
+            <InputLabel id="host-label" disabled={!formData?.hosts?.length}>
+              {frontend ? 'Load Balancer' : 'Host'}
+            </InputLabel>
             <Select
               name="host"
               labelId="host-label"
@@ -552,6 +602,7 @@ export const NodeForm = ({
               label="Host"
               onChange={handleChange}
               size="small"
+              disabled={!formData?.hosts?.length}
             >
               {(frontend
                 ? formData.loadBalancers
@@ -569,30 +620,38 @@ export const NodeForm = ({
             {!!errors.host && <FormHelperText>{errors.host}</FormHelperText>}
           </FormControl>
         )}
-        <FormControl fullWidth disabled={read}>
-          <InputLabel>HTTPS</InputLabel>
-          <Box>
-            <FormControlLabel
-              control={
-                read && !selectedNode ? (
-                  <></>
-                ) : (
-                  <Switch
-                    name="https"
-                    checked={values.https}
-                    onChange={handleChange}
-                    disabled={read || !hostHasFqdn || values.dispatch}
-                  />
-                )
-              }
-              label={
-                read || !values.host
-                  ? ''
-                  : hostHasFqdn
-                  ? 'Selected host has a FQDN'
-                  : 'Selected host does not have a FQDN'
-              }
-            />
+        <FormControl fullWidth>
+          <InputLabel disabled={read || !formData?.hosts?.length}>HTTPS</InputLabel>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            {read && !selectedNode ? (
+              <></>
+            ) : (
+              <Switch
+                name="https"
+                checked={values.https}
+                onChange={handleChange}
+                disabled={
+                  read || !hostHasFqdn || values.dispatch || !formData?.hosts?.length
+                }
+              />
+            )}
+            {!read && (
+              <InputAdornment position="start">
+                <Tooltip
+                  title="For HTTPS to be enabled, the selected host must have an FQDN field and not an IP"
+                  placement="left"
+                  arrow
+                >
+                  <HelpOutlineIcon fontSize="small" />
+                </Tooltip>
+              </InputAdornment>
+            )}
           </Box>
         </FormControl>
         <TextField
@@ -603,15 +662,23 @@ export const NodeForm = ({
           variant="outlined"
           error={!!errors.port}
           helperText={errors.port}
-          disabled={read}
+          disabled={read || !formData?.hosts?.length}
           size="small"
           fullWidth
         />
         {!frontend && (
           <>
-            <FormControl fullWidth disabled={read}>
-              <InputLabel>Automation</InputLabel>
-              <Box>
+            <FormControl fullWidth>
+              <InputLabel disabled={read || !formData?.hosts?.length}>
+                Automation
+              </InputLabel>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
                 {read && !selectedNode ? (
                   <></>
                 ) : (
@@ -619,7 +686,19 @@ export const NodeForm = ({
                     name="automation"
                     checked={values.automation}
                     onChange={handleChange}
+                    disabled={!formData?.hosts?.length}
                   />
+                )}
+                {!read && (
+                  <InputAdornment position="start">
+                    <Tooltip
+                      title="In order to utilize the automation feature, HAProxy must be configured on at least one load balancer host and the following three fields filled out."
+                      placement="left"
+                      arrow
+                    >
+                      <HelpOutlineIcon fontSize="small" />
+                    </Tooltip>
+                  </InputAdornment>
                 )}
               </Box>
             </FormControl>
@@ -629,7 +708,10 @@ export const NodeForm = ({
                   name="backend"
                   value={values.backend}
                   onChange={handleChange}
-                  disabled={read ?? (!!values.frontend || !values.automation)}
+                  disabled={
+                    (!formData?.hosts?.length || read) ??
+                    (!!values.frontend || !values.automation)
+                  }
                   label="Backend"
                   variant="outlined"
                   size="small"
@@ -657,7 +739,10 @@ export const NodeForm = ({
                 {!read && (
                   <FormControl
                     fullWidth
-                    disabled={read ?? (!!values.frontend || !values.automation)}
+                    disabled={
+                      (!formData?.hosts?.length || read) ??
+                      (!!values.frontend || !values.automation)
+                    }
                     error={!!errors.loadBalancers}
                   >
                     <InputLabel id="lb-label">Load Balancers</InputLabel>
@@ -697,7 +782,10 @@ export const NodeForm = ({
                   onChange={handleChange}
                   label="Server"
                   variant="outlined"
-                  disabled={read ?? (!!values.frontend || !values.automation)}
+                  disabled={
+                    (!formData?.hosts?.length || read) ??
+                    (!!values.frontend || !values.automation)
+                  }
                   size="small"
                   fullWidth
                   error={!!errors.server}
