@@ -23,7 +23,11 @@ const resolvers: {
         .exec(),
 
     chains: () => ChainsModel.find({}).exec(),
-    hosts: () => HostsModel.find({}).populate('location').sort({ name: 1 }).exec(),
+    hosts: (_, { loadBalancer }) =>
+      HostsModel.find(loadBalancer ? { loadBalancer } : {})
+        .populate('location')
+        .sort({ name: 1 })
+        .exec(),
     locations: () => LocationsModel.find({}).exec(),
     nodes: () =>
       NodesModel.find({})
