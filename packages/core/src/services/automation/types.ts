@@ -2,8 +2,8 @@ import { Types } from 'mongoose';
 
 export interface INodeCreationProps {
   nodeInput: INodeInput;
-  restart: boolean;
-  createWebhook: boolean;
+  restart?: boolean;
+  createWebhook?: boolean;
 }
 
 export interface INodeInput {
