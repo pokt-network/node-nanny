@@ -266,7 +266,7 @@ export class Service extends BaseService {
   private sanitizeCreate(unsanitizedCreate: { [key: string]: any }): UpdateQuery<any> {
     const input: UpdateQuery<any> = {};
     Object.entries(unsanitizedCreate).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
+      if (value !== undefined && value !== null && value !== '' && value !== []) {
         input[key] = typeof value === 'string' ? value.trim() : value;
       }
     });
@@ -276,7 +276,7 @@ export class Service extends BaseService {
   private sanitizeUpdate(unsanitizedUpdate: { [key: string]: any }): UpdateQuery<any> {
     let update: UpdateQuery<any> = {};
     Object.entries(unsanitizedUpdate).forEach(([key, value]) => {
-      if (value === undefined || value === null || value === '') {
+      if (value === undefined || value === null || value === '' || value === []) {
         if (Object.keys(update).includes('$unset')) {
           update.$unset[key] = 1;
         } else {
