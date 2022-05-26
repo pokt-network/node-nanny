@@ -46,7 +46,8 @@ const resolvers: {
   Mutation: {
     createHost: (_, { input }) => new AutomationService().createHost(input),
     createLocation: (_, { name }) => LocationsModel.create({ name }),
-    createNode: (_, { input }) => new AutomationService().createNode(input),
+    createNode: (_, { input }) =>
+      new AutomationService().createNode({ nodeInput: input }),
     createNodesCSV: (_, { nodes }) => new AutomationService().createNodesCSV(nodes),
     createHostsCSV: (_, { hosts }) => new AutomationService().createHostsCSV(hosts),
 
