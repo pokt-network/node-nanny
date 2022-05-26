@@ -52,6 +52,7 @@ query Node($id: ID!) {
       name
       type
       allowance
+      chainId
     }
     host {
       id
@@ -83,6 +84,7 @@ query Nodes {
       name
       type
       allowance
+      chainId
     }
     host {
       id
@@ -144,6 +146,7 @@ query GetHostsChainsAndLoadBalancers {
   chains {
     id
     name
+    chainId
   }
   loadBalancers: hosts(loadBalancer: true) {
     id
