@@ -506,7 +506,7 @@ export const NodeForm = ({
         )}
         {!read && (
           <FormControl fullWidth error={!!errors.host}>
-            <InputLabel id="host-label">Host</InputLabel>
+            <InputLabel id="host-label">{frontend ? 'Load Balancer' : 'Host'}</InputLabel>
             <Select
               name="host"
               labelId="host-label"
