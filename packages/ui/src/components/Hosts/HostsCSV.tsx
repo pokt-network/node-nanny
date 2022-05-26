@@ -1,7 +1,7 @@
 import { Dispatch } from 'react';
 import { ApolloQueryResult } from '@apollo/client';
 import CSVReader from 'react-csv-reader';
-import { Box, Button } from '@mui/material';
+import { Alert, AlertTitle, Box, Button } from '@mui/material';
 
 import { Title } from 'components';
 import Paper from 'components/Paper';
@@ -129,9 +129,20 @@ export const HostsCSV = ({
   /* ----- Layout ----- */
   return (
     <Paper>
+      {!locations?.length && (
+        <Alert severity="info" sx={{ marginBottom: 2 }}>
+          <AlertTitle>No Locations in Inventory Database</AlertTitle>
+          Before creating a host, you must enter at least one location using the Edit
+          Locations form.
+        </Alert>
+      )}
       <Title>Upload Hosts CSV</Title>
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <CSVReader onFileLoaded={parseHostsCsv} parserOptions={{ header: true }} />
+        <CSVReader
+          onFileLoaded={parseHostsCsv}
+          parserOptions={{ header: true }}
+          disabled={!locations?.length}
+        />
         <Button
           onClick={() => setState(HostActionsState.Info)}
           color="error"
