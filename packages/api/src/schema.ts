@@ -125,6 +125,7 @@ const typeDefs = gql`
     frontend: String
     server: String
     basicAuth: String
+    dispatch: Boolean
   }
 
   input HostInput {
@@ -175,6 +176,7 @@ const typeDefs = gql`
     frontend: String
     server: String
     https: Boolean
+    dispatch: Boolean
   }
 
   input HostUpdate {

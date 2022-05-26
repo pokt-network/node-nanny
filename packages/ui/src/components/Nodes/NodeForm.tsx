@@ -25,7 +25,9 @@ import {
   Select,
   Switch,
   TextField,
+  Tooltip,
 } from '@mui/material';
+import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 
 import {
   IChain,
@@ -43,6 +45,8 @@ import {
 import { ModalHelper, s, SnackbarHelper } from 'utils';
 import Form from 'components/Form';
 import { NodeActionsState } from 'pages/Nodes';
+
+import { env } from 'environment';
 
 export interface NodesFormProps {
   formData: IGetHostsChainsAndLoadBalancersQuery;
@@ -194,6 +198,7 @@ export const NodeForm = ({
       server: '',
       frontend: '',
       basicAuth: '',
+      dispatch: env('PNF') ? false : null,
     },
     validate,
     validateOnChange: false,
@@ -235,7 +240,14 @@ export const NodeForm = ({
   }, [values.host, formData, setFieldValue]);
 
   const getNodeName = useCallback(() => {
-    if (values.chain && values.host) {
+    if (values.dispatch && values.host) {
+      const host = formData?.hosts?.find(({ id }) => id === values.host);
+      const { name: locationName } = host.location;
+      const [, instance] = host.name.split('-');
+      const existingDispatchCount =
+        nodeNames?.filter((name) => name.includes('dispatch-'))?.length || 0;
+      return `instance-${instance}/${locationName}/dispatch-${existingDispatchCount + 1}`;
+    } else if (values.chain && values.host) {
       const chainName = formData?.chains?.find(({ id }) => id === values.chain)?.name;
       const hostName = formData?.hosts?.find(({ id }) => id === values.host)?.name;
       let nodeName = `${hostName}/${chainName}`;
@@ -251,9 +263,22 @@ export const NodeForm = ({
     } else {
       return '';
     }
-  }, [values.chain, values.host, frontend, formData.chains, formData.hosts, nodeNames]);
+  }, [
+    values.dispatch,
+    values.host,
+    values.chain,
+    frontend,
+    formData.chains,
+    formData.hosts,
+    nodeNames,
+  ]);
 
   const getNodeUrl = useCallback(() => {
+    if (values.dispatch && values.port) {
+      const host = formData?.hosts?.find(({ id }) => id === values.host);
+      const [, instance] = host.name.split('-');
+      return `http://dispatch-${instance}-instance.nodes.pokt.network:${values.port}`;
+    }
     if (values.host && values.port) {
       const host = formData?.hosts?.find(({ id }) => id === values.host);
       const hostDomain = host?.ip || host?.fqdn;
@@ -262,7 +287,7 @@ export const NodeForm = ({
     } else {
       return '';
     }
-  }, [values.host, values.port, values.https, formData.hosts]);
+  }, [values.dispatch, values.host, values.port, values.https, formData.hosts]);
 
   useEffect(() => {
     if (frontend) {
@@ -271,6 +296,15 @@ export const NodeForm = ({
       setFrontendExists(frontendExists);
     }
   }, [values.host, values.chain, frontend, frontendHostChainCombos]);
+
+  useEffect(() => {
+    if (values.dispatch) {
+      setFieldValue('chain', formData.chains.find(({ name }) => name === 'POKT-DIS').id);
+      setFieldValue('https', false);
+    } else if (!update) {
+      setFieldValue('chain', '');
+    }
+  }, [values.dispatch, formData.chains, setFieldValue, update]);
 
   /* ----- Update Mode ----- */
   if (update && selectedNode) {
@@ -325,6 +359,7 @@ export const NodeForm = ({
     setFieldValue('frontend', selectedNode.frontend);
     setFieldValue('server', selectedNode.server);
     setFieldValue('automation', selectedNode.automation);
+    if (env('PNF')) setFieldValue('dispatch', selectedNode.dispatch);
   }, [setFieldValue, selectedNode]);
 
   const handleResetRefs = useCallback(() => {
@@ -359,6 +394,8 @@ export const NodeForm = ({
       resetForm();
     }
   }, [update, selectedNode, resetForm, handleResetFormState, handleResetRefs, frontend]);
+
+  useEffect(() => {}, []);
 
   /* ----- Queries ----- */
   const [checkValidHaProxy] = useCheckValidHaProxyLazyQuery({
@@ -479,6 +516,7 @@ export const NodeForm = ({
               label="Chain"
               onChange={handleChange}
               size="small"
+              disabled={values.dispatch}
             >
               {formData?.chains.map(({ name, id }) => (
                 <MenuItem key={id} value={id}>
@@ -515,13 +553,18 @@ export const NodeForm = ({
               onChange={handleChange}
               size="small"
             >
-              {(frontend ? formData?.loadBalancers : formData?.hosts).map(
-                ({ name, id, location }) => (
-                  <MenuItem key={id} value={id}>
-                    {`${name} - ${location.name}`}
-                  </MenuItem>
-                ),
-              )}
+              {(frontend
+                ? formData.loadBalancers
+                : values.dispatch
+                ? formData.hosts.filter(({ name }) => name.includes('dispatch-'))
+                : env('PNF')
+                ? formData.hosts.filter(({ name }) => !name.includes('dispatch-'))
+                : formData.hosts
+              ).map(({ name, id, location }) => (
+                <MenuItem key={id} value={id}>
+                  {`${name} - ${location.name}`}
+                </MenuItem>
+              ))}
             </Select>
             {!!errors.host && <FormHelperText>{errors.host}</FormHelperText>}
           </FormControl>
@@ -538,7 +581,7 @@ export const NodeForm = ({
                     name="https"
                     checked={values.https}
                     onChange={handleChange}
-                    disabled={read || !hostHasFqdn}
+                    disabled={read || !hostHasFqdn || values.dispatch}
                   />
                 )
               }
@@ -663,6 +706,22 @@ export const NodeForm = ({
               </>
             )}
           </>
+        )}
+        {env('PNF') && (
+          <FormControl fullWidth disabled={read}>
+            <InputLabel>Dispatch</InputLabel>
+            <Box>
+              {read && !selectedNode ? (
+                <></>
+              ) : (
+                <Switch
+                  name="dispatch"
+                  checked={values.dispatch}
+                  onChange={handleChange}
+                />
+              )}
+            </Box>
+          </FormControl>
         )}
         {frontend && (
           <>
