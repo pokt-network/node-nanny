@@ -135,8 +135,6 @@ export class Service {
       query = { chain, location };
     }
 
-    console.log({ chain, location, frontend, query });
-
     const { url } = await WebhookModel.findOne(query);
     return url;
   }
