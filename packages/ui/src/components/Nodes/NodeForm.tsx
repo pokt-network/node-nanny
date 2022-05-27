@@ -278,8 +278,7 @@ export const NodeForm = ({
       const host = formData?.hosts?.find(({ id }) => id === values.host);
       const [, instance] = host.name.split('-');
       return `http://dispatch-${instance}-instance.nodes.pokt.network:${values.port}`;
-    }
-    if (values.host && values.port) {
+    } else if (values.host && values.port) {
       const host = formData?.hosts?.find(({ id }) => id === values.host);
       const hostDomain = host?.ip || host?.fqdn;
       const protocol = `http${values.https ? 's' : ''}`;
