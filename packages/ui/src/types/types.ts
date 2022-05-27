@@ -269,6 +269,7 @@ export type INodeInput = {
   backend?: InputMaybe<Scalars['String']>;
   basicAuth?: InputMaybe<Scalars['String']>;
   chain: Scalars['ID'];
+  dispatch?: InputMaybe<Scalars['Boolean']>;
   frontend?: InputMaybe<Scalars['String']>;
   host: Scalars['ID'];
   https: Scalars['Boolean'];
@@ -283,6 +284,7 @@ export type INodeUpdate = {
   automation?: InputMaybe<Scalars['Boolean']>;
   backend?: InputMaybe<Scalars['String']>;
   chain?: InputMaybe<Scalars['ID']>;
+  dispatch?: InputMaybe<Scalars['Boolean']>;
   frontend?: InputMaybe<Scalars['String']>;
   host?: InputMaybe<Scalars['ID']>;
   https?: InputMaybe<Scalars['Boolean']>;
@@ -531,12 +533,12 @@ export type INodeQueryVariables = Exact<{
 }>;
 
 
-export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number }, host: { id: string, name: string } } };
+export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number, chainId: string }, host: { id: string, name: string } } };
 
 export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number }, host: { id: string, name: string } }> };
+export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number, chainId: string }, host: { id: string, name: string } }> };
 
 export type ILogsQueryVariables = Exact<{
   input: ILogParams;
@@ -565,7 +567,7 @@ export type IWebhooksQuery = { webhooks: Array<{ id: string, location: string, c
 export type IGetHostsChainsAndLoadBalancersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, fqdn?: string | null, location: { id: string, name: string } }>, chains: Array<{ id: string, name: string }>, loadBalancers: Array<{ id: string, name: string, ip?: string | null, fqdn?: string | null, location: { id: string, name: string } }> };
+export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, fqdn?: string | null, location: { id: string, name: string } }>, chains: Array<{ id: string, name: string, chainId: string }>, loadBalancers: Array<{ id: string, name: string, ip?: string | null, fqdn?: string | null, location: { id: string, name: string } }> };
 
 export type IGetNodeStatusQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -1367,6 +1369,7 @@ export const NodeDocument = gql`
       name
       type
       allowance
+      chainId
     }
     host {
       id
@@ -1427,6 +1430,7 @@ export const NodesDocument = gql`
       name
       type
       allowance
+      chainId
     }
     host {
       id
@@ -1630,6 +1634,7 @@ export const GetHostsChainsAndLoadBalancersDocument = gql`
   chains {
     id
     name
+    chainId
   }
   loadBalancers: hosts(loadBalancer: true) {
     id
