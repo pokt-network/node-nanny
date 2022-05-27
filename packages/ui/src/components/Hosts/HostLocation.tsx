@@ -75,7 +75,7 @@ export const HostLocation = ({
     onError: () => setLoading(false),
   });
   const [deleteLocation] = useDeleteLocationMutation({
-    variables: { id: locationId },
+    // variables: { id: locationId },
     onCompleted: () => {
       refetchLocations();
       ModalHelper.close();
@@ -93,12 +93,13 @@ export const HostLocation = ({
     ModalHelper.open({
       modalType: 'confirmation',
       modalProps: {
-        handleOk: deleteLocation,
+        handleOk: () => deleteLocation({ variables: { id: locationId } }),
         confirmText: `Confirm Delete Location`,
         okText: 'Delete Location',
         promptText: `This will delete the location ${
           locations.find(({ id }) => id === locationId).name
         } from the inventory database. Confirm?`,
+        cancelColor: 'error',
       },
     });
   };
