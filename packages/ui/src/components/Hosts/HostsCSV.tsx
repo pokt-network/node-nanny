@@ -8,7 +8,7 @@ import Paper from 'components/Paper';
 import { ConfirmationModalProps } from 'components/modals/CSVConfirmationModal';
 import { HostActionsState } from 'pages/Hosts';
 
-import { IHostsQuery, ILocation } from 'types';
+import { IHostCsvInput, IHostsQuery, ILocation } from 'types';
 import { ModalHelper, regexTest } from 'utils';
 
 interface ICSVHost {
@@ -83,7 +83,8 @@ export const HostsCSV = ({
     );
 
     const invalidHosts: any = [];
-    const parsedHosts = hostsWithRequiredFields.map((host: any) => {
+
+    const parsedHosts: IHostCsvInput[] = hostsWithRequiredFields.map((host: any) => {
       const invalidFields = validateCsvHostInput(host, schema);
 
       if (hostNames.includes(host.name)) {

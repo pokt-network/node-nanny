@@ -125,7 +125,10 @@ export class Service extends BaseService {
           host: host._id,
           url: `http${https ? 's' : ''}://${fqdn || ip}:${nodeInput.port}`,
           loadBalancers: (
-            await HostsModel.find({ name: { $in: nodeInput.loadBalancers } })
+            await HostsModel.find({
+              name: { $in: nodeInput.loadBalancers },
+              loadBalancer: true,
+            })
           ).map(({ _id }) => _id),
         };
 
