@@ -298,7 +298,10 @@ export const NodeForm = ({
 
   useEffect(() => {
     if (values.dispatch) {
-      setFieldValue('chain', formData.chains.find(({ name }) => name === 'POKT-DIS').id);
+      setFieldValue(
+        'chain',
+        formData.chains?.find(({ name }) => name === 'POKT-DIS')?.id,
+      );
       setFieldValue('https', false);
     } else if (!update) {
       setFieldValue('chain', '');
@@ -795,8 +798,8 @@ export const NodeForm = ({
           </>
         )}
         {env('PNF') && (
-          <FormControl fullWidth disabled={read}>
-            <InputLabel>Dispatch</InputLabel>
+          <FormControl fullWidth>
+            <InputLabel disabled={read || !formData?.hosts?.length}>Dispatch</InputLabel>
             <Box>
               {read && !selectedNode ? (
                 <></>
@@ -805,6 +808,7 @@ export const NodeForm = ({
                   name="dispatch"
                   checked={values.dispatch}
                   onChange={handleChange}
+                  disabled={!formData?.hosts?.length}
                 />
               )}
             </Box>
