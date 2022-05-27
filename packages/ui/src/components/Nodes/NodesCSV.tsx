@@ -3,7 +3,7 @@ import { ApolloQueryResult } from '@apollo/client';
 import CSVReader from 'react-csv-reader';
 import { Alert, AlertTitle, Box, Button, Typography } from '@mui/material';
 
-import { IGetHostsChainsAndLoadBalancersQuery, IHost, INodesQuery } from 'types';
+import { IGetHostsChainsAndLoadBalancersQuery, INodeCsvInput, INodesQuery } from 'types';
 import { ModalHelper, regexTest, s } from 'utils';
 import { NodeActionsState } from 'pages/Nodes';
 
@@ -141,7 +141,8 @@ export const NodesCSV = ({
 
     const invalidNodes: any = [];
     const counts = {};
-    const parsedNodes = nodesWithRequiredFields.map((node) => {
+
+    const parsedNodes: INodeCsvInput[] = nodesWithRequiredFields.map((node) => {
       let nodeName = `${node.host}/${node.chain}`;
       counts[nodeName] = counts[nodeName]
         ? counts[nodeName] + 1
@@ -170,6 +171,7 @@ export const NodesCSV = ({
         name: nodeName,
         chain: node.chain.toUpperCase(),
         host: node.host.toLowerCase(),
+        loadBalancers: splitLoadBalancers(node.loadBalancers),
         https: Boolean(node.https.toLowerCase() === 'true'),
         automation: Boolean(node.automation.toLowerCase() === 'true'),
       };
