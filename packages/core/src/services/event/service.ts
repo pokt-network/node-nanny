@@ -57,13 +57,8 @@ export class Service extends BaseService {
       if (env('PNF') && dispatchFrontendDown) {
         await this.urgentAlertDispatchFrontendIsDown(message);
       }
-    } catch ({ stack }) {
-      const [message, location] = stack.split('\n');
-      const nodeNameStr = nodeName ? ` Node: ${nodeName} ` : '';
-      colorLog(
-        `[EVENT CONSUMER ERROR - TRIGGERED]${nodeNameStr}${message} ${location}`,
-        'yellow',
-      );
+    } catch (error) {
+      this.parseError(error, 'TRIGGERED', nodeName);
     }
   };
 
@@ -107,13 +102,8 @@ export class Service extends BaseService {
       if (env('PNF') && dispatchFrontendDown) {
         await this.urgentAlertDispatchFrontendIsDown(message);
       }
-    } catch ({ stack }) {
-      const [message, location] = stack.split('\n');
-      const nodeNameStr = nodeName ? ` Node: ${nodeName} ` : '';
-      colorLog(
-        `[EVENT CONSUMER ERROR - RETRIGGERED]${nodeNameStr}${message} ${location}`,
-        'yellow',
-      );
+    } catch (error) {
+      this.parseError(error, 'RETRIGGERED', nodeName);
     }
   };
 
@@ -146,13 +136,8 @@ export class Service extends BaseService {
       if (automation && backend && !frontend && healthy) {
         await this.toggleServer({ node, enable: true });
       }
-    } catch ({ stack }) {
-      const [message, location] = stack.split('\n');
-      const nodeNameStr = nodeName ? ` Node: ${nodeName} ` : '';
-      colorLog(
-        `[EVENT CONSUMER ERROR - RESOLVED]${nodeNameStr}${message} ${location}`,
-        'yellow',
-      );
+    } catch (error) {
+      this.parseError(error, 'RESOLVED', nodeName);
     }
   };
 
@@ -264,6 +249,18 @@ export class Service extends BaseService {
         EErrorStatus.ERROR,
       );
     }
+  }
+
+  private parseError(error: any, type: string, nodeName: string): void {
+    let errorMessage: string;
+    if (error?.stack) {
+      const [message, location] = error.stack.split('\n');
+      const nodeNameStr = nodeName ? ` Node: ${nodeName} ` : '';
+      errorMessage = `[EVENT CONSUMER ERROR - ${type}]${nodeNameStr}${message} ${location}`;
+    } else {
+      errorMessage = `[EVENT CONSUMER ERROR - ${type}] ${error}`;
+    }
+    colorLog(errorMessage, 'yellow');
   }
 
   /* ----- PNF Internal Only ----- */
