@@ -125,7 +125,7 @@ export function Hosts() {
                 hostNames={hostNames}
                 setState={setState}
                 refetchHosts={refetch}
-              ></HostsCSV>
+              />
             </Grid>
           )}
           {state === 'location' && (
