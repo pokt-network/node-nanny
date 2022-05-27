@@ -16,8 +16,8 @@ import {
   Checkbox,
   CircularProgress,
   FormControl,
-  FormControlLabel,
   FormHelperText,
+  InputAdornment,
   InputLabel,
   ListItemText,
   MenuItem,
@@ -25,7 +25,9 @@ import {
   Select,
   Switch,
   TextField,
+  Tooltip,
 } from '@mui/material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 import {
   IChain,
@@ -43,6 +45,8 @@ import {
 import { ModalHelper, s, SnackbarHelper } from 'utils';
 import Form from 'components/Form';
 import { NodeActionsState } from 'pages/Nodes';
+
+import { env } from 'environment';
 
 export interface NodesFormProps {
   formData: IGetHostsChainsAndLoadBalancersQuery;
@@ -194,6 +198,7 @@ export const NodeForm = ({
       server: '',
       frontend: '',
       basicAuth: '',
+      dispatch: env('PNF') ? false : null,
     },
     validate,
     validateOnChange: false,
@@ -235,7 +240,14 @@ export const NodeForm = ({
   }, [values.host, formData, setFieldValue]);
 
   const getNodeName = useCallback(() => {
-    if (values.chain && values.host) {
+    if (values.dispatch && values.host) {
+      const host = formData?.hosts?.find(({ id }) => id === values.host);
+      const { name: locationName } = host.location;
+      const [, instance] = host.name.split('-');
+      const existingDispatchCount =
+        nodeNames?.filter((name) => name.includes('dispatch-'))?.length || 0;
+      return `instance-${instance}/${locationName}/dispatch-${existingDispatchCount + 1}`;
+    } else if (values.chain && values.host) {
       const chainName = formData?.chains?.find(({ id }) => id === values.chain)?.name;
       const hostName = formData?.hosts?.find(({ id }) => id === values.host)?.name;
       let nodeName = `${hostName}/${chainName}`;
@@ -251,10 +263,22 @@ export const NodeForm = ({
     } else {
       return '';
     }
-  }, [values.chain, values.host, frontend, formData.chains, formData.hosts, nodeNames]);
+  }, [
+    values.dispatch,
+    values.host,
+    values.chain,
+    frontend,
+    formData.chains,
+    formData.hosts,
+    nodeNames,
+  ]);
 
   const getNodeUrl = useCallback(() => {
-    if (values.host && values.port) {
+    if (values.dispatch && values.port) {
+      const host = formData?.hosts?.find(({ id }) => id === values.host);
+      const [, instance] = host.name.split('-');
+      return `http://dispatch-${instance}-instance.nodes.pokt.network:${values.port}`;
+    } else if (values.host && values.port) {
       const host = formData?.hosts?.find(({ id }) => id === values.host);
       const hostDomain = host?.ip || host?.fqdn;
       const protocol = `http${values.https ? 's' : ''}`;
@@ -262,7 +286,7 @@ export const NodeForm = ({
     } else {
       return '';
     }
-  }, [values.host, values.port, values.https, formData.hosts]);
+  }, [values.dispatch, values.host, values.port, values.https, formData.hosts]);
 
   useEffect(() => {
     if (frontend) {
@@ -271,6 +295,15 @@ export const NodeForm = ({
       setFrontendExists(frontendExists);
     }
   }, [values.host, values.chain, frontend, frontendHostChainCombos]);
+
+  useEffect(() => {
+    if (values.dispatch) {
+      setFieldValue('chain', formData.chains.find(({ name }) => name === 'POKT-DIS').id);
+      setFieldValue('https', false);
+    } else if (!update) {
+      setFieldValue('chain', '');
+    }
+  }, [values.dispatch, formData.chains, setFieldValue, update]);
 
   /* ----- Update Mode ----- */
   if (update && selectedNode) {
@@ -325,6 +358,7 @@ export const NodeForm = ({
     setFieldValue('frontend', selectedNode.frontend);
     setFieldValue('server', selectedNode.server);
     setFieldValue('automation', selectedNode.automation);
+    if (env('PNF')) setFieldValue('dispatch', selectedNode.dispatch);
   }, [setFieldValue, selectedNode]);
 
   const handleResetRefs = useCallback(() => {
@@ -359,6 +393,8 @@ export const NodeForm = ({
       resetForm();
     }
   }, [update, selectedNode, resetForm, handleResetFormState, handleResetRefs, frontend]);
+
+  useEffect(() => {}, []);
 
   /* ----- Queries ----- */
   const [checkValidHaProxy] = useCheckValidHaProxyLazyQuery({
@@ -430,20 +466,39 @@ export const NodeForm = ({
   return (
     <>
       <Form read={read}>
-        {!read && (
-          <TextField
-            name="name"
-            value={getNodeName()}
-            onChange={handleChange}
-            label="Name"
-            variant="outlined"
-            disabled
-            size="small"
-            sx={{
-              '& fieldset': { borderWidth: '0px !important' },
-            }}
-          />
+        {!read && !formData?.hosts?.length && (
+          <Alert severity="info" sx={{ marginBottom: 2 }}>
+            <AlertTitle>No Hosts in Inventory Database</AlertTitle>
+            Before creating a node, you must create at least one host using the Hosts
+            screen.
+          </Alert>
         )}
+        <TextField
+          name="name"
+          value={getNodeName()}
+          onChange={handleChange}
+          label="Name"
+          variant="outlined"
+          disabled
+          size="small"
+          sx={{
+            '& fieldset': { borderWidth: '0px !important' },
+          }}
+          InputProps={{
+            sx: { paddingRight: 0 },
+            endAdornment: read ? null : (
+              <InputAdornment position="start">
+                <Tooltip
+                  title="Node name is derived from host name/chain/number"
+                  placement="left"
+                  arrow
+                >
+                  <HelpOutlineIcon fontSize="small" />
+                </Tooltip>
+              </InputAdornment>
+            ),
+          }}
+        />
         <TextField
           name="url"
           ref={urlRef}
@@ -455,6 +510,30 @@ export const NodeForm = ({
           size="small"
           sx={{
             '& fieldset': { borderWidth: '0px !important' },
+          }}
+          InputProps={{
+            sx: { paddingRight: 0 },
+            endAdornment: read ? null : (
+              <InputAdornment position="start">
+                <Tooltip
+                  title={
+                    <>
+                      <div>
+                        Node URL is derived from the host's IP/FQDN and the port field.
+                      </div>
+                      <div>
+                        If you wish to update the IP/FQDN portion of the URL, update the
+                        field on the node's host in the Hosts screen.
+                      </div>
+                    </>
+                  }
+                  placement="left"
+                  arrow
+                >
+                  <HelpOutlineIcon fontSize="small" />
+                </Tooltip>
+              </InputAdornment>
+            ),
           }}
         />
         {read && (
@@ -471,7 +550,12 @@ export const NodeForm = ({
         )}
         {!read && (
           <FormControl fullWidth error={!!errors.chain}>
-            <InputLabel id="chain-label">Chain</InputLabel>
+            <InputLabel
+              id="chain-label"
+              disabled={values.dispatch || !formData?.hosts?.length}
+            >
+              Chain
+            </InputLabel>
             <Select
               name="chain"
               labelId="chain-label"
@@ -479,10 +563,11 @@ export const NodeForm = ({
               label="Chain"
               onChange={handleChange}
               size="small"
+              disabled={values.dispatch || !formData?.hosts?.length}
             >
-              {formData?.chains.map(({ name, id }) => (
+              {formData?.chains.map(({ name, id, chainId }) => (
                 <MenuItem key={id} value={id}>
-                  {name}
+                  {`${name} - ${chainId}`}
                 </MenuItem>
               ))}
             </Select>
@@ -506,7 +591,9 @@ export const NodeForm = ({
         )}
         {!read && (
           <FormControl fullWidth error={!!errors.host}>
-            <InputLabel id="host-label">{frontend ? 'Load Balancer' : 'Host'}</InputLabel>
+            <InputLabel id="host-label" disabled={!formData?.hosts?.length}>
+              {frontend ? 'Load Balancer' : 'Host'}
+            </InputLabel>
             <Select
               name="host"
               labelId="host-label"
@@ -514,42 +601,56 @@ export const NodeForm = ({
               label="Host"
               onChange={handleChange}
               size="small"
+              disabled={!formData?.hosts?.length}
             >
-              {(frontend ? formData?.loadBalancers : formData?.hosts).map(
-                ({ name, id, location }) => (
-                  <MenuItem key={id} value={id}>
-                    {`${name} - ${location.name}`}
-                  </MenuItem>
-                ),
-              )}
+              {(frontend
+                ? formData.loadBalancers
+                : values.dispatch
+                ? formData.hosts.filter(({ name }) => name.includes('dispatch-'))
+                : env('PNF')
+                ? formData.hosts.filter(({ name }) => !name.includes('dispatch-'))
+                : formData.hosts
+              ).map(({ name, id, location }) => (
+                <MenuItem key={id} value={id}>
+                  {`${name} - ${location.name}`}
+                </MenuItem>
+              ))}
             </Select>
             {!!errors.host && <FormHelperText>{errors.host}</FormHelperText>}
           </FormControl>
         )}
-        <FormControl fullWidth disabled={read}>
-          <InputLabel>HTTPS</InputLabel>
-          <Box>
-            <FormControlLabel
-              control={
-                read && !selectedNode ? (
-                  <></>
-                ) : (
-                  <Switch
-                    name="https"
-                    checked={values.https}
-                    onChange={handleChange}
-                    disabled={read || !hostHasFqdn}
-                  />
-                )
-              }
-              label={
-                read || !values.host
-                  ? ''
-                  : hostHasFqdn
-                  ? 'Selected host has a FQDN'
-                  : 'Selected host does not have a FQDN'
-              }
-            />
+        <FormControl fullWidth>
+          <InputLabel disabled={read || !formData?.hosts?.length}>HTTPS</InputLabel>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            {read && !selectedNode ? (
+              <></>
+            ) : (
+              <Switch
+                name="https"
+                checked={values.https}
+                onChange={handleChange}
+                disabled={
+                  read || !hostHasFqdn || values.dispatch || !formData?.hosts?.length
+                }
+              />
+            )}
+            {!read && (
+              <InputAdornment position="start">
+                <Tooltip
+                  title="For HTTPS to be enabled, the selected host must have an FQDN field and not an IP"
+                  placement="left"
+                  arrow
+                >
+                  <HelpOutlineIcon fontSize="small" />
+                </Tooltip>
+              </InputAdornment>
+            )}
           </Box>
         </FormControl>
         <TextField
@@ -560,15 +661,23 @@ export const NodeForm = ({
           variant="outlined"
           error={!!errors.port}
           helperText={errors.port}
-          disabled={read}
+          disabled={read || !formData?.hosts?.length}
           size="small"
           fullWidth
         />
         {!frontend && (
           <>
-            <FormControl fullWidth disabled={read}>
-              <InputLabel>Automation</InputLabel>
-              <Box>
+            <FormControl fullWidth>
+              <InputLabel disabled={read || !formData?.hosts?.length}>
+                Automation
+              </InputLabel>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
                 {read && !selectedNode ? (
                   <></>
                 ) : (
@@ -576,7 +685,19 @@ export const NodeForm = ({
                     name="automation"
                     checked={values.automation}
                     onChange={handleChange}
+                    disabled={!formData?.hosts?.length}
                   />
+                )}
+                {!read && (
+                  <InputAdornment position="start">
+                    <Tooltip
+                      title="In order to utilize the automation feature, HAProxy must be configured on at least one load balancer host and the following three fields filled out."
+                      placement="left"
+                      arrow
+                    >
+                      <HelpOutlineIcon fontSize="small" />
+                    </Tooltip>
+                  </InputAdornment>
                 )}
               </Box>
             </FormControl>
@@ -586,7 +707,10 @@ export const NodeForm = ({
                   name="backend"
                   value={values.backend}
                   onChange={handleChange}
-                  disabled={read ?? (!!values.frontend || !values.automation)}
+                  disabled={
+                    (!formData?.hosts?.length || read) ??
+                    (!!values.frontend || !values.automation)
+                  }
                   label="Backend"
                   variant="outlined"
                   size="small"
@@ -614,7 +738,10 @@ export const NodeForm = ({
                 {!read && (
                   <FormControl
                     fullWidth
-                    disabled={read ?? (!!values.frontend || !values.automation)}
+                    disabled={
+                      (!formData?.hosts?.length || read) ??
+                      (!!values.frontend || !values.automation)
+                    }
                     error={!!errors.loadBalancers}
                   >
                     <InputLabel id="lb-label">Load Balancers</InputLabel>
@@ -654,7 +781,10 @@ export const NodeForm = ({
                   onChange={handleChange}
                   label="Server"
                   variant="outlined"
-                  disabled={read ?? (!!values.frontend || !values.automation)}
+                  disabled={
+                    (!formData?.hosts?.length || read) ??
+                    (!!values.frontend || !values.automation)
+                  }
                   size="small"
                   fullWidth
                   error={!!errors.server}
@@ -663,6 +793,22 @@ export const NodeForm = ({
               </>
             )}
           </>
+        )}
+        {env('PNF') && (
+          <FormControl fullWidth disabled={read}>
+            <InputLabel>Dispatch</InputLabel>
+            <Box>
+              {read && !selectedNode ? (
+                <></>
+              ) : (
+                <Switch
+                  name="dispatch"
+                  checked={values.dispatch}
+                  onChange={handleChange}
+                />
+              )}
+            </Box>
+          </FormControl>
         )}
         {frontend && (
           <>
