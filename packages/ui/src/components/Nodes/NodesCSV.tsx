@@ -172,7 +172,6 @@ export const NodesCSV = ({
         host: node.host.toLowerCase(),
         https: Boolean(node.https.toLowerCase() === 'true'),
         automation: Boolean(node.automation.toLowerCase() === 'true'),
-        loadBalancers: splitLoadBalancers(node.loadBalancers),
       };
     });
 
@@ -205,8 +204,6 @@ export const NodesCSV = ({
       modalProps,
     });
   };
-
-  console.log({ hosts });
 
   return (
     <Paper>
