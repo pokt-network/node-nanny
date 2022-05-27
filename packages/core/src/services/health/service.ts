@@ -356,9 +356,7 @@ export class Service {
       return data;
     } catch (error) {
       const stringError = JSON.stringify(error);
-      throw new Error(
-        `getBlockHeight could not contact blockchain node ${stringError} ${url}`,
-      );
+      throw new Error(`getBlockHeight contact blockchain node ${stringError} ${url}`);
     }
   }
 
