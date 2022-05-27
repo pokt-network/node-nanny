@@ -16,12 +16,15 @@ import {
   CircularProgress,
   FormControl,
   FormHelperText,
+  InputAdornment,
   InputLabel,
   MenuItem,
   Select,
   Switch,
   TextField,
+  Tooltip,
 } from '@mui/material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 import {
   IHost,
@@ -259,6 +262,13 @@ export const HostForm = ({
   /* ----- Layout ----- */
   return (
     <Form read={read}>
+      {!read && !locations?.length && (
+        <Alert severity="info" sx={{ marginBottom: 2 }}>
+          <AlertTitle>No Locations in Inventory Database</AlertTitle>
+          Before creating a host, you must enter at least one location using the Edit
+          Locations form.
+        </Alert>
+      )}
       {read && (
         <TextField
           ref={locationRef}
@@ -275,14 +285,16 @@ export const HostForm = ({
       )}
       {!read && (
         <FormControl fullWidth error={!!errors.location}>
-          <InputLabel id="location-label">Location</InputLabel>
+          <InputLabel id="location-label" disabled={!locations?.length}>
+            Location
+          </InputLabel>
           <Select
             name="location"
             labelId="location-label"
             value={values.location}
             label="Location"
             onChange={handleChange}
-            disabled={read}
+            disabled={read || !locations?.length}
             size="small"
           >
             {locations?.map(({ id, name }) => (
@@ -300,7 +312,7 @@ export const HostForm = ({
         variant="outlined"
         error={!!errors.name}
         helperText={errors.name}
-        disabled={read}
+        disabled={read || !locations?.length}
         size="small"
         fullWidth
       />
@@ -310,11 +322,35 @@ export const HostForm = ({
         onChange={handleChange}
         label="Host IP"
         variant="outlined"
-        disabled={read ? read : ipDisabled}
+        disabled={read ? read : ipDisabled || !locations?.length}
         error={!!errors.ip}
         helperText={errors.ip}
         size="small"
         fullWidth
+        InputProps={{
+          sx: { paddingRight: 0 },
+          endAdornment: read ? null : (
+            <InputAdornment position="start">
+              <Tooltip
+                title={
+                  <>
+                    <div>Either IP or FQDN must be entered, but not both.</div>
+                    {update && (
+                      <div>
+                        A change to this host's IP will automatically update the URL for
+                        all nodes on this host.
+                      </div>
+                    )}
+                  </>
+                }
+                placement="left"
+                arrow
+              >
+                <HelpOutlineIcon fontSize="small" />
+              </Tooltip>
+            </InputAdornment>
+          ),
+        }}
       />
       <TextField
         name="fqdn"
@@ -322,21 +358,63 @@ export const HostForm = ({
         onChange={handleChange}
         label="Host FQDN"
         variant="outlined"
-        disabled={read ? read : fqdnDisabled}
+        disabled={read ? read : fqdnDisabled || !locations?.length}
         error={!!errors.fqdn}
         helperText={errors.fqdn}
         size="small"
         fullWidth
+        InputProps={{
+          sx: { paddingRight: 0 },
+          endAdornment: read ? null : (
+            <InputAdornment position="start">
+              <Tooltip
+                title={
+                  <>
+                    <div>Either IP or FQDN must be entered, but not both.</div>
+                    <div>FQDN is required if you wish to use HTTPS for a node.</div>
+                    {update && (
+                      <div>
+                        A change to this host's FQDN will automatically update the URL for
+                        all nodes on this host.
+                      </div>
+                    )}
+                  </>
+                }
+                placement="left"
+                arrow
+              >
+                <HelpOutlineIcon fontSize="small" />
+              </Tooltip>
+            </InputAdornment>
+          ),
+        }}
       />
       <FormControl fullWidth>
-        <InputLabel disabled={read}>Load Balancer</InputLabel>
-        <Box>
+        <InputLabel disabled={read || !locations?.length}>Load Balancer</InputLabel>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           <Switch
             name="loadBalancer"
             checked={values.loadBalancer}
             onChange={handleChange}
-            disabled={read}
+            disabled={read || !locations?.length}
           />
+          {!read && (
+            <InputAdornment position="start">
+              <Tooltip
+                title="If this host is running load balancer software, this toggle should be enabled. This is required to use a host for the automation feature."
+                placement="left"
+                arrow
+              >
+                <HelpOutlineIcon fontSize="small" />
+              </Tooltip>
+            </InputAdornment>
+          )}
         </Box>
       </FormControl>
       {read && (

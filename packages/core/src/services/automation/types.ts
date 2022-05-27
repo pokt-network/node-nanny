@@ -19,6 +19,7 @@ export interface INodeInput {
   frontend?: string;
   server?: string;
   basicAuth?: string;
+  dispatch?: boolean;
 }
 
 export interface INodeCsvInput {
