@@ -78,8 +78,8 @@ describe('Automation Service Tests', () => {
         increment: 1000 * 60,
       });
 
-      expect(logData[0].ok).toEqual(56);
-      expect(logData[0].error).toEqual(27);
+      expect(logData[0].ok).toEqual(67);
+      expect(logData[0].error).toEqual(33);
       expect(logData[0].ok + logData[0].error).toEqual(numOfLogs);
     });
 
@@ -91,8 +91,8 @@ describe('Automation Service Tests', () => {
         nodeIds: [mockId],
       });
 
-      expect(logData[0].ok).toEqual(56);
-      expect(logData[0].error).toEqual(27);
+      expect(logData[0].ok).toEqual(67);
+      expect(logData[0].error).toEqual(33);
       expect(logData[0].ok + logData[0].error).toEqual(numOfLogs);
     });
   });
