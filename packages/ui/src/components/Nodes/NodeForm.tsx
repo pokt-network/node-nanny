@@ -100,8 +100,7 @@ export const NodeForm = ({
       setLoading(true);
 
       if (values.automation || frontend) {
-        // const { data } = await checkValidHaProxy();
-        const data = { validHaProxy: true };
+        const { data } = await checkValidHaProxy();
 
         if (data?.validHaProxy) {
           update
