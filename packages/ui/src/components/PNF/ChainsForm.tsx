@@ -80,7 +80,6 @@ export const ChainsForm = ({
       validateOnChange: false,
       onSubmit: async () => {
         setLoading(true);
-        console.log({ values });
         update
           ? submitUpdate({
               variables: {
@@ -115,7 +114,6 @@ export const ChainsForm = ({
     Object.entries(selectedChain).forEach(([key, value]) => {
       if (values[key] && values[key] !== value) newValues[key] = values[key];
     });
-    console.log({ newValues });
     return newValues;
   };
 
