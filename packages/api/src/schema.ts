@@ -68,6 +68,7 @@ const typeDefs = gql`
     ssl: Boolean
     automation: Boolean
     dispatch: Boolean
+    basicAuth: String
     deltaArray: [Int]
   }
 
@@ -177,6 +178,7 @@ const typeDefs = gql`
     server: String
     https: Boolean
     dispatch: Boolean
+    basicAuth: String
   }
 
   input HostUpdate {
