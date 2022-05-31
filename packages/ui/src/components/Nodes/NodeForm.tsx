@@ -352,7 +352,6 @@ export const NodeForm = ({
       if (values.basicAuth !== selectedNode?.basicAuth) {
         newValues.basicAuth = values.basicAuth;
       }
-      console.log({ newValues });
       return newValues;
     },
     [getNodeName, getNodeUrl],
