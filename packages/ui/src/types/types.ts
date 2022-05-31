@@ -135,7 +135,7 @@ export type IMutation = {
   createNode?: Maybe<INode>;
   createNodesCSV: Array<Maybe<INode>>;
   deleteHost?: Maybe<IHost>;
-  deleteLocation?: Maybe<Scalars['Boolean']>;
+  deleteLocation?: Maybe<ILocation>;
   deleteNode?: Maybe<INode>;
   disableHaProxyServer: Scalars['Boolean'];
   enableHaProxyServer: Scalars['Boolean'];
@@ -476,7 +476,7 @@ export type IDeleteLocationMutationVariables = Exact<{
 }>;
 
 
-export type IDeleteLocationMutation = { deleteLocation?: boolean | null };
+export type IDeleteLocationMutation = { deleteLocation?: { id: string, name: string } | null };
 
 export type IDeleteNodeMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -1035,7 +1035,10 @@ export type DeleteHostMutationResult = Apollo.MutationResult<IDeleteHostMutation
 export type DeleteHostMutationOptions = Apollo.BaseMutationOptions<IDeleteHostMutation, IDeleteHostMutationVariables>;
 export const DeleteLocationDocument = gql`
     mutation DeleteLocation($id: ID!) {
-  deleteLocation(id: $id)
+  deleteLocation(id: $id) {
+    id
+    name
+  }
 }
     `;
 export type IDeleteLocationMutationFn = Apollo.MutationFunction<IDeleteLocationMutation, IDeleteLocationMutationVariables>;

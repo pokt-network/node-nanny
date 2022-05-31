@@ -252,7 +252,7 @@ const typeDefs = gql`
     updateOracle(update: OracleUpdate!): Oracle
 
     deleteHost(id: ID!): Host
-    deleteLocation(id: ID!): Boolean
+    deleteLocation(id: ID!): Location
     deleteNode(id: ID!): Node
 
     muteMonitor(id: ID!): Node!
