@@ -457,8 +457,8 @@ export const NodeForm = ({
       modalProps: {
         handleOk: () => submitDelete({ variables: { id: selectedNode?.id } }),
         confirmText: `Delete: ${selectedNode?.name}`,
-        promptText: `Are you sure you wish to remove host ${selectedNode?.name} from the inventory database?`,
-        okText: 'Delete Host',
+        promptText: `Are you sure you wish to remove node ${selectedNode?.name} from the inventory database?`,
+        okText: 'Delete Node',
         okColor: 'error',
         cancelColor: 'inherit',
       },
