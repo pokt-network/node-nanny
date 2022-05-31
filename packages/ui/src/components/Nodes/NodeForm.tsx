@@ -543,7 +543,14 @@ export const NodeForm = ({
           <TextField
             ref={chainRef}
             name="chain"
-            value={formData?.chains.find((chain) => chain.id === values.chain)?.name}
+            value={(() => {
+              if (!values.chain) {
+                return null;
+              }
+              const { name, chainId } =
+                formData?.chains.find((chain) => chain.id === values.chain) || {};
+              return `${name} - ${chainId}`;
+            })()}
             onChange={handleChange}
             label="Chain"
             variant="outlined"
