@@ -84,9 +84,8 @@ export const HostForm = ({
     if (!values.location) errors.location = 'Location is required';
     if (!values.name) errors.name = 'Name is required';
     if (
-      update &&
       hostNames
-        .filter((hostName) => hostName !== selectedHost?.name)
+        .filter((hostName) => !update || hostName !== selectedHost?.name)
         .includes(values.name)
     )
       errors.name = 'Name is already taken';

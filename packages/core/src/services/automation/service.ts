@@ -6,6 +6,7 @@ import { ELoadBalancerStatus } from '../event/types';
 import {
   IChain,
   IHost,
+  ILocation,
   INode,
   IOracle,
   ChainsModel,
@@ -264,6 +265,20 @@ export class Service extends BaseService {
     if (restart) await this.restartMonitor();
 
     return node;
+  }
+
+  public async deleteLocation(id: string): Promise<ILocation> {
+    const location = await LocationsModel.findOne({ _id: id });
+    const locationHasHost = await HostsModel.exists({ location: id });
+    if (locationHasHost) {
+      throw new Error(
+        `Location ${location.name} has one or more hosts; cannot be deleted.`,
+      );
+    }
+
+    await LocationsModel.deleteOne({ _id: id });
+
+    return location;
   }
 
   private sanitizeCreate(unsanitizedCreate: { [key: string]: any }): UpdateQuery<any> {
