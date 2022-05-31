@@ -64,7 +64,7 @@ const resolvers: {
     updateOracle: (_, { update }) => new AutomationService().updateOracle(update),
 
     deleteHost: (_, { id }) => new AutomationService().deleteHost(id),
-    deleteLocation: async (_, { id }) => !!(await LocationsModel.deleteOne({ id })),
+    deleteLocation: async (_, { id }) => new AutomationService().deleteLocation(id),
     deleteNode: (_, { id }) => new AutomationService().deleteNode(id),
 
     muteMonitor: (_, { id }) => new AutomationService().muteMonitor(id),

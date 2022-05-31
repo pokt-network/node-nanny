@@ -133,7 +133,10 @@ mutation DeleteHost($id: ID!) {
   }
 }
 mutation DeleteLocation($id: ID!) {
-  deleteLocation(id: $id)
+  deleteLocation(id: $id) {
+    id
+    name
+  }
 }
 mutation DeleteNode($id: ID!) {
   deleteNode(id: $id) {
