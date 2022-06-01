@@ -94,9 +94,6 @@ export const HostForm = ({
       errors.fqdn = 'Either IP or FQDN is required';
     }
     if (values.ip && !regexTest(values.ip.trim(), 'ip')) errors.ip = 'Not a valid IP';
-    if (values.fqdn && !regexTest(values.fqdn.trim(), 'fqdn'))
-      errors.fqdn = 'Not a valid FQDN';
-
     return errors;
   };
 
