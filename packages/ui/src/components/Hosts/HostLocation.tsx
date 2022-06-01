@@ -56,7 +56,7 @@ export const HostLocation = ({
     return errors;
   };
 
-  const { values, handleChange, handleSubmit } = useFormik({
+  const { values, handleChange, handleSubmit, errors } = useFormik({
     initialValues: { name: '' },
     validate,
     validateOnChange: false,
@@ -75,7 +75,6 @@ export const HostLocation = ({
     onError: () => setLoading(false),
   });
   const [deleteLocation] = useDeleteLocationMutation({
-    // variables: { id: locationId },
     onCompleted: () => {
       refetchLocations();
       ModalHelper.close();
@@ -93,7 +92,9 @@ export const HostLocation = ({
     ModalHelper.open({
       modalType: 'confirmation',
       modalProps: {
-        handleOk: () => deleteLocation({ variables: { id: locationId } }),
+        handleOk: () => {
+          deleteLocation({ variables: { id: locationId } });
+        },
         confirmText: `Confirm Delete Location`,
         okText: 'Delete Location',
         promptText: `This will delete the location ${
@@ -147,8 +148,8 @@ export const HostLocation = ({
               onChange={handleChange}
               label="Name"
               variant="outlined"
-              error={!!addLocationError}
-              helperText={addLocationError}
+              error={!!errors?.name || !!addLocationError}
+              helperText={errors?.name || addLocationError}
             />
           </FormControl>
           <Box
