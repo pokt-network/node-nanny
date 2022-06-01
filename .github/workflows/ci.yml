@@ -18,7 +18,7 @@ jobs:
       TEST_DISCORD_TOKEN: ${{ secrets.TEST_DISCORD_TOKEN }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
 
     steps:
       - name: Check out code
@@ -28,7 +28,7 @@ jobs:
 
       - uses: pnpm/action-setup@v2.0.1
         with:
-          version: 6.32.2
+          version: 6.32.11
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2
