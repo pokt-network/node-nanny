@@ -104,9 +104,9 @@ export class Service {
       const { name: chainName } = chain;
       const { name: locName } = location;
 
-      if (await WebhookModel.exists({ chain: chainName, location: locName })) {
-        return;
-      }
+      // if (await WebhookModel.exists({ chain: chainName, location: locName })) {
+      //   return;
+      // }
 
       const categoryName = `${test ? 'TEST-' : ''}NODE-NANNY-${locName}`;
       const channelName = `${test ? 'test-' : ''}${chainName}-${locName}`.toLowerCase();
@@ -120,6 +120,7 @@ export class Service {
       if (batch && error?.timeout) {
         throw error;
       } else {
+        console.debug({ error });
         throw new Error(`Discord webhook creation error: ${JSON.stringify(error)}`);
       }
     }
@@ -189,7 +190,7 @@ export class Service {
     channel: TextChannel,
     chain: string,
     location: string,
-  ): Promise<any> {
+  ): Promise<IWebhook> {
     const webhookName = `${channelName}-alert`;
     const webhooks = await channel.fetchWebhooks();
 
@@ -197,7 +198,13 @@ export class Service {
       webhooks?.find(({ name }) => name === webhookName) ||
       (await channel.createWebhook(webhookName));
 
-    return WebhookModel.create({ chain, location, url });
+    if (await WebhookModel.exists({ chain, location, url: { $ne: url } })) {
+      await WebhookModel.updateOne({ chain, location }, { url });
+    } else if (!(await WebhookModel.exists({ chain, location }))) {
+      await WebhookModel.create({ chain, location, url });
+    }
+
+    return WebhookModel.findOne({ chain, location });
   }
 
   /** DO NOT USE - For testing purposes only - DO NOT USE */

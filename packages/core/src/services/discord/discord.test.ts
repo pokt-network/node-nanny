@@ -80,6 +80,28 @@ describe('Discord Service Tests', () => {
       expect(webhooks.length).toEqual(14);
       expect(numOfDuplicates).toEqual(0);
     });
+
+    test('should update an existing webhook record with a new url if it exists in the database', async () => {
+      const testUrl = 'https://www.notarealwebhook.com';
+      const testWebhookInput = { chain: 'TST', location: 'USW1', url: testUrl };
+      await WebhookModel.create(testWebhookInput);
+      const webhookBefore = await WebhookModel.findOne(testWebhookInput);
+
+      const testNewNode = ({
+        chain: { name: 'TST' },
+        host: { location: { name: 'USW1' } },
+      } as unknown) as INode;
+
+      const [webhookAfter] = await discordService.createWebhooks(
+        { nodes: [testNewNode], batch: false },
+        true,
+      ); // Method Call
+
+      expect(webhookBefore).toBeTruthy();
+      expect(webhookBefore.url).toEqual(testUrl);
+      expect(webhookBefore.chain).toEqual('TST');
+      expect(webhookAfter.url).not.toEqual(testUrl);
+    });
   });
 
   /* Private Methods 
