@@ -1,14 +1,12 @@
 {
   "$schema": "https://turborepo.org/schema.json",
+  "baseBranch": "origin/main",
   "pipeline": {
     "build": {
       "dependsOn": ["^build"]
     },
-    "build:clean": {
-      "dependsOn": ["^build:clean"]
-    },
     "test": {
-      "dependsOn": ["^test"]
+      "dependsOn": ["^build"]
     }
   }
 }
