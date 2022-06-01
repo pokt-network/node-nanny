@@ -9,7 +9,7 @@ on:
       - 'v*'
 
 jobs:
-  build:
+  buildtest:
     name: Build and Test
     timeout-minutes: 15
     runs-on: ${{ matrix.os }}
