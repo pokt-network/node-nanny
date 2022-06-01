@@ -58,6 +58,7 @@ query Node($id: ID!) {
       id
       name
     }
+    basicAuth
   }
 }
 
@@ -90,6 +91,7 @@ query Nodes {
       id
       name
     }
+    basicAuth
   }
 }
 

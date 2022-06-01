@@ -84,9 +84,8 @@ export const HostForm = ({
     if (!values.location) errors.location = 'Location is required';
     if (!values.name) errors.name = 'Name is required';
     if (
-      update &&
       hostNames
-        .filter((hostName) => hostName !== selectedHost?.name)
+        .filter((hostName) => !update || hostName !== selectedHost?.name)
         .includes(values.name)
     )
       errors.name = 'Name is already taken';
@@ -95,9 +94,6 @@ export const HostForm = ({
       errors.fqdn = 'Either IP or FQDN is required';
     }
     if (values.ip && !regexTest(values.ip.trim(), 'ip')) errors.ip = 'Not a valid IP';
-    if (values.fqdn && !regexTest(values.fqdn.trim(), 'fqdn'))
-      errors.fqdn = 'Not a valid FQDN';
-
     return errors;
   };
 
