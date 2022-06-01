@@ -135,7 +135,7 @@ export type IMutation = {
   createNode?: Maybe<INode>;
   createNodesCSV: Array<Maybe<INode>>;
   deleteHost?: Maybe<IHost>;
-  deleteLocation?: Maybe<Scalars['Boolean']>;
+  deleteLocation?: Maybe<ILocation>;
   deleteNode?: Maybe<INode>;
   disableHaProxyServer: Scalars['Boolean'];
   enableHaProxyServer: Scalars['Boolean'];
@@ -235,6 +235,7 @@ export type IMutationUpdateOracleArgs = {
 export type INode = {
   automation?: Maybe<Scalars['Boolean']>;
   backend?: Maybe<Scalars['String']>;
+  basicAuth?: Maybe<Scalars['String']>;
   chain: IChain;
   conditions: Scalars['String'];
   deltaArray?: Maybe<Array<Maybe<Scalars['Int']>>>;
@@ -283,6 +284,7 @@ export type INodeInput = {
 export type INodeUpdate = {
   automation?: InputMaybe<Scalars['Boolean']>;
   backend?: InputMaybe<Scalars['String']>;
+  basicAuth?: InputMaybe<Scalars['String']>;
   chain?: InputMaybe<Scalars['ID']>;
   dispatch?: InputMaybe<Scalars['Boolean']>;
   frontend?: InputMaybe<Scalars['String']>;
@@ -476,7 +478,7 @@ export type IDeleteLocationMutationVariables = Exact<{
 }>;
 
 
-export type IDeleteLocationMutation = { deleteLocation?: boolean | null };
+export type IDeleteLocationMutation = { deleteLocation?: { id: string, name: string } | null };
 
 export type IDeleteNodeMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -533,12 +535,12 @@ export type INodeQueryVariables = Exact<{
 }>;
 
 
-export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number, chainId: string }, host: { id: string, name: string } } };
+export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, basicAuth?: string | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number, chainId: string }, host: { id: string, name: string } } };
 
 export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number, chainId: string }, host: { id: string, name: string } }> };
+export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, basicAuth?: string | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number, chainId: string }, host: { id: string, name: string } }> };
 
 export type ILogsQueryVariables = Exact<{
   input: ILogParams;
@@ -1035,7 +1037,10 @@ export type DeleteHostMutationResult = Apollo.MutationResult<IDeleteHostMutation
 export type DeleteHostMutationOptions = Apollo.BaseMutationOptions<IDeleteHostMutation, IDeleteHostMutationVariables>;
 export const DeleteLocationDocument = gql`
     mutation DeleteLocation($id: ID!) {
-  deleteLocation(id: $id)
+  deleteLocation(id: $id) {
+    id
+    name
+  }
 }
     `;
 export type IDeleteLocationMutationFn = Apollo.MutationFunction<IDeleteLocationMutation, IDeleteLocationMutationVariables>;
@@ -1375,6 +1380,7 @@ export const NodeDocument = gql`
       id
       name
     }
+    basicAuth
   }
 }
     `;
@@ -1436,6 +1442,7 @@ export const NodesDocument = gql`
       id
       name
     }
+    basicAuth
   }
 }
     `;

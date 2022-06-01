@@ -57,6 +57,7 @@ export interface NodesFormProps {
   setSelectedNode: Dispatch<SetStateAction<INode>>;
   frontend?: boolean;
   update?: boolean;
+  updateFrontend?: boolean;
   read?: boolean;
   refetchNodes: (variables?: any) => Promise<ApolloQueryResult<INodesQuery>>;
   onCancel?: Dispatch<any>;
@@ -73,6 +74,7 @@ export const NodeForm = ({
   setSelectedNode,
   frontend,
   update,
+  updateFrontend,
   read,
   onCancel,
   setState,
@@ -151,7 +153,14 @@ export const NodeForm = ({
       errors.host = 'Host does not have an FQDN so HTTPS cannot be enabled';
     }
     if (!values.port) errors.port = 'Port is required';
-    if (hostPortCombos.includes(`${values.host}/${values.port}`)) {
+    if (
+      (update
+        ? hostPortCombos.filter(
+            (combo) => combo !== `${selectedNode?.host}/${selectedNode?.port}`,
+          )
+        : hostPortCombos
+      ).includes(`${values.host}/${values.port}`)
+    ) {
       errors.port = 'Host/port combination is already taken';
     }
     if (!frontend && values.automation) {
@@ -168,9 +177,6 @@ export const NodeForm = ({
     if (frontend) {
       if (!values.frontend) {
         errors.frontend = 'Frontend is required';
-      }
-      if (!values.basicAuth.split(':')[0] || !values.basicAuth.split(':')[1]) {
-        errors.basicAuth = 'Username and password are required';
       }
     }
     return errors;
@@ -192,7 +198,7 @@ export const NodeForm = ({
       name: '',
       url: '',
       port: '',
-      automation: true,
+      automation: frontend ? false : true,
       backend: '',
       loadBalancers: [],
       server: '',
@@ -220,11 +226,11 @@ export const NodeForm = ({
       setFieldValue('loadBalancers', []);
       setFieldValue('server', '');
     }
-    if (!frontend) {
+    if (!frontend && !selectedNode?.frontend) {
       setFieldValue('frontend', '');
       setFieldValue('basicAuth', '');
     }
-  }, [values.automation, frontend, setFieldValue]);
+  }, [values.automation, selectedNode?.frontend, frontend, setFieldValue]);
 
   useEffect(() => {
     if (formData?.hosts && values.host) {
@@ -342,6 +348,9 @@ export const NodeForm = ({
       if (newValues.host || newValues.port || newValues.https) {
         newValues.url = getNodeUrl();
       }
+      if (values.basicAuth !== selectedNode?.basicAuth) {
+        newValues.basicAuth = values.basicAuth;
+      }
       return newValues;
     },
     [getNodeName, getNodeUrl],
@@ -361,6 +370,9 @@ export const NodeForm = ({
     setFieldValue('frontend', selectedNode.frontend);
     setFieldValue('server', selectedNode.server);
     setFieldValue('automation', selectedNode.automation);
+    if (selectedNode.basicAuth) {
+      setFieldValue('basicAuth', selectedNode.basicAuth);
+    }
     if (env('PNF')) setFieldValue('dispatch', selectedNode.dispatch);
   }, [setFieldValue, selectedNode]);
 
@@ -387,7 +399,7 @@ export const NodeForm = ({
   };
 
   useEffect(() => {
-    if (update && selectedNode) {
+    if ((update || updateFrontend) && selectedNode) {
       handleResetFormState();
       handleResetRefs();
     }
@@ -395,7 +407,15 @@ export const NodeForm = ({
       handleResetRefs();
       resetForm();
     }
-  }, [update, selectedNode, resetForm, handleResetFormState, handleResetRefs, frontend]);
+  }, [
+    update,
+    updateFrontend,
+    selectedNode,
+    resetForm,
+    handleResetFormState,
+    handleResetRefs,
+    frontend,
+  ]);
 
   useEffect(() => {}, []);
 
@@ -543,7 +563,14 @@ export const NodeForm = ({
           <TextField
             ref={chainRef}
             name="chain"
-            value={formData?.chains.find((chain) => chain.id === values.chain)?.name}
+            value={(() => {
+              if (!values.chain) {
+                return null;
+              }
+              const { name, chainId } =
+                formData?.chains.find((chain) => chain.id === values.chain) || {};
+              return `${name} - ${chainId}`;
+            })()}
             onChange={handleChange}
             label="Chain"
             variant="outlined"
@@ -595,7 +622,7 @@ export const NodeForm = ({
         {!read && (
           <FormControl fullWidth error={!!errors.host}>
             <InputLabel id="host-label" disabled={!formData?.hosts?.length}>
-              {frontend ? 'Load Balancer' : 'Host'}
+              {frontend || updateFrontend ? 'Load Balancer' : 'Host'}
             </InputLabel>
             <Select
               name="host"
@@ -606,7 +633,7 @@ export const NodeForm = ({
               size="small"
               disabled={!formData?.hosts?.length}
             >
-              {(frontend
+              {(frontend || updateFrontend
                 ? formData.loadBalancers
                 : values.dispatch
                 ? formData.hosts.filter(({ name }) => name.includes('dispatch-'))
@@ -668,7 +695,7 @@ export const NodeForm = ({
           size="small"
           fullWidth
         />
-        {!frontend && (
+        {!frontend && !updateFrontend && !selectedNode?.frontend && (
           <>
             <FormControl fullWidth>
               <InputLabel disabled={read || !formData?.hosts?.length}>
@@ -688,7 +715,7 @@ export const NodeForm = ({
                     name="automation"
                     checked={values.automation}
                     onChange={handleChange}
-                    disabled={!formData?.hosts?.length}
+                    disabled={read || !formData?.hosts?.length}
                   />
                 )}
                 {!read && (
@@ -808,13 +835,13 @@ export const NodeForm = ({
                   name="dispatch"
                   checked={values.dispatch}
                   onChange={handleChange}
-                  disabled={!formData?.hosts?.length}
+                  disabled={read || !formData?.hosts?.length}
                 />
               )}
             </Box>
           </FormControl>
         )}
-        {frontend && (
+        {(frontend || updateFrontend || (read && selectedNode?.frontend)) && (
           <>
             <TextField
               name="frontend"
@@ -826,6 +853,7 @@ export const NodeForm = ({
               fullWidth
               error={!!errors.frontend}
               helperText={errors.frontend}
+              disabled={read}
             />
             <TextField
               name="username"
@@ -837,6 +865,7 @@ export const NodeForm = ({
               fullWidth
               error={!!errors.basicAuth}
               helperText={errors.basicAuth}
+              disabled={read}
             />
             <TextField
               name="password"
@@ -848,6 +877,7 @@ export const NodeForm = ({
               fullWidth
               error={!!errors.basicAuth}
               helperText={errors.basicAuth}
+              disabled={read}
             />
           </>
         )}
@@ -878,12 +908,14 @@ export const NodeForm = ({
                     getUpdateValues(selectedNode, values as INodeUpdate),
                   ).filter((key) => key !== 'id')?.length)
               }
-              sx={{ width: frontend ? 160 : 125, height: 36.5 }}
+              sx={{ width: frontend || updateFrontend ? 160 : 125, height: 36.5 }}
             >
               {loading ? (
                 <CircularProgress size={20} color="secondary" />
               ) : (
-                `${update ? 'Save' : 'Create'} ${frontend ? 'Frontend' : 'Node'}`
+                `${update ? 'Save' : 'Create'} ${
+                  frontend || updateFrontend ? 'Frontend' : 'Node'
+                }`
               )}
             </Button>
             <Button onClick={handleCancel} color="error" variant="outlined">
@@ -903,9 +935,9 @@ export const NodeForm = ({
               onClick={() => setState(NodeActionsState.Edit)}
               variant="contained"
               color="primary"
-              sx={{ width: frontend ? 160 : 125, height: 36.5 }}
+              sx={{ width: frontend || selectedNode.frontend ? 160 : 125, height: 36.5 }}
             >
-              Update Node
+              {`Update ${selectedNode.frontend ? 'Frontend' : 'Node'}`}
             </Button>
             <Button onClick={handleOpenDeleteModal} color="error" variant="outlined">
               Delete Node
