@@ -73,7 +73,7 @@ export function ConfirmationModal({
           }}
           variant="contained"
           color={okColor || 'primary'}
-          sx={{ width: 'auto' }}
+          sx={{ width: 150 }}
         >
           {loading ? (
             <CircularProgress size={20} color="secondary" style={{ marginRight: 8 }} />

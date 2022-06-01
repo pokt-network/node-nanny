@@ -246,6 +246,7 @@ export const NodeCRUD = ({
           read={type === 'info'}
           frontend={type === 'createFrontend'}
           update={type === 'info' || type === 'edit'}
+          updateFrontend={type === 'edit' && !!node.frontend}
           nodeNames={nodeNames}
           formData={formData}
           hostPortCombos={hostPortCombos}

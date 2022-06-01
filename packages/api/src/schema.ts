@@ -68,6 +68,7 @@ const typeDefs = gql`
     ssl: Boolean
     automation: Boolean
     dispatch: Boolean
+    basicAuth: String
     deltaArray: [Int]
   }
 
@@ -177,6 +178,7 @@ const typeDefs = gql`
     server: String
     https: Boolean
     dispatch: Boolean
+    basicAuth: String
   }
 
   input HostUpdate {
@@ -252,7 +254,7 @@ const typeDefs = gql`
     updateOracle(update: OracleUpdate!): Oracle
 
     deleteHost(id: ID!): Host
-    deleteLocation(id: ID!): Boolean
+    deleteLocation(id: ID!): Location
     deleteNode(id: ID!): Node
 
     muteMonitor(id: ID!): Node!
