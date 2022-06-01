@@ -60,16 +60,20 @@ export const ChainsForm = ({
     const errors: FormikErrors<IChainInput> = {};
     if (!values.name) errors.name = 'Name is required';
     if (!values.type) errors.type = 'Type is required';
-    if (chainNames.includes(values.name)) errors.name = 'Name is already taken';
+    if (
+      chainNames
+        .filter((chainName) => !update || chainName !== selectedChain?.name)
+        .includes(values.name)
+    )
+      errors.name = 'Name is already taken';
     if (!values.chainId) errors.chainId = 'Relay chain ID is required';
     if (
       chainIds
-        .filter((chainId) => chainId !== selectedChain.chainId)
+        .filter((chainId) => !update || chainId !== selectedChain?.chainId)
         .includes(values.chainId)
     ) {
       errors.chainId = 'Relay chain ID is already taken';
     }
-
     return errors;
   };
 
