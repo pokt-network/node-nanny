@@ -5,7 +5,7 @@ on:
     branches:
       - pascal/semantic-release
       # - main
-    tags-ignore:
+    tags:
       - 'v*'
 
 jobs:
@@ -49,6 +49,8 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     environment: CI
+    outputs:
+      version: ${{ steps.semantic.outputs.new_release_version }}
 
     steps:
       - name: Checkout
@@ -62,16 +64,6 @@ jobs:
             @semantic-release/git
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-      - name: Save version for Docker tags
-        shell: bash
-        run: |
-          echo ${{ steps.semantic.outputs.new_release_version }} > version.txt
-      - name: Upload version for Docker tags
-        uses: actions/upload-artifact@v3
-        with:
-          name: version
-          path: version.txt
 
   docker:
     name: Docker Build & Push
@@ -93,25 +85,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Get version for Docker tags
-        uses: actions/download-artifact@v3
-        with:
-          name: version
-      - name: Save version for Docker tags
-        id: version
-        run: >-
-          echo "::set-output name=VERSION::$(cat version.txt)"
-
-      - name: Docker Meta
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ matrix.image }}
-          tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
@@ -121,11 +94,10 @@ jobs:
       - name: Build and push Docker images
         uses: docker/build-push-action@v3
         with:
+          push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          # tags: |
-          #   ${{ matrix.image }}:${{ steps.version.outputs.VERSION }}
-          # # ${{ matrix.image }}:latest
-          # # ${{ matrix.image }}:${GITHUB_REF##*/}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            ${{ matrix.image }}:latest
+            ${{ matrix.image }}:${{ fromJson(needs.semanticrelease.outputs.version) }}
+            ${{ matrix.image }}:${GITHUB_REF##*/}
