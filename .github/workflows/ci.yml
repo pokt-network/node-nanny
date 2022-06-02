@@ -99,5 +99,5 @@ jobs:
           file: ${{ matrix.dockerfile }}
           tags: |
             ${{ matrix.image }}:latest
-            ${{ matrix.image }}:${{ fromJson(needs.semanticrelease.outputs.version) }}
+            ${{ matrix.image }}:${{ needs.semanticrelease.outputs.version }}
             ${{ matrix.image }}:${GITHUB_REF##*/}
