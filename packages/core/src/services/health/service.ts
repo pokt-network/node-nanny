@@ -42,7 +42,7 @@ export class Service {
     }
   }
 
-  /* ----- Node Health Check ----- */
+  /* ----- Node Health Check Public Method ----- */
   public async getNodeHealth(node: INode): Promise<IHealthResponse> {
     const { chain } = node;
     if (!Object.keys(ESupportedBlockchainTypes).includes(chain.type)) {
