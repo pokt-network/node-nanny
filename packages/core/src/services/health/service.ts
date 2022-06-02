@@ -149,7 +149,10 @@ export class Service {
     };
 
     /* Check if node is online and RPC up */
-    const isNodeListening = await this.isNodeListening({ host: host.ip, port });
+    const isNodeListening = await this.isNodeListening({
+      host: host.fqdn || host.ip,
+      port,
+    });
     if (!isNodeListening) {
       return {
         ...healthResponse,
@@ -305,10 +308,8 @@ export class Service {
   private async getOracles({ name }: IChain): Promise<IOraclesResponse> {
     const { urls } = await OraclesModel.findOne({ chain: name });
 
-    const {
-      healthyUrls: healthyOracles,
-      badUrls: badOracles,
-    } = await this.checkRefUrlHealth(urls.map((url) => ({ url })));
+    const { healthyUrls: healthyOracles, badUrls: badOracles } =
+      await this.checkRefUrlHealth(urls.map((url) => ({ url })));
 
     return { healthyOracles, badOracles };
   }

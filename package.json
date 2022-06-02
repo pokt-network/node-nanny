@@ -30,7 +30,8 @@
     "monitor": "pm2 log monitor",
     "console": "pm2 monit",
     "dev:test": "nodemon ./packages/api/src/server.ts",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "postinstall": "turbo run build --filter=@pokt-foundation/node-nanny-core"
   },
   "devDependencies": {
     "@shelf/jest-mongodb": "^2.2.1",
@@ -47,5 +48,5 @@
     "turbo": "1.2.14",
     "typescript": "4.5.5"
   },
-  "packageManager": "pnpm@6.32.11"
+  "packageManager": "pnpm@7.1.7"
 }
