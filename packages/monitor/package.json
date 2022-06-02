@@ -1,7 +1,6 @@
 {
   "name": "@pokt-foundation/node-nanny-monitor",
   "description": "Node monitoring interval",
-  "version": "0.0.1",
   "main": "src/index.ts",
   "license": "MIT",
   "scripts": {
