@@ -1,3 +1,5 @@
+import { ManipulateType } from 'dayjs';
+
 const ONE_MINUTE = 60 * 1000;
 const ONE_HOUR = ONE_MINUTE * 60;
 const ONE_DAY = ONE_HOUR * 24;
@@ -5,7 +7,7 @@ const ONE_DAY = ONE_HOUR * 24;
 export interface ITimePeriod {
   code: string;
   label: string;
-  timePeriod: string;
+  timePeriod: ManipulateType;
   numPeriods: number;
   increment: number;
   format: string;
