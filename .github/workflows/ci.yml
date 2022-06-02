@@ -123,8 +123,9 @@ jobs:
         with:
           context: .
           file: ${{ matrix.dockerfile }}
-          tags: |
-            ${{ matrix.image }}:${{ steps.version.outputs.VERSION }}
-          # ${{ matrix.image }}:latest
-          # ${{ matrix.image }}:${GITHUB_REF##*/}
+          # tags: |
+          #   ${{ matrix.image }}:${{ steps.version.outputs.VERSION }}
+          # # ${{ matrix.image }}:latest
+          # # ${{ matrix.image }}:${GITHUB_REF##*/}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
