@@ -3,13 +3,13 @@ name: CI
 on:
   push:
     branches:
-      - pascal/semantic-release
-      # - main
+      - main
+      - beta
     tags:
       - 'v*'
 
 jobs:
-  buildtest:
+  build-test:
     name: Build and Test
     timeout-minutes: 15
     runs-on: ubuntu-latest
@@ -20,32 +20,27 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 2
-
       - uses: pnpm/action-setup@v2.0.1
         with:
           version: 7.1.7
-
       - name: Setup Node.js environment
         uses: actions/setup-node@v2
         with:
           node-version: 16
           cache: 'pnpm'
-
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
-
       - name: Build
         run: pnpm build
-
       - name: Test
         env:
           TEST_DISCORD_SERVER_ID: ${{ secrets.TEST_DISCORD_SERVER_ID }}
           TEST_DISCORD_TOKEN: ${{ secrets.TEST_DISCORD_TOKEN }}
         run: pnpm test
 
-  semanticrelease:
+  semantic-release:
     name: Semantic Release
-    needs: buildtest
+    needs: build-test
     timeout-minutes: 15
     runs-on: ubuntu-latest
     environment: CI
@@ -55,7 +50,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
       - name: Semantic Release
         id: semantic
         uses: cycjimmy/semantic-release-action@v3
@@ -67,7 +61,7 @@ jobs:
 
   docker:
     name: Docker Build & Push
-    needs: [buildtest, semanticrelease]
+    needs: [build-test, semantic-release]
     timeout-minutes: 15
     runs-on: ubuntu-latest
     environment: CI
@@ -84,13 +78,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Build and push Docker images
         uses: docker/build-push-action@v3
         with:
@@ -99,4 +93,4 @@ jobs:
           file: ${{ matrix.dockerfile }}
           tags: |
             ${{ matrix.image }}:latest
-            ${{ matrix.image }}:${{ needs.semanticrelease.outputs.version }}
+            ${{ matrix.image }}:${{ needs.semantic-release.outputs.version }}
