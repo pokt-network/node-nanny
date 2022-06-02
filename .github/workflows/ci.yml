@@ -59,8 +59,8 @@ jobs:
           # You can specify specifying version range for the extra plugins if you prefer.
           extra_plugins: |
             @semantic-release/git
-          extends: |
-            semantic-release-monorepo
+          # extends: |
+          #   semantic-release-monorepo
         id: semantic
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
