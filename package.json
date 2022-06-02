@@ -30,7 +30,7 @@
     "monitor": "pm2 log monitor",
     "console": "pm2 monit",
     "dev:test": "nodemon ./packages/api/src/server.ts",
-    "test": "turbo run test",
+    "test": "turbo run test --filter=@pokt-foundation/node-nanny-core",
     "postinstall": "turbo run build --filter=@pokt-foundation/node-nanny-core"
   },
   "devDependencies": {
