@@ -60,8 +60,6 @@ export class Service {
       timestamp: { $gte: new Date(startDate), $lt: new Date(endDate) },
     };
 
-    console.log();
-
     if (nodeIds) matchQuery.label = { $in: nodeIds };
     const logs = await LogsModel.aggregate<{ _id: string; ok: number; error: number }>([
       { $match: matchQuery },
