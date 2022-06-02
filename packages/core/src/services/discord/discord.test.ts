@@ -57,7 +57,8 @@ describe('Discord Service Tests', () => {
       expect(existsAfter).toBeTruthy();
     });
 
-    test('should create a webhook for every chain/location combo for all nodes created in a CSV batch upload', async () => {
+    // This test takes a really long time. Run only when needed.
+    test.skip('should create a webhook for every chain/location combo for all nodes created in a CSV batch upload', async () => {
       await discordService.createWebhooks({ nodes: testNodesBatch, batch: true }, true); // Method Call
 
       const { categories, channels } = await discordService['getServerChannels']();
