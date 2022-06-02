@@ -100,4 +100,4 @@ jobs:
           tags: |
             ${{ matrix.image }}:latest
             ${{ matrix.image }}:${{ needs.semanticrelease.outputs.version }}
-            ${{ matrix.image }}:${GITHUB_REF##*/}
+            ${{ matrix.image }}:${{ env.GITHUB_REF_NAME }}
