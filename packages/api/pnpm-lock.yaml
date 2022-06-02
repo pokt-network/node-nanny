@@ -2,9 +2,9 @@ lockfileVersion: 5.4
 
 specifiers:
   '@graphql-codegen/cli': 2.6.2
-  '@graphql-codegen/typescript': 2.4.8
-  '@graphql-codegen/typescript-operations': 2.3.5
-  '@graphql-codegen/typescript-react-apollo': ^3.2.11
+  '@graphql-codegen/typescript': 2.4.11
+  '@graphql-codegen/typescript-operations': 2.4.0
+  '@graphql-codegen/typescript-react-apollo': ^3.2.14
   '@pokt-foundation/node-nanny-core': workspace:latest
   '@types/express': ^4.17.13
   apollo-server: ^3.6.7
@@ -19,8 +19,8 @@ dependencies:
 
 devDependencies:
   '@graphql-codegen/cli': 2.6.2_graphql@16.5.0
-  '@graphql-codegen/typescript': 2.4.8_graphql@16.5.0
-  '@graphql-codegen/typescript-operations': 2.3.5_graphql@16.5.0
+  '@graphql-codegen/typescript': 2.4.11_graphql@16.5.0
+  '@graphql-codegen/typescript-operations': 2.4.0_graphql@16.5.0
   '@graphql-codegen/typescript-react-apollo': 3.2.14_ubrtutz2urcxyhwqr2zvlqjzha
   '@types/express': 4.17.13
 
@@ -794,17 +794,17 @@ packages:
       tslib: 2.3.1
     dev: true
 
-  /@graphql-codegen/typescript-operations/2.3.5_graphql@16.5.0:
-    resolution: {integrity: sha512-GCZQW+O+cIF62ioPkQMoSJGzjJhtr7ttZGJOAoN/Q/oolG8ph9jNFePKO67tSQ/POAs5HLqfat4kAlCK8OPV3Q==}
+  /@graphql-codegen/typescript-operations/2.4.0_graphql@16.5.0:
+    resolution: {integrity: sha512-vJ15FLyWchuO2Xkp6uz7jJOdChiay7P9KJKFDILx/JTwjinU1fFa7iOvyeTvslqiUPxgsXthR5izdY+E5IyLkQ==}
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     dependencies:
       '@graphql-codegen/plugin-helpers': 2.4.2_graphql@16.5.0
-      '@graphql-codegen/typescript': 2.4.8_graphql@16.5.0
-      '@graphql-codegen/visitor-plugin-common': 2.7.4_graphql@16.5.0
+      '@graphql-codegen/typescript': 2.4.11_graphql@16.5.0
+      '@graphql-codegen/visitor-plugin-common': 2.8.0_graphql@16.5.0
       auto-bind: 4.0.0
       graphql: 16.5.0
-      tslib: 2.3.1
+      tslib: 2.4.0
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -828,38 +828,17 @@ packages:
       - supports-color
     dev: true
 
-  /@graphql-codegen/typescript/2.4.8_graphql@16.5.0:
-    resolution: {integrity: sha512-tVsHIkuyenBany7c5IMU1yi4S1er2hgyXJGNY7PcyhpJMx0eChmbqz1VTiZxDEwi8mDBS2mn3TaSJMh6xuJM5g==}
+  /@graphql-codegen/typescript/2.4.11_graphql@16.5.0:
+    resolution: {integrity: sha512-K3oDLPJRH9Wgpg9TOvb7L+xrJZ8HxkIzV2umqGn54c+8DQjvnRFBIYRO0THgUBMnEauE2sEy6RZkGHGfgQUruA==}
     peerDependencies:
       graphql: ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     dependencies:
       '@graphql-codegen/plugin-helpers': 2.4.2_graphql@16.5.0
       '@graphql-codegen/schema-ast': 2.4.1_graphql@16.5.0
-      '@graphql-codegen/visitor-plugin-common': 2.7.4_graphql@16.5.0
+      '@graphql-codegen/visitor-plugin-common': 2.8.0_graphql@16.5.0
       auto-bind: 4.0.0
       graphql: 16.5.0
-      tslib: 2.3.1
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-    dev: true
-
-  /@graphql-codegen/visitor-plugin-common/2.7.4_graphql@16.5.0:
-    resolution: {integrity: sha512-aaDoEudDD+B7DK/UwDSL2Fzej75N9hNJ3N8FQuTIeDyw6FNGWUxmkjVBLQGlzfnYfK8IYkdfYkrPn3Skq0pVxA==}
-    peerDependencies:
-      graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-    dependencies:
-      '@graphql-codegen/plugin-helpers': 2.4.2_graphql@16.5.0
-      '@graphql-tools/optimize': 1.2.0_graphql@16.5.0
-      '@graphql-tools/relay-operation-optimizer': 6.4.12_graphql@16.5.0
-      '@graphql-tools/utils': 8.6.12_graphql@16.5.0
-      auto-bind: 4.0.0
-      change-case-all: 1.0.14
-      dependency-graph: 0.11.0
-      graphql: 16.5.0
-      graphql-tag: 2.12.6_graphql@16.5.0
-      parse-filepath: 1.0.2
-      tslib: 2.3.1
+      tslib: 2.4.0
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -1144,7 +1123,7 @@ packages:
       isomorphic-ws: 4.0.1_ws@8.7.0
       meros: 1.2.0
       sync-fetch: 0.3.1
-      tslib: 2.4.0
+      tslib: 2.3.1
       value-or-promise: 1.0.11
       ws: 8.7.0
     transitivePeerDependencies:
@@ -1803,8 +1782,8 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001344
-      electron-to-chromium: 1.4.143
+      caniuse-lite: 1.0.30001346
+      electron-to-chromium: 1.4.144
       escalade: 3.1.1
       node-releases: 2.0.5
       picocolors: 1.0.0
@@ -1879,8 +1858,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /caniuse-lite/1.0.30001344:
-    resolution: {integrity: sha512-0ZFjnlCaXNOAYcV7i+TtdKBp0L/3XEU2MF/x6Du1lrh+SRX4IfzIVL4HNJg5pB2PmFb8rszIGyOvsZnqqRoc2g==}
+  /caniuse-lite/1.0.30001346:
+    resolution: {integrity: sha512-q6ibZUO2t88QCIPayP/euuDREq+aMAxFE5S70PkrLh0iTDj/zEhgvJRKC2+CvXY6EWc6oQwUR48lL5vCW6jiXQ==}
     dev: true
 
   /capital-case/1.0.4:
@@ -2303,8 +2282,8 @@ packages:
     resolution: {integrity: sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=}
     dev: false
 
-  /electron-to-chromium/1.4.143:
-    resolution: {integrity: sha512-2hIgvu0+pDfXIqmVmV5X6iwMjQ2KxDsWKwM+oI1fABEOy/Dqmll0QJRmIQ3rm+XaoUa/qKrmy5h7LSTFQ6Ldzg==}
+  /electron-to-chromium/1.4.144:
+    resolution: {integrity: sha512-R3RV3rU1xWwFJlSClVWDvARaOk6VUO/FubHLodIASDB3Mc2dzuWvNdfOgH9bwHUTqT79u92qw60NWfwUdzAqdg==}
     dev: true
 
   /elegant-spinner/1.0.1:
