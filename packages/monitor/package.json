@@ -6,14 +6,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@pokt-foundation/node-nanny-core": "workspace:^",
+    "@pokt-foundation/node-nanny-core": "workspace:0.1.0",
     "dd-trace": "^1.1.0",
     "ioredis": "^4.28.1"
-  },
-  "dependenciesMeta": {
-    "@pokt-foundation/node-nanny-core": {
-      "injected": true
-    }
   },
   "devDependencies": {
     "@types/ioredis": "^4.28.8"
