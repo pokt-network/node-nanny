@@ -1,7 +1,6 @@
 {
   "name": "@pokt-foundation/node-nanny-api",
   "description": "GraphQL API to service the UI",
-  "version": "0.0.1",
   "main": "src/server.ts",
   "license": "MIT",
   "scripts": {

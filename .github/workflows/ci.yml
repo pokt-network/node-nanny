@@ -53,18 +53,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v3
         with:
-          # You can specify specifying version range for the extra plugins if you prefer.
           extra_plugins: |
             @semantic-release/git
-          # extends: |
-          #   semantic-release-monorepo
         id: semantic
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          # NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Do something when a new release published
         if: steps.semantic.outputs.new_release_published == 'true'
@@ -74,29 +71,42 @@ jobs:
           echo ${{ steps.semantic.outputs.new_release_minor_version }}
           echo ${{ steps.semantic.outputs.new_release_patch_version }}
 
-  # docker:
-  #   name: Docker build & push
-  #   runs-on: ubuntu-20.04
-  #   steps:
-  #     - uses: actions/checkout@v2
+  docker:
+    name: Docker Build & Push
+    needs: [buildtest, semanticrelease]
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    environment: CI
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: ./Dockerfile
+            image: pocketfoundation/node-nanny
+          - dockerfile: ./DockerfileUI
+            image: pocketfoundation/node-nanny-ui
 
-  # - uses: docker/setup-buildx-action@v1
-  #   name: Set up Docker Buildx
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-  # - name: Docker meta
-  #   id: docker_meta
-  #   uses: crazy-max/ghaction-docker-meta@v1
-  #   with:
-  #     images: pocketfoundation/node-nanny
-  #     tag-custom: latest
-  #     tag-semver: |
-  #       {{raw}}
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  # - name: Build and push
-  #   id: docker_build
-  #   uses: docker/build-push-action@v2
-  #   with:
-  #     context: .
-  #     push: false
-  #     tags: ${{ steps.docker_meta.outputs.tags }}
-  #     labels: ${{ steps.docker_meta.outputs.labels }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ${{ matrix.image }}
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
