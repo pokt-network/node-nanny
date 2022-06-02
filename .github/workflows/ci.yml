@@ -12,11 +12,8 @@ jobs:
   buildtest:
     name: Build and Test
     timeout-minutes: 15
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
+    runs-on: ubuntu-latest
+    environment: CI
 
     steps:
       - name: Check out code
