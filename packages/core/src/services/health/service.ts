@@ -466,18 +466,52 @@ export class Service {
         conditions: EErrorConditions.NO_RESPONSE,
       };
     }
+    let referenceUrls: IReferenceURL[];
+    const { healthyOracles, badOracles } = await this.getOracles(chain);
+    if (healthyOracles.length >= 1) {
+      referenceUrls = healthyOracles;
+    } else {
+      const healthyPeers = await this.getPeers(chain, node.id);
+      if (!healthyOracles.length && healthyPeers.length < 2) {
+        return {
+          ...healthResponse,
+          status: EErrorStatus.ERROR,
+          conditions: EErrorConditions.NO_PEERS,
+        };
+      } else if (!healthyOracles.length && healthyPeers.length >= 2) {
+        healthResponse = {
+          ...healthResponse,
+          details: { noOracle: true, numPeers: healthyPeers.length },
+        };
+      }
+      referenceUrls = [...healthyOracles, ...healthyPeers];
+    }
 
-    let referenceUrl = 'https://rpc.mainnet.near.org';
+    if (badOracles.length) {
+      healthResponse = {
+        ...healthResponse,
+        details: {
+          ...healthResponse.details,
+          badOracles: badOracles.map(({ url }) => url),
+        },
+      };
+    }
+
 
     try {
       /* Get node's block height, highest block height from reference nodes */
-      const [internalBh, externalBh] = await Promise.all([
-        this.getNEARBlockHeight(url),
-        this.getNEARBlockHeight(referenceUrl),
-      ]);
+
+      let externalHeights = await Promise.all(
+        referenceUrls.map((ref) => this.getNEARBlockHeight(ref.url))
+      )
+      const sortedExternalHeights = externalHeights.sort((a, b) => {
+        return b - a;
+      })
+
+      const internalBh = await this.getNEARBlockHeight(url);
 
       const nodeHeight = internalBh;
-      const peerHeight = externalBh;
+      const peerHeight = sortedExternalHeights[0];
 
       /* Compare highest ref height with node's height */
       const delta = peerHeight - nodeHeight;
