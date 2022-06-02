@@ -5,8 +5,11 @@
     "build": {
       "dependsOn": ["^build"]
     },
+    "build:clean": {
+      "dependsOn": ["^build:clean"]
+    },
     "test": {
-      "dependsOn": ["build"]
+      "dependsOn": ["^build"]
     }
   }
 }
