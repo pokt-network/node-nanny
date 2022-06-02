@@ -120,7 +120,7 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           tags: |
-            `${{ matrix.image }}:latest`
-            `${{ matrix.image }}:${cat version.txt}`
-            `${{ matrix.image }}:${GITHUB_REF##*/}`
+            ${{ matrix.image }}:latest
+            ${{ matrix.image }}:${cat version.txt}
+            ${{ matrix.image }}:${GITHUB_REF##*/}
           # labels: ${{ steps.meta.outputs.labels }}
