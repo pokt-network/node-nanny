@@ -4,10 +4,15 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "@pokt-foundation/node-nanny-core": "workspace:^0.1.0",
+    "@pokt-foundation/node-nanny-core": "workspace:^",
     "apollo-server": "^3.6.7",
     "express": "^4.17.3",
     "graphql": "^16.3.0"
+  },
+  "dependenciesMeta": {
+    "@pokt-foundation/node-nanny-core": {
+      "injected": true
+    }
   },
   "devDependencies": {
     "@graphql-codegen/cli": "2.6.2",
