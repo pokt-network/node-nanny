@@ -63,7 +63,7 @@ describe('Automation Service Tests', () => {
       });
     });
 
-    test('Should create a batch of Nodes with webhooks from a CSV input array', async () => {
+    test('Should create a batch of Hosts from a CSV input array', async () => {
       const createdHosts = await new AutomationService().createHostsCSV(testCSVHosts);
 
       expect(createdHosts).toBeTruthy();
