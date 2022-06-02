@@ -1,7 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@pokt-foundation/node-nanny-core': workspace:0.1.0
+  '@pokt-foundation/node-nanny-core': workspace:latest
   '@types/ioredis': ^4.28.8
   dd-trace: ^1.1.0
   ioredis: ^4.28.1
