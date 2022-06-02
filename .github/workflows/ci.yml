@@ -140,7 +140,7 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           tags: |
-            ${{ matrix.image }}:latest
             ${{ matrix.image }}:${{ steps.version.outputs.VERSION }}
+          # ${{ matrix.image }}:latest
           # ${{ matrix.image }}:${GITHUB_REF##*/}
           # labels: ${{ steps.meta.outputs.labels }}
