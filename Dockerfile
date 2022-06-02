@@ -14,6 +14,7 @@ RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm@6
 
 COPY ./ .
 RUN rm -rf ./packages/ui
+RUN rm ./pnpm-lock.yaml
 
 RUN pnpm install pm2 turbo -g
 RUN pnpm install 
