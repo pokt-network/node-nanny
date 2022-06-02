@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - pascal/semantic-release
+    tags:
+      - 'v*'
+
+jobs:
+  docker:
+    name: Docker Build & Push
+    needs: [buildtest, semanticrelease]
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    environment: CI
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: ./Dockerfile
+            image: pocketfoundation/node-nanny
+          - dockerfile: ./DockerfileUI
+            image: pocketfoundation/node-nanny-ui
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Docker Meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ matrix.image }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Login to DockerHub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: DEBUG
+        run: echo ${{ steps.meta.outputs.tags }}
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          file: ${{ matrix.dockerfile }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
