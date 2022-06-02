@@ -4,6 +4,7 @@
     "next",
     "pascal/semantic-release"
   ],
+  "extends": "semantic-release-monorepo",
   "plugins": [
     [
       "@semantic-release/npm",
