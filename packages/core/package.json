@@ -1,7 +1,6 @@
 {
   "name": "@pokt-foundation/node-nanny-core",
   "description": "Shared package used by all backend packages",
-  "version": "0.0.1",
   "license": "MIT",
   "scripts": {
     "build": "tsc -b .",

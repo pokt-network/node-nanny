@@ -1,7 +1,6 @@
 {
   "name": "@pokt-foundation/node-nanny-event-consumer",
   "description": "Event Consumer for node monitor events",
-  "version": "0.0.1",
   "main": "src/index.ts",
   "license": "MIT",
   "scripts": {

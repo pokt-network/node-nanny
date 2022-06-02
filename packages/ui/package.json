@@ -1,7 +1,6 @@
 {
   "name": "@pokt-foundation/node-nanny-ui",
   "description": "React app UI",
-  "version": "0.0.1",
   "main": "src/index.tsx",
   "license": "MIT",
   "scripts": {
