@@ -84,8 +84,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - dockerfile: ./Dockerfile
-            image: pocketfoundation/node-nanny
+          # - dockerfile: ./Dockerfile
+          #   image: pocketfoundation/node-nanny
           - dockerfile: ./DockerfileUI
             image: pocketfoundation/node-nanny-ui
 
@@ -124,7 +124,7 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           tags: |
-            ${{ matrix.image }}:latest
-            ${{ matrix.image }}:${{ steps.version.outputs.VERSION }}
+            pocketfoundation/node-nanny-ui:latest
+            pocketfoundation/node-nanny-ui:${{ steps.version.outputs.VERSION }}
           # ${{ matrix.image }}:${GITHUB_REF##*/}
           # labels: ${{ steps.meta.outputs.labels }}
