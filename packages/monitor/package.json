@@ -1,18 +1,9 @@
 {
   "name": "@pokt-foundation/node-nanny-monitor",
+  "description": "Node monitoring interval",
   "version": "0.0.1",
-  "description": "",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@pokt-foundation/node-nanny-core": "workspace:latest",
-    "dd-trace": "^1.1.0",
-    "ioredis": "^4.28.1"
-  },
-  "devDependencies": {
-    "@types/ioredis": "^4.28.8"
-  },
+  "main": "src/index.ts",
+  "license": "MIT",
   "scripts": {
     "start": "pnpm build && pm2 start ./dist/index.js --name \"monitor\"",
     "start:dev": "pm2 start \"nodemon ./src/index.ts\" --name monitor-dev",
@@ -22,5 +13,13 @@
     "build": "tsc -b .",
     "build:clean": "tsc --build --clean && rm -rf ./dist",
     "build:watch": "tsc -b -w ."
+  },
+  "dependencies": {
+    "@pokt-foundation/node-nanny-core": "workspace:latest",
+    "dd-trace": "^1.1.0",
+    "ioredis": "^4.28.1"
+  },
+  "devDependencies": {
+    "@types/ioredis": "^4.28.8"
   }
 }
