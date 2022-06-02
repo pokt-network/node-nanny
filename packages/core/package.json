@@ -1,7 +1,6 @@
 {
   "name": "@pokt-foundation/node-nanny-core",
-  "version": "0.1.0",
-  "author": "JonathonJulian <john@pokt.network>",
+  "version": "0.0.1",
   "license": "MIT",
   "scripts": {
     "build": "tsc -b .",
