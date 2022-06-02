@@ -97,11 +97,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: version
-      - name: Print the final result
-        shell: bash
-        run: |
-          value=`cat version.txt`
-          echo The result is $value
 
       # - name: Docker Meta
       #   id: meta
@@ -119,16 +114,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: DEBUG
-        run: echo ${{ steps.meta.outputs.tags }}
-
       - name: Build and push Docker images
         uses: docker/build-push-action@v3
         with:
           context: .
           file: ${{ matrix.dockerfile }}
           tags: |
-            `latest`
-            `cat version.txt`
-            ${GITHUB_REF##*/}
+            `${{ matrix.image }}:latest`
+            `${{ matrix.image }}:${cat version.txt}`
+            `${{ matrix.image }}:${GITHUB_REF##*/}`
           # labels: ${{ steps.meta.outputs.labels }}
