@@ -55,14 +55,15 @@ export class Service {
   private healthCheckMethods: {
     [chainType in ESupportedBlockchainTypes]: (node: INode) => Promise<IHealthResponse>;
   } = {
-    ALG: (node) => this.getAlgorandNodeHealth(node),
-    AVA: (node) => this.getAvaNodeHealth(node),
-    EVM: (node) => this.getEVMNodeHealth(node),
-    HMY: (node) => this.getHarmonyNodeHealth(node),
-    POKT: (node) => this.getPocketNodeHealth(node),
-    SOL: (node) => this.getSolNodeHealth(node),
-    TMT: (node) => this.getTendermintNodeHealth(node),
-  };
+      ALG: (node) => this.getAlgorandNodeHealth(node),
+      AVA: (node) => this.getAvaNodeHealth(node),
+      EVM: (node) => this.getEVMNodeHealth(node),
+      HMY: (node) => this.getHarmonyNodeHealth(node),
+      POKT: (node) => this.getPocketNodeHealth(node),
+      SOL: (node) => this.getSolNodeHealth(node),
+      TMT: (node) => this.getTendermintNodeHealth(node),
+      NEAR: (node) => this.getNEARNodeHealth(node),
+    };
 
   /* ----- Algorand ----- */
   private getAlgorandNodeHealth = async (node: INode): Promise<IHealthResponse> => {
@@ -418,6 +419,120 @@ export class Service {
     return await this.getEVMNodeHealth(node, { harmony: true });
   };
 
+  /* ----- Near ----- */
+  private async getNEARBlockHeight(
+    url: string,
+  ) {
+    try {
+      const { data } = await this.rpc.post(
+        url,
+        { jsonrpc: '2.0', id: "dontcare", method: "status", params: [] },
+      );
+      return data.result.sync_info.latest_block_height;
+    } catch (error) {
+      const stringError = JSON.stringify(error);
+      throw new Error(
+        `getBlockHeight could not contact blockchain node ${stringError} ${url}`,
+      );
+    }
+  };
+
+  private getNEARNodeHealth = async (
+    node: INode,
+  ): Promise<IHealthResponse> => {
+    const { name, chain, url, host, port } = node;
+    const { allowance } = chain;
+
+    let healthResponse: IHealthResponse = {
+      name,
+      status: EErrorStatus.OK,
+      conditions: EErrorConditions.HEALTHY,
+    };
+
+    /* Check if node is online and RPC up */
+    const isNodeListening = await this.isNodeListening({ host: host.ip, port });
+    if (!isNodeListening) {
+      return {
+        ...healthResponse,
+        status: EErrorStatus.ERROR,
+        conditions: EErrorConditions.OFFLINE,
+      };
+    }
+    const NEARBlockHeight = await this.getNEARBlockHeight(url);
+    if (!NEARBlockHeight) {
+      return {
+        ...healthResponse,
+        status: EErrorStatus.ERROR,
+        conditions: EErrorConditions.NO_RESPONSE,
+      };
+    }
+
+    let referenceUrl = 'https://rpc.mainnet.near.org';
+
+    try {
+      /* Get node's block height, highest block height from reference nodes */
+      const [internalBh, externalBh] = await Promise.all([
+        this.getNEARBlockHeight(url),
+        this.getNEARBlockHeight(referenceUrl),
+      ]);
+
+      const nodeHeight = internalBh;
+      const peerHeight = externalBh;
+
+      /* Compare highest ref height with node's height */
+      const delta = peerHeight - nodeHeight;
+      const nodeIsAheadOfPeer = delta + allowance < 0;
+      const height = { internalHeight: nodeHeight, externalHeight: peerHeight, delta };
+
+      if (nodeIsAheadOfPeer) {
+        return {
+          ...healthResponse,
+          status: EErrorStatus.ERROR,
+          conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
+          height,
+          details: { ...healthResponse.details, nodeIsAheadOfPeer: Math.abs(delta) },
+        };
+      }
+
+      // Not synced response
+      if (delta > allowance || internalBh.error?.code) {
+        const secondsToRecover = await this.updateNotSynced(delta, node.id.toString());
+        if (secondsToRecover !== null) {
+          healthResponse = {
+            ...healthResponse,
+            details: { ...healthResponse.details, secondsToRecover },
+          };
+        }
+
+        return {
+          ...healthResponse,
+          status: EErrorStatus.ERROR,
+          conditions: EErrorConditions.NOT_SYNCHRONIZED,
+          health: internalBh.error?.code ? internalBh : null,
+          height,
+        };
+      }
+
+      // Healthy response
+      return { ...healthResponse, height };
+    } catch (error) {
+      const isTimeout = String(error).includes(`Error: timeout of 1000ms exceeded`);
+      if (isTimeout) {
+        return {
+          ...healthResponse,
+          status: EErrorStatus.ERROR,
+          conditions: EErrorConditions.NO_RESPONSE,
+        };
+      }
+    }
+
+    return {
+      ...healthResponse,
+      status: EErrorStatus.ERROR,
+      conditions: EErrorConditions.NO_RESPONSE,
+    };
+  };
+
   /* ----- Pocket ----- */
   private getPocketNodeHealth = async (node: INode): Promise<IHealthResponse> => {
     const { name, id, chain, url } = node;
@@ -663,4 +778,5 @@ export class Service {
 
     return secondsToRecover;
   }
+
 }

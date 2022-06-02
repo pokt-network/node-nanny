@@ -76,4 +76,19 @@ describe('Health Service Tests', () => {
       expect(testSeconds).toEqual(0);
     });
   });
+
+  describe('getNEARBlockHeight', () => {
+    test('Should return blockHeight for NEAR Internal Node URL', async () => {
+      const NEARInternalUrl = 'http://near:6ChMDr507RK7mWoMse54@near-altruist.us-east.thunderstake.io';
+      const response = await healthService['getNEARBlockHeight'](NEARInternalUrl);
+      expect(response).toBeDefined();
+      expect(response > 0).toBeTruthy();
+    });
+    test('Should return blockHeight for NEAR External Node URL', async () => {
+      const NEARExternalUrl = 'https://rpc.mainnet.near.org';
+      const response = await healthService['getNEARBlockHeight'](NEARExternalUrl);
+      expect(response).toBeDefined();
+      expect(response > 0).toBeTruthy();
+    });
+  });
 });
