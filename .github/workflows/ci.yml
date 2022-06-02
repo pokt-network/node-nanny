@@ -45,6 +45,7 @@ jobs:
 
   semanticrelease:
     name: Semantic Release
+    needs: buildtest
     timeout-minutes: 15
     runs-on: ubuntu-latest
     environment: CI
