@@ -5,6 +5,8 @@ on:
     branches:
       - pascal/semantic-release
       # - main
+    tags-ignore:
+      - 'v*'
 
 jobs:
   buildtest:

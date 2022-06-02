@@ -4,13 +4,13 @@ on:
   push:
     branches:
       - pascal/semantic-release
+      # - main
     tags:
       - 'v*'
 
 jobs:
   docker:
     name: Docker Build & Push
-    needs: [buildtest, semanticrelease]
     timeout-minutes: 15
     runs-on: ubuntu-latest
     environment: CI
