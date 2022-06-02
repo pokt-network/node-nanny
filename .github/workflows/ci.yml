@@ -94,9 +94,14 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Get version for Docker tags
+        id: version
         uses: actions/download-artifact@v3
         with:
           name: version
+        run: >-
+          echo "::set-output name=VERSION::$(
+            cat version.txt
+          )"
 
       # - name: Docker Meta
       #   id: meta
@@ -121,6 +126,6 @@ jobs:
           file: ${{ matrix.dockerfile }}
           tags: |
             ${{ matrix.image }}:latest
-            ${{ matrix.image }}:${cat version.txt}
-            ${{ matrix.image }}:${GITHUB_REF##*/}
+            ${{ matrix.image }}:${{ steps.version.outputs.VERSION }}
+          # ${{ matrix.image }}:${GITHUB_REF##*/}
           # labels: ${{ steps.meta.outputs.labels }}
