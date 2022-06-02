@@ -24,7 +24,7 @@ afterAll(async () => {
   await mongoose.disconnect();
 });
 
-describe('Discord Service Tests', () => {
+describe.skip('Discord Service Tests', () => {
   /* Public Method
   This test hits an actual Discord test server; this is necessary to ensure that rate-limits do not 
   prevent the creation of the channels & webhooks in production. For this test to successfully run in 
