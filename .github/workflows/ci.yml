@@ -93,22 +93,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - uses: pnpm/action-setup@v2.0.1
-        with:
-          version: 7.1.7
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Build
-        run: pnpm build
-
       - name: Get version for Docker tags
         uses: actions/download-artifact@v3
         with:
@@ -118,15 +102,15 @@ jobs:
         run: >-
           echo "::set-output name=VERSION::$(cat version.txt)"
 
-      # - name: Docker Meta
-      #   id: meta
-      #   uses: docker/metadata-action@v4
-      #   with:
-      #     images: ${{ matrix.image }}
-      #     tags: |
-      #       type=ref,event=branch
-      #       type=semver,pattern={{version}}
-      #       type=semver,pattern={{major}}.{{minor}}
+      - name: Docker Meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ matrix.image }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
 
       - name: Login to DockerHub
         uses: docker/login-action@v2
@@ -143,4 +127,4 @@ jobs:
             ${{ matrix.image }}:${{ steps.version.outputs.VERSION }}
           # ${{ matrix.image }}:latest
           # ${{ matrix.image }}:${GITHUB_REF##*/}
-          # labels: ${{ steps.meta.outputs.labels }}
+          labels: ${{ steps.meta.outputs.labels }}
