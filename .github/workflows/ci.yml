@@ -13,9 +13,7 @@ jobs:
     name: Build and Test
     timeout-minutes: 15
     runs-on: ${{ matrix.os }}
-    env:
-      TEST_DISCORD_SERVER_ID: ${{ secrets.TEST_DISCORD_SERVER_ID }}
-      TEST_DISCORD_TOKEN: ${{ secrets.TEST_DISCORD_TOKEN }}
+
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -43,6 +41,9 @@ jobs:
         run: pnpm build
 
       - name: Test
+        env:
+          TEST_DISCORD_SERVER_ID: ${{ secrets.TEST_DISCORD_SERVER_ID }}
+          TEST_DISCORD_TOKEN: ${{ secrets.TEST_DISCORD_TOKEN }}
         run: pnpm test
 
   # docker:
