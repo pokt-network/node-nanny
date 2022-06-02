@@ -1123,7 +1123,7 @@ packages:
       isomorphic-ws: 4.0.1_ws@8.7.0
       meros: 1.2.0
       sync-fetch: 0.3.1
-      tslib: 2.3.1
+      tslib: 2.4.0
       value-or-promise: 1.0.11
       ws: 8.7.0
     transitivePeerDependencies:
