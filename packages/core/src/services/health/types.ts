@@ -20,6 +20,7 @@ export enum ESupportedBlockchains {
   KOV = 'KOV',
   HEI = 'HEI',
   POKT = 'POKT',
+  NEAR = 'NEAR',
   /* PNF Internal only */
   'POKT-DIS' = 'POKT-DIS',
   'POKT-MAIN' = 'POKT-MAIN',
@@ -34,6 +35,7 @@ export enum ESupportedBlockchainTypes {
   SOL = 'SOL',
   ALG = 'ALG',
   HMY = 'HMY',
+  NEAR = 'NEAR',
 }
 
 export enum EErrorConditions {
