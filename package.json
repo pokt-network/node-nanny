@@ -35,6 +35,8 @@
     "postinstall": "turbo run build --filter=@pokt-foundation/node-nanny-core"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.1",
+    "@semantic-release/commit-analyzer": "^9.0.2",
     "@semantic-release/git": "^10.0.1",
     "@shelf/jest-mongodb": "^3.0.1",
     "@types/jest": "^28.1.0",
