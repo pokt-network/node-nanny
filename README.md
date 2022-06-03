@@ -186,7 +186,7 @@ Notes
 
 ## 5. Frontends
 
-A frontend is a record of the host that is running your load balancer software for a given chain. Monitoring your frontend is a convenient way to ensure there is any service available for a given chain; if a health check cannot return a healthy response for any of the backends for a frontend it means there is no service available for that chain through the load balancer frontend.
+A frontend is a record of the host that is running your load balancer software for a given chain. Monitoring your frontend is a convenient way to ensure there is any service available for a given chain; if a health check cannot return a healthy response for any of the backends/nodes that are running behind a load balancer frontend it means there is no service available for that chain through the load balancer.
 
 | field    | type    | required |
 | -------- | ------- | -------- |
