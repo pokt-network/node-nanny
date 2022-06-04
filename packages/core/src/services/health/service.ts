@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import axiosRetry from 'axios-retry';
 import { exec } from 'child_process';
 import { Types } from 'mongoose';
@@ -21,6 +21,31 @@ import {
 import { camelToTitle, hexToDec } from '../../utils';
 import env from '../../environment';
 
+// TEMP TYPES
+interface IRPCMethodParams {
+  fullRpcUrl: string;
+  basicAuth?: string;
+  rpcBody?: { jsonrpc: string; id: number; method: string; params?: any[] };
+}
+
+interface IRPCResult {
+  // DEV NOTE -> Need to type fully per chain
+  jsonrpc: string;
+  id: number;
+  result?:
+    | string // ALG, SOL
+    | number
+    | { healthy?: boolean } // AVAX
+    | { sync_info: { catching_up: boolean } }; // TMT
+  error?: { code: number; message: string };
+}
+// TEMP TYPES
+
+//TEMP UTIL FUNCTIONS
+const resolvePath = <T = any>(response: AxiosResponse<T>, path: string) =>
+  path.split('.').reduce((p, c) => (p && p[c]) ?? null, response);
+//TEMP UTIL FUNCTIONS
+
 export class Service {
   private rpc: AxiosInstance;
 
@@ -31,7 +56,7 @@ export class Service {
   private initClient(): AxiosInstance {
     const headers = { 'Content-Type': 'application/json' };
     const client = axios.create({ timeout: 10000, headers });
-    axiosRetry(client, { retries: 5 });
+    axiosRetry(client, { retries: 3 });
     return client;
   }
 
@@ -42,7 +67,127 @@ export class Service {
     }
   }
 
-  /* ----- Node Health Check Public Method ----- */
+  /* ----- DEVELOPMENT - Chain Agnostic Health Check Methods - DEVELOPMENT ----- 
+  Database parameters needed per-chain:
+  - chain.method - string - RPC endpoint method: GET, POST, etc.
+  - chain.endpoint - string - Endpoint path: /health, /ext/health, /status, etc.
+  - chain.rpcs["typeOfRpc"] - object of JSON strings - RPC body (if POST request) - example: `rpcs.health`, `rpcs.blockHeight`
+  - chain.hasOwnEndpoint - boolean - Whether Chain has its own health endpoint (if not, proceed to next step - useOracles)
+  - chain.useOracles - boolean - Whether Chain has external Oracles (currently only EVM does). If not (current only POKT), will use peers for reference nodes.
+  - chain.healthCheckPath - string - Chain health check RPC response field path - example: "status" or "data.result.healthy"
+  - chain.blockHeightPath - string - Chain block height RPC response field path - example: "data.result" or "data.result.sync_info.latest_block_height"
+  - chain.healthyValue - boolean | number | string - The field contents that signify a healthy response from the chain's API
+  
+  Questions Currently?
+  1. Do we still need to check OFFLINE status or is NO_RESPONSE check sufficient (EVM chains only)?
+  2. Do we still need to fetch number of peers and ethSyncing (EVM chains only)?
+  */
+
+  /**  Main Health Check Call */
+  async checkNodeHealth(node: any /* INode */): Promise<IHealthResponse> {
+    const { name, chain } = node;
+    const { hasOwnEndpoint, healthCheckPath, healthyValue } = chain;
+
+    let rpcResponse: AxiosResponse<IRPCResult>;
+    try {
+      rpcResponse = await this.checkNodeRPC(node);
+    } catch (error) {
+      return this.getNoResponseObject(node.name, error);
+    }
+
+    if (hasOwnEndpoint) {
+      const nodeIsHealthy = this.checkHealthCheckField(
+        rpcResponse,
+        healthCheckPath,
+        healthyValue,
+      );
+      return nodeIsHealthy
+        ? this.getHealthyObject(name, rpcResponse.data?.result)
+        : this.getNotSyncedObject(name, rpcResponse.data?.result);
+    }
+  }
+
+  private rpcMethodTemplates: {
+    [key: string]: <T>(params: IRPCMethodParams) => Promise<AxiosResponse<T>>;
+  } = {
+    get: async ({ fullRpcUrl, basicAuth }) =>
+      this.rpc.get(fullRpcUrl, this.getAxiosRequestConfig(basicAuth)),
+    post: async ({ fullRpcUrl, basicAuth, rpcBody }) =>
+      this.rpc.post(fullRpcUrl, rpcBody, this.getAxiosRequestConfig(basicAuth)),
+  };
+
+  private async checkEVMNodeIsOnline() {
+    // DEV NOTE -> Determine if Netcat is still the best way to check OFFLINE status for EVM node.
+    // Or even if it is still necessary to perform the OFFLINE check.
+  }
+
+  /** Returns a response from the Node to determine if the Node is responding.
+   * The shape of this response varies depending on the Chain. */
+  private async checkNodeRPC(
+    { chain, url, basicAuth }: any /* INode */,
+  ): Promise<AxiosResponse<IRPCResult>> {
+    const { method, endpoint, rpcs } = chain;
+
+    const fullRpcUrl = `${url}${endpoint || ''}`;
+    const rpcMethod = this.rpcMethodTemplates[method];
+
+    return rpcMethod<IRPCResult>({ fullRpcUrl, basicAuth, rpcBody: rpcs?.health });
+  }
+
+  /** Only used if `chain.hasOwnEndpoint` is true */
+  private checkHealthCheckField<T>(
+    response: AxiosResponse<T>,
+    healthCheckPath: string,
+    healthyValue: string | number | boolean,
+  ): Boolean {
+    const healthCheckField = resolvePath(response, healthCheckPath);
+
+    return Boolean(healthCheckField === healthyValue);
+  }
+
+  /* Health Response Object creation methods */
+  private getHealthyObject = (nodeName: string, result: any): IHealthResponse => ({
+    name: nodeName,
+    conditions: EErrorConditions.HEALTHY,
+    status: EErrorStatus.OK,
+    health: result || 'Node is healthy.',
+  });
+
+  getNoResponseObject = (nodeName: string, error: Error): IHealthResponse => ({
+    name: nodeName,
+    conditions: EErrorConditions.NO_RESPONSE,
+    status: EErrorStatus.ERROR,
+    error: error.message,
+  });
+
+  getNotSyncedObject = (nodeName: string, result: any): IHealthResponse => ({
+    name: nodeName,
+    conditions: EErrorConditions.NOT_SYNCHRONIZED,
+    status: EErrorStatus.ERROR,
+    health: result || 'Node is out of sync.',
+  });
+
+  /* End of Development logic for Chain-Agnostic Health Check
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  */
+  /*  OLD HEALTH CHECKS - WILL BE REMOVED 
+  ----- Node Health Check Public Method ----- */
   public async getNodeHealth(node: INode): Promise<IHealthResponse> {
     const { chain } = node;
     if (!Object.keys(ESupportedBlockchainTypes).includes(chain.type)) {
@@ -55,15 +200,15 @@ export class Service {
   private healthCheckMethods: {
     [chainType in ESupportedBlockchainTypes]: (node: INode) => Promise<IHealthResponse>;
   } = {
-      ALG: (node) => this.getAlgorandNodeHealth(node),
-      AVA: (node) => this.getAvaNodeHealth(node),
-      EVM: (node) => this.getEVMNodeHealth(node),
-      HMY: (node) => this.getHarmonyNodeHealth(node),
-      POKT: (node) => this.getPocketNodeHealth(node),
-      SOL: (node) => this.getSolNodeHealth(node),
-      TMT: (node) => this.getTendermintNodeHealth(node),
-      NEAR: (node) => this.getNEARNodeHealth(node),
-    };
+    ALG: (node) => this.getAlgorandNodeHealth(node),
+    AVA: (node) => this.getAvaNodeHealth(node),
+    EVM: (node) => this.getEVMNodeHealth(node),
+    HMY: (node) => this.getHarmonyNodeHealth(node),
+    POKT: (node) => this.getPocketNodeHealth(node),
+    SOL: (node) => this.getSolNodeHealth(node),
+    TMT: (node) => this.getTendermintNodeHealth(node),
+    NEAR: (node) => this.getNEARNodeHealth(node),
+  };
 
   /* ----- Algorand ----- */
   private getAlgorandNodeHealth = async (node: INode): Promise<IHealthResponse> => {
@@ -74,6 +219,7 @@ export class Service {
         `${url}/health`,
         this.getAxiosRequestConfig(basicAuth),
       );
+
       if (status === 200) {
         return {
           name,
@@ -421,14 +567,14 @@ export class Service {
   };
 
   /* ----- Near ----- */
-  private async getNEARBlockHeight(
-    url: string,
-  ) {
+  private async getNEARBlockHeight(url: string) {
     try {
-      const { data } = await this.rpc.post(
-        url,
-        { jsonrpc: '2.0', id: "dontcare", method: "status", params: [] },
-      );
+      const { data } = await this.rpc.post(url, {
+        jsonrpc: '2.0',
+        id: 'dontcare',
+        method: 'status',
+        params: [],
+      });
       return data.result.sync_info.latest_block_height;
     } catch (error) {
       const stringError = JSON.stringify(error);
@@ -436,11 +582,9 @@ export class Service {
         `getBlockHeight could not contact blockchain node ${stringError} ${url}`,
       );
     }
-  };
+  }
 
-  private getNEARNodeHealth = async (
-    node: INode,
-  ): Promise<IHealthResponse> => {
+  private getNEARNodeHealth = async (node: INode): Promise<IHealthResponse> => {
     const { name, chain, url, host, port } = node;
     const { allowance } = chain;
 
@@ -498,16 +642,15 @@ export class Service {
       };
     }
 
-
     try {
       /* Get node's block height, highest block height from reference nodes */
 
       let externalHeights = await Promise.all(
-        referenceUrls.map((ref) => this.getNEARBlockHeight(ref.url))
-      )
+        referenceUrls.map((ref) => this.getNEARBlockHeight(ref.url)),
+      );
       const sortedExternalHeights = externalHeights.sort((a, b) => {
         return b - a;
-      })
+      });
 
       const internalBh = await this.getNEARBlockHeight(url);
 
@@ -813,5 +956,4 @@ export class Service {
 
     return secondsToRecover;
   }
-
 }
