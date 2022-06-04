@@ -74,6 +74,7 @@ export interface IHealthResponse {
   peers?: number;
   details?: IHealthResponseDetails;
   health?: any;
+  error?: string;
   id?: string;
   ethSyncing?: string;
   delta?: number;
