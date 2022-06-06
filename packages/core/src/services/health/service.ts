@@ -55,15 +55,15 @@ export class Service {
   private healthCheckMethods: {
     [chainType in ESupportedBlockchainTypes]: (node: INode) => Promise<IHealthResponse>;
   } = {
-      ALG: (node) => this.getAlgorandNodeHealth(node),
-      AVA: (node) => this.getAvaNodeHealth(node),
-      EVM: (node) => this.getEVMNodeHealth(node),
-      HMY: (node) => this.getHarmonyNodeHealth(node),
-      POKT: (node) => this.getPocketNodeHealth(node),
-      SOL: (node) => this.getSolNodeHealth(node),
-      TMT: (node) => this.getTendermintNodeHealth(node),
-      NEAR: (node) => this.getNEARNodeHealth(node),
-    };
+    ALG: (node) => this.getAlgorandNodeHealth(node),
+    AVA: (node) => this.getAvaNodeHealth(node),
+    EVM: (node) => this.getEVMNodeHealth(node),
+    HMY: (node) => this.getHarmonyNodeHealth(node),
+    POKT: (node) => this.getPocketNodeHealth(node),
+    SOL: (node) => this.getSolNodeHealth(node),
+    TMT: (node) => this.getTendermintNodeHealth(node),
+    NEAR: (node) => this.getNEARNodeHealth(node),
+  };
 
   /* ----- Algorand ----- */
   private getAlgorandNodeHealth = async (node: INode): Promise<IHealthResponse> => {
@@ -421,14 +421,14 @@ export class Service {
   };
 
   /* ----- Near ----- */
-  private async getNEARBlockHeight(
-    url: string,
-  ) {
+  private async getNEARBlockHeight(url: string) {
     try {
-      const { data } = await this.rpc.post(
-        url,
-        { jsonrpc: '2.0', id: "dontcare", method: "status", params: [] },
-      );
+      const { data } = await this.rpc.post(url, {
+        jsonrpc: '2.0',
+        id: 'dontcare',
+        method: 'status',
+        params: [],
+      });
       return data.result.sync_info.latest_block_height;
     } catch (error) {
       const stringError = JSON.stringify(error);
@@ -436,11 +436,9 @@ export class Service {
         `getBlockHeight could not contact blockchain node ${stringError} ${url}`,
       );
     }
-  };
+  }
 
-  private getNEARNodeHealth = async (
-    node: INode,
-  ): Promise<IHealthResponse> => {
+  private getNEARNodeHealth = async (node: INode): Promise<IHealthResponse> => {
     const { name, chain, url, host, port } = node;
     const { allowance } = chain;
 
@@ -451,7 +449,10 @@ export class Service {
     };
 
     /* Check if node is online and RPC up */
-    const isNodeListening = await this.isNodeListening({ host: host.ip, port });
+    const isNodeListening = await this.isNodeListening({
+      host: host.fqdn || host.ip,
+      port,
+    });
     if (!isNodeListening) {
       return {
         ...healthResponse,
@@ -498,16 +499,15 @@ export class Service {
       };
     }
 
-
     try {
       /* Get node's block height, highest block height from reference nodes */
 
       let externalHeights = await Promise.all(
-        referenceUrls.map((ref) => this.getNEARBlockHeight(ref.url))
-      )
+        referenceUrls.map((ref) => this.getNEARBlockHeight(ref.url)),
+      );
       const sortedExternalHeights = externalHeights.sort((a, b) => {
         return b - a;
-      })
+      });
 
       const internalBh = await this.getNEARBlockHeight(url);
 
@@ -813,5 +813,4 @@ export class Service {
 
     return secondsToRecover;
   }
-
 }
