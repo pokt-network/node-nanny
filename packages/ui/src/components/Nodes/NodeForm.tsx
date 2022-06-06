@@ -246,7 +246,7 @@ export const NodeForm = ({
   }, [values.host, formData, setFieldValue]);
 
   const getNodeName = useCallback(() => {
-    if (values.dispatch && values.host) {
+    if (values.dispatch && !values.frontend && values.host) {
       const host = formData?.hosts?.find(({ id }) => id === values.host);
       const { name: locationName } = host.location;
       const [, instance] = host.name.split('-');
@@ -271,8 +271,9 @@ export const NodeForm = ({
     }
   }, [
     values.dispatch,
+    values.frontend,
     values.host,
-    values.chain,
+    values.chain,q
     frontend,
     formData.chains,
     formData.hosts,
@@ -280,7 +281,7 @@ export const NodeForm = ({
   ]);
 
   const getNodeUrl = useCallback(() => {
-    if (values.dispatch && values.port) {
+    if (values.dispatch && !values.frontend && values.port) {
       const host = formData?.hosts?.find(({ id }) => id === values.host);
       const [, instance] = host.name.split('-');
       return `http://dispatch-${instance}-instance.nodes.pokt.network:${values.port}`;
@@ -292,7 +293,14 @@ export const NodeForm = ({
     } else {
       return '';
     }
-  }, [values.dispatch, values.host, values.port, values.https, formData.hosts]);
+  }, [
+    values.dispatch,
+    values.frontend,
+    values.host,
+    values.port,
+    values.https,
+    formData.hosts,
+  ]);
 
   useEffect(() => {
     if (frontend) {
