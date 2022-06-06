@@ -273,7 +273,7 @@ export const NodeForm = ({
     values.dispatch,
     values.frontend,
     values.host,
-    values.chain,q
+    values.chain,
     frontend,
     formData.chains,
     formData.hosts,
