@@ -421,14 +421,18 @@ export class Service {
   };
 
   /* ----- Near ----- */
-  private async getNEARBlockHeight(url: string) {
+  private async getNEARBlockHeight(url: string, auth?: string) {
     try {
-      const { data } = await this.rpc.post(url, {
-        jsonrpc: '2.0',
-        id: 'dontcare',
-        method: 'status',
-        params: [],
-      });
+      const { data } = await this.rpc.post(
+        url,
+        {
+          jsonrpc: '2.0',
+          id: 'dontcare',
+          method: 'status',
+          params: [],
+        },
+        this.getAxiosRequestConfig(auth),
+      );
       return data.result.sync_info.latest_block_height;
     } catch (error) {
       const stringError = JSON.stringify(error);
@@ -439,7 +443,7 @@ export class Service {
   }
 
   private getNEARNodeHealth = async (node: INode): Promise<IHealthResponse> => {
-    const { name, chain, url, host, port } = node;
+    const { name, chain, url, host, port, basicAuth } = node;
     const { allowance } = chain;
 
     let healthResponse: IHealthResponse = {
@@ -460,7 +464,7 @@ export class Service {
         conditions: EErrorConditions.OFFLINE,
       };
     }
-    const NEARBlockHeight = await this.getNEARBlockHeight(url);
+    const NEARBlockHeight = await this.getNEARBlockHeight(url, basicAuth);
     if (!NEARBlockHeight) {
       return {
         ...healthResponse,
@@ -503,13 +507,13 @@ export class Service {
       /* Get node's block height, highest block height from reference nodes */
 
       let externalHeights = await Promise.all(
-        referenceUrls.map((ref) => this.getNEARBlockHeight(ref.url)),
+        referenceUrls.map((ref) => this.getNEARBlockHeight(ref.url, basicAuth)),
       );
       const sortedExternalHeights = externalHeights.sort((a, b) => {
         return b - a;
       });
 
-      const internalBh = await this.getNEARBlockHeight(url);
+      const internalBh = await this.getNEARBlockHeight(url, basicAuth);
 
       const nodeHeight = internalBh;
       const peerHeight = sortedExternalHeights[0];
