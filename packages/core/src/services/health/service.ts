@@ -25,7 +25,7 @@ import env from '../../environment';
 interface IRPCMethodParams {
   fullRpcUrl: string;
   basicAuth?: string;
-  rpcBody?: { jsonrpc: string; id: number; method: string; params?: any[] };
+  rpc?: { jsonrpc: string; id: number; method: string; params?: any[] };
 }
 
 interface IRPCResult {
@@ -71,10 +71,10 @@ export class Service {
   Database parameters needed per-chain:
   - chain.method - string - RPC endpoint method: GET, POST, etc.
   - chain.endpoint - string - Endpoint path: /health, /ext/health, /status, etc.
-  - chain.rpcs["typeOfRpc"] - object of JSON strings - RPC body (if POST request) - example: `rpcs.health`, `rpcs.blockHeight`
+  - chain.rpc - RPC body (if POST request)
   - chain.hasOwnEndpoint - boolean - Whether Chain has its own health endpoint (if not, proceed to next step - useOracles)
   - chain.useOracles - boolean - Whether Chain has external Oracles (currently only EVM does). If not (current only POKT), will use peers for reference nodes.
-  - chain.healthCheckPath - string - Chain health check RPC response field path - example: "status" or "data.result.healthy"
+  - chain.responsePath - string - Chain health check RPC response field path - example: "status" or "data.result.healthy"
   - chain.blockHeightPath - string - Chain block height RPC response field path - example: "data.result" or "data.result.sync_info.latest_block_height"
   - chain.healthyValue - boolean | number | string - The field contents that signify a healthy response from the chain's API
   
@@ -86,7 +86,7 @@ export class Service {
   /**  Main Health Check Call */
   async checkNodeHealth(node: any /* INode */): Promise<IHealthResponse> {
     const { name, chain } = node;
-    const { hasOwnEndpoint, healthCheckPath, healthyValue } = chain;
+    const { hasOwnEndpoint, responsePath, healthyValue } = chain;
 
     let rpcResponse: AxiosResponse<IRPCResult>;
     try {
@@ -98,7 +98,7 @@ export class Service {
     if (hasOwnEndpoint) {
       const nodeIsHealthy = this.checkHealthCheckField(
         rpcResponse,
-        healthCheckPath,
+        responsePath,
         healthyValue,
       );
       return nodeIsHealthy
@@ -112,8 +112,8 @@ export class Service {
   } = {
     get: async ({ fullRpcUrl, basicAuth }) =>
       this.rpc.get(fullRpcUrl, this.getAxiosRequestConfig(basicAuth)),
-    post: async ({ fullRpcUrl, basicAuth, rpcBody }) =>
-      this.rpc.post(fullRpcUrl, rpcBody, this.getAxiosRequestConfig(basicAuth)),
+    post: async ({ fullRpcUrl, basicAuth, rpc }) =>
+      this.rpc.post(fullRpcUrl, rpc, this.getAxiosRequestConfig(basicAuth)),
   };
 
   private async checkEVMNodeIsOnline() {
@@ -126,23 +126,58 @@ export class Service {
   private async checkNodeRPC(
     { chain, url, basicAuth }: any /* INode */,
   ): Promise<AxiosResponse<IRPCResult>> {
-    const { method, endpoint, rpcs } = chain;
+    const { method, endpoint, rpc } = chain;
 
     const fullRpcUrl = `${url}${endpoint || ''}`;
     const rpcMethod = this.rpcMethodTemplates[method];
-
-    return rpcMethod<IRPCResult>({ fullRpcUrl, basicAuth, rpcBody: rpcs?.health });
+    return rpcMethod<IRPCResult>({ fullRpcUrl, basicAuth, rpc });
   }
 
   /** Only used if `chain.hasOwnEndpoint` is true */
-  private checkHealthCheckField<T>(
-    response: AxiosResponse<T>,
+  private checkHealthCheckField(
+    response: AxiosResponse,
     healthCheckPath: string,
     healthyValue: string | number | boolean,
-  ): Boolean {
+  ): boolean {
     const healthCheckField = resolvePath(response, healthCheckPath);
-
     return Boolean(healthCheckField === healthyValue);
+  }
+
+  /** Only used if `chain.hasOwnEndpoint` is false */
+  private getBlockHeightField(response: AxiosResponse, blockHeightPath: string): number {
+    const blockHeightField = resolvePath(response, blockHeightPath);
+    return hexToDec(blockHeightField);
+  }
+
+  //   /** Only used if `chain.hasOwnEndpoint` is true */
+  private async getReferenceBlockHeights<T>(node: any /* INode */) {
+    const { chain } = node;
+    const { id: chainId, name, responsePath, useOracles } = chain;
+
+    let referenceUrls: string[] = [];
+
+    if (useOracles) {
+      const { urls } = await OraclesModel.findOne({ chain: name });
+      referenceUrls = [...urls];
+      let blockHeights: number[] = [];
+      let badOracles: string[] = [];
+      for await (const oracleUrl of urls) {
+        try {
+          const blockHeightResponse = await this.checkNodeRPC({
+            ...node,
+            url: oracleUrl,
+          });
+          const blockHeightField = this.getBlockHeightField(
+            blockHeightResponse,
+            responsePath,
+          );
+          blockHeights.push(blockHeightField);
+          if (blockHeights.length >= 3) break;
+        } catch {
+          badOracles.push(oracleUrl);
+        }
+      }
+    }
   }
 
   /* Health Response Object creation methods */

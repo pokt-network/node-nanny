@@ -40,7 +40,7 @@ describe('Health Service Tests', () => {
           chain: {
             ...mockNode.chain,
             hasOwnEndpoint: true,
-            healthCheckPath: 'status',
+            responsePath: 'status',
             healthyValue: 200,
           },
         };
@@ -61,7 +61,7 @@ describe('Health Service Tests', () => {
           chain: {
             ...mockNode.chain,
             hasOwnEndpoint: true,
-            healthCheckPath: 'status',
+            responsePath: 'status',
             healthyValue: 200,
           },
         };
@@ -94,9 +94,7 @@ describe('Health Service Tests', () => {
           chain: {
             ...mockNode.chain,
             method: 'post',
-            rpcs: {
-              health: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] },
-            },
+            rpc: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] },
           },
         };
         const mockRpc = { data: 'anything', status: 200 };
