@@ -7,4 +7,5 @@ module.exports = {
   transform: tsjPreset.transform,
   transformIgnorePatterns: ['^.+\\.js$'],
   testMatch: ['**/?(*.)+(spec|test).ts?(x)'],
+  resetMocks: true,
 };
