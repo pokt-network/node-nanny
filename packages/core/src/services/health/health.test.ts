@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 
 import { Service } from './service';
 import { EErrorConditions, EErrorStatus } from './types';
-import { INode } from '../../models';
+import { INode, NodesModel, OraclesModel } from '../../models';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -16,6 +16,7 @@ function randomInt(min: number, max: number): number {
 describe('Health Service Tests', () => {
   describe.only('Chain-agnostic Health Check Tests', () => {
     const mockNode = {
+      id: '123456789',
       name: 'TEST-HOST/TST/01',
       chain: { method: 'get', path: '/health' },
       url: 'http://162.210.199.42:8545',
@@ -23,7 +24,7 @@ describe('Health Service Tests', () => {
     } as unknown as INode;
 
     describe('checkNodeHealth', () => {
-      test('Should return a NO_RESPONSE health check if the checkNodeRPC throws an error', async () => {
+      test('Should return a NO_RESPONSE response if the checkNodeRPC throws an error', async () => {
         mockedAxios.get.mockRejectedValueOnce(new Error('whatever'));
 
         const healthResponse = await healthService.checkNodeHealth(mockNode);
@@ -34,7 +35,9 @@ describe('Health Service Tests', () => {
         expect(healthResponse.error).toEqual('whatever');
       });
 
-      test('Should return a HEALTHY health check if the node has its own endpoint and returns the correct healthy response', async () => {
+      /* Has-Own-Endpoint Tests */
+
+      test('Should return a HEALTHY response if the node has its own endpoint and returns the correct healthy response', async () => {
         const mockNodeForHealthy = {
           ...mockNode,
           chain: {
@@ -55,7 +58,7 @@ describe('Health Service Tests', () => {
         expect(healthResponse.health).toEqual("hi I'm healthy");
       });
 
-      test('Should return a NOT_SYNCHRONIZED health check if the node has its own endpoint and returns the correct healthy response', async () => {
+      test('Should return a NOT_SYNCHRONIZED response if the node has its own endpoint and returns the correct healthy response', async () => {
         const mockNodeForNotSynced = {
           ...mockNode,
           chain: {
@@ -74,6 +77,107 @@ describe('Health Service Tests', () => {
         expect(healthResponse.status).toEqual(EErrorStatus.ERROR);
         expect(healthResponse.conditions).toEqual(EErrorConditions.NOT_SYNCHRONIZED);
         expect(healthResponse.health).toEqual("oops I'm not healthy");
+      });
+
+      /* Oracles Tests */
+      const mockNodeForOracles = {
+        ...mockNode,
+        chain: {
+          name: 'ETH',
+          allowance: 3,
+          method: 'post',
+          rpc: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] },
+          useOracles: true,
+          responsePath: 'data.result',
+        },
+      };
+      const mockOracle = {
+        chain: 'ETH',
+        urls: ['https://whatever1.com', 'https://whatever2.com'],
+      };
+
+      test('Should return a HEALTHY response if the node uses oracles, the oracles are healthy and the node is in sync with its oracles', async () => {
+        const mockResponse = { data: { result: 657289 } };
+        mockedAxios.post.mockResolvedValueOnce(mockResponse);
+        jest
+          .spyOn(OraclesModel, 'findOne')
+          .mockImplementationOnce(() => mockOracle as any);
+        mockedAxios.post.mockResolvedValueOnce({ data: { result: 657271 } });
+        mockedAxios.post.mockResolvedValueOnce({ data: { result: 657291 } });
+
+        const healthResponse = await healthService.checkNodeHealth(mockNodeForOracles);
+
+        expect(healthResponse.name).toEqual(mockNode.name);
+        expect(healthResponse.status).toEqual(EErrorStatus.OK);
+        expect(healthResponse.conditions).toEqual(EErrorConditions.HEALTHY);
+        expect(healthResponse.health).toEqual('Node is healthy.');
+        expect(healthResponse.height.internalHeight).toEqual(657289);
+        expect(healthResponse.height.externalHeight).toEqual(657291);
+        expect(healthResponse.height.delta).toEqual(2);
+      });
+
+      test('Should return a NOT_SYNCHRONIZED response if the node uses oracles, the oracles are healthy and the delta is above the chains allowance', async () => {
+        const mockResponse = { data: { result: 657251 } };
+        mockedAxios.post.mockResolvedValueOnce(mockResponse);
+        jest
+          .spyOn(OraclesModel, 'findOne')
+          .mockImplementationOnce(() => mockOracle as any);
+        mockedAxios.post.mockResolvedValueOnce({ data: { result: 657271 } });
+        mockedAxios.post.mockResolvedValueOnce({ data: { result: 657291 } });
+        jest.spyOn(healthService as any, 'updateNotSynced').mockImplementation(jest.fn);
+
+        const healthResponse = await healthService.checkNodeHealth(mockNodeForOracles);
+
+        expect(healthResponse.name).toEqual(mockNode.name);
+        expect(healthResponse.status).toEqual(EErrorStatus.ERROR);
+        expect(healthResponse.conditions).toEqual(EErrorConditions.NOT_SYNCHRONIZED);
+        expect(healthResponse.health).toEqual('Node is out of sync.');
+        expect(healthResponse.height.internalHeight).toEqual(657251);
+        expect(healthResponse.height.externalHeight).toEqual(657291);
+        expect(healthResponse.height.delta).toEqual(40);
+      });
+
+      /* Peers Tests */
+
+      test("Should return a HEALTHY response if the node doesn't use oracles, the peers are healthy and the node is in sync with its peers", async () => {
+        const mockNodeForPersHealthy = {
+          ...mockNode,
+          chain: {
+            name: 'POKT',
+            method: 'post',
+            endpoint: '/v1/query/height',
+            rpc: {},
+            useOracles: false,
+            responsePath: 'data.height',
+          },
+        };
+        const mockResponse = { data: { height: 32453 } };
+        mockedAxios.post.mockResolvedValueOnce(mockResponse);
+        const mockPeers = [
+          { url: 'https://whatever1.com' },
+          { url: 'https://whatever2.com' },
+        ] as unknown as INode[];
+        const [first, second] = [
+          { data: { height: 32453 } },
+          { data: { height: 32427 } },
+        ];
+        jest
+          .spyOn(NodesModel, 'aggregate')
+          .mockImplementationOnce(() => mockPeers as any);
+        mockedAxios.post.mockResolvedValueOnce(first);
+        mockedAxios.post.mockResolvedValueOnce(second);
+
+        const healthResponse = await healthService.checkNodeHealth(
+          mockNodeForPersHealthy,
+        );
+
+        expect(healthResponse.name).toEqual(mockNode.name);
+        expect(healthResponse.status).toEqual(EErrorStatus.OK);
+        expect(healthResponse.conditions).toEqual(EErrorConditions.HEALTHY);
+        expect(healthResponse.health).toEqual('Node is healthy.');
+        expect(healthResponse.height.internalHeight).toEqual(32453);
+        expect(healthResponse.height.externalHeight).toEqual(32453);
+        expect(healthResponse.height.delta).toEqual(0);
       });
     });
 
@@ -214,6 +318,245 @@ describe('Health Service Tests', () => {
         );
 
         expect(response).toEqual(false);
+      });
+    });
+
+    /* getReferenceBlockHeight returns the highest block height among the node's references - oracles and/or peers */
+    describe('getReferenceBlockHeight', () => {
+      test('Should return the highest block height for a node that uses oracles and has two healthy oracles', async () => {
+        const mockOracle = {
+          chain: 'TST',
+          urls: [
+            'https://whatever1.com',
+            'https://whatever2.com',
+            'https://whatever3.com',
+          ],
+        };
+        const [first, second, third] = [
+          { data: { result: 61573 } },
+          { data: { result: 61582 } },
+          { data: { result: 61571 } },
+        ];
+        const mockNodeForOracles = {
+          chain: {
+            name: 'ETH',
+            method: 'post',
+            rpc: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] },
+            useOracles: true,
+            responsePath: 'data.result',
+          } as unknown as INode,
+        };
+
+        jest
+          .spyOn(OraclesModel, 'findOne')
+          .mockImplementationOnce(() => mockOracle as any);
+        mockedAxios.post.mockResolvedValueOnce(first);
+        mockedAxios.post.mockResolvedValueOnce(second);
+        mockedAxios.post.mockResolvedValueOnce(third);
+
+        const { refHeight, badOracles } = await healthService['getReferenceBlockHeight'](
+          mockNodeForOracles,
+        );
+
+        expect(refHeight).toEqual(61582);
+        expect(badOracles).toBeFalsy();
+      });
+
+      test('Should return the highest block height for a node that uses oracles and has less than two healthy oracles', async () => {
+        const mockOracle = { chain: 'TST', urls: ['https://whatever1.com'] };
+        const [first, second] = [
+          { data: { result: 61573 } },
+          { data: { result: 61571 } },
+        ];
+        const mockNodeForOracles = {
+          chain: {
+            name: 'TST',
+            method: 'post',
+            rpc: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] },
+            useOracles: true,
+            responsePath: 'data.result',
+          } as unknown as INode,
+        };
+        const mockPeers = [{ url: 'https://whatever1.com' }] as unknown as INode[];
+
+        jest
+          .spyOn(OraclesModel, 'findOne')
+          .mockImplementationOnce(() => mockOracle as any);
+        mockedAxios.post.mockResolvedValueOnce(first);
+        jest
+          .spyOn(NodesModel, 'aggregate')
+          .mockImplementationOnce(() => mockPeers as any);
+        mockedAxios.post.mockResolvedValueOnce(second);
+
+        const { refHeight, badOracles } = await healthService['getReferenceBlockHeight'](
+          mockNodeForOracles,
+        );
+
+        expect(refHeight).toEqual(61573);
+        expect(badOracles).toBeFalsy();
+      });
+
+      test('Should return the highest block height for a node that uses peers instead of oracles', async () => {
+        const mockPeers = [
+          { url: 'https://whatever1.com' },
+          { url: 'https://whatever2.com' },
+        ] as unknown as INode[];
+        const [first, second] = [
+          { data: { height: 61573 } },
+          { data: { height: 61582 } },
+        ];
+        const mockNodeForPeers = {
+          chain: {
+            name: 'POKT',
+            method: 'post',
+            endpoint: '/v1/query/height',
+            rpc: {},
+            useOracles: false,
+            responsePath: 'data.height',
+          } as unknown as INode,
+        };
+
+        jest
+          .spyOn(NodesModel, 'aggregate')
+          .mockImplementationOnce(() => mockPeers as any);
+        mockedAxios.post.mockResolvedValueOnce(first);
+        mockedAxios.post.mockResolvedValueOnce(second);
+
+        const { refHeight, badOracles } = await healthService['getReferenceBlockHeight'](
+          mockNodeForPeers,
+        );
+
+        expect(refHeight).toEqual(61582);
+        expect(badOracles).toBeFalsy();
+      });
+    });
+
+    describe('sortBlockHeights', () => {
+      test('Should return the highest block height', async () => {
+        const mockBlockHeights = [5, 3, 7, 8, 2, 3, 5, 6, 9, 7, 8, 2, 4];
+
+        const highest = healthService['sortBlockHeights'](mockBlockHeights);
+
+        expect(highest).toEqual(9);
+      });
+    });
+
+    /* getOracleBlockHeights is for chains with their own provided health endpoint only */
+    describe('getOracleBlockHeights', () => {
+      const mockOracle = {
+        chain: 'TST',
+        urls: ['https://whatever1.com', 'https://whatever2.com', 'https://whatever3.com'],
+      };
+      const [first, second, third] = [
+        { data: { result: 61573 } },
+        { data: { result: 61582 } },
+        { data: { result: 61571 } },
+      ];
+      const mockNodeForOracles = {
+        chain: {
+          name: 'ETH',
+          method: 'post',
+          rpc: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] },
+          useOracles: true,
+          responsePath: 'data.result',
+        } as unknown as INode,
+      };
+
+      test('Should return two block heights from external oracle endpoints if all oracles are healthy', async () => {
+        jest
+          .spyOn(OraclesModel, 'findOne')
+          .mockImplementationOnce(() => mockOracle as any);
+        mockedAxios.post.mockResolvedValueOnce(first);
+        mockedAxios.post.mockResolvedValueOnce(second);
+        mockedAxios.post.mockResolvedValueOnce(third);
+
+        const { oracleHeights, badOracles } = await healthService[
+          'getOracleBlockHeights'
+        ](mockNodeForOracles);
+
+        expect(oracleHeights.length).toEqual(2);
+        expect(badOracles.length).toEqual(0);
+        expect(oracleHeights[0]).toEqual(first.data.result);
+        expect(oracleHeights[1]).toEqual(second.data.result);
+        expect(oracleHeights[2]).toBeFalsy();
+      });
+
+      test('Should return a bad oracle URL if one of the oracles is unhealthy', async () => {
+        jest
+          .spyOn(OraclesModel, 'findOne')
+          .mockImplementationOnce(() => mockOracle as any);
+        mockedAxios.post.mockResolvedValueOnce(first);
+        mockedAxios.post.mockRejectedValueOnce(new Error('bad oracle'));
+        mockedAxios.post.mockResolvedValueOnce(third);
+
+        const { oracleHeights, badOracles } = await healthService[
+          'getOracleBlockHeights'
+        ](mockNodeForOracles);
+
+        expect(oracleHeights.length).toEqual(2);
+        expect(badOracles.length).toEqual(1);
+        expect(oracleHeights[0]).toEqual(first.data.result);
+        expect(oracleHeights[1]).toEqual(third.data.result);
+        expect(badOracles[0]).toEqual('https://whatever2.com');
+      });
+    });
+
+    /* getPeerBlockHeights is for chains that don't use external oracles or have less than 2 healthy oracle urls */
+    describe('getPeerBlockHeights', () => {
+      const mockPeers = [
+        { url: 'https://whatever1.com' },
+        { url: 'https://whatever2.com' },
+        { url: 'https://whatever3.com' },
+      ] as unknown as INode[];
+      const [first, second, third] = [
+        { data: { height: 61573 } },
+        { data: { height: 61582 } },
+        { data: { height: 61571 } },
+      ];
+      const mockNodeForPeers = {
+        chain: {
+          name: 'POKT',
+          method: 'post',
+          endpoint: '/v1/query/height',
+          rpc: {},
+          useOracles: false,
+          responsePath: 'data.height',
+        } as unknown as INode,
+      };
+
+      test("Should return all block heights from node's peers if the peers are all healthy", async () => {
+        jest
+          .spyOn(NodesModel, 'aggregate')
+          .mockImplementationOnce(() => mockPeers as any);
+        mockedAxios.post.mockResolvedValueOnce(first);
+        mockedAxios.post.mockResolvedValueOnce(second);
+        mockedAxios.post.mockResolvedValueOnce(third);
+
+        const peerBlockHeights = await healthService['getPeerBlockHeights'](
+          mockNodeForPeers,
+        );
+
+        expect(peerBlockHeights.length).toEqual(3);
+        expect(peerBlockHeights[0]).toEqual(first.data.height);
+        expect(peerBlockHeights[1]).toEqual(second.data.height);
+        expect(peerBlockHeights[2]).toEqual(third.data.height);
+      });
+
+      test("Should return all healthy block heights from node's peers if any peers are not responding", async () => {
+        jest
+          .spyOn(NodesModel, 'aggregate')
+          .mockImplementationOnce(() => mockPeers as any);
+        mockedAxios.post.mockResolvedValueOnce(first);
+        mockedAxios.post.mockRejectedValueOnce(new Error('peer not responding'));
+        mockedAxios.post.mockResolvedValueOnce(third);
+
+        const peerBlockHeights = await healthService['getPeerBlockHeights'](
+          mockNodeForPeers,
+        );
+
+        expect(peerBlockHeights.length).toEqual(2);
+        expect(peerBlockHeights[0]).toEqual(first.data.height);
+        expect(peerBlockHeights[1]).toEqual(third.data.height);
       });
     });
   });
