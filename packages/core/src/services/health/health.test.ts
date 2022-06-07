@@ -3,7 +3,8 @@ import child_process from 'child_process';
 
 import { Service } from './service';
 import { EErrorConditions, EErrorStatus } from './types';
-import { INode, NodesModel, OraclesModel } from '../../models';
+import { IChain, INode, NodesModel, OraclesModel } from '../../models';
+import { hexToDec } from '../../utils';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -58,7 +59,7 @@ describe('Health Service Tests', () => {
         expect(healthResponse.conditions).toEqual(EErrorConditions.OFFLINE);
       });
 
-      /* Node OFFLINE Check Tests */
+      /* Node NO_RESPONSE Check Tests */
       test('Should return a NO_RESPONSE response if the checkNodeRPC throws an error', async () => {
         mockedAxios.get.mockRejectedValueOnce(new Error('whatever'));
 
@@ -78,7 +79,7 @@ describe('Health Service Tests', () => {
             ...mockNode.chain,
             hasOwnEndpoint: true,
             responsePath: 'status',
-            healthyValue: 200,
+            healthyValue: '200',
           },
         };
         const mockResponse = { data: { result: "hi I'm healthy" }, status: 200 };
@@ -99,7 +100,7 @@ describe('Health Service Tests', () => {
             ...mockNode.chain,
             hasOwnEndpoint: true,
             responsePath: 'status',
-            healthyValue: 200,
+            healthyValue: '200',
           },
         };
         const mockResponse = { data: { result: "oops I'm not healthy" }, status: 500 };
@@ -120,10 +121,10 @@ describe('Health Service Tests', () => {
           name: 'ETH',
           allowance: 3,
           method: 'post',
-          rpc: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] },
+          rpc: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }',
           useOracles: true,
           responsePath: 'data.result',
-        },
+        } as unknown as IChain,
       };
       const mockOracle = {
         chain: 'ETH',
@@ -134,7 +135,7 @@ describe('Health Service Tests', () => {
         { url: 'https://whatever2.com' },
       ] as unknown as INode[];
 
-      test('Should return a HEALTHY response if the node uses oracles, the oracles are healthy and the node is in sync with its oracles', async () => {
+      test('Should return a HEALTHY response if the node uses oracles, is in sync and the oracles are healthy', async () => {
         const mockResponse = { data: { result: 657289 } };
         mockedAxios.post.mockResolvedValueOnce(mockResponse);
         jest
@@ -154,7 +155,7 @@ describe('Health Service Tests', () => {
         expect(healthResponse.height.delta).toEqual(2);
       });
 
-      test('Should return a HEALTHY response if the node uses oracles and there are less than 2 healthy oracles but more than 2 healthy peers', async () => {
+      test('Should return a HEALTHY response if the node uses oracles, is in sync and there are less than 2 healthy oracles but more than 2 healthy peers', async () => {
         const mockResponse = { data: { result: 657271 } };
         mockedAxios.post.mockResolvedValueOnce(mockResponse);
         jest
@@ -231,10 +232,10 @@ describe('Health Service Tests', () => {
           allowance: 1,
           method: 'post',
           endpoint: '/v1/query/height',
-          rpc: {},
+          rpc: '{}',
           useOracles: false,
           responsePath: 'data.height',
-        },
+        } as unknown as IChain,
       };
 
       test("Should return a HEALTHY response if the node doesn't use oracles, the peers are healthy and the node is in sync with its peers", async () => {
@@ -287,6 +288,7 @@ describe('Health Service Tests', () => {
       });
     });
 
+    /* Private method tests */
     describe('isNodeListening', () => {
       test('Should return true if the nc call to the node returns a sucess response', async () => {
         (child_process as any).exec.mockImplementation((_command, callback) => {
@@ -353,7 +355,7 @@ describe('Health Service Tests', () => {
           chain: {
             ...mockNode.chain,
             method: 'post',
-            rpc: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] },
+            rpc: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }',
           },
         };
         const mockRpc = { data: 'anything', status: 200 };
@@ -386,7 +388,7 @@ describe('Health Service Tests', () => {
         const response = healthService['checkHealthCheckField'](
           mockResponse as AxiosResponse<{ result: string }>,
           'status',
-          200,
+          '200',
         );
 
         expect(response).toEqual(true);
@@ -396,7 +398,7 @@ describe('Health Service Tests', () => {
         const response = healthService['checkHealthCheckField'](
           mockResponse as AxiosResponse<{ result: string }>,
           'status',
-          200,
+          '200',
         );
 
         expect(response).toEqual(false);
@@ -407,7 +409,7 @@ describe('Health Service Tests', () => {
         const response = healthService['checkHealthCheckField'](
           mockResponse as AxiosResponse<{ result: { healthy: boolean } }>,
           'data.result.healthy',
-          true,
+          'true',
         );
 
         expect(response).toEqual(true);
@@ -417,7 +419,7 @@ describe('Health Service Tests', () => {
         const response = healthService['checkHealthCheckField'](
           mockResponse as AxiosResponse<{ result: { healthy: boolean } }>,
           'data.result.healthy',
-          true,
+          'true',
         );
 
         expect(response).toEqual(false);
@@ -454,7 +456,7 @@ describe('Health Service Tests', () => {
             result: { sync_info: { catching_up: boolean } };
           }>,
           'data.result.sync_info.catching_up',
-          false,
+          'false',
         );
 
         expect(response).toEqual(true);
@@ -469,7 +471,7 @@ describe('Health Service Tests', () => {
             result: { sync_info: { catching_up: boolean } };
           }>,
           'data.result.sync_info.catching_up',
-          false,
+          'false',
         );
 
         expect(response).toEqual(false);
@@ -501,11 +503,11 @@ describe('Health Service Tests', () => {
           chain: {
             name: 'ETH',
             method: 'post',
-            rpc: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] },
+            rpc: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }',
             useOracles: true,
             responsePath: 'data.result',
-          } as unknown as INode,
-        };
+          },
+        } as unknown as INode;
 
         jest
           .spyOn(OraclesModel, 'findOne')
@@ -532,11 +534,11 @@ describe('Health Service Tests', () => {
           chain: {
             name: 'TST',
             method: 'post',
-            rpc: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] },
+            rpc: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }',
             useOracles: true,
             responsePath: 'data.result',
-          } as unknown as INode,
-        };
+          },
+        } as unknown as INode;
 
         jest
           .spyOn(OraclesModel, 'findOne')
@@ -565,11 +567,11 @@ describe('Health Service Tests', () => {
             name: 'POKT',
             method: 'post',
             endpoint: '/v1/query/height',
-            rpc: {},
+            rpc: '{}',
             useOracles: false,
             responsePath: 'data.height',
-          } as unknown as INode,
-        };
+          },
+        } as unknown as INode;
 
         jest
           .spyOn(NodesModel, 'aggregate')
@@ -586,13 +588,42 @@ describe('Health Service Tests', () => {
       });
     });
 
-    describe('sortBlockHeights', () => {
+    describe('getHighestHeight', () => {
       test('Should return the highest block height', async () => {
         const mockBlockHeights = [5, 3, 7, 8, 2, 3, 5, 6, 9, 7, 8, 2, 4];
 
-        const highest = healthService['sortBlockHeights'](mockBlockHeights);
+        const highest = healthService['getHighestHeight'](mockBlockHeights);
 
         expect(highest).toEqual(9);
+      });
+    });
+
+    describe('getHealthyValueType', () => {
+      test('Should return the correct value if it is a string', async () => {
+        const stringValue = 'healthy';
+
+        const string = healthService['getHealthyValueType'](stringValue);
+
+        expect(string).toEqual('healthy');
+      });
+
+      test('Should return the correct value if it is a number', async () => {
+        const stringValue = '200';
+
+        const number = healthService['getHealthyValueType'](stringValue);
+
+        expect(number).toEqual(200);
+      });
+
+      test('Should return the correct value if it is a boolean', async () => {
+        const stringTrue = 'true';
+        const stringFalse = 'fAlSe';
+
+        const trueVal = healthService['getHealthyValueType'](stringTrue);
+        const falseVal = healthService['getHealthyValueType'](stringFalse);
+
+        expect(trueVal).toEqual(true);
+        expect(falseVal).toEqual(false);
       });
     });
 
@@ -611,11 +642,11 @@ describe('Health Service Tests', () => {
         chain: {
           name: 'ETH',
           method: 'post',
-          rpc: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] },
+          rpc: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }',
           useOracles: true,
           responsePath: 'data.result',
-        } as unknown as INode,
-      };
+        },
+      } as unknown as INode;
 
       test('Should return two block heights from external oracle endpoints if all oracles are healthy', async () => {
         jest
@@ -633,6 +664,32 @@ describe('Health Service Tests', () => {
         expect(badOracles.length).toEqual(0);
         expect(oracleHeights[0]).toEqual(first.data.result);
         expect(oracleHeights[1]).toEqual(second.data.result);
+        expect(oracleHeights[2]).toBeFalsy();
+      });
+
+      test('Should return two block heights and parse hex codes to numbers', async () => {
+        const [first, second, third] = [
+          { data: { result: 'F085' } },
+          { data: { result: 'F08E' } },
+          { data: { result: 61571 } },
+        ];
+        jest
+          .spyOn(OraclesModel, 'findOne')
+          .mockImplementationOnce(() => mockOracle as any);
+        mockedAxios.post.mockResolvedValueOnce(first);
+        mockedAxios.post.mockResolvedValueOnce(second);
+        mockedAxios.post.mockResolvedValueOnce(third);
+
+        const { oracleHeights, badOracles } = await healthService[
+          'getOracleBlockHeights'
+        ](mockNodeForOracles);
+
+        expect(oracleHeights.length).toEqual(2);
+        expect(badOracles.length).toEqual(0);
+        expect(oracleHeights[0]).toEqual(hexToDec(first.data.result));
+        expect(oracleHeights[1]).toEqual(hexToDec(second.data.result));
+        expect(oracleHeights[0]).toEqual(61573);
+        expect(oracleHeights[1]).toEqual(61582);
         expect(oracleHeights[2]).toBeFalsy();
       });
 
@@ -673,11 +730,11 @@ describe('Health Service Tests', () => {
           name: 'POKT',
           method: 'post',
           endpoint: '/v1/query/height',
-          rpc: {},
+          rpc: '{}',
           useOracles: false,
           responsePath: 'data.height',
-        } as unknown as INode,
-      };
+        },
+      } as unknown as INode;
 
       test("Should return all block heights from node's peers if the peers are all healthy", async () => {
         jest

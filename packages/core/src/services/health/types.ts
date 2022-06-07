@@ -62,8 +62,10 @@ export interface IBlockHeight {
   internalHeight: number;
 }
 
-export interface IPocketBlockHeight {
-  height: number;
+export interface IHealthCheck {
+  node: INode;
+  height?: IBlockHeight;
+  details?: IHealthResponseDetails;
 }
 
 export interface IHealthResponse {
@@ -76,12 +78,6 @@ export interface IHealthResponse {
   details?: IHealthResponseDetails;
 }
 
-export interface IHealthCheck {
-  node: INode;
-  height?: IBlockHeight;
-  details?: IHealthResponseDetails;
-}
-
 export interface IHealthResponseDetails {
   noOracle?: boolean;
   numPeers?: number;
@@ -90,27 +86,19 @@ export interface IHealthResponseDetails {
   secondsToRecover?: number;
 }
 
-export interface IReferenceURL {
-  url: string;
-  auth?: string;
+export interface IHealthResponseParams {
+  name: string;
+  result?: any;
+  height?: IBlockHeight;
+  secondsToRecover?: number;
+  badOracles?: string[];
+  noOracle?: boolean;
+  error?: Error;
 }
 
-export interface IRPCResponse {
-  jsonrpc: string;
-  id: number;
-  result?: string | number;
-  error?: { code: number; message: string };
-}
-
-export interface IRPCSyncResponse {
-  jsonrpc: string;
-  id: number;
-  result: boolean;
-  error?: { code: number; message: string };
-}
-
-export interface IEVMHealthCheckOptions {
-  harmony?: boolean;
+export interface INodeCheckParams {
+  host: string;
+  port: number;
 }
 
 export interface IOraclesResponse {
@@ -124,12 +112,19 @@ export interface IRefHeight {
   noOracle?: boolean;
 }
 
-export interface IHealthResponseParams {
-  name: string;
-  result?: any;
-  height?: IBlockHeight;
-  secondsToRecover?: number;
-  badOracles?: string[];
-  noOracle?: boolean;
-  error?: Error;
+export interface IRPCMethodParams {
+  fullRpcUrl: string;
+  basicAuth?: string;
+  rpc?: { jsonrpc: string; id: number; method: string; params?: any[] };
+}
+
+export interface IRPCResult {
+  jsonrpc: string;
+  id: number;
+  result?:
+    | string // ALG, SOL
+    | number
+    | { healthy?: boolean } // AVAX
+    | { sync_info: { catching_up: boolean } }; // TMT
+  error?: { code: number; message: string };
 }
