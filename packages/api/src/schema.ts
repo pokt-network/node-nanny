@@ -8,6 +8,18 @@ const typeDefs = gql`
     type: String!
     chainId: String!
     allowance: Int!
+    hasOwnEndpoint: Boolean!
+    useOracles: Boolean!
+    responsePath: String!
+    method: ChainMethod!
+    rpc: String
+    endpoint: String
+    healthyValue: String
+  }
+
+  enum ChainMethod {
+    GET
+    POST
   }
 
   type Host {
@@ -161,6 +173,13 @@ const typeDefs = gql`
     type: String!
     chainId: String!
     allowance: Int!
+    hasOwnEndpoint: Boolean!
+    useOracles: Boolean!
+    responsePath: String!
+    method: ChainMethod!
+    rpc: String
+    endpoint: String
+    healthyValue: String
   }
 
   input NodeUpdate {
@@ -195,6 +214,13 @@ const typeDefs = gql`
     type: String
     chainId: String
     allowance: Int
+    hasOwnEndpoint: Boolean
+    useOracles: Boolean
+    responsePath: String
+    method: ChainMethod
+    rpc: String
+    endpoint: String
+    healthyValue: String
   }
 
   input OracleUpdate {
