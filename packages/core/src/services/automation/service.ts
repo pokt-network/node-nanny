@@ -337,7 +337,7 @@ export class Service extends BaseService {
       .exec();
 
     const { status, conditions, height, details } =
-      await new HealthService().getNodeHealth(node);
+      await new HealthService().checkNodeHealth(node);
     const { status: nodeStatus, conditions: nodeConditions, deltaArray } = node;
 
     if (status !== nodeStatus || conditions !== nodeConditions) {
