@@ -17,12 +17,11 @@ import {
   IEVMHealthCheckOptions,
   IOraclesResponse,
   IPocketBlockHeight,
-  IRefBlockHeight,
+  IRefHeight,
   IReferenceURL,
   IRPCResponse,
-  IRPCSyncResponse,
 } from './types';
-import { camelToTitle, colorLog, hexToDec } from '../../utils';
+import { colorLog, hexToDec } from '../../utils';
 import env from '../../environment';
 
 // TEMP TYPES
@@ -87,7 +86,8 @@ export class Service {
   2. Do we still need to fetch number of peers and ethSyncing (EVM chains only)? NO
   */
 
-  /**  Main Health Check Call */
+  /** Health Check Call - This is the main method that checks the health of any node for any chain. 
+  Chain-specific parameters are stored in the database to enable this method to be chain-agnostic. */
   async checkNodeHealth(node: any /* INode */): Promise<IHealthResponse> {
     const { name, chain } = node;
     const { allowance, hasOwnEndpoint, healthyValue, responsePath } = chain;
@@ -105,19 +105,19 @@ export class Service {
         responsePath,
         healthyValue,
       );
-      const { result } = rpcResponse.data;
+      const { data } = rpcResponse;
+      const { result } = data;
+
       return nodeIsHealthy
         ? this.healthResponse[EErrorConditions.HEALTHY]({ name, result })
         : this.healthResponse[EErrorConditions.NOT_SYNCHRONIZED]({ name, result });
     } else {
       try {
+        const refHeightValues = await this.getReferenceBlockHeight(node);
+        const { refHeight, badOracles, noOracle } = refHeightValues;
         const nodeHeight = this.getBlockHeightField(rpcResponse, responsePath);
-        const { refHeight, badOracles, noOracle } = await this.getReferenceBlockHeight(
-          node,
-        );
 
         const delta = refHeight - nodeHeight;
-        console.debug({ refHeight, nodeHeight, delta });
         const height: IBlockHeight = {
           internalHeight: nodeHeight,
           externalHeight: refHeight,
@@ -165,13 +165,7 @@ export class Service {
     }
   }
 
-  private checkNodeNotSynced(
-    delta: number,
-    allowance: number,
-    response: IRPCResult,
-  ): boolean {
-    return Boolean(delta > allowance || response.error?.code);
-  }
+  /** ---- Private health check methods ---- */
 
   private rpcMethodTemplates: {
     [key: string]: <T>(params: IRPCMethodParams) => Promise<AxiosResponse<T>>;
@@ -209,6 +203,14 @@ export class Service {
     return Boolean(healthCheckField === healthyValue);
   }
 
+  private checkNodeNotSynced(
+    delta: number,
+    allowance: number,
+    response: IRPCResult,
+  ): boolean {
+    return Boolean(delta > allowance || response.error?.code);
+  }
+
   /** Only used if `chain.hasOwnEndpoint` is false */
   private getBlockHeightField(response: AxiosResponse, blockHeightPath: string): number {
     const blockHeightField = resolvePath(response, blockHeightPath);
@@ -217,9 +219,7 @@ export class Service {
 
   /** Only used if `chain.hasOwnEndpoint` is false. Gets the highest block height among
    * reference URLs for the node. Ref URLS are either external oracles or node peers.  */
-  private async getReferenceBlockHeight<T>(
-    node: any /* INode */,
-  ): Promise<IRefBlockHeight> {
+  private async getReferenceBlockHeight(node: any /* INode */): Promise<IRefHeight> {
     const { chain } = node;
     const { useOracles } = chain;
 
@@ -235,23 +235,19 @@ export class Service {
     if (!useOracles || refHeights.length < 2) {
       const peerHeights = await this.getPeerBlockHeights(node);
 
-      if (!refHeights?.length) {
-        if (peerHeights.length < 2) {
-          throw EErrorConditions.NO_PEERS;
-        } else {
-          noOracle = true;
-        }
+      if (peerHeights.length < 2) {
+        throw EErrorConditions.NO_PEERS;
+      } else if (!refHeights.length) {
+        noOracle = true;
       }
 
       refHeights = [...refHeights, ...peerHeights];
     }
 
-    const blockHeightValue: IRefBlockHeight = {
-      refHeight: this.sortBlockHeights(refHeights),
-    };
-    if (badOraclesArray) blockHeightValue.badOracles = badOraclesArray;
-    if (noOracle) blockHeightValue.noOracle = noOracle;
-    return blockHeightValue;
+    const blockHeightVal: IRefHeight = { refHeight: this.sortBlockHeights(refHeights) };
+    if (badOraclesArray) blockHeightVal.badOracles = badOraclesArray;
+    if (noOracle) blockHeightVal.noOracle = noOracle;
+    return blockHeightVal;
   }
 
   private sortBlockHeights(blockHeights: number[]): number {
@@ -283,8 +279,8 @@ export class Service {
     return { oracleHeights, badOracles };
   }
 
-  /** Only used if `chain.useOracles` is false or <2 healthy Oracles can be called for Node.js.
-  Will sample up to 20 random peers for node and return  */
+  /** Only used if `chain.useOracles` is false or <2 healthy Oracles can be called for node.
+  Will sample up to 20 random peers for node and return their block heights. */
   private async getPeerBlockHeights(node: any /* INode */): Promise<number[]> {
     const { id: nodeId, chain, name: nodeName } = node;
     const { id: chainId, responsePath, type } = chain;
@@ -318,7 +314,7 @@ export class Service {
     return peerHeights;
   }
 
-  /** IHealthResponse object creation methods */
+  /** ---- IHealthResponse object creation methods ---- */
   private healthResponse: {
     [condition in EErrorConditions]: (params: IHealthResponseParams) => IHealthResponse;
   } = {
@@ -392,7 +388,7 @@ export class Service {
     return healthResponse;
   };
 
-  private getNoPeers = ({ name }: IHealthResponseParams) => ({
+  private getNoPeers = ({ name }: IHealthResponseParams): IHealthResponse => ({
     name,
     status: EErrorStatus.ERROR,
     conditions: EErrorConditions.NO_PEERS,
