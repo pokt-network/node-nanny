@@ -336,13 +336,8 @@ export class Service extends BaseService {
       .populate('chain')
       .exec();
 
-    const {
-      status,
-      conditions,
-      height,
-      details,
-      ethSyncing,
-    } = await new HealthService().getNodeHealth(node);
+    const { status, conditions, height, details } =
+      await new HealthService().getNodeHealth(node);
     const { status: nodeStatus, conditions: nodeConditions, deltaArray } = node;
 
     if (status !== nodeStatus || conditions !== nodeConditions) {
@@ -350,7 +345,7 @@ export class Service extends BaseService {
     }
 
     const updatedNodeHealth = { status, conditions, deltaArray: deltaArray };
-    return { height, details, ethSyncing, node: updatedNodeHealth as INode };
+    return { height, details, node: updatedNodeHealth as INode };
   }
 
   /* ----- Rotation Methods ----- */

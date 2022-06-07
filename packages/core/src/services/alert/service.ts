@@ -177,7 +177,7 @@ export class Service {
 
   /* ----- Message String Methods ----- */
   getAlertMessage(
-    { count, conditions, name, ethSyncing, height, details }: IRedisEvent,
+    { count, conditions, name, height, details }: IRedisEvent,
     alertType: EAlertTypes,
     nodesOnline: number,
     nodesTotal: number,
@@ -193,7 +193,6 @@ export class Service {
       alertType !== EAlertTypes.RESOLVED
         ? `This event has occurred ${count} time${s(count)} since first occurrence.`
         : '';
-    const ethSyncStr = ethSyncing ? `\nETH Syncing - ${ethSyncing}\n` : '';
     const heightStr = height
       ? `Block Height - Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
       : '';
@@ -223,7 +222,6 @@ export class Service {
         countStr,
         heightStr,
         secondsToRecoverStr,
-        ethSyncStr,
         badOracleStr,
         noOracleStr,
         nodeCountStr,
