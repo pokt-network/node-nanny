@@ -51,17 +51,6 @@ export class Service {
       this.rpc.post(fullRpcUrl, rpc, this.getAxiosRequestConfig(basicAuth)),
   };
 
-  /* ----- DEVELOPMENT - Chain Agnostic Health Check Methods - DEVELOPMENT ----- 
-  Database parameters needed per-chain:
-  - chain.method - string - RPC endpoint method: GET, POST, etc.
-  - chain.endpoint - string - Endpoint path: /health, /ext/health, /status, etc.
-  - chain.rpc - RPC body (if POST request)
-  - chain.hasOwnEndpoint - boolean - Whether Chain has its own health endpoint (if not, proceed to next step - useOracles)
-  - chain.useOracles - boolean - Whether Chain has external Oracles (currently only EVM does). If not (current only POKT), will use peers for reference nodes.
-  - chain.responsePath - string - Chain health check RPC response field path - example: "status" or "data.result.healthy"
-  - chain.healthyValue - boolean | number | string - The field contents that signify a healthy response from the chain's API
-  */
-
   /** Health Check Call - This is the main method that checks the health of any node for any chain. 
   Chain-specific parameters are stored in the database to enable this method to be chain-agnostic. */
   async checkNodeHealth(node: INode): Promise<IHealthResponse> {
