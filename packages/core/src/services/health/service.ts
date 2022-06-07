@@ -89,8 +89,16 @@ export class Service {
   /** Health Check Call - This is the main method that checks the health of any node for any chain. 
   Chain-specific parameters are stored in the database to enable this method to be chain-agnostic. */
   async checkNodeHealth(node: any /* INode */): Promise<IHealthResponse> {
-    const { name, chain } = node;
+    const { name, chain, host, port } = node;
     const { allowance, hasOwnEndpoint, healthyValue, responsePath } = chain;
+
+    const isNodeListening = await this.isNodeListening({
+      host: host.fqdn || host.ip,
+      port,
+    });
+    if (!isNodeListening) {
+      return this.healthResponse[EErrorConditions.OFFLINE]({ name });
+    }
 
     let rpcResponse: AxiosResponse<IRPCResult>;
     try {
@@ -176,9 +184,21 @@ export class Service {
       this.rpc.post(fullRpcUrl, rpc, this.getAxiosRequestConfig(basicAuth)),
   };
 
-  private async checkEVMNodeIsOnline() {
-    // DEV NOTE -> Determine if Netcat is still the best way to check OFFLINE status for EVM node.
-    // Or even if it is still necessary to perform the OFFLINE check.
+  private async isNodeListening({ host, port }): Promise<boolean> {
+    try {
+      const nc = await new Promise<string>((resolve, reject) => {
+        exec(`nc -vz -q 2 ${host} ${port}`, (error, stdout, stderr) => {
+          if (error) reject(`error: ${error.message}`);
+          if (stderr) resolve(stderr);
+
+          resolve(stdout);
+        });
+      });
+      let status = nc.split(' ');
+      return status[status.length - 1].includes(ENCResponse.SUCCESS);
+    } catch (error) {
+      return false;
+    }
   }
 
   /** Returns a response from the Node to determine if the Node is responding.
@@ -652,16 +672,6 @@ export class Service {
       conditions: EErrorConditions.NO_RESPONSE,
     };
   };
-
-  private async isNodeListening({ host, port }) {
-    try {
-      const nc = await this.nc({ host, port });
-      let status = nc.split(' ');
-      return status[status.length - 1].includes(ENCResponse.SUCCESS);
-    } catch (error) {
-      return false;
-    }
-  }
 
   private async nc({ host, port }): Promise<string> {
     return new Promise((resolve, reject) => {
