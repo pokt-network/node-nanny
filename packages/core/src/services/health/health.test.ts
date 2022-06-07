@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
+import child_process from 'child_process';
 
 import { Service } from './service';
 import { EErrorConditions, EErrorStatus } from './types';
@@ -7,6 +8,10 @@ import { INode, NodesModel, OraclesModel } from '../../models';
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 mockedAxios.create.mockImplementation((_config) => axios);
+
+jest.mock('child_process');
+// const mockedChildProcess = child_process as jest.Mocked<typeof child_process>;
+
 const healthService = new Service();
 
 function randomInt(min: number, max: number): number {
@@ -19,11 +24,41 @@ describe('Health Service Tests', () => {
       id: '123456789',
       name: 'TEST-HOST/TST/01',
       chain: { method: 'get', path: '/health' },
+      host: { ip: '162.210.199.42' },
       url: 'http://162.210.199.42:8545',
+      port: 8545,
       basicAuth: null,
     } as unknown as INode;
 
     describe('checkNodeHealth', () => {
+      beforeEach(() => {
+        (child_process as any).exec.mockImplementation((_command, callback) => {
+          callback(
+            null,
+            'Connection to 162.210.199.42 8545 port [tcp/*] succeeded!',
+            null,
+          );
+        });
+      });
+
+      /* Node OFFLINE Check Tests */
+      test('Should return an OFFLINE response if the node has its own endpoint and returns the correct healthy response', async () => {
+        (child_process as any).exec.mockImplementation((_command, callback) => {
+          callback(
+            null,
+            'nc: connect to 162.210.199.42 port 8545 (tcp) failed: Connection refused',
+            null,
+          );
+        });
+
+        const healthResponse = await healthService.checkNodeHealth(mockNode);
+
+        expect(healthResponse.name).toEqual(mockNode.name);
+        expect(healthResponse.status).toEqual(EErrorStatus.ERROR);
+        expect(healthResponse.conditions).toEqual(EErrorConditions.OFFLINE);
+      });
+
+      /* Node OFFLINE Check Tests */
       test('Should return a NO_RESPONSE response if the checkNodeRPC throws an error', async () => {
         mockedAxios.get.mockRejectedValueOnce(new Error('whatever'));
 
@@ -36,7 +71,6 @@ describe('Health Service Tests', () => {
       });
 
       /* Has-Own-Endpoint Tests */
-
       test('Should return a HEALTHY response if the node has its own endpoint and returns the correct healthy response', async () => {
         const mockNodeForHealthy = {
           ...mockNode,
@@ -250,6 +284,55 @@ describe('Health Service Tests', () => {
         expect(healthResponse.height.internalHeight).toEqual(32453);
         expect(healthResponse.height.externalHeight).toEqual(32483);
         expect(healthResponse.height.delta).toEqual(30);
+      });
+    });
+
+    describe('isNodeListening', () => {
+      test('Should return true if the nc call to the node returns a sucess response', async () => {
+        (child_process as any).exec.mockImplementation((_command, callback) => {
+          callback(
+            null,
+            'Connection to 162.210.199.42 8545 port [tcp/*] succeeded!',
+            null,
+          );
+        });
+
+        const isNodeListening = await healthService['isNodeListening']({
+          host: mockNode.host.ip,
+          port: mockNode.port,
+        });
+
+        expect(isNodeListening).toEqual(true);
+      });
+
+      test('Should return false if the nc call to the node does not return a sucess response', async () => {
+        (child_process as any).exec.mockImplementation((_command, callback) => {
+          callback(
+            null,
+            'nc: connect to 162.210.199.42 port 8545 (tcp) failed: Connection refused',
+            null,
+          );
+        });
+
+        const isNodeListening = await healthService['isNodeListening']({
+          host: mockNode.host.ip,
+          port: mockNode.port,
+        });
+
+        expect(isNodeListening).toEqual(false);
+      });
+
+      test('Should return false if the nc call to the node throws an error', async () => {
+        (child_process as any).exec.mockImplementation((_command, callback) => {
+          callback('an error occurred calling nc', null, null);
+        });
+
+        const isNodeListening = await healthService['isNodeListening']({
+          host: mockNode.host.ip,
+          port: mockNode.port,
+        });
+
+        expect(isNodeListening).toEqual(false);
       });
     });
 
