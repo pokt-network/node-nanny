@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import axiosRetry from 'axios-retry';
 import { exec } from 'child_process';
-import { Types } from 'mongoose';
+import { FilterQuery, Types } from 'mongoose';
 import util from 'util';
 
 import { IChain, INode, ChainsModel, NodesModel, OraclesModel } from '../../models';
@@ -10,15 +10,19 @@ import {
   EErrorStatus,
   ENCResponse,
   ESupportedBlockchainTypes,
+  IBlockHeight,
   IHealthResponse,
+  IHealthResponseDetails,
+  IHealthResponseParams,
   IEVMHealthCheckOptions,
   IOraclesResponse,
   IPocketBlockHeight,
+  IRefBlockHeight,
   IReferenceURL,
   IRPCResponse,
   IRPCSyncResponse,
 } from './types';
-import { camelToTitle, hexToDec } from '../../utils';
+import { camelToTitle, colorLog, hexToDec } from '../../utils';
 import env from '../../environment';
 
 // TEMP TYPES
@@ -86,13 +90,13 @@ export class Service {
   /**  Main Health Check Call */
   async checkNodeHealth(node: any /* INode */): Promise<IHealthResponse> {
     const { name, chain } = node;
-    const { hasOwnEndpoint, responsePath, healthyValue } = chain;
+    const { allowance, hasOwnEndpoint, healthyValue, responsePath } = chain;
 
     let rpcResponse: AxiosResponse<IRPCResult>;
     try {
       rpcResponse = await this.checkNodeRPC(node);
     } catch (error) {
-      return this.getNoResponseObject(node.name, error);
+      return this.healthResponse[EErrorConditions.NO_RESPONSE]({ name, error });
     }
 
     if (hasOwnEndpoint) {
@@ -101,10 +105,72 @@ export class Service {
         responsePath,
         healthyValue,
       );
+      const { result } = rpcResponse.data;
       return nodeIsHealthy
-        ? this.getHealthyObject(name, rpcResponse.data?.result)
-        : this.getNotSyncedObject(name, rpcResponse.data?.result);
+        ? this.healthResponse[EErrorConditions.HEALTHY]({ name, result })
+        : this.healthResponse[EErrorConditions.NOT_SYNCHRONIZED]({ name, result });
+    } else {
+      try {
+        const nodeHeight = this.getBlockHeightField(rpcResponse, responsePath);
+        const { refHeight, badOracles, noOracle } = await this.getReferenceBlockHeight(
+          node,
+        );
+
+        const delta = refHeight - nodeHeight;
+        console.debug({ refHeight, nodeHeight, delta });
+        const height: IBlockHeight = {
+          internalHeight: nodeHeight,
+          externalHeight: refHeight,
+          delta,
+        };
+
+        const nodeIsAheadOfPeer = delta + allowance < 0;
+        if (nodeIsAheadOfPeer) {
+          return this.healthResponse[EErrorConditions.PEER_NOT_SYNCHRONIZED]({
+            name,
+            height,
+          });
+        }
+
+        const notSynced = this.checkNodeNotSynced(delta, allowance, rpcResponse.data);
+        if (notSynced) {
+          const secondsToRecover = await this.updateNotSynced(delta, node.id.toString());
+          return this.healthResponse[EErrorConditions.NOT_SYNCHRONIZED]({
+            name,
+            height,
+            secondsToRecover,
+            badOracles,
+            noOracle,
+          });
+        }
+
+        /* HEALTHY Node Response */
+        return this.healthResponse[EErrorConditions.HEALTHY]({
+          name,
+          height,
+          badOracles,
+          noOracle,
+        });
+      } catch (error) {
+        const noPeers = error === EErrorConditions.NO_PEERS;
+        if (noPeers) return this.healthResponse[EErrorConditions.NO_PEERS]({ name });
+
+        const timeout = String(error).includes(`Error: timeout of`);
+        if (timeout) {
+          return this.healthResponse[EErrorConditions.NO_RESPONSE]({ name, error });
+        }
+
+        throw error;
+      }
     }
+  }
+
+  private checkNodeNotSynced(
+    delta: number,
+    allowance: number,
+    response: IRPCResult,
+  ): boolean {
+    return Boolean(delta > allowance || response.error?.code);
   }
 
   private rpcMethodTemplates: {
@@ -149,57 +215,198 @@ export class Service {
     return hexToDec(blockHeightField);
   }
 
-  //   /** Only used if `chain.hasOwnEndpoint` is true */
-  private async getReferenceBlockHeights<T>(node: any /* INode */) {
+  /** Only used if `chain.hasOwnEndpoint` is false. Gets the highest block height among
+   * reference URLs for the node. Ref URLS are either external oracles or node peers.  */
+  private async getReferenceBlockHeight<T>(
+    node: any /* INode */,
+  ): Promise<IRefBlockHeight> {
     const { chain } = node;
-    const { id: chainId, name, responsePath, useOracles } = chain;
+    const { useOracles } = chain;
 
-    let referenceUrls: string[] = [];
+    let refHeights: number[] = [];
+    let badOraclesArray: string[];
+    let noOracle: boolean;
 
     if (useOracles) {
-      const { urls } = await OraclesModel.findOne({ chain: name });
-      referenceUrls = [...urls];
-      let blockHeights: number[] = [];
-      let badOracles: string[] = [];
-      for await (const oracleUrl of urls) {
-        try {
-          const blockHeightResponse = await this.checkNodeRPC({
-            ...node,
-            url: oracleUrl,
-          });
-          const blockHeightField = this.getBlockHeightField(
-            blockHeightResponse,
-            responsePath,
-          );
-          blockHeights.push(blockHeightField);
-          if (blockHeights.length >= 3) break;
-        } catch {
-          badOracles.push(oracleUrl);
+      const { oracleHeights, badOracles } = await this.getOracleBlockHeights(node);
+      refHeights = oracleHeights;
+      if (badOracles?.length) badOraclesArray = badOracles;
+    }
+    if (!useOracles || refHeights.length < 2) {
+      const peerHeights = await this.getPeerBlockHeights(node);
+
+      if (!refHeights?.length) {
+        if (peerHeights.length < 2) {
+          throw EErrorConditions.NO_PEERS;
+        } else {
+          noOracle = true;
         }
       }
+
+      refHeights = [...refHeights, ...peerHeights];
     }
+
+    const blockHeightValue: IRefBlockHeight = {
+      refHeight: this.sortBlockHeights(refHeights),
+    };
+    if (badOraclesArray) blockHeightValue.badOracles = badOraclesArray;
+    if (noOracle) blockHeightValue.noOracle = noOracle;
+    return blockHeightValue;
   }
 
-  /* Health Response Object creation methods */
-  private getHealthyObject = (nodeName: string, result: any): IHealthResponse => ({
-    name: nodeName,
-    conditions: EErrorConditions.HEALTHY,
-    status: EErrorStatus.OK,
-    health: result || 'Node is healthy.',
+  private sortBlockHeights(blockHeights: number[]): number {
+    const [highestBlockHeight] = blockHeights.sort((a, b) => b - a);
+    return highestBlockHeight;
+  }
+
+  /** Only used if `chain.useOracles` is true. Will return up to 2 block heights from healthy oracles. */
+  private async getOracleBlockHeights(node: any /* INode */): Promise<IOraclesResponse> {
+    const { chain } = node;
+    const { name, responsePath } = chain;
+    const { urls: oracleUrls } = await OraclesModel.findOne({ chain: name });
+
+    let oracleHeights: number[] = [];
+    let badOracles: string[] = [];
+
+    for await (const oracleUrl of oracleUrls) {
+      try {
+        const blockHeightRes = await this.checkNodeRPC({ ...node, url: oracleUrl });
+        const blockHeightField = this.getBlockHeightField(blockHeightRes, responsePath);
+
+        oracleHeights.push(blockHeightField);
+        if (oracleHeights.length >= 2) break;
+      } catch {
+        badOracles.push(oracleUrl);
+      }
+    }
+
+    return { oracleHeights, badOracles };
+  }
+
+  /** Only used if `chain.useOracles` is false or <2 healthy Oracles can be called for Node.js.
+  Will sample up to 20 random peers for node and return  */
+  private async getPeerBlockHeights(node: any /* INode */): Promise<number[]> {
+    const { id: nodeId, chain, name: nodeName } = node;
+    const { id: chainId, responsePath, type } = chain;
+
+    let chainQuery: FilterQuery<INode>;
+    if (env('PNF') && type === ESupportedBlockchainTypes.POKT) {
+      const poktChains = await ChainsModel.find({ type: ESupportedBlockchainTypes.POKT });
+      const poktChainIds = poktChains.map(({ _id }) => _id);
+      chainQuery = { $in: poktChainIds };
+    } else {
+      chainQuery = chainId;
+    }
+
+    const status = { $ne: EErrorStatus.ERROR };
+    const $match = { chain: chainQuery, _id: { $ne: nodeId }, status };
+    const $sample = { size: 20 };
+    const peers = await NodesModel.aggregate<INode>([{ $match }, { $sample }]);
+    const peerUrls = peers.map(({ url }) => url);
+
+    let peerHeights: number[] = [];
+    for await (const peerUrl of peerUrls) {
+      try {
+        const blockHeightRes = await this.checkNodeRPC({ ...node, url: peerUrl });
+        const blockHeightField = this.getBlockHeightField(blockHeightRes, responsePath);
+        peerHeights.push(blockHeightField);
+      } catch (error) {
+        colorLog(`Error getting blockHeight: ${nodeName} ${peerUrl} ${error}`, 'yellow');
+      }
+    }
+
+    return peerHeights;
+  }
+
+  /** IHealthResponse object creation methods */
+  private healthResponse: {
+    [condition in EErrorConditions]: (params: IHealthResponseParams) => IHealthResponse;
+  } = {
+    [EErrorConditions.HEALTHY]: (params) => this.getHealthy(params),
+    [EErrorConditions.OFFLINE]: (params) => this.getOffline(params),
+    [EErrorConditions.NO_RESPONSE]: (params) => this.getNoResponse(params),
+    [EErrorConditions.NOT_SYNCHRONIZED]: (params) => this.getNotSynced(params),
+    [EErrorConditions.NO_PEERS]: (params) => this.getNoPeers(params),
+    [EErrorConditions.PEER_NOT_SYNCHRONIZED]: (params) => this.getPeersNotSynced(params),
+    [EErrorConditions.PENDING]: null, // PENDING only used as initial status, not response.
+  };
+
+  private getHealthy = ({
+    name,
+    result,
+    height,
+    badOracles,
+    noOracle,
+  }: IHealthResponseParams): IHealthResponse => {
+    const healthResponse: IHealthResponse = {
+      name,
+      status: EErrorStatus.OK,
+      conditions: EErrorConditions.HEALTHY,
+      health: result || 'Node is healthy.',
+    };
+
+    if (height) healthResponse.height = height;
+    const details: IHealthResponseDetails = {};
+    if (badOracles) details.badOracles = badOracles;
+    if (noOracle) details.noOracle = noOracle;
+    if (Object.keys(details).length) healthResponse.details = details;
+
+    return healthResponse;
+  };
+
+  private getOffline = ({ name }: IHealthResponseParams): IHealthResponse => ({
+    name,
+    status: EErrorStatus.ERROR,
+    conditions: EErrorConditions.OFFLINE,
   });
 
-  getNoResponseObject = (nodeName: string, error: Error): IHealthResponse => ({
-    name: nodeName,
-    conditions: EErrorConditions.NO_RESPONSE,
+  private getNoResponse = ({ name, error }: IHealthResponseParams): IHealthResponse => ({
+    name,
     status: EErrorStatus.ERROR,
+    conditions: EErrorConditions.NO_RESPONSE,
     error: error.message,
   });
 
-  getNotSyncedObject = (nodeName: string, result: any): IHealthResponse => ({
-    name: nodeName,
-    conditions: EErrorConditions.NOT_SYNCHRONIZED,
+  private getNotSynced = ({
+    name,
+    result,
+    height,
+    secondsToRecover,
+    badOracles,
+    noOracle,
+  }: IHealthResponseParams): IHealthResponse => {
+    const healthResponse: IHealthResponse = {
+      name,
+      status: EErrorStatus.ERROR,
+      conditions: EErrorConditions.NOT_SYNCHRONIZED,
+      health: result || 'Node is out of sync.',
+    };
+
+    if (height) healthResponse.height = height;
+    const details: IHealthResponseDetails = {};
+    if (secondsToRecover) details.secondsToRecover = secondsToRecover;
+    if (badOracles) details.badOracles = badOracles;
+    if (noOracle) details.noOracle = noOracle;
+    if (Object.keys(details).length) healthResponse.details = details;
+
+    return healthResponse;
+  };
+
+  private getNoPeers = ({ name }: IHealthResponseParams) => ({
+    name,
     status: EErrorStatus.ERROR,
-    health: result || 'Node is out of sync.',
+    conditions: EErrorConditions.NO_PEERS,
+  });
+
+  private getPeersNotSynced = ({
+    name,
+    height,
+  }: IHealthResponseParams): IHealthResponse => ({
+    name,
+    status: EErrorStatus.ERROR,
+    conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
+    height,
+    details: { nodeIsAheadOfPeer: Math.abs(height.delta) },
   });
 
   /* End of Development logic for Chain-Agnostic Health Check
@@ -385,14 +592,14 @@ export class Service {
 
     try {
       /* Get node's block height, highest block height from reference nodes and ethSyncing object */
-      const [internalBh, externalBh, ethSyncing] = await Promise.all([
+      const [internalBh, externalBh /*ethSyncing*/] = await Promise.all([
         this.getBlockHeight(url, basicAuth, harmony),
-        this.getReferenceBlockHeight(referenceUrls, allowance, harmony),
-        this.getEthSyncing(url, basicAuth),
+        this.getReferenceBlockHeightOLD(referenceUrls, allowance, harmony),
+        // this.getEthSyncing(url, basicAuth),
       ]);
 
-      const { result } = await this.getExternalPeers(url, basicAuth);
-      const numPeers = hexToDec(result);
+      // const { result } = await this.getExternalPeers(url, basicAuth);
+      // const numPeers = hexToDec(result);
       const nodeHeight = hexToDec(internalBh.result);
       const peerHeight = externalBh;
 
@@ -431,7 +638,7 @@ export class Service {
       }
 
       // Healthy response
-      return { ...healthResponse, ethSyncing, peers: numPeers, height };
+      return { ...healthResponse, height };
     } catch (error) {
       const isTimeout = String(error).includes(`Error: timeout of 1000ms exceeded`);
       if (isTimeout) {
@@ -487,7 +694,7 @@ export class Service {
     }
   }
 
-  private async getOracles({ name }: IChain): Promise<IOraclesResponse> {
+  private async getOracles({ name }: IChain): Promise<any> {
     const { urls } = await OraclesModel.findOne({ chain: name });
 
     const { healthyUrls: healthyOracles, badUrls: badOracles } =
@@ -543,7 +750,7 @@ export class Service {
     }
   }
 
-  private async getReferenceBlockHeight(
+  private async getReferenceBlockHeightOLD(
     endpoints: IReferenceURL[],
     _allowance: number,
     harmony: boolean,
@@ -558,43 +765,43 @@ export class Service {
     return readings.sort((a, b) => b - a)[0];
   }
 
-  private async getEthSyncing(
-    url: string,
-    auth?: string,
-    harmony?: boolean,
-  ): Promise<string> {
-    const method = harmony ? 'hmyv2_syncing' : 'eth_syncing';
-    try {
-      const { data } = await this.rpc.post<IRPCSyncResponse>(
-        url,
-        { jsonrpc: '2.0', id: 1, method, params: [] },
-        this.getAxiosRequestConfig(auth),
-      );
-      return Object.entries(data.result)
-        .map(([key, value]) => {
-          const syncValue = key.toLowerCase().includes('hash') ? value : hexToDec(value);
-          return `${camelToTitle(key)}: ${syncValue}`;
-        })
-        .join(' / ');
-    } catch (error) {
-      throw new Error(`getEthSyncing could not contact blockchain node ${error} ${url}`);
-    }
-  }
+  // private async getEthSyncing(
+  //   url: string,
+  //   auth?: string,
+  //   harmony?: boolean,
+  // ): Promise<string> {
+  //   const method = harmony ? 'hmyv2_syncing' : 'eth_syncing';
+  //   try {
+  //     const { data } = await this.rpc.post<IRPCSyncResponse>(
+  //       url,
+  //       { jsonrpc: '2.0', id: 1, method, params: [] },
+  //       this.getAxiosRequestConfig(auth),
+  //     );
+  //     return Object.entries(data.result)
+  //       .map(([key, value]) => {
+  //         const syncValue = key.toLowerCase().includes('hash') ? value : hexToDec(value);
+  //         return `${camelToTitle(key)}: ${syncValue}`;
+  //       })
+  //       .join(' / ');
+  //   } catch (error) {
+  //     throw new Error(`getEthSyncing could not contact blockchain node ${error} ${url}`);
+  //   }
+  // }
 
-  private async getExternalPeers(url: string, auth?: string): Promise<IRPCResponse> {
-    try {
-      const { data } = await this.rpc.post<IRPCResponse>(
-        url,
-        { jsonrpc: '2.0', id: 1, method: 'net_peerCount', params: [] },
-        this.getAxiosRequestConfig(auth),
-      );
-      return data;
-    } catch (error) {
-      throw new Error(
-        `getExternalPeers could not contact blockchain node ${error} ${url}`,
-      );
-    }
-  }
+  // private async getExternalPeers(url: string, auth?: string): Promise<IRPCResponse> {
+  //   try {
+  //     const { data } = await this.rpc.post<IRPCResponse>(
+  //       url,
+  //       { jsonrpc: '2.0', id: 1, method: 'net_peerCount', params: [] },
+  //       this.getAxiosRequestConfig(auth),
+  //     );
+  //     return data;
+  //   } catch (error) {
+  //     throw new Error(
+  //       `getExternalPeers could not contact blockchain node ${error} ${url}`,
+  //     );
+  //   }
+  // }
 
   /* ----- Harmony ----- */
   private getHarmonyNodeHealth = async (node: INode): Promise<IHealthResponse> => {
@@ -602,16 +809,6 @@ export class Service {
   };
 
   /* ----- Near ----- */
-<<<<<<< HEAD
-  private async getNEARBlockHeight(url: string) {
-    try {
-      const { data } = await this.rpc.post(url, {
-        jsonrpc: '2.0',
-        id: 'dontcare',
-        method: 'status',
-        params: [],
-      });
-=======
   private async getNEARBlockHeight(url: string, auth?: string) {
     try {
       const { data } = await this.rpc.post(
@@ -624,7 +821,6 @@ export class Service {
         },
         this.getAxiosRequestConfig(auth),
       );
->>>>>>> beta
       return data.result.sync_info.latest_block_height;
     } catch (error) {
       const stringError = JSON.stringify(error);
@@ -635,11 +831,7 @@ export class Service {
   }
 
   private getNEARNodeHealth = async (node: INode): Promise<IHealthResponse> => {
-<<<<<<< HEAD
-    const { name, chain, url, host, port } = node;
-=======
     const { name, chain, url, host, port, basicAuth } = node;
->>>>>>> beta
     const { allowance } = chain;
 
     let healthResponse: IHealthResponse = {
@@ -703,11 +895,7 @@ export class Service {
       /* Get node's block height, highest block height from reference nodes */
 
       let externalHeights = await Promise.all(
-<<<<<<< HEAD
-        referenceUrls.map((ref) => this.getNEARBlockHeight(ref.url)),
-=======
         referenceUrls.map((ref) => this.getNEARBlockHeight(ref.url, basicAuth)),
->>>>>>> beta
       );
       const sortedExternalHeights = externalHeights.sort((a, b) => {
         return b - a;
@@ -817,9 +1005,6 @@ export class Service {
         name,
         status: EErrorStatus.ERROR,
         conditions: EErrorConditions.PEER_NOT_SYNCHRONIZED,
-        delta,
-        refNodeUrls: refNodeUrls.map((url) => `${url}\n`),
-        highest: peerHeight,
         height: { internalHeight: nodeHeight, externalHeight: peerHeight, delta },
       };
     }

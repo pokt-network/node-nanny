@@ -70,23 +70,16 @@ export interface IHealthResponse {
   name: string;
   status: EErrorStatus;
   conditions?: EErrorConditions;
-  height?: IBlockHeight;
-  peers?: number;
-  details?: IHealthResponseDetails;
   health?: any;
   error?: string;
-  id?: string;
-  ethSyncing?: string;
-  delta?: number;
-  refNodeUrls?: string[];
-  highest?: any;
+  height?: IBlockHeight;
+  details?: IHealthResponseDetails;
 }
 
 export interface IHealthCheck {
   node: INode;
   height?: IBlockHeight;
   details?: IHealthResponseDetails;
-  ethSyncing?: string;
 }
 
 export interface IHealthResponseDetails {
@@ -121,6 +114,22 @@ export interface IEVMHealthCheckOptions {
 }
 
 export interface IOraclesResponse {
-  healthyOracles: IReferenceURL[];
-  badOracles: IReferenceURL[];
+  oracleHeights: number[];
+  badOracles: string[];
+}
+
+export interface IRefBlockHeight {
+  refHeight: number;
+  badOracles?: string[];
+  noOracle?: boolean;
+}
+
+export interface IHealthResponseParams {
+  name: string;
+  result?: any;
+  height?: IBlockHeight;
+  secondsToRecover?: number;
+  badOracles?: string[];
+  noOracle?: boolean;
+  error?: Error;
 }
