@@ -118,7 +118,7 @@ export interface IOraclesResponse {
   badOracles: string[];
 }
 
-export interface IRefBlockHeight {
+export interface IRefHeight {
   refHeight: number;
   badOracles?: string[];
   noOracle?: boolean;
