@@ -2,6 +2,7 @@ import axios from 'axios';
 import { FilterQuery } from 'mongoose';
 
 import { ChainsModel, OraclesModel, NodesModel, IChain, IOracle } from '../models';
+import { Service as AutomationService } from '../services/automation';
 import { getTimestamp } from '../utils';
 
 interface IChainsAndOraclesResponse {
@@ -13,7 +14,7 @@ interface ICurrentChainsAndOraclesResponse {
   currentChains: string[];
 }
 
-/* ----- Script Runs Every 30 minutes ----- */
+/* ----- Script Runs Every hour ----- */
 export const updaterScript = async () => {
   const nodeNannysBirthday = new Date('2022-02-14').toISOString();
 
@@ -128,6 +129,9 @@ export const updaterScript = async () => {
         }
       }
     }
+
+    /* If new or updated Chains or Oracles found, restart the monitor */
+    await new AutomationService().restartMonitor();
   } else {
     console.log('No new chains or oracles found ...');
   }
