@@ -170,9 +170,10 @@ export class Service {
     const { endpoint, rpc } = chain;
 
     const method = !!rpc ? 'post' : 'get';
-    const fullRpcUrl = `${url}${endpoint || ''}`;
-    const rpcMethod = this.rpcMethodTemplates[method];
     const parsedRpc = rpc ? JSON.parse(rpc) : null;
+    const fullRpcUrl = `${url}${endpoint || ''}`;
+
+    const rpcMethod = this.rpcMethodTemplates[method];
     return rpcMethod({ fullRpcUrl, basicAuth, rpc: parsedRpc });
   }
 
@@ -210,7 +211,7 @@ export class Service {
     if (!useOracles || refHeights.length < 2) {
       const peerHeights = await this.getPeerBlockHeights(node);
 
-      if (peerHeights.length < 2) {
+      if (!refHeights.length && peerHeights.length < 2) {
         throw EErrorConditions.NO_PEERS;
       } else if (!refHeights.length) {
         noOracle = true;
@@ -273,6 +274,7 @@ export class Service {
     const $match: FilterQuery<INode> = {
       chain: chainQuery,
       _id: { $ne: new Types.ObjectId(nodeId) },
+      frontend: null,
     };
     if (pnfInternal) $match.status = { $ne: EErrorStatus.ERROR };
     const $sample = { size: 20 };
@@ -286,7 +288,7 @@ export class Service {
         const blockHeightField = this.getBlockHeightField(blockHeightRes, responsePath);
         peerHeights.push(blockHeightField);
       } catch (error) {
-        colorLog(`Error getting blockHeight: ${nodeName} ${url} ${error}`, 'yellow');
+        colorLog(`Error getting peer blockHeight: ${nodeName} ${url} ${error}`, 'yellow');
       }
     }
 
