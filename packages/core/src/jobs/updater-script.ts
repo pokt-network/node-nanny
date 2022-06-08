@@ -13,7 +13,7 @@ interface ICurrentChainsAndOraclesResponse {
   currentChains: string[];
 }
 
-/* ----- Script Runs Every Hour ----- */
+/* ----- Script Runs Every 30 minutes ----- */
 export const updaterScript = async () => {
   const nodeNannysBirthday = new Date('2022-02-14').toISOString();
 
@@ -87,13 +87,12 @@ export const updaterScript = async () => {
           type,
           allowance,
           chainId,
-          // TEMP BELOW - replace with actual chain values once prod DB updated
-          hasOwnEndpoint: false,
-          useOracles: true,
-          responsePath: 'test',
-          rpc: '{}',
-          endpoint: '/test',
-          healthyValue: 'ok',
+          hasOwnEndpoint,
+          useOracles,
+          responsePath,
+          rpc,
+          endpoint,
+          healthyValue,
         }).forEach(([key, value]) => {
           if (value !== null && value !== undefined) {
             sanitizedChain[key] = value;
