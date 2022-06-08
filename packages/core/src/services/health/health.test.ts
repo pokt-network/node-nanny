@@ -22,7 +22,7 @@ function randomInt(min: number, max: number): number {
 describe('Health Service Tests', () => {
   describe('Chain-agnostic Health Check Tests', () => {
     const mockNode = {
-      id: '123456789',
+      id: '62420628d8696941d1c42039',
       name: 'TEST-HOST/TST/01',
       chain: { path: '/health' },
       host: { ip: '162.210.199.42' },
@@ -206,14 +206,14 @@ describe('Health Service Tests', () => {
         expect(healthResponse.height.delta).toEqual(40);
       });
 
-      test('Should return a NO_PEERS response if the node uses oracles but there are less than 2 healthy oracles and less than 2 healthy peers', async () => {
+      test('Should return a NO_PEERS response if the node uses oracles but there are no healthy oracles and less than 2 healthy peers', async () => {
         const mockResponse = { data: { result: 657271 } };
         mockedAxios.post.mockResolvedValueOnce(mockResponse);
         jest
           .spyOn(OraclesModel, 'findOne')
           .mockImplementationOnce(() => mockOracle as any);
-        mockedAxios.post.mockResolvedValueOnce({ data: { result: 657271 } });
-        mockedAxios.post.mockRejectedValueOnce(new Error('bad oracles'));
+        mockedAxios.post.mockRejectedValueOnce(new Error('bad oracle'));
+        mockedAxios.post.mockRejectedValueOnce(new Error('bad oracle'));
         jest.spyOn(NodesModel, 'aggregate').mockImplementationOnce(() => [] as any);
 
         const healthResponse = await healthService.checkNodeHealth(mockNodeForOracles);
