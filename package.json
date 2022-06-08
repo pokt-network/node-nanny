@@ -11,7 +11,7 @@
     "build:clean": "turbo run build:clean",
     "build:fresh": "turbo run build:clean && turbo run build",
     "dev:front": "export $(cat .env-dev | xargs) && pnpm start:dev:watch --filter=@pokt-foundation/node-nanny-api && pnpm start --filter=@pokt-foundation/node-nanny-ui",
-    "dev:back": "export $(cat .env-dev | xargs) && pnpm start:dev --filter=@pokt-foundation/node-nanny-monitor && pnpm start:dev --filter=@pokt-foundation/node-nanny-event-consumer",
+    "dev:back": "export $(cat .env-dev | xargs) && pm2 start ./packages/monitor/dist/index.js --name monitor && pm2 start ./packages/event-consumer/dist/index.js --name event-consumer",
     "dev:front:windows": "(for /F \"tokens=*\" %i in (.env-dev) do set %i) && pnpm start:dev --filter=@pokt-foundation/node-nanny-api && pnpm start --filter=@pokt-foundation/node-nanny-ui",
     "dev:back:windows": "(for /F \"tokens=*\" %i in (.env-dev) do set %i) && pnpm start:dev --filter=@pokt-foundation/node-nanny-monitor && pnpm start:dev --filter=@pokt-foundation/node-nanny-event-consumer",
     "dev:stop": "pm2 kill",
