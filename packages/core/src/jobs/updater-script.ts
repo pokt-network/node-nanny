@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { FilterQuery } from 'mongoose';
 
-import { ChainsModel, OraclesModel, IChain, IOracle } from '../models';
+import { ChainsModel, OraclesModel, NodesModel, IChain, IOracle } from '../models';
 import { getTimestamp } from '../utils';
 
 interface IChainsAndOraclesResponse {
@@ -11,7 +11,6 @@ interface IChainsAndOraclesResponse {
 
 interface ICurrentChainsAndOraclesResponse {
   currentChains: string[];
-  currentOracles: string[];
 }
 
 /* ----- Script Runs Every Hour ----- */
@@ -137,11 +136,24 @@ export const updaterScript = async () => {
   /* ----- 4) Remove Chains and Oracles that no longer exist in prod from local database ---- */
   console.log('Checking all current chains and oracles ...');
   const {
-    data: { currentChains, currentOracles },
+    data: { currentChains },
   } = await axios.get<ICurrentChainsAndOraclesResponse>(
     'https://k69ggmt3u3.execute-api.us-east-2.amazonaws.com/get-current',
   );
 
-  await ChainsModel.deleteMany({ name: { $nin: currentChains } });
-  await OraclesModel.deleteMany({ chain: { $nin: currentOracles } });
+  const chainsNotInProd = await ChainsModel.find({ name: { $nin: currentChains } });
+
+  if (chainsNotInProd?.length) {
+    for await (const { _id, name } of chainsNotInProd) {
+      const chainHasNode = await NodesModel.exists({ chain: _id });
+
+      if (!chainHasNode) {
+        await ChainsModel.deleteOne({ name });
+
+        if (await OraclesModel.exists({ chain: name })) {
+          await OraclesModel.deleteOne({ chain: name });
+        }
+      }
+    }
+  }
 };
