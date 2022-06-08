@@ -5,6 +5,12 @@ query Chains {
     type
     chainId
     allowance
+    hasOwnEndpoint
+    useOracles
+    responsePath
+    rpc
+    endpoint
+    healthyValue
   }
 }
 
@@ -53,6 +59,12 @@ query Node($id: ID!) {
       type
       allowance
       chainId
+      hasOwnEndpoint
+      useOracles
+      responsePath
+      rpc
+      endpoint
+      healthyValue
     }
     host {
       id
@@ -86,6 +98,12 @@ query Nodes {
       type
       allowance
       chainId
+      hasOwnEndpoint
+      useOracles
+      responsePath
+      rpc
+      endpoint
+      healthyValue
     }
     host {
       id
@@ -148,7 +166,15 @@ query GetHostsChainsAndLoadBalancers {
   chains {
     id
     name
+    type
+    allowance
     chainId
+    hasOwnEndpoint
+    useOracles
+    responsePath
+    rpc
+    endpoint
+    healthyValue
   }
   loadBalancers: hosts(loadBalancer: true) {
     id

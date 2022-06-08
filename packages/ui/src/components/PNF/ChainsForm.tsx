@@ -79,7 +79,15 @@ export const ChainsForm = ({
 
   const { values, errors, handleChange, handleSubmit, setFieldValue, resetForm } =
     useFormik({
-      initialValues: { name: '', type: '', allowance: 0, chainId: '' },
+      initialValues: {
+        name: '',
+        type: '',
+        allowance: 0,
+        chainId: '',
+        hasOwnEndpoint: false,
+        responsePath: '',
+        useOracles: false,
+      },
       validate,
       validateOnChange: false,
       onSubmit: async () => {
@@ -87,7 +95,7 @@ export const ChainsForm = ({
         update
           ? submitUpdate({
               variables: {
-                update: getUpdateValues(selectedChain, values as IChainUpdate),
+                update: getUpdateValues(selectedChain, values as any),
               },
             })
           : submitCreate({ variables: { input: values } });
