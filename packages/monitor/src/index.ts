@@ -24,13 +24,6 @@ export class App {
   async main() {
     await connect();
 
-    // //TEMP TEST
-    // const nodes = await NodesModel.find({ chain: '6244d628d8877341d1c35137' })
-    //   .populate('host')
-    //   .populate('chain')
-    //   .exec();
-    // //TEMP TEST
-
     const nodes = await NodesModel.find({}).populate('host').populate('chain').exec();
     const publish = new Publish(nodes);
 
