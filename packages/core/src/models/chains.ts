@@ -16,7 +16,7 @@ export interface IChain {
   /** The object path that contains the health check response field. RESPONSE IS AN AxiosResponse SO TOP LEVEL IS "status", "data", etc.
    * - ex: "status" or "data.result.healthy" */
   responsePath: string;
-  /** (Optional - method: POST ONLY) The RPC request body used for the chain health check. MUST BE VALID JSON.
+  /** (Optional) The RPC request body used for the chain health check. MUST BE VALID JSON.
    * - ex: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }' */
   rpc: string | null;
   /** (Optional) The URL path appended to the node's URL to check health. MUST INCLUDE LEADING SLASH.
