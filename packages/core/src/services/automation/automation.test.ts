@@ -68,6 +68,9 @@ describe('Automation Service Tests', () => {
         type: 'POKT',
         allowance: 3,
         chainId: '0001',
+        hasOwnEndpoint: true,
+        useOracles: false,
+        responsePath: 'data.result.healthy',
       });
     });
 
