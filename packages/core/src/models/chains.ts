@@ -16,8 +16,6 @@ export interface IChain {
   /** The object path that contains the health check response field. RESPONSE IS AN AxiosResponse SO TOP LEVEL IS "status", "data", etc.
    * - ex: "status" or "data.result.healthy" */
   responsePath: string;
-  /** The HTTP method that the health check for the chain uses. "get" or "post" */
-  method: string;
   /** (Optional - method: POST ONLY) The RPC request body used for the chain health check. MUST BE VALID JSON.
    * - ex: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }' */
   rpc: string | null;
@@ -42,7 +40,6 @@ export const chainSchema = new Schema<IChain>(
     hasOwnEndpoint: { type: Boolean, required: true },
     useOracles: { type: Boolean, required: true },
     responsePath: { type: String, required: true },
-    method: { type: String, required: true, enum: ['get', 'post'] },
     rpc: { type: String },
     endpoint: { type: String },
     healthyValue: { type: String },
