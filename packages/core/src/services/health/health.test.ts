@@ -24,7 +24,7 @@ describe('Health Service Tests', () => {
     const mockNode = {
       id: '123456789',
       name: 'TEST-HOST/TST/01',
-      chain: { method: 'get', path: '/health' },
+      chain: { path: '/health' },
       host: { ip: '162.210.199.42' },
       url: 'http://162.210.199.42:8545',
       port: 8545,
@@ -120,7 +120,6 @@ describe('Health Service Tests', () => {
         chain: {
           name: 'ETH',
           allowance: 3,
-          method: 'post',
           rpc: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }',
           useOracles: true,
           responsePath: 'data.result',
@@ -230,7 +229,6 @@ describe('Health Service Tests', () => {
         chain: {
           name: 'POKT',
           allowance: 1,
-          method: 'post',
           endpoint: '/v1/query/height',
           rpc: '{}',
           useOracles: false,
@@ -354,7 +352,6 @@ describe('Health Service Tests', () => {
           ...mockNode,
           chain: {
             ...mockNode.chain,
-            method: 'post',
             rpc: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }',
           },
         };
@@ -502,7 +499,6 @@ describe('Health Service Tests', () => {
         const mockNodeForOracles = {
           chain: {
             name: 'ETH',
-            method: 'post',
             rpc: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }',
             useOracles: true,
             responsePath: 'data.result',
@@ -533,7 +529,6 @@ describe('Health Service Tests', () => {
         const mockNodeForOracles = {
           chain: {
             name: 'TST',
-            method: 'post',
             rpc: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }',
             useOracles: true,
             responsePath: 'data.result',
@@ -565,7 +560,6 @@ describe('Health Service Tests', () => {
         const mockNodeForPeers = {
           chain: {
             name: 'POKT',
-            method: 'post',
             endpoint: '/v1/query/height',
             rpc: '{}',
             useOracles: false,
@@ -641,7 +635,6 @@ describe('Health Service Tests', () => {
       const mockNodeForOracles = {
         chain: {
           name: 'ETH',
-          method: 'post',
           rpc: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }',
           useOracles: true,
           responsePath: 'data.result',
@@ -728,7 +721,6 @@ describe('Health Service Tests', () => {
       const mockNodeForPeers = {
         chain: {
           name: 'POKT',
-          method: 'post',
           endpoint: '/v1/query/height',
           rpc: '{}',
           useOracles: false,
