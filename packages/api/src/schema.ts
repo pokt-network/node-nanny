@@ -11,15 +11,9 @@ const typeDefs = gql`
     hasOwnEndpoint: Boolean!
     useOracles: Boolean!
     responsePath: String!
-    method: ChainMethod!
     rpc: String
     endpoint: String
     healthyValue: String
-  }
-
-  enum ChainMethod {
-    GET
-    POST
   }
 
   type Host {
@@ -176,7 +170,6 @@ const typeDefs = gql`
     hasOwnEndpoint: Boolean!
     useOracles: Boolean!
     responsePath: String!
-    method: ChainMethod!
     rpc: String
     endpoint: String
     healthyValue: String
@@ -217,7 +210,6 @@ const typeDefs = gql`
     hasOwnEndpoint: Boolean
     useOracles: Boolean
     responsePath: String
-    method: ChainMethod
     rpc: String
     endpoint: String
     healthyValue: String

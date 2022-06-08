@@ -165,8 +165,9 @@ export class Service {
     url,
     basicAuth,
   }: INode): Promise<AxiosResponse<IRPCResult>> {
-    const { method, endpoint, rpc } = chain;
+    const { endpoint, rpc } = chain;
 
+    const method = !!rpc ? 'post' : 'get';
     const fullRpcUrl = `${url}${endpoint || ''}`;
     const rpcMethod = this.rpcMethodTemplates[method];
     const parsedRpc = rpc ? JSON.parse(rpc) : null;
