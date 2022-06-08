@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import axiosRetry from 'axios-retry';
 import { exec } from 'child_process';
-import { FilterQuery } from 'mongoose';
+import { FilterQuery, Types } from 'mongoose';
 
 import { INode, ChainsModel, NodesModel, OraclesModel } from '../../models';
 import {
@@ -16,11 +16,13 @@ import {
   INodeCheckParams,
   IOraclesResponse,
   IRefHeight,
+  IRPCCheckParams,
   IRPCMethodParams,
   IRPCResult,
 } from './types';
 import { colorLog, hexToDec } from '../../utils';
 import env from '../../environment';
+
 export class Service {
   private rpc: AxiosInstance;
 
@@ -79,7 +81,7 @@ export class Service {
         healthyValue,
       );
       const { data } = rpcResponse;
-      const { result } = data;
+      const { result } = data || {};
 
       return nodeIsHealthy
         ? this.healthResponse[EErrorConditions.HEALTHY]({ name, result })
@@ -164,7 +166,7 @@ export class Service {
     chain,
     url,
     basicAuth,
-  }: INode): Promise<AxiosResponse<IRPCResult>> {
+  }: IRPCCheckParams): Promise<AxiosResponse<IRPCResult>> {
     const { endpoint, rpc } = chain;
 
     const method = !!rpc ? 'post' : 'get';
@@ -230,22 +232,22 @@ export class Service {
 
   /** Only used if `chain.useOracles` is true. Will return up to 2 block heights from healthy oracles. */
   private async getOracleBlockHeights(node: INode): Promise<IOraclesResponse> {
-    const { chain } = node;
+    const { chain, basicAuth } = node;
     const { name, responsePath } = chain;
     const { urls: oracleUrls } = await OraclesModel.findOne({ chain: name });
 
     let oracleHeights: number[] = [];
     let badOracles: string[] = [];
 
-    for await (const oracleUrl of oracleUrls) {
+    for await (const url of oracleUrls) {
       try {
-        const blockHeightRes = await this.checkNodeRPC({ ...node, url: oracleUrl });
+        const blockHeightRes = await this.checkNodeRPC({ chain, url, basicAuth });
         const blockHeightField = this.getBlockHeightField(blockHeightRes, responsePath);
 
         oracleHeights.push(blockHeightField);
         if (oracleHeights.length >= 2) break;
       } catch (error) {
-        badOracles.push(oracleUrl);
+        badOracles.push(url);
       }
     }
 
@@ -255,32 +257,36 @@ export class Service {
   /** Only used if `chain.useOracles` is false or <2 healthy Oracles can be called for node.
   Will sample up to 20 random peers for node and return their block heights. */
   private async getPeerBlockHeights(node: INode): Promise<number[]> {
-    const { id: nodeId, chain, name: nodeName } = node;
+    const { id: nodeId, chain, name: nodeName, basicAuth } = node;
     const { id: chainId, responsePath, type } = chain;
+    const pnfInternal = env('PNF') && type === ESupportedBlockchainTypes.POKT;
 
     let chainQuery: FilterQuery<INode>;
-    if (env('PNF') && type === ESupportedBlockchainTypes.POKT) {
+    if (pnfInternal) {
       const poktChains = await ChainsModel.find({ type: ESupportedBlockchainTypes.POKT });
-      const poktChainIds = poktChains.map(({ _id }) => _id);
+      const poktChainIds = poktChains.map(({ _id }) => new Types.ObjectId(_id));
       chainQuery = { $in: poktChainIds };
     } else {
-      chainQuery = chainId;
+      chainQuery = new Types.ObjectId(chainId);
     }
 
-    const status = { $ne: EErrorStatus.ERROR };
-    const $match = { chain: chainQuery, _id: { $ne: nodeId }, status };
+    const $match: FilterQuery<INode> = {
+      chain: chainQuery,
+      _id: { $ne: new Types.ObjectId(nodeId) },
+    };
+    if (pnfInternal) $match.status = { $ne: EErrorStatus.ERROR };
     const $sample = { size: 20 };
     const peers = await NodesModel.aggregate<INode>([{ $match }, { $sample }]);
     const peerUrls = peers.map(({ url }) => url);
 
     let peerHeights: number[] = [];
-    for await (const peerUrl of peerUrls) {
+    for await (const url of peerUrls) {
       try {
-        const blockHeightRes = await this.checkNodeRPC({ ...node, url: peerUrl });
+        const blockHeightRes = await this.checkNodeRPC({ chain, url, basicAuth });
         const blockHeightField = this.getBlockHeightField(blockHeightRes, responsePath);
         peerHeights.push(blockHeightField);
       } catch (error) {
-        colorLog(`Error getting blockHeight: ${nodeName} ${peerUrl} ${error}`, 'yellow');
+        colorLog(`Error getting blockHeight: ${nodeName} ${url} ${error}`, 'yellow');
       }
     }
 

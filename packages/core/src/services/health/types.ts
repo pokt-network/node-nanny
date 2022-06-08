@@ -1,4 +1,4 @@
-import { INode } from '../../models';
+import { IChain, INode } from '../../models';
 
 export enum ENCResponse {
   SUCCESS = 'succeeded!',
@@ -110,6 +110,12 @@ export interface IRefHeight {
   refHeight: number;
   badOracles?: string[];
   noOracle?: boolean;
+}
+
+export interface IRPCCheckParams {
+  chain: IChain;
+  url: string;
+  basicAuth?: string;
 }
 
 export interface IRPCMethodParams {
