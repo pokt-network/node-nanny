@@ -7,4 +7,4 @@ apps:
     name: monitor
   - script: ./packages/core/dist/jobs/updater.js
     name: updater
-    restart_delay: 1800000
+    restart_delay: 3600000
