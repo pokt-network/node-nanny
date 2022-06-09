@@ -19,7 +19,6 @@ import {
   IChainsQuery,
   IChainUpdate,
   IOraclesQuery,
-  useCreateChainMutation,
   useUpdateChainMutation,
 } from 'types';
 import { SnackbarHelper } from 'utils';
@@ -98,13 +97,11 @@ export const ChainsForm = ({
       validateOnChange: false,
       onSubmit: async () => {
         setLoading(true);
-        update
-          ? submitUpdate({
-              variables: {
-                update: getUpdateValues(selectedChain, values as any),
-              },
-            })
-          : submitCreate({ variables: { input: values } });
+        submitUpdate({
+          variables: {
+            update: getUpdateValues(selectedChain, values as any),
+          },
+        });
       },
     });
 
@@ -156,22 +153,6 @@ export const ChainsForm = ({
   }, [update, selectedChain, handleResetFormState]);
 
   /* ----- Mutations ----- */
-  const [submitCreate] = useCreateChainMutation({
-    onCompleted: ({ createChain }) => {
-      SnackbarHelper.open({ text: `Chain ${createChain.name} successfully created!` });
-      resetForm();
-      refetchChains();
-      refetchOracles();
-      setLoading(false);
-      setState(PNFActionsState.Info);
-      setSelectedChain({ ...createChain } as IChain);
-    },
-    onError: (backendError) => {
-      setBackendError(backendError.message);
-      setLoading(false);
-    },
-  });
-
   const [submitUpdate] = useUpdateChainMutation({
     onCompleted: ({ updateChain }) => {
       SnackbarHelper.open({ text: `Chain ${updateChain.name} successfully updated!` });
@@ -339,11 +320,7 @@ export const ChainsForm = ({
             onClick={handleSubmit as any}
             sx={{ width: 150, height: 36.5 }}
           >
-            {loading ? (
-              <CircularProgress size={20} color="secondary" />
-            ) : (
-              `${update ? 'Save' : 'Create'} Chain`
-            )}
+            {loading ? <CircularProgress size={20} color="secondary" /> : 'Update Chain'}
           </Button>
           <Button onClick={handleCancel} color="error" variant="outlined">
             Cancel
@@ -380,7 +357,7 @@ export const ChainsForm = ({
 
       {backendError && (
         <Alert severity="error">
-          <AlertTitle>{`Error ${update ? 'Updating' : 'Creating'} Chain`}</AlertTitle>
+          <AlertTitle>{`Error Updating Chain`}</AlertTitle>
           {backendError}
         </Alert>
       )}

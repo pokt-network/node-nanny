@@ -145,7 +145,6 @@ export type ILogParams = {
 };
 
 export type IMutation = {
-  createChain?: Maybe<IChain>;
   createHost?: Maybe<IHost>;
   createHostsCSV: Array<Maybe<IHost>>;
   createLocation: ILocation;
@@ -162,11 +161,6 @@ export type IMutation = {
   updateHost?: Maybe<IHost>;
   updateNode?: Maybe<INode>;
   updateOracle?: Maybe<IOracle>;
-};
-
-
-export type IMutationCreateChainArgs = {
-  input: IChainInput;
 };
 
 
@@ -448,13 +442,6 @@ export type ICreateNodesCsvMutationVariables = Exact<{
 
 
 export type ICreateNodesCsvMutation = { createNodesCSV: Array<{ id: string } | null> };
-
-export type ICreateChainMutationVariables = Exact<{
-  input: IChainInput;
-}>;
-
-
-export type ICreateChainMutation = { createChain?: { name: string, type: string, allowance: number, chainId: string } | null };
 
 export type IUpdateHostMutationVariables = Exact<{
   update: IHostUpdate;
@@ -815,42 +802,6 @@ export function useCreateNodesCsvMutation(baseOptions?: Apollo.MutationHookOptio
 export type CreateNodesCsvMutationHookResult = ReturnType<typeof useCreateNodesCsvMutation>;
 export type CreateNodesCsvMutationResult = Apollo.MutationResult<ICreateNodesCsvMutation>;
 export type CreateNodesCsvMutationOptions = Apollo.BaseMutationOptions<ICreateNodesCsvMutation, ICreateNodesCsvMutationVariables>;
-export const CreateChainDocument = gql`
-    mutation CreateChain($input: ChainInput!) {
-  createChain(input: $input) {
-    name
-    type
-    allowance
-    chainId
-  }
-}
-    `;
-export type ICreateChainMutationFn = Apollo.MutationFunction<ICreateChainMutation, ICreateChainMutationVariables>;
-
-/**
- * __useCreateChainMutation__
- *
- * To run a mutation, you first call `useCreateChainMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateChainMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createChainMutation, { data, loading, error }] = useCreateChainMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useCreateChainMutation(baseOptions?: Apollo.MutationHookOptions<ICreateChainMutation, ICreateChainMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ICreateChainMutation, ICreateChainMutationVariables>(CreateChainDocument, options);
-      }
-export type CreateChainMutationHookResult = ReturnType<typeof useCreateChainMutation>;
-export type CreateChainMutationResult = Apollo.MutationResult<ICreateChainMutation>;
-export type CreateChainMutationOptions = Apollo.BaseMutationOptions<ICreateChainMutation, ICreateChainMutationVariables>;
 export const UpdateHostDocument = gql`
     mutation UpdateHost($update: HostUpdate!) {
   updateHost(update: $update) {

@@ -310,13 +310,6 @@ export class Service extends BaseService {
   }
 
   /* ----- PNF Internal Only ----- */
-  public async createChain(input: IChainInput): Promise<IChain> {
-    if (input.type === ESupportedBlockchainTypes.EVM) {
-      await OraclesModel.create({ chain: input.name, urls: [] });
-    }
-    return await ChainsModel.create(input);
-  }
-
   public async updateChain(update: IChainUpdate): Promise<IChain> {
     const { name: oldChainName } = await ChainsModel.findOne({ _id: update.id });
 
