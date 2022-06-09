@@ -127,10 +127,6 @@ export interface IRPCMethodParams {
 export interface IRPCResult {
   jsonrpc: string;
   id: number;
-  result?:
-    | string // ALG, SOL
-    | number
-    | { healthy?: boolean } // AVAX
-    | { sync_info: { catching_up: boolean } }; // TMT
+  result?: any;
   error?: { code: number; message: string };
 }
