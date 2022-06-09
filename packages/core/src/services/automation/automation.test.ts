@@ -17,7 +17,15 @@ const automationService = new Service();
 let chain: IChain, location: ILocation, host: IHost, node: INode;
 
 const createMocks = async () => {
-  const mockChain = { name: 'TST', type: 'TST', allowance: 5, chainId: '0666' };
+  const mockChain = {
+    name: 'TST',
+    type: 'TST',
+    allowance: 5,
+    chainId: '0666',
+    hasOwnEndpoint: true,
+    useOracles: false,
+    responsePath: 'data.result.healthy',
+  };
   const chain = await ChainsModel.create(mockChain);
   const mockLocation = { name: 'USE2' };
   const location = await LocationsModel.create(mockLocation);
@@ -60,6 +68,9 @@ describe('Automation Service Tests', () => {
         type: 'POKT',
         allowance: 3,
         chainId: '0001',
+        hasOwnEndpoint: true,
+        useOracles: false,
+        responsePath: 'data.result.healthy',
       });
     });
 
