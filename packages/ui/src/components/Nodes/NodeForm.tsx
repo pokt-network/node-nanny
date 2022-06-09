@@ -533,7 +533,7 @@ export const NodeForm = ({
         <TextField
           name="url"
           ref={urlRef}
-          value={getNodeUrl()}
+          value={read ? selectedNode?.url : getNodeUrl()}
           onChange={handleChange}
           label="URL"
           variant="outlined"
