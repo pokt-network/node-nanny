@@ -41,8 +41,6 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     environment: CI
-    outputs:
-      version: ${{ steps.semantic.outputs.new_release_version }}
 
     steps:
       - name: Checkout
@@ -93,4 +91,3 @@ jobs:
           file: ${{ matrix.dockerfile }}
           tags: |
             ${{ matrix.image }}:dev
-            ${{ matrix.image }}:${{ needs.semantic-release.outputs.version }}
