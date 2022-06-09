@@ -265,7 +265,7 @@ export class Service {
     console.debug('PEERS 1', { pnfInternal });
 
     let chainQuery: FilterQuery<INode>;
-    if (pnfInternal) {
+    if (type === ESupportedBlockchainTypes.POKT) {
       const poktChains = await ChainsModel.find({ type: ESupportedBlockchainTypes.POKT });
       const poktChainIds = poktChains.map(({ _id }) => new Types.ObjectId(_id));
       chainQuery = { $in: poktChainIds };
