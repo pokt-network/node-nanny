@@ -12,11 +12,6 @@ afterAll(async () => {
   await mongoose.disconnect();
 });
 
-beforeEach(async () => {
-  await ChainsModel.deleteMany({});
-  await OraclesModel.deleteMany({});
-});
-
 const chainRequiredFields = [
   'id',
   'name',
@@ -44,6 +39,11 @@ const deprecatedChain = {
 const deprecatedOracle = { chain: 'NOTREAL', urls: ['http://www.notreal.com'] };
 
 describe('Updater script tests ', () => {
+  beforeEach(async () => {
+    await ChainsModel.deleteMany({});
+    await OraclesModel.deleteMany({});
+  });
+
   test('Should create all chains and oracles if none exist in DB', async () => {
     const chainsBefore = await ChainsModel.find({});
     const oraclesBefore = await OraclesModel.find({});
