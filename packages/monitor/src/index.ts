@@ -52,7 +52,7 @@ export class App {
       setInterval(async () => {
         /* Get Node health */
         try {
-          const healthResponse = await this.health.getNodeHealth(node);
+          const healthResponse = await this.health.checkNodeHealth(node);
           const status = healthResponse?.status;
 
           /* Log to process console */

@@ -8,6 +8,12 @@ const typeDefs = gql`
     type: String!
     chainId: String!
     allowance: Int!
+    hasOwnEndpoint: Boolean!
+    useOracles: Boolean!
+    responsePath: String!
+    rpc: String
+    endpoint: String
+    healthyValue: String
   }
 
   type Host {
@@ -80,7 +86,6 @@ const typeDefs = gql`
   type HealthCheck {
     height: BlockHeight
     details: HealthResponseDetails
-    ethSyncing: String
     node: Node
   }
 
@@ -162,6 +167,12 @@ const typeDefs = gql`
     type: String!
     chainId: String!
     allowance: Int!
+    hasOwnEndpoint: Boolean!
+    useOracles: Boolean!
+    responsePath: String!
+    rpc: String
+    endpoint: String
+    healthyValue: String
   }
 
   input NodeUpdate {
@@ -196,6 +207,12 @@ const typeDefs = gql`
     type: String
     chainId: String
     allowance: Int
+    hasOwnEndpoint: Boolean
+    useOracles: Boolean
+    responsePath: String
+    rpc: String
+    endpoint: String
+    healthyValue: String
   }
 
   input OracleUpdate {

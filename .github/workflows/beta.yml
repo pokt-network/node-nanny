@@ -3,7 +3,6 @@ name: CI
 on:
   push:
     branches:
-      - main
       - beta
 
 jobs:
@@ -93,5 +92,5 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           tags: |
-            ${{ matrix.image }}:latest
+            ${{ matrix.image }}:latest-beta
             ${{ matrix.image }}:${{ needs.semantic-release.outputs.version }}
