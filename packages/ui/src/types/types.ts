@@ -273,6 +273,7 @@ export type INode = {
 export type INodeCsvInput = {
   automation: Scalars['Boolean'];
   backend?: InputMaybe<Scalars['String']>;
+  basicAuth?: InputMaybe<Scalars['String']>;
   chain: Scalars['String'];
   host: Scalars['String'];
   https: Scalars['Boolean'];
@@ -474,7 +475,7 @@ export type IUpdateChainMutationVariables = Exact<{
 }>;
 
 
-export type IUpdateChainMutation = { updateChain?: { name: string, type: string, allowance: number, chainId: string } | null };
+export type IUpdateChainMutation = { updateChain?: { name: string, type: string, allowance: number, chainId: string, hasOwnEndpoint: boolean, useOracles: boolean, responsePath: string, rpc?: string | null, endpoint?: string | null, healthyValue?: string | null } | null };
 
 export type IUpdateOracleMutationVariables = Exact<{
   update: IOracleUpdate;
@@ -955,6 +956,12 @@ export const UpdateChainDocument = gql`
     type
     allowance
     chainId
+    hasOwnEndpoint
+    useOracles
+    responsePath
+    rpc
+    endpoint
+    healthyValue
   }
 }
     `;

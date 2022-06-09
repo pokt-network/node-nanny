@@ -7,6 +7,9 @@ import {
   Box,
   Button,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  Switch,
   TextField,
 } from '@mui/material';
 
@@ -110,6 +113,12 @@ export const ChainsForm = ({
     setFieldValue('type', selectedChain?.type || '');
     setFieldValue('allowance', selectedChain?.allowance || 0);
     setFieldValue('chainId', selectedChain?.chainId || '');
+    setFieldValue('hasOwnEndpoint', selectedChain?.hasOwnEndpoint || false);
+    setFieldValue('useOracles', selectedChain?.useOracles || false);
+    setFieldValue('responsePath', selectedChain?.responsePath || '');
+    setFieldValue('rpc', selectedChain?.rpc || '');
+    setFieldValue('endpoint', selectedChain?.endpoint || null);
+    setFieldValue('healthyValue', selectedChain?.healthyValue || null);
   }, [setFieldValue, selectedChain]);
 
   const handleCancel = (e) => {
@@ -127,7 +136,8 @@ export const ChainsForm = ({
   const getUpdateValues = (selectedChain: IChain, values: IChainUpdate): IChainUpdate => {
     const newValues: IChainUpdate = { id: selectedChain?.id };
     Object.entries(selectedChain).forEach(([key, value]) => {
-      if (values[key] && values[key] !== value) newValues[key] = values[key];
+      if ((values[key] === false || values[key]) && values[key] !== value)
+        newValues[key] = values[key];
     });
     return newValues;
   };
@@ -226,6 +236,88 @@ export const ChainsForm = ({
         variant="outlined"
         error={!!errors.chainId}
         helperText={errors.chainId}
+        disabled={read}
+        size="small"
+        fullWidth
+      />
+      <FormControl fullWidth>
+        <InputLabel disabled={read}>Has Endpoint</InputLabel>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Switch
+            name="hasOwnEndpoint"
+            checked={values.hasOwnEndpoint}
+            onChange={handleChange}
+            disabled={read}
+          />
+        </Box>
+      </FormControl>
+      <FormControl fullWidth>
+        <InputLabel disabled={read}>Uses Oracles</InputLabel>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Switch
+            name="useOracles"
+            checked={values.useOracles}
+            onChange={handleChange}
+            disabled={read}
+          />
+        </Box>
+      </FormControl>
+      <TextField
+        name="responsePath"
+        value={values.responsePath}
+        onChange={handleChange}
+        label="Response Path"
+        variant="outlined"
+        error={!!errors.responsePath}
+        helperText={errors.responsePath}
+        disabled={read}
+        size="small"
+        fullWidth
+      />
+      <TextField
+        name="rpc"
+        value={values.rpc}
+        onChange={handleChange}
+        label="RPC Body"
+        variant="outlined"
+        error={!!errors.rpc}
+        helperText={errors.rpc}
+        disabled={read}
+        size="small"
+        fullWidth
+      />
+      <TextField
+        name="endpoint"
+        value={values.endpoint}
+        onChange={handleChange}
+        label="Health Endpoint"
+        variant="outlined"
+        error={!!errors.endpoint}
+        helperText={errors.endpoint}
+        disabled={read}
+        size="small"
+        fullWidth
+      />
+      <TextField
+        name="healthyValue"
+        value={values.healthyValue}
+        onChange={handleChange}
+        label="Healthy Value"
+        variant="outlined"
+        error={!!errors.healthyValue}
+        helperText={errors.healthyValue}
         disabled={read}
         size="small"
         fullWidth
