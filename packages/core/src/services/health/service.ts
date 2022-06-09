@@ -262,6 +262,8 @@ export class Service {
     const { id: chainId, responsePath, type } = chain;
     const pnfInternal = env('PNF') && type === ESupportedBlockchainTypes.POKT;
 
+    console.debug('PEERS 1', { pnfInternal });
+
     let chainQuery: FilterQuery<INode>;
     if (pnfInternal) {
       const poktChains = await ChainsModel.find({ type: ESupportedBlockchainTypes.POKT });
@@ -270,6 +272,7 @@ export class Service {
     } else {
       chainQuery = new Types.ObjectId(chainId);
     }
+    console.debug('PEERS 2', { chainQuery });
 
     const $match: FilterQuery<INode> = {
       chain: chainQuery,
@@ -278,6 +281,8 @@ export class Service {
     };
     if (pnfInternal) $match.status = { $ne: EErrorStatus.ERROR };
     const $sample = { size: 20 };
+    console.debug('PEERS 3', { fullQuery: JSON.stringify($match) });
+
     const peers = await NodesModel.aggregate<INode>([{ $match }, { $sample }]);
     const peerUrls = peers.map(({ url }) => url);
 
@@ -291,6 +296,7 @@ export class Service {
         colorLog(`Error getting peer blockHeight: ${nodeName} ${url} ${error}`, 'yellow');
       }
     }
+    console.debug('PEERS 4', { peers, peerUrls, peerHeights });
 
     return peerHeights;
   }
