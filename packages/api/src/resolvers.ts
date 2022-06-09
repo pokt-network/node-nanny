@@ -55,8 +55,6 @@ const resolvers: {
     createNodesCSV: (_, { nodes }) => new AutomationService().createNodesCSV(nodes),
     createHostsCSV: (_, { hosts }) => new AutomationService().createHostsCSV(hosts),
 
-    createChain: (_, { input }) => new AutomationService().createChain(input),
-
     updateHost: (_, { update }) => new AutomationService().updateHost(update),
     updateNode: (_, { update }) => new AutomationService().updateNode(update),
 
