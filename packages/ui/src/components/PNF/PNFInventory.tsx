@@ -1,5 +1,5 @@
 import { Dispatch } from 'react';
-import { Button, Chip, Grid, Typography } from '@mui/material';
+import { Chip, Grid, Typography } from '@mui/material';
 
 import { PNFActionsState } from 'pages/PNF';
 import Paper from 'components/Paper';
