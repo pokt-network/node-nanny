@@ -120,7 +120,6 @@ export class Service {
       if (batch && error?.timeout) {
         throw error;
       } else {
-        console.debug({ error });
         throw new Error(`Discord webhook creation error: ${JSON.stringify(error)}`);
       }
     }

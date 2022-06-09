@@ -179,6 +179,12 @@ export const NodeForm = ({
         errors.frontend = 'Frontend is required';
       }
     }
+    if (values.basicAuth) {
+      const [username, password] = values.basicAuth.split(':');
+      if (!values.basicAuth.includes(':') || !username || !password) {
+        errors.basicAuth = 'Basic Auth must follow the format <USERNAME>:<PASSWORD>';
+      }
+    }
     return errors;
   };
 
@@ -211,15 +217,6 @@ export const NodeForm = ({
     onSubmit: handleFormSubmit,
   });
 
-  const handleBasicAuthChange = ({ target }) => {
-    const { name, value } = target;
-    const [usernameVal, passwordVal] = values.basicAuth.split(':');
-    const username = `${name === 'username' ? value : usernameVal || ''}`;
-    const password = `${name === 'password' ? value : passwordVal || ''}`;
-    const newValue = `${username}:${password}`;
-    setFieldValue('basicAuth', newValue);
-  };
-
   useEffect(() => {
     if (!values.automation || frontend) {
       setFieldValue('backend', '');
@@ -228,7 +225,6 @@ export const NodeForm = ({
     }
     if (!frontend && !selectedNode?.frontend) {
       setFieldValue('frontend', '');
-      setFieldValue('basicAuth', '');
     }
   }, [values.automation, selectedNode?.frontend, frontend, setFieldValue]);
 
@@ -356,9 +352,6 @@ export const NodeForm = ({
       if (newValues.host || newValues.port || newValues.https) {
         newValues.url = getNodeUrl();
       }
-      if (values.basicAuth !== selectedNode?.basicAuth) {
-        newValues.basicAuth = values.basicAuth;
-      }
       return newValues;
     },
     [getNodeName, getNodeUrl],
@@ -378,9 +371,8 @@ export const NodeForm = ({
     setFieldValue('frontend', selectedNode.frontend);
     setFieldValue('server', selectedNode.server);
     setFieldValue('automation', selectedNode.automation);
-    if (selectedNode.basicAuth) {
-      setFieldValue('basicAuth', selectedNode.basicAuth);
-    }
+    setFieldValue('basicAuth', selectedNode.basicAuth || '');
+
     if (env('PNF')) setFieldValue('dispatch', selectedNode.dispatch);
   }, [setFieldValue, selectedNode]);
 
@@ -863,32 +855,36 @@ export const NodeForm = ({
               helperText={errors.frontend}
               disabled={read}
             />
-            <TextField
-              name="username"
-              value={values.basicAuth?.split(':')[0]}
-              onChange={handleBasicAuthChange}
-              label="Username"
-              variant="outlined"
-              size="small"
-              fullWidth
-              error={!!errors.basicAuth}
-              helperText={errors.basicAuth}
-              disabled={read}
-            />
-            <TextField
-              name="password"
-              value={values.basicAuth?.split(':')[1]}
-              onChange={handleBasicAuthChange}
-              label="Password"
-              variant="outlined"
-              size="small"
-              fullWidth
-              error={!!errors.basicAuth}
-              helperText={errors.basicAuth}
-              disabled={read}
-            />
           </>
         )}
+        <TextField
+          name="basicAuth"
+          value={values.basicAuth}
+          onChange={handleChange}
+          label="Basic Auth"
+          variant="outlined"
+          size="small"
+          fullWidth
+          error={!!errors.basicAuth}
+          helperText={errors.basicAuth}
+          disabled={read}
+          InputProps={{
+            sx: { paddingRight: 0 },
+            endAdornment: read ? null : (
+              <InputAdornment position="start">
+                <Tooltip
+                  title={
+                    'Basic Auth is optional but, if used, must follow the format <USERNAME>:<PASSWORD>'
+                  }
+                  placement="left"
+                  arrow
+                >
+                  <HelpOutlineIcon fontSize="small" />
+                </Tooltip>
+              </InputAdornment>
+            ),
+          }}
+        />
         {frontend && frontendExists && (
           <Alert severity="error">
             <AlertTitle>Frontend Record Exists</AlertTitle>
