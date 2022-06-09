@@ -24,29 +24,46 @@ export type IBlockHeight = {
 export type IChain = {
   allowance: Scalars['Int'];
   chainId: Scalars['String'];
+  endpoint?: Maybe<Scalars['String']>;
+  hasOwnEndpoint: Scalars['Boolean'];
+  healthyValue?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
   name: Scalars['String'];
+  responsePath: Scalars['String'];
+  rpc?: Maybe<Scalars['String']>;
   type: Scalars['String'];
+  useOracles: Scalars['Boolean'];
 };
 
 export type IChainInput = {
   allowance: Scalars['Int'];
   chainId: Scalars['String'];
+  endpoint?: InputMaybe<Scalars['String']>;
+  hasOwnEndpoint: Scalars['Boolean'];
+  healthyValue?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
+  responsePath: Scalars['String'];
+  rpc?: InputMaybe<Scalars['String']>;
   type: Scalars['String'];
+  useOracles: Scalars['Boolean'];
 };
 
 export type IChainUpdate = {
   allowance?: InputMaybe<Scalars['Int']>;
   chainId?: InputMaybe<Scalars['String']>;
+  endpoint?: InputMaybe<Scalars['String']>;
+  hasOwnEndpoint?: InputMaybe<Scalars['Boolean']>;
+  healthyValue?: InputMaybe<Scalars['String']>;
   id: Scalars['ID'];
   name?: InputMaybe<Scalars['String']>;
+  responsePath?: InputMaybe<Scalars['String']>;
+  rpc?: InputMaybe<Scalars['String']>;
   type?: InputMaybe<Scalars['String']>;
+  useOracles?: InputMaybe<Scalars['Boolean']>;
 };
 
 export type IHealthCheck = {
   details?: Maybe<IHealthResponseDetails>;
-  ethSyncing?: Maybe<Scalars['String']>;
   height?: Maybe<IBlockHeight>;
   node?: Maybe<INode>;
 };
@@ -518,7 +535,7 @@ export type IDisableHaProxyServerMutation = { disableHaProxyServer: boolean };
 export type IChainsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IChainsQuery = { chains: Array<{ id: string, name: string, type: string, chainId: string, allowance: number }> };
+export type IChainsQuery = { chains: Array<{ id: string, name: string, type: string, chainId: string, allowance: number, hasOwnEndpoint: boolean, useOracles: boolean, responsePath: string, rpc?: string | null, endpoint?: string | null, healthyValue?: string | null }> };
 
 export type IHostsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -535,12 +552,12 @@ export type INodeQueryVariables = Exact<{
 }>;
 
 
-export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, basicAuth?: string | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number, chainId: string }, host: { id: string, name: string } } };
+export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, basicAuth?: string | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number, chainId: string, hasOwnEndpoint: boolean, useOracles: boolean, responsePath: string, rpc?: string | null, endpoint?: string | null, healthyValue?: string | null }, host: { id: string, name: string } } };
 
 export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, basicAuth?: string | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number, chainId: string }, host: { id: string, name: string } }> };
+export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, basicAuth?: string | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number, chainId: string, hasOwnEndpoint: boolean, useOracles: boolean, responsePath: string, rpc?: string | null, endpoint?: string | null, healthyValue?: string | null }, host: { id: string, name: string } }> };
 
 export type ILogsQueryVariables = Exact<{
   input: ILogParams;
@@ -569,7 +586,7 @@ export type IWebhooksQuery = { webhooks: Array<{ id: string, location: string, c
 export type IGetHostsChainsAndLoadBalancersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, fqdn?: string | null, location: { id: string, name: string } }>, chains: Array<{ id: string, name: string, chainId: string }>, loadBalancers: Array<{ id: string, name: string, ip?: string | null, fqdn?: string | null, location: { id: string, name: string } }> };
+export type IGetHostsChainsAndLoadBalancersQuery = { hosts: Array<{ id: string, name: string, ip?: string | null, fqdn?: string | null, location: { id: string, name: string } }>, chains: Array<{ id: string, name: string, type: string, allowance: number, chainId: string, hasOwnEndpoint: boolean, useOracles: boolean, responsePath: string, rpc?: string | null, endpoint?: string | null, healthyValue?: string | null }>, loadBalancers: Array<{ id: string, name: string, ip?: string | null, fqdn?: string | null, location: { id: string, name: string } }> };
 
 export type IGetNodeStatusQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -1243,6 +1260,12 @@ export const ChainsDocument = gql`
     type
     chainId
     allowance
+    hasOwnEndpoint
+    useOracles
+    responsePath
+    rpc
+    endpoint
+    healthyValue
   }
 }
     `;
@@ -1375,6 +1398,12 @@ export const NodeDocument = gql`
       type
       allowance
       chainId
+      hasOwnEndpoint
+      useOracles
+      responsePath
+      rpc
+      endpoint
+      healthyValue
     }
     host {
       id
@@ -1437,6 +1466,12 @@ export const NodesDocument = gql`
       type
       allowance
       chainId
+      hasOwnEndpoint
+      useOracles
+      responsePath
+      rpc
+      endpoint
+      healthyValue
     }
     host {
       id
@@ -1641,7 +1676,15 @@ export const GetHostsChainsAndLoadBalancersDocument = gql`
   chains {
     id
     name
+    type
+    allowance
     chainId
+    hasOwnEndpoint
+    useOracles
+    responsePath
+    rpc
+    endpoint
+    healthyValue
   }
   loadBalancers: hosts(loadBalancer: true) {
     id

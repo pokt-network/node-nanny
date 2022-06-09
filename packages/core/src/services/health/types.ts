@@ -1,4 +1,4 @@
-import { INode } from '../../models';
+import { IChain, INode } from '../../models';
 
 export enum ENCResponse {
   SUCCESS = 'succeeded!',
@@ -62,30 +62,20 @@ export interface IBlockHeight {
   internalHeight: number;
 }
 
-export interface IPocketBlockHeight {
-  height: number;
+export interface IHealthCheck {
+  node: INode;
+  height?: IBlockHeight;
+  details?: IHealthResponseDetails;
 }
 
 export interface IHealthResponse {
   name: string;
   status: EErrorStatus;
   conditions?: EErrorConditions;
-  height?: IBlockHeight;
-  peers?: number;
-  details?: IHealthResponseDetails;
   health?: any;
-  id?: string;
-  ethSyncing?: string;
-  delta?: number;
-  refNodeUrls?: string[];
-  highest?: any;
-}
-
-export interface IHealthCheck {
-  node: INode;
+  error?: string;
   height?: IBlockHeight;
   details?: IHealthResponseDetails;
-  ethSyncing?: string;
 }
 
 export interface IHealthResponseDetails {
@@ -96,30 +86,51 @@ export interface IHealthResponseDetails {
   secondsToRecover?: number;
 }
 
-export interface IReferenceURL {
-  url: string;
-  auth?: string;
+export interface IHealthResponseParams {
+  name: string;
+  result?: any;
+  height?: IBlockHeight;
+  secondsToRecover?: number;
+  badOracles?: string[];
+  noOracle?: boolean;
+  error?: Error;
 }
 
-export interface IRPCResponse {
-  jsonrpc: string;
-  id: number;
-  result?: string | number;
-  error?: { code: number; message: string };
-}
-
-export interface IRPCSyncResponse {
-  jsonrpc: string;
-  id: number;
-  result: boolean;
-  error?: { code: number; message: string };
-}
-
-export interface IEVMHealthCheckOptions {
-  harmony?: boolean;
+export interface INodeCheckParams {
+  host: string;
+  port: number;
 }
 
 export interface IOraclesResponse {
-  healthyOracles: IReferenceURL[];
-  badOracles: IReferenceURL[];
+  oracleHeights: number[];
+  badOracles: string[];
+}
+
+export interface IRefHeight {
+  refHeight: number;
+  badOracles?: string[];
+  noOracle?: boolean;
+}
+
+export interface IRPCCheckParams {
+  chain: IChain;
+  url: string;
+  basicAuth?: string;
+}
+
+export interface IRPCMethodParams {
+  fullRpcUrl: string;
+  basicAuth?: string;
+  rpc?: { jsonrpc: string; id: number; method: string; params?: any[] };
+}
+
+export interface IRPCResult {
+  jsonrpc: string;
+  id: number;
+  result?:
+    | string // ALG, SOL
+    | number
+    | { healthy?: boolean } // AVAX
+    | { sync_info: { catching_up: boolean } }; // TMT
+  error?: { code: number; message: string };
 }
