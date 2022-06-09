@@ -18,7 +18,7 @@ dependencies:
   graphql: 16.5.0
 
 devDependencies:
-  '@graphql-codegen/cli': 2.6.2_fvukzu7z6wfjxvwqanosrw6g6m
+  '@graphql-codegen/cli': 2.6.2_graphql@16.5.0
   '@graphql-codegen/typescript': 2.4.11_graphql@16.5.0
   '@graphql-codegen/typescript-operations': 2.4.0_graphql@16.5.0
   '@graphql-codegen/typescript-react-apollo': 3.2.14_ubrtutz2urcxyhwqr2zvlqjzha
@@ -686,7 +686,7 @@ packages:
       to-fast-properties: 2.0.0
     dev: true
 
-  /@endemolshinegroup/cosmiconfig-typescript-loader/3.0.2_efk5qcpfsmnbut4twxjisyfsvi:
+  /@endemolshinegroup/cosmiconfig-typescript-loader/3.0.2_cosmiconfig@7.0.1:
     resolution: {integrity: sha512-QRVtqJuS1mcT56oHpVegkKBlgtWjXw/gHNWO3eL9oyB5Sc7HBoc2OLG/nYpVfT/Jejvo3NUrD0Udk7XgoyDKkA==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
@@ -697,11 +697,10 @@ packages:
       make-error: 1.3.6
       ts-node: 9.1.1_typescript@4.7.2
       tslib: 2.4.0
-    transitivePeerDependencies:
-      - typescript
+      typescript: 4.7.2
     dev: true
 
-  /@graphql-codegen/cli/2.6.2_fvukzu7z6wfjxvwqanosrw6g6m:
+  /@graphql-codegen/cli/2.6.2_graphql@16.5.0:
     resolution: {integrity: sha512-UO75msoVgvLEvfjCezM09cQQqp32+mR8Ma1ACsBpr7nroFvHbgcu2ulx1cMovg4sxDBCsvd9Eq/xOOMpARUxtw==}
     hasBin: true
     peerDependencies:
@@ -731,7 +730,7 @@ packages:
       glob: 7.2.3
       globby: 11.1.0
       graphql: 16.5.0
-      graphql-config: 4.3.1_fvukzu7z6wfjxvwqanosrw6g6m
+      graphql-config: 4.3.1_graphql@16.5.0
       inquirer: 8.2.4
       is-glob: 4.0.3
       json-to-pretty-yaml: 1.2.2
@@ -753,7 +752,6 @@ packages:
       - bufferutil
       - encoding
       - supports-color
-      - typescript
       - utf-8-validate
       - zen-observable
       - zenObservable
@@ -2624,13 +2622,13 @@ packages:
       url-parse-lax: 3.0.0
     dev: true
 
-  /graphql-config/4.3.1_fvukzu7z6wfjxvwqanosrw6g6m:
+  /graphql-config/4.3.1_graphql@16.5.0:
     resolution: {integrity: sha512-czBWzJSGaLJfOHBLuUTZVRTjfgohPfvlaeN1B5nXBVptFARpiFuS7iI4FnRhCGwm6qt1h2j1g05nkg0OIGA6bg==}
     engines: {node: '>= 10.0.0'}
     peerDependencies:
       graphql: ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     dependencies:
-      '@endemolshinegroup/cosmiconfig-typescript-loader': 3.0.2_efk5qcpfsmnbut4twxjisyfsvi
+      '@endemolshinegroup/cosmiconfig-typescript-loader': 3.0.2_cosmiconfig@7.0.1
       '@graphql-tools/graphql-file-loader': 7.3.14_graphql@16.5.0
       '@graphql-tools/json-file-loader': 7.3.14_graphql@16.5.0
       '@graphql-tools/load': 7.5.13_graphql@16.5.0
@@ -2646,7 +2644,6 @@ packages:
       - '@types/node'
       - bufferutil
       - encoding
-      - typescript
       - utf-8-validate
     dev: true
 
