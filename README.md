@@ -163,6 +163,7 @@ Nodes can be added on the Nodes screen, either by form input or in batches by CS
 | backend       | string       |          |
 | loadBalancers | string array |          |
 | server        | string       |          |
+| basicauth     | string       |          |
 
 Notes
 
@@ -170,14 +171,15 @@ Notes
 - `backend`, `loadBalancers` and `server` are required if `automation` is true.
 - `backend` and `server` must match the fields defined in your `haproxy.cfg` file.
   - For further information on setting up HAProxy, including an example of where `backend` and`server` are defined, [see below](#automation).
+- `basicAuth` is entirely optional, but if used, must follow the format <USERNAME>:<PASSWORD>
 
 ### Example CSV Format
 
-| https | chain | host      | port | automation | backend    | loadBalancers       | server |
-| ----- | ----- | --------- | ---- | ---------- | ---------- | ------------------- | ------ |
-| false | ETH   | eth-1-2a  | 4001 | true       | ethmainnet | shared2a, shared-2b | 2a     |
-| true  | ETH   | eth-1-2b  | 4230 | true       | ethmainnet | shared2a, shared-2b | 2b     |
-| false | POKT  | pokt-1-1c | 5008 | false      |            |                     |        |
+| https | chain | host      | port | automation | backend    | loadBalancers       | server | basicAuth     |
+| ----- | ----- | --------- | ---- | ---------- | ---------- | ------------------- | ------ | ------------- |
+| false | ETH   | eth-1-2a  | 4001 | true       | ethmainnet | shared2a, shared-2b | 2a     |               |
+| true  | ETH   | eth-1-2b  | 4230 | true       | ethmainnet | shared2a, shared-2b | 2b     |               |
+| false | POKT  | pokt-1-1c | 5008 | false      |            |                     |        | user:password |
 
 Notes
 
@@ -188,21 +190,21 @@ Notes
 
 A frontend is a record of the host that is running your load balancer software for a given chain. Monitoring your frontend is a convenient way to ensure there is any service available for a given chain; if a health check cannot return a healthy response for any of the backends for a frontend it means there is no service available for that chain through the load balancer frontend.
 
-| field    | type    | required |
-| -------- | ------- | -------- |
-| https    | boolean | Y        |
-| chain    | string  | Y        |
-| host     | string  | Y        |
-| port     | number  | Y        |
-| frontend | string  | Y        |
-| username | string  | Y        |
-| password | string  | Y        |
+| field     | type    | required |
+| --------- | ------- | -------- |
+| https     | boolean | Y        |
+| chain     | string  | Y        |
+| host      | string  | Y        |
+| port      | number  | Y        |
+| frontend  | string  | Y        |
+| basicAuth | string  |          |
 
 Notes
 
 - `frontend` must match the field defined in your `haproxy.cfg` file.
   - For further information on setting up HAProxy, [see below](#automation).
 - Only one frontend record may be created for a given host/chain combination, and only load balancer hosts may be selected.
+- `basicAuth` is entirely optional, but if used, must follow the format <USERNAME>:<PASSWORD>
 
 **CSV import of frontends is not supported.**
 

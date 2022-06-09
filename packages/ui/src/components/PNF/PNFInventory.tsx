@@ -26,6 +26,7 @@ export const PNFInventory = ({ chains, oracles, setState }: PNFInventoryProps) =
         container
         spacing={2}
         alignItems="center"
+        justifyContent={'space-between'}
         sx={{
           '& h3': {
             margin: 0,
@@ -38,6 +39,7 @@ export const PNFInventory = ({ chains, oracles, setState }: PNFInventoryProps) =
         <Grid item sm={8} md>
           <Grid
             container
+            justifyContent="flex-end"
             spacing={4}
             columns={{ xs: 12, md: 4 }}
             sx={{
@@ -48,6 +50,7 @@ export const PNFInventory = ({ chains, oracles, setState }: PNFInventoryProps) =
               '& .MuiTypography-body1': {
                 marginLeft: 1,
               },
+              paddingRight: 8,
             }}
           >
             <Grid item>
@@ -63,26 +66,6 @@ export const PNFInventory = ({ chains, oracles, setState }: PNFInventoryProps) =
               <Typography color="secondary">Oracles</Typography>
             </Grid>
           </Grid>
-        </Grid>
-        <Grid
-          direction="row"
-          alignItems="center"
-          container
-          item
-          sm={12}
-          md="auto"
-          sx={{ '& button': { marginRight: 1 } }}
-        >
-          {' '}
-          <Button
-            onClick={() => setState(PNFActionsState.Create)}
-            size="small"
-            variant="contained"
-            color="primary"
-            sx={{ width: 120 }}
-          >
-            Create Chain
-          </Button>
         </Grid>
       </Grid>
     </Paper>

@@ -107,6 +107,7 @@ mutation UpdateNode($update: NodeUpdate!) {
       id
       name
     }
+    basicAuth
   }
 }
 
@@ -116,6 +117,12 @@ mutation UpdateChain($update: ChainUpdate!) {
     type
     allowance
     chainId
+    hasOwnEndpoint
+    useOracles
+    responsePath
+    rpc
+    endpoint
+    healthyValue
   }
 }
 
