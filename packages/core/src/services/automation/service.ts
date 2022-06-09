@@ -318,8 +318,19 @@ export class Service extends BaseService {
   }
 
   public async updateChain(update: IChainUpdate): Promise<IChain> {
+    const { name: oldChainName } = await ChainsModel.findOne({ _id: update.id });
+
     const { id, ...rest } = update;
     await ChainsModel.updateOne({ _id: id }, rest);
+
+    if (rest.name !== oldChainName && (await NodesModel.exists({ chain: id }))) {
+      const nodesForChain = await NodesModel.find({ chain: id });
+      for await (const node of nodesForChain) {
+        const newNodeName = node.name.replace(oldChainName, rest.name);
+        await NodesModel.updateOne({ _id: node.id }, { name: newNodeName });
+      }
+    }
+
     return await ChainsModel.findOne({ _id: id });
   }
 

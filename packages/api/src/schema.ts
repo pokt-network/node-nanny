@@ -152,6 +152,7 @@ const typeDefs = gql`
     backend: String
     loadBalancers: [String!]!
     server: String
+    basicAuth: String
   }
 
   input HostCSVInput {

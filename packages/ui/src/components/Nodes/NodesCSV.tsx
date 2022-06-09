@@ -20,6 +20,7 @@ interface ICSVNode {
   loadBalancers?: string;
   backend?: string;
   server?: string;
+  basicAuth?: string;
 }
 
 export interface NodesCSVProps {
@@ -50,6 +51,7 @@ export const NodesCSV = ({
     'backend',
     'loadBalancers',
     'server',
+    'basicAuth',
   ];
 
   /* ----- CSV Validation ----- */
@@ -105,6 +107,14 @@ export const NodesCSV = ({
       const invalidLbs = lbs.filter((lb: string) => !validLoadBalancers?.includes(lb));
       if (invalidLbs?.length) {
         return `Invalid load balancer names: ${invalidLbs.join(', ')}`;
+      }
+    },
+    basicAuth: (basicAuth) => {
+      if (basicAuth) {
+        const [username, password] = basicAuth.split(':');
+        if (!basicAuth.includes(':') || !username || !password) {
+          return 'Basic Auth must follow the format <USERNAME>:<PASSWORD>';
+        }
       }
     },
   };
@@ -174,6 +184,7 @@ export const NodesCSV = ({
         loadBalancers: splitLoadBalancers(node.loadBalancers),
         https: Boolean(node.https.toLowerCase() === 'true'),
         automation: Boolean(node.automation.toLowerCase() === 'true'),
+        basicAuth: node.basicAuth || null,
       };
     });
 
