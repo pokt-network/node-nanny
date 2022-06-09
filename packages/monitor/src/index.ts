@@ -24,7 +24,14 @@ export class App {
   async main() {
     await connect();
 
-    const nodes = await NodesModel.find({}).populate('host').populate('chain').exec();
+    //TEMP
+    const nodes = await NodesModel.find({ name: 'mainnet1/POKT/11' })
+      .populate('host')
+      .populate('chain')
+      .exec();
+    //TEMP
+
+    // const nodes = await NodesModel.find({}).populate('host').populate('chain').exec();
     const publish = new Publish(nodes);
 
     const mode = env('MONITOR_TEST') ? 'TEST' : 'PRODUCTION';
