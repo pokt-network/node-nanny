@@ -263,7 +263,7 @@ export class Service {
     const pnfInternal = env('PNF') && type === ESupportedBlockchainTypes.POKT;
 
     let chainQuery: FilterQuery<INode>;
-    if (pnfInternal) {
+    if (type === ESupportedBlockchainTypes.POKT) {
       const poktChains = await ChainsModel.find({ type: ESupportedBlockchainTypes.POKT });
       const poktChainIds = poktChains.map(({ _id }) => new Types.ObjectId(_id));
       chainQuery = { $in: poktChainIds };
@@ -278,6 +278,7 @@ export class Service {
     };
     if (pnfInternal) $match.status = { $ne: EErrorStatus.ERROR };
     const $sample = { size: 20 };
+
     const peers = await NodesModel.aggregate<INode>([{ $match }, { $sample }]);
     const peerUrls = peers.map(({ url }) => url);
 
