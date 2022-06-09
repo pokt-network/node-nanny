@@ -468,7 +468,7 @@ export type IUpdateNodeMutationVariables = Exact<{
 }>;
 
 
-export type IUpdateNodeMutation = { updateNode?: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } } | null };
+export type IUpdateNodeMutation = { updateNode?: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, basicAuth?: string | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string }, host: { id: string, name: string } } | null };
 
 export type IUpdateChainMutationVariables = Exact<{
   update: IChainUpdate;
@@ -920,6 +920,7 @@ export const UpdateNodeDocument = gql`
       id
       name
     }
+    basicAuth
   }
 }
     `;
