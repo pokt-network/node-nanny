@@ -263,8 +263,6 @@ const typeDefs = gql`
     createNode(input: NodeInput!): Node
     createNodesCSV(nodes: [NodeCSVInput!]!): [Node]!
 
-    createChain(input: ChainInput!): Chain
-
     updateHost(update: HostUpdate!): Host
     updateNode(update: NodeUpdate!): Node
 
