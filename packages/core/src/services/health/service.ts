@@ -170,7 +170,7 @@ export class Service {
     const { endpoint, rpc } = chain;
 
     const method = !!rpc ? 'post' : 'get';
-    const parsedRpc = rpc ? JSON.parse(rpc) : null;
+    const parsedRpc = !!rpc ? JSON.parse(rpc) : null;
     const fullRpcUrl = `${url}${endpoint || ''}`;
 
     const rpcMethod = this.rpcMethodTemplates[method];
