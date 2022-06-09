@@ -57,7 +57,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   docker:
-    if: needs.semantic-release.outputs.version
     name: Docker Build & Push
     needs: [build-test, semantic-release]
     timeout-minutes: 15
