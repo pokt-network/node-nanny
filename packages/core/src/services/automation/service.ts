@@ -16,7 +16,6 @@ import {
   OraclesModel,
 } from '../../models';
 import {
-  IChainInput,
   IChainUpdate,
   IHostInput,
   IHostCsvInput,
@@ -28,7 +27,7 @@ import {
   IOracleUpdate,
 } from './types';
 import { Service as HealthService } from '../health';
-import { ESupportedBlockchainTypes, IHealthCheck } from '../health/types';
+import { IHealthCheck } from '../health/types';
 import { Service as BaseService } from '../base-service/base-service';
 
 export class Service extends BaseService {
