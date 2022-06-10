@@ -1,6 +1,7 @@
 {
   "name": "@pokt-foundation/node-nanny-core",
   "description": "Shared package used by all backend packages",
+  "version": "1.0.0-beta.6",
   "license": "MIT",
   "scripts": {
     "build": "tsc -b .",
@@ -18,5 +19,9 @@
     "mongoose-paginate-v2": "^1.6.3",
     "winston": "^3.6.0",
     "winston-mongodb": "^5.0.7"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "tag": "latest"
   }
 }
