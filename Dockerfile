@@ -19,9 +19,9 @@ RUN rm ./pnpm-lock.yaml
 RUN find . -type f -name "*jest*" -delete
 RUN find . -type f -name "*.test.*" -delete
 
-RUN pnpm install pm2 turbo typescript -g
-RUN pnpm install --no-frozen-lockfile
-RUN pnpm build 
+RUN pnpm install pm2 turbo -g
+RUN pnpm install 
+RUN pnpm build
 RUN pnpm set-script postinstall ""
 RUN pnpm prune --production
 
