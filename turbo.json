@@ -5,6 +5,9 @@
     "build": {
       "dependsOn": ["^build"]
     },
+    "build:docker": {
+      "dependsOn": ["^build:docker"]
+    },
     "build:clean": {
       "dependsOn": ["^build:clean"]
     },

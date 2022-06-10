@@ -6,6 +6,7 @@
   "scripts": {
     "start:dev": "pm2 start \"nodemon ./src/index.ts\" --name event-consumer-dev",
     "build": "tsc -b .",
+    "build:docker": "tsc -b .",
     "build:clean": "tsc --build --clean && rm -rf ./dist",
     "build:watch": "tsc -b -w ."
   },
