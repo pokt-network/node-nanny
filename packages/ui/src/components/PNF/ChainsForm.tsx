@@ -114,8 +114,8 @@ export const ChainsForm = ({
     setFieldValue('useOracles', selectedChain?.useOracles || false);
     setFieldValue('responsePath', selectedChain?.responsePath || '');
     setFieldValue('rpc', selectedChain?.rpc || '');
-    setFieldValue('endpoint', selectedChain?.endpoint || null);
-    setFieldValue('healthyValue', selectedChain?.healthyValue || null);
+    setFieldValue('endpoint', selectedChain?.endpoint || '');
+    setFieldValue('healthyValue', selectedChain?.healthyValue || '');
   }, [setFieldValue, selectedChain]);
 
   const handleCancel = (e) => {
