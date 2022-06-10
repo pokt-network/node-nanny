@@ -62,7 +62,7 @@ jobs:
           find . -type f -name "*.test.*" -delete
       - name: Install dependencies
         run: |
-          pnpm install turbo typescript --save-dev
+          pnpm install turbo typescript -g
           pnpm install --filter=@pokt-foundation/node-nanny-core --no-frozen-lockfile
           pnpm build --filter=@pokt-foundation/node-nanny-core
           pnpm prune --production
