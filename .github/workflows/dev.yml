@@ -62,7 +62,7 @@ jobs:
           find . -type f -name "*.test.*" -delete
       - name: Install dependencies
         run: |
-          pnpm install
+          pnpm install --no-frozen-lockfile
           pnpm build
           pnpm prune --production
       - name: Copy core package.json to core dist foler
