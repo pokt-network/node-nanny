@@ -60,6 +60,7 @@ jobs:
         run: |
           pnpm install
           cd ./packages/core
+          find . -type f -name "*jest*" -delete
           find . -type f -name "*.test.*" -delete
           pnpm prune --production
           cp ./package.json ./dist
