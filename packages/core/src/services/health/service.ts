@@ -213,7 +213,7 @@ export class Service {
 
       if (!refHeights.length && peerHeights.length < 2) {
         throw EErrorConditions.NO_PEERS;
-      } else if (!useOracles && !refHeights.length) {
+      } else if (useOracles && !refHeights.length) {
         noOracle = true;
       }
 
