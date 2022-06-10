@@ -62,9 +62,10 @@ jobs:
           find . -type f -name "*.test.*" -delete
       - name: Install dependencies
         run: |
+          pnpm install turbo typescript -g
           pnpm install --filter=@pokt-foundation/node-nanny-core --no-frozen-lockfile
           pnpm build --filter=@pokt-foundation/node-nanny-core
-          pnpm prune --filter=@pokt-foundation/node-nanny-core --production
+          pnpm prune --production
       - name: Copy core package.json to core dist foler
         run: |
           cp ./package.json ./dist
