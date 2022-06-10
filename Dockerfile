@@ -16,8 +16,8 @@ COPY ./ .
 RUN rm -rf ./packages/ui
 RUN rm ./pnpm-lock.yaml
 
-RUN pnpm install pm2 turbo -g
-RUN pnpm install 
+RUN pnpm install pm2 turbo typescript -g
+RUN pnpm install --frozen-lockfile --prod
 RUN pnpm build
 
 EXPOSE 4000
