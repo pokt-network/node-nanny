@@ -21,7 +21,6 @@
     "winston-mongodb": "^5.0.7"
   },
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "tag": "latest"
+    "registry": "https://registry.npmjs.org/"
   }
 }

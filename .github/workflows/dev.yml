@@ -52,6 +52,7 @@ jobs:
           extra_plugins: |
             @semantic-release/commit-analyzer
             @semantic-release/changelog
+            @semantic-release/npm
             @semantic-release/git
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
