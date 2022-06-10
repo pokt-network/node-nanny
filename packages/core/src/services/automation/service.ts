@@ -323,12 +323,17 @@ export class Service extends BaseService {
       }
     }
 
+    await this.restartMonitor();
+
     return await ChainsModel.findOne({ _id: id });
   }
 
   public async updateOracle(update: IOracleUpdate): Promise<IOracle> {
     const { chain, urls } = update;
     await OraclesModel.updateOne({ chain }, { urls });
+
+    await this.restartMonitor();
+
     return await OraclesModel.findOne({ chain });
   }
 
