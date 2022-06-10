@@ -21,24 +21,7 @@ RUN find . -type f -name "*.test.*" -delete
 
 RUN pnpm install pm2 turbo typescript -g
 RUN pnpm install --no-frozen-lockfile
-
-WORKDIR /usr/src/node-nanny-backend/packages/api
 RUN pnpm build 
-RUN pnpm prune --production
-
-WORKDIR /usr/src/node-nanny-backend/packages/core
-RUN pnpm build 
-RUN pnpm prune --production
-
-WORKDIR /usr/src/node-nanny-backend/packages/event-consumer
-RUN pnpm build 
-RUN pnpm prune --production
-
-WORKDIR /usr/src/node-nanny-backend/packages/monitor
-RUN pnpm build 
-RUN pnpm prune --production
-
-WORKDIR /usr/src/node-nanny-backend
 RUN pnpm set-script postinstall ""
 RUN pnpm prune --production
 
