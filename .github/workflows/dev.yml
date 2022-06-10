@@ -58,7 +58,7 @@ jobs:
           cache: 'pnpm'
       - name: Prepare core package for publish
         run: |
-          pnpm install
+          pnpm install --no-frozen-lockfile
           cd ./packages/core
           find . -type f -name "*jest*" -delete
           find . -type f -name "*.test.*" -delete
