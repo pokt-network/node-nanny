@@ -22,6 +22,12 @@
       }
     ],
     [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "npx rjp package.json version nextRelease.version"
+      }
+    ],
+    [
       "@semantic-release/git",
       {
         "assets": [
