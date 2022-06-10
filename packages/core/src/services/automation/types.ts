@@ -12,9 +12,9 @@ export interface INodeInput {
   host: Types.ObjectId;
   name: string;
   url: string;
-  loadBalancers: Types.ObjectId[];
   port: number;
   automation: boolean;
+  loadBalancers?: Types.ObjectId[];
   backend?: string;
   frontend?: string;
   server?: string;
