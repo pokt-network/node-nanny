@@ -3,7 +3,7 @@
   "description": "Node Nanny core functionality",
   "license": "MIT",
   "main": "index.js",
-  "types": "lib/index.d.ts",
+  "types": "index.d.ts",
   "scripts": {
     "build": "tsc -b .",
     "build:docker": "tsc -b .",
