@@ -64,8 +64,8 @@ jobs:
           npm prune --production
       - name: Copy core package.json to core dist foler
         run: |
-          cp ./packages/core/package.json ./packages/core/dist
-          cp ./packages/core/package-lock.json ./packages/core/dist
+          cp ./package.json ./dist
+          cp ./package-lock.json ./dist
 
       - name: Semantic Release
         id: semantic
