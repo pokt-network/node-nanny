@@ -24,7 +24,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "npm --no-git-tag-version version <%= nextRelease.version %>"
+        "prepareCmd": "cp ./packages/core/package.json ./packages/core/dist && npm --no-git-tag-version version <%= nextRelease.version %>"
       }
     ],
     [
