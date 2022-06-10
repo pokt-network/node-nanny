@@ -1,6 +1,6 @@
 {
   "name": "@pokt-foundation/node-nanny-core",
-  "description": "Node Nanny core functionality shared package",
+  "description": "Node Nanny core functionality",
   "license": "MIT",
   "main": "index.js",
   "types": "lib/index.d.ts",
