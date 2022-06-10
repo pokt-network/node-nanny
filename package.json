@@ -7,6 +7,7 @@
   "license": "MIT",
   "scripts": {
     "build": "turbo run build",
+    "build:docker": "turbo run build:docker",
     "build:install": "pnpm i && pnpm build",
     "build:clean": "turbo run build:clean",
     "build:fresh": "turbo run build:clean && turbo run build",

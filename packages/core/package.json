@@ -1,9 +1,10 @@
 {
   "name": "@pokt-foundation/node-nanny-core",
-  "description": "Shared package used by all backend packages",
+  "description": "Node Nanny core functionality shared package",
   "license": "MIT",
   "scripts": {
     "build": "tsc -b .",
+    "build:docker": "tsc -b .",
     "build:clean": "tsc --build --clean && rm -rf ./dist",
     "build:watch": "tsc -b -w .",
     "test": "pnpm build && jest --runInBand"
