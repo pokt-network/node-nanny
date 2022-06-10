@@ -57,7 +57,7 @@ jobs:
           node-version: 16
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile --prod && pnpm install -g turbo typescript
+        run: pnpm install --no-frozen-lockfile
       - name: Build
         run: pnpm build
       - name: Copy core package.json to core dist foler
