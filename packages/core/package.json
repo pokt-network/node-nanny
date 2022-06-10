@@ -2,6 +2,8 @@
   "name": "@pokt-foundation/node-nanny-core",
   "description": "Node Nanny core functionality shared package",
   "license": "MIT",
+  "main": "index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc -b .",
     "build:docker": "tsc -b .",
