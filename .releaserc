@@ -24,7 +24,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "npx rjp package.json version nextRelease.version"
+        "prepareCmd": "pnpm version <%= nextRelease.version %>"
       }
     ],
     [
