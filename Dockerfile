@@ -19,6 +19,7 @@ RUN pnpm fetch --prod
 COPY ./ .
 RUN rm -rf ./packages/ui
 RUN rm ./pnpm-lock.yaml
+RUN find . -type f -name "*.test.*" -delete
 
 RUN pnpm install pm2 turbo typescript -g
 RUN pnpm install -r --prod
