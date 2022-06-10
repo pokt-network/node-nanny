@@ -32,8 +32,7 @@
     "console": "pm2 monit",
     "dev:test": "nodemon ./packages/api/src/server.ts",
     "test": "turbo run test --filter=@pokt-foundation/node-nanny-core",
-    "postinstall": "turbo run build --filter=@pokt-foundation/node-nanny-core",
-    "postbuild": "cp ./packages/core/package.json ./packages/core/dist"
+    "postinstall": "turbo run build --filter=@pokt-foundation/node-nanny-core"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.1",
