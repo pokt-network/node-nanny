@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc -b .",
+    "postbuild": "cp package.json dist",
     "build:clean": "tsc --build --clean && rm -rf ./dist",
     "build:watch": "tsc -b -w .",
     "test": "pnpm build && jest --runInBand"
