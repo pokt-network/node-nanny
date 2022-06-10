@@ -22,7 +22,7 @@ RUN find . -type f -name "*.test.*" -delete
 RUN pnpm install pm2 turbo -g
 RUN pnpm install 
 RUN pnpm build
-RUN pnpm set-script postinstall ""
+RUN npm set-script postinstall ""
 RUN pnpm prune --production
 
 EXPOSE 4000
