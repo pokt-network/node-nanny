@@ -16,9 +16,24 @@ COPY ./ .
 RUN rm -rf ./packages/ui
 RUN rm ./pnpm-lock.yaml
 
-RUN pnpm install pm2 turbo -g
-RUN pnpm install 
-RUN pnpm build
+RUN pnpm install pm2 turbo typescript -g
+
+RUN cd ./packages/api
+RUN pnpm install --filter=@pokt-foundation/node-nanny-api --no-frozen-lockfile
+RUN pnpm build --filter=@pokt-foundation/node-nanny-api
+RUN pnpm prune --production
+RUN cd ../core
+RUN pnpm install --filter=@pokt-foundation/node-nanny-core --no-frozen-lockfile
+RUN pnpm build --filter=@pokt-foundation/node-nanny-core
+RUN pnpm prune --production
+RUN cd ../event-consumer
+RUN pnpm install --filter=@pokt-foundation/node-nanny-event-consumer --no-frozen-lockfile
+RUN pnpm build --filter=@pokt-foundation/node-nanny-event-consumer
+RUN pnpm prune  --production
+RUN cd ../monitor
+RUN pnpm install --filter=@pokt-foundation/node-nanny-monitor --no-frozen-lockfile
+RUN pnpm build --filter=@pokt-foundation/node-nanny-monitor
+RUN pnpm prune  --production
 
 EXPOSE 4000
 CMD ["pm2-runtime", "process.yml"] 
