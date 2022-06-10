@@ -57,11 +57,13 @@ jobs:
           node-version: 16
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --no-frozen-lockfile --prod && pnpm install -g typescript
       - name: Build
         run: pnpm build
       - name: Copy core package.json to core dist foler
         run: cp ./packages/core/package.json ./packages/core/dist
+      - name: Remove test files from package
+        run: find . -type f -name "*.test.*" -delete
 
       - name: Semantic Release
         id: semantic
