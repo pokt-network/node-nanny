@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 2
       - uses: pnpm/action-setup@v2.0.1
         with:
-          version: 7.1.7
+          version: 6
       - name: Setup Node.js environment
         uses: actions/setup-node@v2
         with:
@@ -56,18 +56,13 @@ jobs:
         with:
           node-version: 16
           cache: 'pnpm'
-      - name: Change to core directory
+      - name: Prepare core package for publish
         run: |
+          pnpm install
           cd ./packages/core
           find . -type f -name "*.test.*" -delete
-      - name: Install dependencies
-        run: |
-          pnpm install turbo typescript -g
-          pnpm install --filter=@pokt-foundation/node-nanny-core --no-frozen-lockfile
-          pnpm build --filter=@pokt-foundation/node-nanny-core
           pnpm prune --production
-      - name: Copy core package.json to core dist foler
-        run: cp ./package.json ./dist
+          cp ./package.json ./dist
 
       - name: Semantic Release
         id: semantic
