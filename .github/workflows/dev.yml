@@ -48,10 +48,14 @@ jobs:
         with:
           fetch-depth: 2
 
+      - uses: pnpm/action-setup@v2.0.1
+        with:
+          version: 7.1.7
       - name: Setup Node.js environment
         uses: actions/setup-node@v2
         with:
           node-version: 16
+          cache: 'pnpm'
       - name: Change to core directory
         run: |
           cd ./packages/core
@@ -59,9 +63,9 @@ jobs:
           find . -type f -name "*.test.*" -delete
       - name: Install dependencies
         run: |
-          npm install
-          npm build
-          npm prune --production
+          pnpm install
+          pnpm build
+          pnpm prune --production
       - name: Copy core package.json to core dist foler
         run: |
           cp ./package.json ./dist
