@@ -42,10 +42,10 @@ Without HAProxy configured, Node Nanny can still provide real time node health m
 
 The application is composed of the following main components:
 
-- Monitor - Performs periodic health checks on node inventory
-- Event Consumer - Handles the automation and alerting in response to health events
-- API - GraphQL API that services the user interface for handling the inventory DB
-- User Interface - React app to handle inventory and logs
+- `Monitor` - Performs periodic health checks on node inventory
+- `Event Consumer` - Handles the automation and alerting in response to health events
+- `API` - GraphQL API that services the user interface for handling the inventory DB
+- `User Interface` - React app to handle inventory and logs
 
 ## Supported Technologies
 
