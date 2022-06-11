@@ -80,7 +80,6 @@ export interface IHealthResponse {
 
 export interface IHealthResponseDetails {
   noOracle?: boolean;
-  numPeers?: number;
   badOracles?: string[];
   nodeIsAheadOfPeer?: number;
   secondsToRecover?: number;

@@ -208,11 +208,9 @@ export class Service {
         : '';
     if (nodeCountStr && nodesOnline <= 1) nodeCountStr = `${nodeCountStr.toUpperCase()}`;
     const badOracleStr = badOracles?.length
-      ? `\nWarning - Bad Oracle${s(badOracles.length)}\n${badOracles}`
+      ? `\nWarning - Bad oracle${s(badOracles.length)}\n${badOracles}`
       : '';
-    const noOracleStr = noOracle
-      ? `\nWarning - No Oracle for node. Node has ${details?.numPeers} peers.`
-      : '';
+    const noOracleStr = noOracle ? `\nWarning - No oracle for node.` : '';
     const nodeIsAheadOfPeerStr = nodeIsAheadOfPeer
       ? `Warning - Node is ahead of peers.\nDelta: ${nodeIsAheadOfPeer}`
       : '';
