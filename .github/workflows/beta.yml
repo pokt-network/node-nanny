@@ -36,30 +36,47 @@ jobs:
         run: pnpm test
 
   semantic-release:
-    name: Semantic Release
+    name: Semantic Release & Publish Core
     needs: build-test
     timeout-minutes: 15
     runs-on: ubuntu-latest
     environment: CI
-    outputs:
-      version: ${{ steps.semantic.outputs.new_release_version }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 2
+
+      - uses: pnpm/action-setup@v2.0.1
+        with:
+          version: 6
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          cache: 'pnpm'
+      - name: Prepare core package for publish
+        run: |
+          pnpm install --no-frozen-lockfile
+          cd ./packages/core
+          find . -type f -name "*jest*" -delete
+          find . -type f -name "*.test.*" -delete
+          pnpm prune --production
+          cp ./package.json ./dist
+
       - name: Semantic Release
         id: semantic
         uses: cycjimmy/semantic-release-action@v3
         with:
           extra_plugins: |
             @semantic-release/commit-analyzer
-            @semantic-release/changelog
+            @semantic-release/npm
             @semantic-release/git
+            @semantic-release/changelog
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   docker:
     if: needs.semantic-release.outputs.version
