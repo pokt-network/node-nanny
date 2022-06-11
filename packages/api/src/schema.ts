@@ -97,7 +97,6 @@ const typeDefs = gql`
 
   type HealthResponseDetails {
     noOracle: Boolean
-    numPeers: Int
     badOracles: [String]
     nodeIsAheadOfPeer: Boolean
     secondsToRecover: Int

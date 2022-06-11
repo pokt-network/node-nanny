@@ -217,7 +217,6 @@ query GetHealthCheck($id: ID!) {
     }
     details {
       noOracle
-      numPeers
       badOracles
       nodeIsAheadOfPeer
       secondsToRecover
