@@ -72,7 +72,6 @@ export type IHealthResponseDetails = {
   badOracles?: Maybe<Array<Maybe<Scalars['String']>>>;
   noOracle?: Maybe<Scalars['Boolean']>;
   nodeIsAheadOfPeer?: Maybe<Scalars['Boolean']>;
-  numPeers?: Maybe<Scalars['Int']>;
   secondsToRecover?: Maybe<Scalars['Int']>;
 };
 
@@ -602,7 +601,7 @@ export type IGetHealthCheckQueryVariables = Exact<{
 }>;
 
 
-export type IGetHealthCheckQuery = { healthCheck: { node?: { status: string, conditions: string, deltaArray?: Array<number | null> | null } | null, height?: { internalHeight: number, delta?: number | null, externalHeight?: number | null } | null, details?: { noOracle?: boolean | null, numPeers?: number | null, badOracles?: Array<string | null> | null, nodeIsAheadOfPeer?: boolean | null, secondsToRecover?: number | null } | null } };
+export type IGetHealthCheckQuery = { healthCheck: { node?: { status: string, conditions: string, deltaArray?: Array<number | null> | null } | null, height?: { internalHeight: number, delta?: number | null, externalHeight?: number | null } | null, details?: { noOracle?: boolean | null, badOracles?: Array<string | null> | null, nodeIsAheadOfPeer?: boolean | null, secondsToRecover?: number | null } | null } };
 
 
 export const CreateHostDocument = gql`
@@ -1801,7 +1800,6 @@ export const GetHealthCheckDocument = gql`
     }
     details {
       noOracle
-      numPeers
       badOracles
       nodeIsAheadOfPeer
       secondsToRecover
