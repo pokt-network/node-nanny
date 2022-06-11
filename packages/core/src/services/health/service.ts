@@ -264,7 +264,7 @@ export class Service {
     const pnfInternal = env('PNF') && type === ESupportedBlockchainTypes.POKT;
 
     let chainQuery: FilterQuery<INode>;
-    if (type === ESupportedBlockchainTypes.POKT) {
+    if (pnfInternal) {
       const poktChains = await ChainsModel.find({
         type: ESupportedBlockchainTypes.POKT,
         name: { $ne: ESupportedBlockchains['POKT-TEST'] }, // Temp until testnet monitor fixed
