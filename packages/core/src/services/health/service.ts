@@ -8,6 +8,7 @@ import {
   EErrorConditions,
   EErrorStatus,
   ENCResponse,
+  ESupportedBlockchains,
   ESupportedBlockchainTypes,
   IBlockHeight,
   IHealthResponse,
@@ -264,7 +265,10 @@ export class Service {
 
     let chainQuery: FilterQuery<INode>;
     if (type === ESupportedBlockchainTypes.POKT) {
-      const poktChains = await ChainsModel.find({ type: ESupportedBlockchainTypes.POKT });
+      const poktChains = await ChainsModel.find({
+        type: ESupportedBlockchainTypes.POKT,
+        name: { $ne: ESupportedBlockchains['POKT-TEST'] }, // Temp until testnet monitor fixed
+      });
       const poktChainIds = poktChains.map(({ _id }) => new Types.ObjectId(_id));
       chainQuery = { $in: poktChainIds };
     } else {
