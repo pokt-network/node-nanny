@@ -24,7 +24,7 @@ export interface INode<Populated = true> {
   deltaArray?: number[];
 }
 
-const nodesSchema = new Schema<INode>(
+export const nodesSchema = new Schema<INode>(
   {
     chain: { type: Schema.Types.ObjectId, ref: 'Chains', required: true },
     host: { type: Schema.Types.ObjectId, ref: 'Hosts', required: true },

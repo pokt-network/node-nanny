@@ -30,7 +30,7 @@ export interface IChain {
   updatedAt: string;
 }
 
-export const chainSchema = new Schema<IChain>(
+export const chainsSchema = new Schema<IChain>(
   {
     name: { type: String, unique: true, required: true },
     type: { type: String, required: true },
@@ -47,4 +47,4 @@ export const chainSchema = new Schema<IChain>(
   { timestamps: true },
 );
 
-export const ChainsModel: Model<IChain> = model('Chains', chainSchema);
+export const ChainsModel: Model<IChain> = model('Chains', chainsSchema);

@@ -1,5 +1,5 @@
 import { exec } from 'child_process';
-import { UpdateQuery } from 'mongoose';
+import { Connection, UpdateQuery } from 'mongoose';
 
 import { Service as DiscordService } from '../discord';
 import { ELoadBalancerStatus } from '../event/types';
@@ -10,10 +10,15 @@ import {
   INode,
   IOracle,
   ChainsModel,
+  chainsSchema,
   HostsModel,
+  hostsSchema,
   LocationsModel,
+  locationsSchema,
   NodesModel,
+  nodesSchema,
   OraclesModel,
+  oraclesSchema,
 } from '../../models';
 import {
   IChainUpdate,
@@ -31,19 +36,31 @@ import { IHealthCheck } from '../health/types';
 import { Service as BaseService } from '../base-service/base-service';
 
 export class Service extends BaseService {
-  constructor() {
+  private chainsModel: typeof ChainsModel;
+  private hostsModel: typeof HostsModel;
+  private locationsModel: typeof LocationsModel;
+  private nodesModel: typeof NodesModel;
+  private oraclesModel: typeof OraclesModel;
+
+  constructor(conn: Connection = null) {
     super();
+
+    this.chainsModel = conn?.model('Chains', chainsSchema) || ChainsModel;
+    this.hostsModel = conn?.model('Hosts', hostsSchema) || HostsModel;
+    this.locationsModel = conn?.model('Locations', locationsSchema) || LocationsModel;
+    this.nodesModel = conn?.model('Nodes', nodesSchema) || NodesModel;
+    this.oraclesModel = conn?.model('Oracles', oraclesSchema) || OraclesModel;
   }
 
   /* ----- CRUD Methods ----- */
   public async createHost(hostInput: IHostInput, restart = true): Promise<IHost> {
     const sanitizedInput = this.sanitizeCreate(hostInput);
 
-    const { _id } = await HostsModel.create(sanitizedInput);
+    const { _id } = await this.hostsModel.create(sanitizedInput);
 
     if (restart) await this.restartMonitor();
 
-    return await HostsModel.findOne({ _id }).populate('location').exec();
+    return await this.hostsModel.findOne({ _id }).populate('location').exec();
   }
 
   public async createHostsCSV(hosts: IHostCsvInput[]): Promise<IHost[]> {
@@ -53,7 +70,7 @@ export class Service extends BaseService {
         const hostInputObj: IHostInput = {
           ...hostInput,
           loadBalancer: Boolean(hostInput.loadBalancer),
-          location: (await LocationsModel.findOne({ name: hostInput.location }))._id,
+          location: (await this.locationsModel.findOne({ name: hostInput.location }))._id,
         };
 
         const host = await this.createHost(hostInputObj, false);
@@ -75,7 +92,7 @@ export class Service extends BaseService {
   }: INodeCreationProps): Promise<INode> {
     let id: string;
     const { https, ...rest } = nodeInput;
-    const { fqdn } = await HostsModel.findOne({ _id: nodeInput.host });
+    const { fqdn } = await this.hostsModel.findOne({ _id: nodeInput.host });
 
     if (https && !fqdn) {
       throw new Error(`Node cannot use https with a host that does not have a FQDN.`);
@@ -83,7 +100,7 @@ export class Service extends BaseService {
 
     try {
       const sanitizedInput = this.sanitizeCreate({ ...rest, port: Number(rest.port) });
-      ({ id } = await NodesModel.create(sanitizedInput));
+      ({ id } = await this.nodesModel.create(sanitizedInput));
 
       const node = await this.getNode(id);
 
@@ -101,7 +118,7 @@ export class Service extends BaseService {
 
       return node;
     } catch (error) {
-      await NodesModel.deleteOne({ _id: id });
+      await this.nodesModel.deleteOne({ _id: id });
       throw error;
     }
   }
@@ -113,7 +130,7 @@ export class Service extends BaseService {
       const discordService = await new DiscordService().init();
 
       for await (const nodeInput of nodes) {
-        const host = await HostsModel.findOne({ name: nodeInput.host });
+        const host = await this.hostsModel.findOne({ name: nodeInput.host });
         const https = Boolean(nodeInput.https === 'true');
         const { fqdn, ip } = host;
 
@@ -121,11 +138,11 @@ export class Service extends BaseService {
           ...nodeInput,
           https,
           port: Number(nodeInput.port),
-          chain: (await ChainsModel.findOne({ name: nodeInput.chain }))._id,
+          chain: (await this.chainsModel.findOne({ name: nodeInput.chain }))._id,
           host: host._id,
           url: `http${https ? 's' : ''}://${fqdn || ip}:${nodeInput.port}`,
           loadBalancers: (
-            await HostsModel.find({
+            await this.hostsModel.find({
               name: { $in: nodeInput.loadBalancers },
               loadBalancer: true,
             })
@@ -158,18 +175,20 @@ export class Service extends BaseService {
     delete unsanitizedUpdate.id;
     const update = this.sanitizeUpdate(unsanitizedUpdate);
 
-    const { ip, fqdn, name } = (await HostsModel.findOne({ _id: id })) as IHost<false>;
+    const { ip, fqdn, name } = (await this.hostsModel.findOne({
+      _id: id,
+    })) as IHost<false>;
     const newName = update.name && update.name !== name;
     const newIp = update.ip && update.ip !== ip;
     const newFqdn = update.fqdn && update.fqdn !== fqdn;
 
     /* If Host Name changes, all node names on that host will need to be updated */
-    if (newName && (await NodesModel.exists({ host: id }))) {
+    if (newName && (await this.nodesModel.exists({ host: id }))) {
       await this.updateNodeNamesIfHostNameChanges(id, update.name, name);
     }
 
     /* If Host IP or FQDN changes, all node URLs on that host will need to be updated */
-    if ((newIp || newFqdn) && (await NodesModel.exists({ host: id }))) {
+    if ((newIp || newFqdn) && (await this.nodesModel.exists({ host: id }))) {
       await this.updateNodeUrlsIfHostDomainChanges(id, update);
     }
     if (ip && update.fqdn) {
@@ -179,10 +198,10 @@ export class Service extends BaseService {
       update.$unset = { ...update.$unset, fqdn: 1 };
     }
 
-    await HostsModel.updateOne({ _id: id }, { ...update });
+    await this.hostsModel.updateOne({ _id: id }, { ...update });
     if (restart) await this.restartMonitor();
 
-    return await HostsModel.findOne({ _id: id }).populate('location').exec();
+    return await this.hostsModel.findOne({ _id: id }).populate('location').exec();
   }
 
   private async updateNodeNamesIfHostNameChanges(
@@ -190,12 +209,12 @@ export class Service extends BaseService {
     newHostName: string,
     oldHostName: string,
   ) {
-    const nodesForHost = NodesModel.find({ host: id });
+    const nodesForHost = this.nodesModel.find({ host: id });
 
     for await (const { id, name } of nodesForHost) {
       const newNodeName = name.replace(oldHostName, newHostName);
 
-      await NodesModel.updateOne({ _id: id }, { name: newNodeName });
+      await this.nodesModel.updateOne({ _id: id }, { name: newNodeName });
     }
   }
 
@@ -203,14 +222,14 @@ export class Service extends BaseService {
     id: string,
     update: UpdateQuery<IHost>,
   ) {
-    const nodesForHost = NodesModel.find({ host: id });
+    const nodesForHost = this.nodesModel.find({ host: id });
 
     for await (const node of nodesForHost) {
       const [protocol] = update.ip ? ['http'] : node.url.split('://');
       const newRootDomain = update.ip || update.fqdn;
       const newUrl = `${protocol}://${newRootDomain}:${node.port}`;
 
-      await NodesModel.updateOne({ _id: node.id }, { url: newUrl });
+      await this.nodesModel.updateOne({ _id: node.id }, { url: newUrl });
     }
   }
 
@@ -223,12 +242,14 @@ export class Service extends BaseService {
     delete unsanitizedUpdate.https;
     const update = this.sanitizeUpdate(unsanitizedUpdate);
 
-    const { host, url, port } = (await NodesModel.findOne({ _id: id })) as INode<false>;
+    const { host, url, port } = (await this.nodesModel.findOne({
+      _id: id,
+    })) as INode<false>;
     const newHost = update.host !== host;
 
     /* If Node's fields change, the node's URL must be updated to reflect the changes */
     if (newHost) {
-      const { fqdn, ip } = await HostsModel.findOne({ _id: host });
+      const { fqdn, ip } = await this.hostsModel.findOne({ _id: host });
       update.url = `${fqdn || ip}:${port}`;
     }
     if (update.port) {
@@ -242,16 +263,16 @@ export class Service extends BaseService {
       update.url = `http${secure ? 's' : ''}://${update.url}`;
     }
 
-    await NodesModel.updateOne({ _id: id }, update);
+    await this.nodesModel.updateOne({ _id: id }, update);
     if (restart) await this.restartMonitor();
 
     return await this.getNode(id);
   }
 
   public async deleteHost(id: string, restart = true): Promise<IHost> {
-    const host = await HostsModel.findOne({ _id: id }).populate('location').exec();
+    const host = await this.hostsModel.findOne({ _id: id }).populate('location').exec();
 
-    await HostsModel.deleteOne({ _id: id });
+    await this.hostsModel.deleteOne({ _id: id });
     if (restart) await this.restartMonitor();
 
     return host;
@@ -260,22 +281,22 @@ export class Service extends BaseService {
   public async deleteNode(id: string, restart = true): Promise<INode> {
     const node = await this.getNode(id);
 
-    await NodesModel.deleteOne({ _id: id });
+    await this.nodesModel.deleteOne({ _id: id });
     if (restart) await this.restartMonitor();
 
     return node;
   }
 
   public async deleteLocation(id: string): Promise<ILocation> {
-    const location = await LocationsModel.findOne({ _id: id });
-    const locationHasHost = await HostsModel.exists({ location: id });
+    const location = await this.locationsModel.findOne({ _id: id });
+    const locationHasHost = await this.hostsModel.exists({ location: id });
     if (locationHasHost) {
       throw new Error(
         `Location ${location.name} has one or more hosts; cannot be deleted.`,
       );
     }
 
-    await LocationsModel.deleteOne({ _id: id });
+    await this.locationsModel.deleteOne({ _id: id });
 
     return location;
   }
@@ -310,36 +331,37 @@ export class Service extends BaseService {
 
   /* ----- PNF Internal Only ----- */
   public async updateChain(update: IChainUpdate): Promise<IChain> {
-    const { name: oldChainName } = await ChainsModel.findOne({ _id: update.id });
+    const { name: oldChainName } = await this.chainsModel.findOne({ _id: update.id });
 
     const { id, ...rest } = update;
-    await ChainsModel.updateOne({ _id: id }, rest);
+    await this.chainsModel.updateOne({ _id: id }, rest);
 
-    if (rest.name !== oldChainName && (await NodesModel.exists({ chain: id }))) {
-      const nodesForChain = await NodesModel.find({ chain: id });
+    if (rest.name !== oldChainName && (await this.nodesModel.exists({ chain: id }))) {
+      const nodesForChain = await this.nodesModel.find({ chain: id });
       for await (const node of nodesForChain) {
         const newNodeName = node.name.replace(oldChainName, rest.name);
-        await NodesModel.updateOne({ _id: node.id }, { name: newNodeName });
+        await this.nodesModel.updateOne({ _id: node.id }, { name: newNodeName });
       }
     }
 
     await this.restartMonitor();
 
-    return await ChainsModel.findOne({ _id: id });
+    return await this.chainsModel.findOne({ _id: id });
   }
 
   public async updateOracle(update: IOracleUpdate): Promise<IOracle> {
     const { chain, urls } = update;
-    await OraclesModel.updateOne({ chain }, { urls });
+    await this.oraclesModel.updateOne({ chain }, { urls });
 
     await this.restartMonitor();
 
-    return await OraclesModel.findOne({ chain });
+    return await this.oraclesModel.findOne({ chain });
   }
 
   /* ----- Health Check Methods ----- */
   async getHealthCheck(id: string): Promise<IHealthCheck> {
-    const node = await NodesModel.findOne({ _id: id })
+    const node = await this.nodesModel
+      .findOne({ _id: id })
       .populate('host')
       .populate('chain')
       .exec();
@@ -349,7 +371,7 @@ export class Service extends BaseService {
     const { status: nodeStatus, conditions: nodeConditions, deltaArray } = node;
 
     if (status !== nodeStatus || conditions !== nodeConditions) {
-      await NodesModel.updateOne({ _id: id }, { status, conditions });
+      await this.nodesModel.updateOne({ _id: id }, { status, conditions });
     }
 
     const updatedNodeHealth = { status, conditions, deltaArray: deltaArray };
@@ -425,27 +447,27 @@ export class Service extends BaseService {
     loadBalancers: loadBalancerIds,
   }: INodeInput): Promise<boolean> {
     if (frontend && host) {
-      const { fqdn, ip } = await HostsModel.findOne({ _id: host });
+      const { fqdn, ip } = await this.hostsModel.findOne({ _id: host });
 
       return await this.getValidHaProxy({
         destination: frontend,
         frontendUrl: fqdn || ip,
       });
     } else if (backend) {
-      const loadBalancers = await HostsModel.find({ _id: { $in: loadBalancerIds } });
+      const loadBalancers = await this.hostsModel.find({ _id: { $in: loadBalancerIds } });
 
       return await this.getValidHaProxy({ destination: backend, loadBalancers });
     }
   }
 
   async muteMonitor(id: string): Promise<INode> {
-    await NodesModel.updateOne({ _id: id }, { muted: true }).exec();
+    await this.nodesModel.updateOne({ _id: id }, { muted: true }).exec();
     await this.restartMonitor();
     return await this.getNode(id);
   }
 
   async unmuteMonitor(id: string): Promise<INode> {
-    await NodesModel.updateOne({ _id: id }, { muted: false });
+    await this.nodesModel.updateOne({ _id: id }, { muted: false });
     await this.restartMonitor();
     return await this.getNode(id);
   }
