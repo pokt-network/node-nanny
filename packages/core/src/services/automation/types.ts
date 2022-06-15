@@ -1,4 +1,19 @@
 import { Types } from 'mongoose';
+import {
+  ChainsModel,
+  HostsModel,
+  LocationsModel,
+  NodesModel,
+  OraclesModel,
+} from '../../models';
+
+export interface IAutomationServiceModels {
+  chainsModel: typeof ChainsModel;
+  hostsModel: typeof HostsModel;
+  locationsModel: typeof LocationsModel;
+  nodesModel: typeof NodesModel;
+  oraclesModel: typeof OraclesModel;
+}
 
 export interface INodeCreationProps {
   nodeInput: INodeInput;

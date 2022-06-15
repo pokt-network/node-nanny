@@ -21,6 +21,7 @@ import {
   oraclesSchema,
 } from '../../models';
 import {
+  IAutomationServiceModels,
   IChainUpdate,
   IHostInput,
   IHostCsvInput,
@@ -42,14 +43,16 @@ export class Service extends BaseService {
   private nodesModel: typeof NodesModel;
   private oraclesModel: typeof OraclesModel;
 
-  constructor(conn: Connection = null) {
+  constructor(externalModels: IAutomationServiceModels = null) {
     super();
 
-    this.chainsModel = conn?.model('Chains', chainsSchema) || ChainsModel;
-    this.hostsModel = conn?.model('Hosts', hostsSchema) || HostsModel;
-    this.locationsModel = conn?.model('Locations', locationsSchema) || LocationsModel;
-    this.nodesModel = conn?.model('Nodes', nodesSchema) || NodesModel;
-    this.oraclesModel = conn?.model('Oracles', oraclesSchema) || OraclesModel;
+    const { chainsModel, hostsModel, locationsModel, nodesModel, oraclesModel } =
+      externalModels || {};
+    this.chainsModel = chainsModel || ChainsModel;
+    this.hostsModel = hostsModel || HostsModel;
+    this.locationsModel = locationsModel || LocationsModel;
+    this.nodesModel = nodesModel || NodesModel;
+    this.oraclesModel = oraclesModel || OraclesModel;
   }
 
   /* ----- CRUD Methods ----- */
