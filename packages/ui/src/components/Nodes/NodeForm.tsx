@@ -242,7 +242,16 @@ export const NodeForm = ({
   }, [values.host, formData, setFieldValue]);
 
   const getNodeName = useCallback(() => {
-    if (values.dispatch && !values.frontend && values.host) {
+    const isPoktInternal =
+      selectedNode?.chain.type === 'POKT-MAIN' ||
+      selectedNode?.chain.type === 'POKT-DIS' ||
+      selectedNode?.chain.type === 'POKT-TEST';
+    if (isPoktInternal) {
+      const { name } = selectedNode?.host;
+      const { name: chain } = selectedNode?.chain;
+      const nodeNumber = selectedNode?.port.toString().slice(-2);
+      return `${name}/${chain}/${nodeNumber}`;
+    } else if (values.dispatch && !values.frontend && values.host) {
       const host = formData?.hosts?.find(({ id }) => id === values.host);
       const { name: locationName } = host.location;
       const [, instance] = host.name.split('-');
