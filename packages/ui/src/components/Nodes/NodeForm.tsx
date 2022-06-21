@@ -243,13 +243,15 @@ export const NodeForm = ({
 
   const getNodeName = useCallback(() => {
     const isPoktInternal =
-      selectedNode?.chain.type === 'POKT-MAIN' ||
-      selectedNode?.chain.type === 'POKT-DIS' ||
-      selectedNode?.chain.type === 'POKT-TEST';
+      env('PNF') &&
+      (selectedNode?.chain.name === 'POKT-MAIN' ||
+        selectedNode?.chain.name === 'POKT-DIS' ||
+        selectedNode?.chain.name === 'POKT-TEST');
     if (isPoktInternal) {
       const { name } = selectedNode?.host;
       const { name: chain } = selectedNode?.chain;
       const nodeNumber = selectedNode?.port.toString().slice(-2);
+
       return `${name}/${chain}/${nodeNumber}`;
     } else if (values.dispatch && !values.frontend && values.host) {
       const host = formData?.hosts?.find(({ id }) => id === values.host);
@@ -257,6 +259,7 @@ export const NodeForm = ({
       const [, instance] = host.name.split('-');
       const existingDispatchCount =
         nodeNames?.filter((name) => name.includes('dispatch-'))?.length || 0;
+
       return `instance-${instance}/${locationName}/dispatch-${existingDispatchCount + 1}`;
     } else if (values.chain && values.host) {
       const chainName = formData?.chains?.find(({ id }) => id === values.chain)?.name;
