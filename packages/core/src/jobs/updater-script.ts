@@ -145,6 +145,7 @@ export const updaterScript = async () => {
   );
 
   const chainsNotInProd = await ChainsModel.find({ name: { $nin: currentChains } });
+  const oraclesNotInProd = await OraclesModel.find({ chain: { $nin: currentChains } });
 
   if (chainsNotInProd?.length) {
     for await (const { _id, name } of chainsNotInProd) {
@@ -156,6 +157,17 @@ export const updaterScript = async () => {
         if (await OraclesModel.exists({ chain: name })) {
           await OraclesModel.deleteOne({ chain: name });
         }
+      }
+    }
+  }
+
+  if (oraclesNotInProd?.length) {
+    for await (const { chain } of oraclesNotInProd) {
+      const chainForOracle = await ChainsModel.findOne({ name: chain });
+      const oracleHasNode = await NodesModel.exists({ chain: chainForOracle?._id });
+
+      if (!oracleHasNode) {
+        await OraclesModel.deleteOne({ chain });
       }
     }
   }
