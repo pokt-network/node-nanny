@@ -260,14 +260,17 @@ export class Service {
   Will sample up to 20 random peers for node and return their block heights. */
   private async getPeerBlockHeights(node: INode): Promise<number[]> {
     const { id: nodeId, chain, name: nodeName, basicAuth } = node;
-    const { id: chainId, responsePath, type } = chain;
-    const pnfInternal = env('PNF') && type === ESupportedBlockchainTypes.POKT;
+    const { id: chainId, responsePath, type, name } = chain;
+    const pnfMainInternal =
+      env('PNF') &&
+      type === ESupportedBlockchainTypes.POKT &&
+      name !== ESupportedBlockchains['POKT-TEST'];
 
     let chainQuery: FilterQuery<INode>;
-    if (pnfInternal) {
+    if (pnfMainInternal) {
       const poktChains = await ChainsModel.find({
         type: ESupportedBlockchainTypes.POKT,
-        name: { $ne: ESupportedBlockchains['POKT-TEST'] }, // Temp until testnet monitor fixed
+        name: { $ne: ESupportedBlockchains['POKT-TEST'] },
       });
       const poktChainIds = poktChains.map(({ _id }) => new Types.ObjectId(_id));
       chainQuery = { $in: poktChainIds };
@@ -280,7 +283,7 @@ export class Service {
       _id: { $ne: new Types.ObjectId(nodeId) },
       frontend: null,
     };
-    if (pnfInternal) $match.status = { $ne: EErrorStatus.ERROR };
+    if (pnfMainInternal) $match.status = { $ne: EErrorStatus.ERROR };
     const $sample = { size: 20 };
 
     const peers = await NodesModel.aggregate<INode>([{ $match }, { $sample }]);
