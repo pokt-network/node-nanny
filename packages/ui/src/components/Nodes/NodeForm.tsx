@@ -275,6 +275,9 @@ export const NodeForm = ({
       return '';
     }
   }, [
+    selectedNode?.host,
+    selectedNode?.chain,
+    selectedNode?.port,
     values.dispatch,
     values.frontend,
     values.host,
