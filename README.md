@@ -99,9 +99,11 @@ The bot will need the following permissions:
 
 ### 4. Start the App
 
-- Then, run `docker-compose up -d` from the same directory as this file. This will pull down the latest Node Nanny images, as well as the MongoDB and Redis containers and start the Node Nanny application.
+- Then, run `docker-compose up -d` from the same directory as your `docker-compose.yml` file. This will pull down the latest Node Nanny images, as well as the MongoDB and Redis containers and start the Node Nanny application.
 
-The Node Nanny UI will be available on port 3000 on your host machine; **it is highly recommended to configure your access settings to prevent access from unauthorized IPs.**
+The Node Nanny UI will be available on port 3000 on your host machine.
+
+**⚠️ You must configure your firewall/access control settings to prevent access from unauthorized IPs. ⚠️**
 
 You are now ready to start adding inventory data.
 
