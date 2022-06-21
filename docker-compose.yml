@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   nn_backend:
-    image: pocketfoundation/node-nanny:latest
+    image: pocketfoundation/node-nanny:latest-beta
     container_name: nn_backend
     ports:
       - '4000:4000'
@@ -19,7 +19,7 @@ services:
       MONGO_URI: 'mongodb://${MONGO_USER:?Mongo user not set.}:${MONGO_PASSWORD:?Mongo password not set.}@nn_db:27017/${MONGO_DATABASE:?Mongo database name not set.}?authSource=admin'
 
   nn_frontend:
-    image: pocketfoundation/node-nanny-ui:latest
+    image: pocketfoundation/node-nanny-ui:latest-beta
     container_name: nn_frontend
     ports:
       - '3000:3000'
