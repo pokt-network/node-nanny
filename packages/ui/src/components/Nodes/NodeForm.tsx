@@ -242,18 +242,7 @@ export const NodeForm = ({
   }, [values.host, formData, setFieldValue]);
 
   const getNodeName = useCallback(() => {
-    const isPoktInternal =
-      env('PNF') &&
-      (selectedNode?.chain.name === 'POKT-MAIN' ||
-        selectedNode?.chain.name === 'POKT-DIS' ||
-        selectedNode?.chain.name === 'POKT-TEST');
-    if (isPoktInternal) {
-      const { name } = selectedNode?.host;
-      const { name: chain } = selectedNode?.chain;
-      const nodeNumber = selectedNode?.port.toString().slice(-2);
-
-      return `${name}/${chain}/${nodeNumber}`;
-    } else if (values.dispatch && !values.frontend && values.host) {
+    if (values.dispatch && !values.frontend && values.host) {
       const host = formData?.hosts?.find(({ id }) => id === values.host);
       const { name: locationName } = host.location;
       const [, instance] = host.name.split('-');
@@ -269,22 +258,27 @@ export const NodeForm = ({
       if (frontend) {
         return `frontend-${nodeName}`;
       } else {
-        const existingNodeCount =
-          nodeNames?.filter((name) => name.includes(nodeName))?.length || 0;
-        const count = String(existingNodeCount + 1).padStart(2, '0');
-        return `${nodeName}/${count}`;
+        const isPoktInternal = env('PNF') && chainName.includes('POKT-');
+
+        let nodeNumber: string;
+        if (isPoktInternal) {
+          nodeNumber = values.port.slice(-2);
+        } else {
+          const existingNodeCount =
+            nodeNames?.filter((name) => name.includes(nodeName))?.length || 0;
+          nodeNumber = String(existingNodeCount + 1).padStart(2, '0');
+        }
+        return `${nodeName}/${nodeNumber}`;
       }
     } else {
       return '';
     }
   }, [
-    selectedNode?.host,
-    selectedNode?.chain,
-    selectedNode?.port,
     values.dispatch,
     values.frontend,
     values.host,
     values.chain,
+    values.port,
     frontend,
     formData.chains,
     formData.hosts,
