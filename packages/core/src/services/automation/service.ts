@@ -1,5 +1,5 @@
 import { exec } from 'child_process';
-import { Connection, UpdateQuery } from 'mongoose';
+import { UpdateQuery } from 'mongoose';
 
 import { Service as DiscordService } from '../discord';
 import { ELoadBalancerStatus } from '../event/types';
@@ -10,15 +10,10 @@ import {
   INode,
   IOracle,
   ChainsModel,
-  chainsSchema,
   HostsModel,
-  hostsSchema,
   LocationsModel,
-  locationsSchema,
   NodesModel,
-  nodesSchema,
   OraclesModel,
-  oraclesSchema,
 } from '../../models';
 import {
   IAutomationServiceModels,

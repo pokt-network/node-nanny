@@ -1,10 +1,15 @@
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { Automation as AutomationService } from '..';
 import {
-  NodesModel,
   ChainsModel,
+  chainsSchema,
   HostsModel,
+  hostsSchema,
   LocationsModel,
+  locationsSchema,
+  NodesModel,
+  nodesSchema,
+  oraclesSchema,
   IChain,
   ILocation,
   IHost,
@@ -60,6 +65,72 @@ afterAll(async () => {
 });
 
 describe('Automation Service Tests', () => {
+  describe('External Models/Connection test', () => {
+    let externalAutomationService: Service,
+      chainId: Types.ObjectId,
+      hostId: Types.ObjectId,
+      hostIp: string;
+
+    beforeAll(async () => {
+      const connection = mongoose.createConnection(global.__MONGO_URI__);
+      const chainsModel = connection.model('Chains', chainsSchema);
+      const hostsModel = connection.model('Hosts', hostsSchema);
+      const locationsModel = connection.model('Locations', locationsSchema);
+      const nodesModel = connection.model('Nodes', nodesSchema);
+      const oraclesModel = connection.model('Oracles', oraclesSchema);
+      externalAutomationService = new Service({
+        chainsModel,
+        hostsModel,
+        locationsModel,
+        nodesModel,
+        oraclesModel,
+      });
+      const { _id: locationId } = await locationsModel.create({ name: 'EXTLOC' });
+      ({ _id: chainId } = await chainsModel.create({
+        name: 'EXT',
+        type: 'EXT',
+        allowance: 5,
+        chainId: '0643',
+        hasOwnEndpoint: true,
+        useOracles: false,
+        responsePath: 'data.result.healthy',
+      }));
+      ({ _id: hostId, ip: hostIp } = await hostsModel.create({
+        name: 'external/testhost-2a',
+        loadBalancer: false,
+        location: locationId,
+        ip: '45.64.2.123',
+      }));
+    });
+
+    test('Should work when models from an external connection are passed into the constructor', async () => {
+      try {
+        const testNode = await externalAutomationService.createNode({
+          nodeInput: {
+            name: 'external/testhost-2a/EXT/01',
+            chain: chainId,
+            host: hostId,
+            port: 6643,
+            url: `http://${hostIp}:6643`,
+            loadBalancers: [hostId],
+            backend: 'testtestmainnet',
+            server: '2a',
+            automation: true,
+            https: false,
+          },
+          restart: false,
+          createWebhook: false,
+        });
+        expect(testNode).toBeTruthy();
+        expect(testNode.name).toEqual('external/testhost-2a/EXT/01');
+      } catch (error) {
+        expect(error).toBeNull();
+      }
+
+      expect;
+    });
+  });
+
   describe('CSV Batch Tests', () => {
     beforeAll(async () => {
       await LocationsModel.create({ name: 'USW2' });
