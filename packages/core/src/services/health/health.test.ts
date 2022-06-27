@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 import child_process from 'child_process';
 
 import { Service } from './service';
-import { EErrorConditions, EErrorStatus } from './types';
+import { IHealthCheckParams, EErrorConditions, EErrorStatus } from './types';
 import { IChain, INode, NodesModel, OraclesModel } from '../../models';
 import { hexToDec } from '../../utils';
 
@@ -21,15 +21,19 @@ function randomInt(min: number, max: number): number {
 
 describe('Health Service Tests', () => {
   describe('Chain-agnostic Health Check Tests', () => {
-    const mockNode = {
-      id: '62420628d8696941d1c42039',
-      name: 'TEST-HOST/TST/01',
-      chain: { path: '/health' },
-      host: { ip: '162.210.199.42' },
-      url: 'http://162.210.199.42:8545',
-      port: 8545,
-      basicAuth: null,
-    } as unknown as INode;
+    const mockNodeParams: IHealthCheckParams = {
+      node: {
+        id: '62420628d8696941d1c42039',
+        name: 'TEST-HOST/TST/01',
+        chain: { path: '/health' },
+        host: { ip: '162.210.199.42' },
+        url: 'http://162.210.199.42:8545',
+        port: 8545,
+        basicAuth: null,
+      } as unknown as INode,
+      oracles: ['https://whatever1.com', 'https://whatever2.com'],
+      peers: ['https://whatever1.com', 'https://whatever2.com'],
+    };
 
     describe('checkNodeHealth', () => {
       beforeEach(() => {
@@ -52,9 +56,9 @@ describe('Health Service Tests', () => {
           );
         });
 
-        const healthResponse = await healthService.checkNodeHealth(mockNode);
+        const healthResponse = await healthService.checkNodeHealth(mockNodeParams);
 
-        expect(healthResponse.name).toEqual(mockNode.name);
+        expect(healthResponse.name).toEqual(mockNodeParams.node.name);
         expect(healthResponse.status).toEqual(EErrorStatus.ERROR);
         expect(healthResponse.conditions).toEqual(EErrorConditions.OFFLINE);
       });
@@ -63,9 +67,9 @@ describe('Health Service Tests', () => {
       test('Should return a NO_RESPONSE response if the checkNodeRPC throws an error', async () => {
         mockedAxios.get.mockRejectedValueOnce(new Error('whatever'));
 
-        const healthResponse = await healthService.checkNodeHealth(mockNode);
+        const healthResponse = await healthService.checkNodeHealth(mockNodeParams);
 
-        expect(healthResponse.name).toEqual(mockNode.name);
+        expect(healthResponse.name).toEqual(mockNodeParams.node.name);
         expect(healthResponse.status).toEqual(EErrorStatus.ERROR);
         expect(healthResponse.conditions).toEqual(EErrorConditions.NO_RESPONSE);
         expect(healthResponse.error).toEqual('whatever');
@@ -74,12 +78,15 @@ describe('Health Service Tests', () => {
       /* Has-Own-Endpoint Tests */
       test('Should return a HEALTHY response if the node has its own endpoint and returns the correct healthy response', async () => {
         const mockNodeForHealthy = {
-          ...mockNode,
-          chain: {
-            ...mockNode.chain,
-            hasOwnEndpoint: true,
-            responsePath: 'status',
-            healthyValue: '200',
+          ...mockNodeParams,
+          node: {
+            ...mockNodeParams.node,
+            chain: {
+              ...mockNodeParams.node.chain,
+              hasOwnEndpoint: true,
+              responsePath: 'status',
+              healthyValue: '200',
+            },
           },
         };
         const mockResponse = { data: { result: "hi I'm healthy" }, status: 200 };
@@ -87,7 +94,7 @@ describe('Health Service Tests', () => {
 
         const healthResponse = await healthService.checkNodeHealth(mockNodeForHealthy);
 
-        expect(healthResponse.name).toEqual(mockNode.name);
+        expect(healthResponse.name).toEqual(mockNodeParams.node.name);
         expect(healthResponse.status).toEqual(EErrorStatus.OK);
         expect(healthResponse.conditions).toEqual(EErrorConditions.HEALTHY);
         expect(healthResponse.health).toEqual("hi I'm healthy");
@@ -95,12 +102,15 @@ describe('Health Service Tests', () => {
 
       test('Should return a NOT_SYNCHRONIZED response if the node has its own endpoint and returns the correct healthy response', async () => {
         const mockNodeForNotSynced = {
-          ...mockNode,
-          chain: {
-            ...mockNode.chain,
-            hasOwnEndpoint: true,
-            responsePath: 'status',
-            healthyValue: '200',
+          ...mockNodeParams,
+          node: {
+            ...mockNodeParams.node,
+            chain: {
+              ...mockNodeParams.node.chain,
+              hasOwnEndpoint: true,
+              responsePath: 'status',
+              healthyValue: '200',
+            },
           },
         };
         const mockResponse = { data: { result: "oops I'm not healthy" }, status: 500 };
@@ -108,7 +118,7 @@ describe('Health Service Tests', () => {
 
         const healthResponse = await healthService.checkNodeHealth(mockNodeForNotSynced);
 
-        expect(healthResponse.name).toEqual(mockNode.name);
+        expect(healthResponse.name).toEqual(mockNodeParams.node.name);
         expect(healthResponse.status).toEqual(EErrorStatus.ERROR);
         expect(healthResponse.conditions).toEqual(EErrorConditions.NOT_SYNCHRONIZED);
         expect(healthResponse.health).toEqual("oops I'm not healthy");
@@ -116,36 +126,28 @@ describe('Health Service Tests', () => {
 
       /* Oracles Tests */
       const mockNodeForOracles = {
-        ...mockNode,
-        chain: {
-          name: 'ETH',
-          allowance: 3,
-          rpc: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }',
-          useOracles: true,
-          responsePath: 'data.result',
-        } as unknown as IChain,
+        ...mockNodeParams,
+        node: {
+          ...mockNodeParams.node,
+          chain: {
+            name: 'ETH',
+            allowance: 3,
+            rpc: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }',
+            useOracles: true,
+            responsePath: 'data.result',
+          } as unknown as IChain,
+        },
       };
-      const mockOracle = {
-        chain: 'ETH',
-        urls: ['https://whatever1.com', 'https://whatever2.com'],
-      };
-      const mockPeers = [
-        { url: 'https://whatever1.com' },
-        { url: 'https://whatever2.com' },
-      ] as unknown as INode[];
 
       test('Should return a HEALTHY response if the node uses oracles, is in sync and the oracles are healthy', async () => {
         const mockResponse = { data: { result: 657289 } };
         mockedAxios.post.mockResolvedValueOnce(mockResponse);
-        jest
-          .spyOn(OraclesModel, 'findOne')
-          .mockImplementationOnce(() => mockOracle as any);
         mockedAxios.post.mockResolvedValueOnce({ data: { result: 657271 } });
         mockedAxios.post.mockResolvedValueOnce({ data: { result: 657291 } });
 
         const healthResponse = await healthService.checkNodeHealth(mockNodeForOracles);
 
-        expect(healthResponse.name).toEqual(mockNode.name);
+        expect(healthResponse.name).toEqual(mockNodeParams.node.name);
         expect(healthResponse.status).toEqual(EErrorStatus.OK);
         expect(healthResponse.conditions).toEqual(EErrorConditions.HEALTHY);
         expect(healthResponse.health).toEqual('Node is healthy.');
@@ -157,24 +159,18 @@ describe('Health Service Tests', () => {
       test('Should return a HEALTHY response if the node uses oracles, is in sync and there are less than 2 healthy oracles but more than 2 healthy peers', async () => {
         const mockResponse = { data: { result: 657271 } };
         mockedAxios.post.mockResolvedValueOnce(mockResponse);
-        jest
-          .spyOn(OraclesModel, 'findOne')
-          .mockImplementationOnce(() => mockOracle as any);
         mockedAxios.post.mockRejectedValueOnce(new Error('bad oracle'));
         mockedAxios.post.mockRejectedValueOnce(new Error('bad oracle'));
         const [first, second] = [
           { data: { result: 657271 } },
           { data: { result: 657271 } },
         ];
-        jest
-          .spyOn(NodesModel, 'aggregate')
-          .mockImplementationOnce(() => mockPeers as any);
         mockedAxios.post.mockResolvedValueOnce(first);
         mockedAxios.post.mockResolvedValueOnce(second);
 
         const healthResponse = await healthService.checkNodeHealth(mockNodeForOracles);
 
-        expect(healthResponse.name).toEqual(mockNode.name);
+        expect(healthResponse.name).toEqual(mockNodeParams.node.name);
         expect(healthResponse.status).toEqual(EErrorStatus.OK);
         expect(healthResponse.conditions).toEqual(EErrorConditions.HEALTHY);
         expect(healthResponse.health).toEqual('Node is healthy.');
@@ -188,16 +184,13 @@ describe('Health Service Tests', () => {
       test('Should return a NOT_SYNCHRONIZED response if the node uses oracles, the oracles are healthy and the delta is above the chains allowance', async () => {
         const mockResponse = { data: { result: 657251 } };
         mockedAxios.post.mockResolvedValueOnce(mockResponse);
-        jest
-          .spyOn(OraclesModel, 'findOne')
-          .mockImplementationOnce(() => mockOracle as any);
         mockedAxios.post.mockResolvedValueOnce({ data: { result: 657271 } });
         mockedAxios.post.mockResolvedValueOnce({ data: { result: 657291 } });
         jest.spyOn(healthService as any, 'updateNotSynced').mockImplementation(jest.fn);
 
         const healthResponse = await healthService.checkNodeHealth(mockNodeForOracles);
 
-        expect(healthResponse.name).toEqual(mockNode.name);
+        expect(healthResponse.name).toEqual(mockNodeParams.node.name);
         expect(healthResponse.status).toEqual(EErrorStatus.ERROR);
         expect(healthResponse.conditions).toEqual(EErrorConditions.NOT_SYNCHRONIZED);
         expect(healthResponse.health).toEqual('Node is out of sync.');
@@ -209,31 +202,33 @@ describe('Health Service Tests', () => {
       test('Should return a NO_PEERS response if the node uses oracles but there are no healthy oracles and less than 2 healthy peers', async () => {
         const mockResponse = { data: { result: 657271 } };
         mockedAxios.post.mockResolvedValueOnce(mockResponse);
-        jest
-          .spyOn(OraclesModel, 'findOne')
-          .mockImplementationOnce(() => mockOracle as any);
         mockedAxios.post.mockRejectedValueOnce(new Error('bad oracle'));
         mockedAxios.post.mockRejectedValueOnce(new Error('bad oracle'));
-        jest.spyOn(NodesModel, 'aggregate').mockImplementationOnce(() => [] as any);
 
-        const healthResponse = await healthService.checkNodeHealth(mockNodeForOracles);
+        const mockNodeForNotEnoughOracles = { ...mockNodeForOracles, oracles: [] };
+        const healthResponse = await healthService.checkNodeHealth(
+          mockNodeForNotEnoughOracles,
+        );
 
-        expect(healthResponse.name).toEqual(mockNode.name);
+        expect(healthResponse.name).toEqual(mockNodeParams.node.name);
         expect(healthResponse.status).toEqual(EErrorStatus.ERROR);
         expect(healthResponse.conditions).toEqual(EErrorConditions.NO_PEERS);
       });
 
       /* Peers Tests */
       const mockNodeForPeers = {
-        ...mockNode,
-        chain: {
-          name: 'POKT',
-          allowance: 1,
-          endpoint: '/v1/query/height',
-          rpc: '{}',
-          useOracles: false,
-          responsePath: 'data.height',
-        } as unknown as IChain,
+        ...mockNodeParams,
+        node: {
+          ...mockNodeParams.node,
+          chain: {
+            name: 'POKT',
+            allowance: 1,
+            endpoint: '/v1/query/height',
+            rpc: '{}',
+            useOracles: false,
+            responsePath: 'data.height',
+          } as unknown as IChain,
+        },
       };
 
       test("Should return a HEALTHY response if the node doesn't use oracles, the peers are healthy and the node is in sync with its peers", async () => {
@@ -243,15 +238,12 @@ describe('Health Service Tests', () => {
           { data: { height: 32453 } },
           { data: { height: 32427 } },
         ];
-        jest
-          .spyOn(NodesModel, 'aggregate')
-          .mockImplementationOnce(() => mockPeers as any);
         mockedAxios.post.mockResolvedValueOnce(first);
         mockedAxios.post.mockResolvedValueOnce(second);
 
         const healthResponse = await healthService.checkNodeHealth(mockNodeForPeers);
 
-        expect(healthResponse.name).toEqual(mockNode.name);
+        expect(healthResponse.name).toEqual(mockNodeParams.node.name);
         expect(healthResponse.status).toEqual(EErrorStatus.OK);
         expect(healthResponse.conditions).toEqual(EErrorConditions.HEALTHY);
         expect(healthResponse.health).toEqual('Node is healthy.');
@@ -267,16 +259,13 @@ describe('Health Service Tests', () => {
           { data: { height: 32453 } },
           { data: { height: 32483 } },
         ];
-        jest
-          .spyOn(NodesModel, 'aggregate')
-          .mockImplementationOnce(() => mockPeers as any);
         mockedAxios.post.mockResolvedValueOnce(first);
         mockedAxios.post.mockResolvedValueOnce(second);
         jest.spyOn(healthService as any, 'updateNotSynced').mockImplementation(jest.fn);
 
         const healthResponse = await healthService.checkNodeHealth(mockNodeForPeers);
 
-        expect(healthResponse.name).toEqual(mockNode.name);
+        expect(healthResponse.name).toEqual(mockNodeParams.node.name);
         expect(healthResponse.status).toEqual(EErrorStatus.ERROR);
         expect(healthResponse.conditions).toEqual(EErrorConditions.NOT_SYNCHRONIZED);
         expect(healthResponse.health).toEqual('Node is out of sync.');
@@ -298,8 +287,8 @@ describe('Health Service Tests', () => {
         });
 
         const isNodeListening = await healthService['isNodeListening']({
-          host: mockNode.host.ip,
-          port: mockNode.port,
+          host: mockNodeParams.node.host.ip,
+          port: mockNodeParams.node.port,
         });
 
         expect(isNodeListening).toEqual(true);
@@ -315,8 +304,8 @@ describe('Health Service Tests', () => {
         });
 
         const isNodeListening = await healthService['isNodeListening']({
-          host: mockNode.host.ip,
-          port: mockNode.port,
+          host: mockNodeParams.node.host.ip,
+          port: mockNodeParams.node.port,
         });
 
         expect(isNodeListening).toEqual(false);
@@ -328,8 +317,8 @@ describe('Health Service Tests', () => {
         });
 
         const isNodeListening = await healthService['isNodeListening']({
-          host: mockNode.host.ip,
-          port: mockNode.port,
+          host: mockNodeParams.node.host.ip,
+          port: mockNodeParams.node.port,
         });
 
         expect(isNodeListening).toEqual(false);
@@ -341,7 +330,7 @@ describe('Health Service Tests', () => {
         const mockRpc = { data: 'anything', status: 200 };
         mockedAxios.get.mockResolvedValueOnce(mockRpc);
 
-        const response = await healthService['checkNodeRPC'](mockNode);
+        const response = await healthService['checkNodeRPC'](mockNodeParams.node);
 
         expect(response.data).toBeTruthy();
         expect(response.status).toEqual(mockRpc.status);
@@ -349,9 +338,9 @@ describe('Health Service Tests', () => {
 
       test('Should return an RPC result if Node is responding for POST RPC', async () => {
         const mockNodeForPut = {
-          ...mockNode,
+          ...mockNodeParams.node,
           chain: {
-            ...mockNode.chain,
+            ...mockNodeParams.node.chain,
             rpc: '{ "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }',
           },
         };
@@ -369,7 +358,7 @@ describe('Health Service Tests', () => {
 
         let rpcResponse;
         try {
-          rpcResponse = await healthService['checkNodeRPC'](mockNode);
+          rpcResponse = await healthService['checkNodeRPC'](mockNodeParams.node);
         } catch (error) {
           expect(rpcResponse).toBeFalsy();
           expect(error instanceof Error).toEqual(true);
@@ -477,10 +466,7 @@ describe('Health Service Tests', () => {
 
     /* getReferenceBlockHeight returns the highest block height among the node's references - oracles and/or peers */
     describe('getReferenceBlockHeight', () => {
-      const mockPeers = [
-        { url: 'https://whatever1.com' },
-        { url: 'https://whatever2.com' },
-      ] as unknown as INode[];
+      const mockPeers = ['https://whatever1.com', 'https://whatever2.com'];
 
       test('Should return the highest block height for a node that uses oracles and has two healthy oracles', async () => {
         const mockOracle = {
@@ -505,16 +491,14 @@ describe('Health Service Tests', () => {
           },
         } as unknown as INode;
 
-        jest
-          .spyOn(OraclesModel, 'findOne')
-          .mockImplementationOnce(() => mockOracle as any);
         mockedAxios.post.mockResolvedValueOnce(first);
         mockedAxios.post.mockResolvedValueOnce(second);
         mockedAxios.post.mockResolvedValueOnce(third);
 
-        const { refHeight, badOracles } = await healthService['getReferenceBlockHeight'](
-          mockNodeForOracles,
-        );
+        const { refHeight, badOracles } = await healthService['getReferenceBlockHeight']({
+          node: mockNodeForOracles,
+          oracles: mockOracle.urls,
+        });
 
         expect(refHeight).toEqual(61582);
         expect(badOracles).toBeFalsy();
@@ -535,18 +519,14 @@ describe('Health Service Tests', () => {
           },
         } as unknown as INode;
 
-        jest
-          .spyOn(OraclesModel, 'findOne')
-          .mockImplementationOnce(() => mockOracle as any);
         mockedAxios.post.mockResolvedValueOnce(first);
-        jest
-          .spyOn(NodesModel, 'aggregate')
-          .mockImplementationOnce(() => mockPeers as any);
         mockedAxios.post.mockResolvedValueOnce(second);
 
-        const { refHeight, badOracles } = await healthService['getReferenceBlockHeight'](
-          mockNodeForOracles,
-        );
+        const { refHeight, badOracles } = await healthService['getReferenceBlockHeight']({
+          node: mockNodeForOracles,
+          oracles: mockOracle.urls,
+          peers: mockPeers,
+        });
 
         expect(refHeight).toEqual(61573);
         expect(badOracles).toBeFalsy();
@@ -567,15 +547,13 @@ describe('Health Service Tests', () => {
           },
         } as unknown as INode;
 
-        jest
-          .spyOn(NodesModel, 'aggregate')
-          .mockImplementationOnce(() => mockPeers as any);
         mockedAxios.post.mockResolvedValueOnce(first);
         mockedAxios.post.mockResolvedValueOnce(second);
 
-        const { refHeight, badOracles } = await healthService['getReferenceBlockHeight'](
-          mockNodeForPeers,
-        );
+        const { refHeight, badOracles } = await healthService['getReferenceBlockHeight']({
+          node: mockNodeForPeers,
+          peers: mockPeers,
+        });
 
         expect(refHeight).toEqual(61582);
         expect(badOracles).toBeFalsy();
@@ -642,21 +620,18 @@ describe('Health Service Tests', () => {
       } as unknown as INode;
 
       test('Should return two block heights from external oracle endpoints if all oracles are healthy', async () => {
-        jest
-          .spyOn(OraclesModel, 'findOne')
-          .mockImplementationOnce(() => mockOracle as any);
         mockedAxios.post.mockResolvedValueOnce(first);
         mockedAxios.post.mockResolvedValueOnce(second);
         mockedAxios.post.mockResolvedValueOnce(third);
 
         const { oracleHeights, badOracles } = await healthService[
           'getOracleBlockHeights'
-        ](mockNodeForOracles);
+        ](mockNodeForOracles, mockOracle.urls);
 
         expect(oracleHeights.length).toEqual(2);
         expect(badOracles.length).toEqual(0);
-        expect(oracleHeights[0]).toEqual(first.data.result);
-        expect(oracleHeights[1]).toEqual(second.data.result);
+        expect(oracleHeights).toContain(first.data.result);
+        expect(oracleHeights).toContain(second.data.result);
         expect(oracleHeights[2]).toBeFalsy();
       });
 
@@ -666,53 +641,46 @@ describe('Health Service Tests', () => {
           { data: { result: 'F08E' } },
           { data: { result: 61571 } },
         ];
-        jest
-          .spyOn(OraclesModel, 'findOne')
-          .mockImplementationOnce(() => mockOracle as any);
         mockedAxios.post.mockResolvedValueOnce(first);
         mockedAxios.post.mockResolvedValueOnce(second);
         mockedAxios.post.mockResolvedValueOnce(third);
 
         const { oracleHeights, badOracles } = await healthService[
           'getOracleBlockHeights'
-        ](mockNodeForOracles);
+        ](mockNodeForOracles, mockOracle.urls);
 
         expect(oracleHeights.length).toEqual(2);
         expect(badOracles.length).toEqual(0);
-        expect(oracleHeights[0]).toEqual(hexToDec(first.data.result));
-        expect(oracleHeights[1]).toEqual(hexToDec(second.data.result));
-        expect(oracleHeights[0]).toEqual(61573);
-        expect(oracleHeights[1]).toEqual(61582);
+        expect(oracleHeights).toContain(hexToDec(first.data.result));
+        expect(oracleHeights).toContain(hexToDec(second.data.result));
+        expect(oracleHeights).toContain(61573);
+        expect(oracleHeights).toContain(61582);
         expect(oracleHeights[2]).toBeFalsy();
       });
 
       test('Should return a bad oracle URL if one of the oracles is unhealthy', async () => {
-        jest
-          .spyOn(OraclesModel, 'findOne')
-          .mockImplementationOnce(() => mockOracle as any);
         mockedAxios.post.mockResolvedValueOnce(first);
         mockedAxios.post.mockRejectedValueOnce(new Error('bad oracle'));
         mockedAxios.post.mockResolvedValueOnce(third);
 
         const { oracleHeights, badOracles } = await healthService[
           'getOracleBlockHeights'
-        ](mockNodeForOracles);
+        ](mockNodeForOracles, mockOracle.urls);
 
         expect(oracleHeights.length).toEqual(2);
         expect(badOracles.length).toEqual(1);
-        expect(oracleHeights[0]).toEqual(first.data.result);
-        expect(oracleHeights[1]).toEqual(third.data.result);
-        expect(badOracles[0]).toEqual('https://whatever2.com');
+        expect(oracleHeights).toContain(first.data.result);
+        expect(oracleHeights).toContain(third.data.result);
       });
     });
 
     /* getPeerBlockHeights is for chains that don't use external oracles or have less than 2 healthy oracle urls */
     describe('getPeerBlockHeights', () => {
       const mockPeers = [
-        { url: 'https://whatever1.com' },
-        { url: 'https://whatever2.com' },
-        { url: 'https://whatever3.com' },
-      ] as unknown as INode[];
+        'https://whatever1.com',
+        'https://whatever2.com',
+        'https://whatever3.com',
+      ];
       const [first, second, third] = [
         { data: { height: 61573 } },
         { data: { height: 61582 } },
@@ -729,21 +697,19 @@ describe('Health Service Tests', () => {
       } as unknown as INode;
 
       test("Should return all block heights from node's peers if the peers are all healthy", async () => {
-        jest
-          .spyOn(NodesModel, 'aggregate')
-          .mockImplementationOnce(() => mockPeers as any);
         mockedAxios.post.mockResolvedValueOnce(first);
         mockedAxios.post.mockResolvedValueOnce(second);
         mockedAxios.post.mockResolvedValueOnce(third);
 
         const peerBlockHeights = await healthService['getPeerBlockHeights'](
           mockNodeForPeers,
+          mockPeers,
         );
 
         expect(peerBlockHeights.length).toEqual(3);
-        expect(peerBlockHeights[0]).toEqual(first.data.height);
-        expect(peerBlockHeights[1]).toEqual(second.data.height);
-        expect(peerBlockHeights[2]).toEqual(third.data.height);
+        expect(peerBlockHeights).toContain(first.data.height);
+        expect(peerBlockHeights).toContain(second.data.height);
+        expect(peerBlockHeights).toContain(third.data.height);
       });
 
       test("Should return all healthy block heights from node's peers if any peers are not responding", async () => {
@@ -756,11 +722,12 @@ describe('Health Service Tests', () => {
 
         const peerBlockHeights = await healthService['getPeerBlockHeights'](
           mockNodeForPeers,
+          mockPeers,
         );
 
         expect(peerBlockHeights.length).toEqual(2);
-        expect(peerBlockHeights[0]).toEqual(first.data.height);
-        expect(peerBlockHeights[1]).toEqual(third.data.height);
+        expect(peerBlockHeights).toContain(first.data.height);
+        expect(peerBlockHeights).toContain(third.data.height);
       });
     });
   });

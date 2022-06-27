@@ -364,8 +364,11 @@ export class Service extends BaseService {
       .populate('chain')
       .exec();
 
-    const { status, conditions, height, details } =
-      await new HealthService().checkNodeHealth(node);
+    const healthService = new HealthService();
+    const healthCheckParams = await healthService.getNodeOraclesAndPeers(node);
+    const healthCheck = await healthService.checkNodeHealth(healthCheckParams);
+
+    const { status, conditions, height, details } = healthCheck;
     const { status: nodeStatus, conditions: nodeConditions, deltaArray } = node;
 
     if (status !== nodeStatus || conditions !== nodeConditions) {
