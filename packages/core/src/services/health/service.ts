@@ -1,5 +1,4 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import axiosRetry from 'axios-retry';
 import { exec } from 'child_process';
 import { FilterQuery, Types } from 'mongoose';
 
@@ -11,6 +10,7 @@ import {
   ESupportedBlockchains,
   ESupportedBlockchainTypes,
   IBlockHeight,
+  IHealthCheckParams,
   IHealthResponse,
   IHealthResponseDetails,
   IHealthResponseParams,
@@ -21,7 +21,7 @@ import {
   IRPCMethodParams,
   IRPCResult,
 } from './types';
-import { colorLog, hexToDec } from '../../utils';
+import { colorLog, hexToDec, shuffle } from '../../utils';
 import env from '../../environment';
 
 export class Service {
@@ -33,8 +33,7 @@ export class Service {
 
   private initClient(): AxiosInstance {
     const headers = { 'Content-Type': 'application/json' };
-    const client = axios.create({ timeout: 10000, headers });
-    axiosRetry(client, { retries: 3 });
+    const client = axios.create({ timeout: env('MONITOR_INTERVAL') / 2, headers });
     return client;
   }
 
@@ -56,7 +55,8 @@ export class Service {
 
   /** Health Check Call - This is the main method that checks the health of any node for any chain. 
   Chain-specific parameters are stored in the database to enable this method to be chain-agnostic. */
-  async checkNodeHealth(node: INode): Promise<IHealthResponse> {
+  async checkNodeHealth(healthCheckParams: IHealthCheckParams): Promise<IHealthResponse> {
+    const { node } = healthCheckParams;
     const { name, chain, host, port } = node;
     const { allowance, hasOwnEndpoint, healthyValue, responsePath } = chain;
 
@@ -89,7 +89,7 @@ export class Service {
         : this.healthResponse[EErrorConditions.NOT_SYNCHRONIZED]({ name, result });
     } else {
       try {
-        const refHeightValues = await this.getReferenceBlockHeight(node);
+        const refHeightValues = await this.getReferenceBlockHeight(healthCheckParams);
         const { refHeight, badOracles, noOracle } = refHeightValues;
         const nodeHeight = this.getBlockHeightField(rpcResponse, responsePath);
 
@@ -196,7 +196,11 @@ export class Service {
 
   /** Only used if `chain.hasOwnEndpoint` is false. Gets the highest block height among
    * reference URLs for the node. Ref URLS are either external oracles or node peers.  */
-  private async getReferenceBlockHeight(node: INode): Promise<IRefHeight> {
+  private async getReferenceBlockHeight({
+    node,
+    oracles,
+    peers,
+  }: IHealthCheckParams): Promise<IRefHeight> {
     const { chain } = node;
     const { useOracles } = chain;
 
@@ -205,12 +209,15 @@ export class Service {
     let noOracle: boolean;
 
     if (useOracles) {
-      const { oracleHeights, badOracles } = await this.getOracleBlockHeights(node);
+      const { oracleHeights, badOracles } = await this.getOracleBlockHeights(
+        node,
+        oracles,
+      );
       refHeights = oracleHeights;
       if (badOracles?.length) badOraclesArray = badOracles;
     }
     if (!useOracles || refHeights.length < 2) {
-      const peerHeights = await this.getPeerBlockHeights(node);
+      const peerHeights = await this.getPeerBlockHeights(node, peers);
 
       if (!refHeights.length && peerHeights.length < 2) {
         throw EErrorConditions.NO_PEERS;
@@ -233,15 +240,17 @@ export class Service {
   }
 
   /** Only used if `chain.useOracles` is true. Will return up to 2 block heights from healthy oracles. */
-  private async getOracleBlockHeights(node: INode): Promise<IOraclesResponse> {
+  private async getOracleBlockHeights(
+    node: INode,
+    oracles: string[],
+  ): Promise<IOraclesResponse> {
     const { chain, basicAuth } = node;
-    const { name, responsePath } = chain;
-    const { urls: oracleUrls } = await OraclesModel.findOne({ chain: name });
+    const { responsePath } = chain;
 
     let oracleHeights: number[] = [];
     let badOracles: string[] = [];
 
-    for await (const url of oracleUrls) {
+    for await (const url of shuffle(oracles)) {
       try {
         const blockHeightRes = await this.checkNodeRPC({ chain, url, basicAuth });
         const blockHeightField = this.getBlockHeightField(blockHeightRes, responsePath);
@@ -258,43 +267,17 @@ export class Service {
 
   /** Only used if `chain.useOracles` is false or <2 healthy Oracles can be called for node.
   Will sample up to 20 random peers for node and return their block heights. */
-  private async getPeerBlockHeights(node: INode): Promise<number[]> {
-    const { id: nodeId, chain, name: nodeName, basicAuth } = node;
-    const { id: chainId, responsePath, type, name } = chain;
-    const pnfMainInternal =
-      env('PNF') &&
-      type === ESupportedBlockchainTypes.POKT &&
-      name !== ESupportedBlockchains['POKT-TEST'];
-
-    let chainQuery: FilterQuery<INode>;
-    if (pnfMainInternal) {
-      const poktChains = await ChainsModel.find({
-        type: ESupportedBlockchainTypes.POKT,
-        name: { $ne: ESupportedBlockchains['POKT-TEST'] },
-      });
-      const poktChainIds = poktChains.map(({ _id }) => new Types.ObjectId(_id));
-      chainQuery = { $in: poktChainIds };
-    } else {
-      chainQuery = new Types.ObjectId(chainId);
-    }
-
-    const $match: FilterQuery<INode> = {
-      chain: chainQuery,
-      _id: { $ne: new Types.ObjectId(nodeId) },
-      frontend: null,
-    };
-    if (pnfMainInternal) $match.status = { $ne: EErrorStatus.ERROR };
-    const $sample = { size: 20 };
-
-    const peers = await NodesModel.aggregate<INode>([{ $match }, { $sample }]);
-    const peerUrls = peers.map(({ url }) => url);
+  private async getPeerBlockHeights(node: INode, peers: string[]): Promise<number[]> {
+    const { chain, name: nodeName, basicAuth } = node;
+    const { responsePath } = chain;
 
     let peerHeights: number[] = [];
-    for await (const url of peerUrls) {
+    for await (const url of shuffle(peers)) {
       try {
         const blockHeightRes = await this.checkNodeRPC({ chain, url, basicAuth });
         const blockHeightField = this.getBlockHeightField(blockHeightRes, responsePath);
         peerHeights.push(blockHeightField);
+        if (peerHeights.length >= 5) break;
       } catch (error) {
         colorLog(`Error getting peer blockHeight: ${nodeName} ${url} ${error}`, 'yellow');
       }
@@ -415,6 +398,58 @@ export class Service {
     height,
     details: { nodeIsAheadOfPeer: Math.abs(height.delta) },
   });
+
+  /** Public method to fetch Oracles and Peers per-node one time
+   * on monitor start instead of on every health check execution. */
+  public async getNodeOraclesAndPeers(node: INode): Promise<IHealthCheckParams> {
+    const { id: nodeId, chain } = node;
+    const { id: chainId, hasOwnEndpoint, name, type, useOracles } = chain;
+
+    const params: IHealthCheckParams = { node };
+
+    /* If has own endpoint, oracles/peers not used */
+    if (hasOwnEndpoint) return params;
+
+    /* If node uses oracles, must fetch oracle URLs */
+    if (useOracles) {
+      const { urls: oracles } = await OraclesModel.findOne({ chain: name });
+      params.oracles = oracles;
+    }
+
+    /* Whether node uses oracles or peers, peers must be fetched */
+    const pnfMainInternal =
+      env('PNF') &&
+      type === ESupportedBlockchainTypes.POKT &&
+      name !== ESupportedBlockchains['POKT-TEST'];
+
+    let chainQuery: FilterQuery<INode>;
+    if (pnfMainInternal) {
+      const poktChains = await ChainsModel.find({
+        type: ESupportedBlockchainTypes.POKT,
+        name: { $ne: ESupportedBlockchains['POKT-TEST'] },
+      });
+      const poktChainIds = poktChains.map(({ _id }) => new Types.ObjectId(_id));
+      chainQuery = { $in: poktChainIds };
+    } else {
+      chainQuery = new Types.ObjectId(chainId);
+    }
+
+    const $match: FilterQuery<INode> = {
+      chain: chainQuery,
+      _id: { $ne: new Types.ObjectId(nodeId) },
+      frontend: null,
+      status: { $ne: EErrorStatus.ERROR },
+    };
+    const $sample = { size: 20 };
+
+    const peers = (await NodesModel.aggregate<INode>([{ $match }, { $sample }])).map(
+      ({ url }) => url,
+    );
+
+    params.peers = peers;
+
+    return params;
+  }
 
   /* Estimate Seconds to Recover for Not Synced - Nodes that use oracles or peers only */
 
