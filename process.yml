@@ -1,10 +1,13 @@
 apps:
   - script: ./packages/api/dist/server.js
     name: api
+    max_memory_restart: 200M
   - script: ./packages/event-consumer/dist/index.js
     name: event-consumer
+    max_memory_restart: 200M
   - script: ./packages/monitor/dist/index.js
     name: monitor
+    max_memory_restart: 200M
   - script: ./packages/core/dist/jobs/updater.js
     name: updater
     restart_delay: 3600000
