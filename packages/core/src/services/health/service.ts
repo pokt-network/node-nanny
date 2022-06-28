@@ -57,7 +57,7 @@ export class Service {
   Chain-specific parameters are stored in the database to enable this method to be chain-agnostic. */
   async checkNodeHealth(healthCheckParams: IHealthCheckParams): Promise<IHealthResponse> {
     const { node } = healthCheckParams;
-    const { name, chain, host, port } = node;
+    const { name, chain, frontend, host, port } = node;
     const { allowance, hasOwnEndpoint, healthyValue, responsePath } = chain;
 
     const isNodeListening = await this.isNodeListening({
@@ -109,7 +109,7 @@ export class Service {
         }
 
         const notSynced = this.checkNodeNotSynced(delta, allowance, rpcResponse.data);
-        if (notSynced) {
+        if (!frontend && notSynced) {
           const secondsToRecover = await this.updateNotSynced(delta, node.id.toString());
           return this.healthResponse[EErrorConditions.NOT_SYNCHRONIZED]({
             name,
