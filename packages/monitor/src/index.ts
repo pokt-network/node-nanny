@@ -2,7 +2,7 @@ import { connect, disconnect } from '@pokt-foundation/node-nanny-core/dist/db';
 import { NodesModel } from '@pokt-foundation/node-nanny-core/dist/models';
 import { Health, Log } from '@pokt-foundation/node-nanny-core/dist/services';
 import { HealthTypes } from '@pokt-foundation/node-nanny-core/dist/types';
-import { colorLog, s } from '@pokt-foundation/node-nanny-core/dist/utils';
+import { colorLog, s, wait } from '@pokt-foundation/node-nanny-core/dist/utils';
 
 import env from '@pokt-foundation/node-nanny-core/dist/environment';
 
@@ -49,10 +49,12 @@ export class App {
       const { id, name } = node;
       const logger = this.log.init(id, name.toLowerCase());
 
+      const healthCheckParams = await this.health.getNodeOraclesAndPeers(node);
+
       setInterval(async () => {
         /* Get Node health */
         try {
-          const healthResponse = await this.health.checkNodeHealth(node);
+          const healthResponse = await this.health.checkNodeHealth(healthCheckParams);
           const status = healthResponse?.status;
 
           /* Log to process console */
@@ -74,6 +76,8 @@ export class App {
           colorLog(`[MONITOR ERROR] Node: ${name} ${message} ${location}`, 'yellow');
         }
       }, this.interval);
+
+      await wait(200);
     }
   }
 }
