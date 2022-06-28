@@ -62,6 +62,12 @@ export interface IBlockHeight {
   internalHeight: number;
 }
 
+export interface IHealthCheckParams {
+  node: INode;
+  oracles?: string[];
+  peers?: string[];
+}
+
 export interface IHealthCheck {
   node: INode;
   height?: IBlockHeight;
