@@ -250,6 +250,7 @@ export type INode = {
   conditions: Scalars['String'];
   deltaArray?: Maybe<Array<Maybe<Scalars['Int']>>>;
   dispatch?: Maybe<Scalars['Boolean']>;
+  erroredAt?: Maybe<Scalars['String']>;
   frontend?: Maybe<Scalars['String']>;
   host: IHost;
   id: Scalars['ID'];
@@ -544,7 +545,7 @@ export type INodeQuery = { node: { id: string, backend?: string | null, frontend
 export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, basicAuth?: string | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number, chainId: string, hasOwnEndpoint: boolean, useOracles: boolean, responsePath: string, rpc?: string | null, endpoint?: string | null, healthyValue?: string | null }, host: { id: string, name: string } }> };
+export type INodesQuery = { nodes: Array<{ id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, basicAuth?: string | null, erroredAt?: string | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number, chainId: string, hasOwnEndpoint: boolean, useOracles: boolean, responsePath: string, rpc?: string | null, endpoint?: string | null, healthyValue?: string | null }, host: { id: string, name: string } }> };
 
 export type ILogsQueryVariables = Exact<{
   input: ILogParams;
@@ -1436,6 +1437,7 @@ export const NodesDocument = gql`
       name
     }
     basicAuth
+    erroredAt
   }
 }
     `;
