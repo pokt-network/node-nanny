@@ -4,7 +4,7 @@ import { api as pagerDutyApi } from '@pagerduty/pdjs';
 
 import { INode, IWebhook, WebhookModel } from '../../models';
 import { AlertTypes } from '../../types';
-import { colorLog, s, is } from '../../utils';
+import { colorLog, is, s, secondsToUnits } from '../../utils';
 import {
   AlertColor,
   SendMessageInput,
@@ -177,11 +177,12 @@ export class Service {
 
   /* ----- Message String Methods ----- */
   getAlertMessage(
-    { count, conditions, name, height, details }: IRedisEvent,
+    { conditions, name, height, details }: IRedisEvent,
     alertType: EAlertTypes,
     nodesOnline: number,
     nodesTotal: number,
     destination: string,
+    erroredAt?: string,
   ): { message: string; statusStr: string } {
     const badOracles = details?.badOracles?.join('\n');
     const noOracle = details?.noOracle;
@@ -189,10 +190,9 @@ export class Service {
     const secondsToRecover = details?.secondsToRecover;
 
     const statusStr = `${name} is ${conditions}.`;
-    const countStr =
-      alertType !== EAlertTypes.RESOLVED
-        ? `This event has occurred ${count} time${s(count)} since first occurrence.`
-        : '';
+    const countStr = erroredAt
+      ? this.getErrorTimeElapsedString(erroredAt, alertType)
+      : '';
     const heightStr = height
       ? `Block Height - Internal: ${height.internalHeight} / External: ${height.externalHeight} / Delta: ${height.delta}`
       : '';
@@ -231,6 +231,18 @@ export class Service {
     };
   }
 
+  private getErrorTimeElapsedString(erroredAt: string, alertType: EAlertTypes): string {
+    const erroredDate = new Date(erroredAt);
+    const firstOccurrence = erroredDate.toUTCString();
+    const seconds = (new Date(Date.now()).getTime() - erroredDate.getTime()) / 1000;
+    const desc = alertType === EAlertTypes.RESOLVED ? 'had' : 'has';
+
+    const firstString = `First occurrence of this error was: ${firstOccurrence}.`;
+    const elapsedString =
+      seconds > 60 ? `\nError ${desc} been occurring for ${secondsToUnits(seconds)}` : '';
+    return `${firstString}${elapsedString}`;
+  }
+
   private getSecondsToRecoverString(secondsToRecover: number): string {
     if (secondsToRecover === -1) {
       return 'Delta is increasing.';
@@ -239,8 +251,8 @@ export class Service {
       return 'Delta is stuck.';
     }
 
-    const minutesToRecover = Math.floor(secondsToRecover / 60);
-    return `Node is syncing; the estimated time to sync is approximately ${minutesToRecover} minutes.`;
+    const timeToRecover = secondsToUnits(secondsToRecover);
+    return `Node is syncing; the estimated time to sync is approximately ${timeToRecover}.`;
   }
 
   getRotationMessage(

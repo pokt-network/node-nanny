@@ -40,7 +40,7 @@ export class Publish {
         : this.map.set(id, 1);
       const count = this.map.get(id);
 
-      const event: EventTypes.IRedisEvent = { ...message, id, count };
+      const event: EventTypes.IRedisEvent = { ...message, id };
       if (count === this.threshold) {
         await this.redis.publish('send-event-trigger', JSON.stringify(event));
       }
@@ -57,7 +57,7 @@ export class Publish {
         this.map.delete(id);
 
         if (count >= this.threshold) {
-          const event: EventTypes.IRedisEvent = { ...message, id, count };
+          const event: EventTypes.IRedisEvent = { ...message, id };
           await this.redis.publish('send-event-resolved', JSON.stringify(event));
         }
       }
