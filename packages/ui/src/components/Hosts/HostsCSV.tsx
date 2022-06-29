@@ -64,7 +64,6 @@ export const HostsCSV = ({
     fqdn: (fqdn, host) => {
       if (!fqdn && !host.ip) return 'ip/fqdn: Host must have either an IP or a FQDN';
       if (fqdn && host.ip) return 'Host may only have FQDN or IP, not both';
-      if (fqdn && !regexTest(fqdn, 'fqdn')) return 'Not a valid FQDN';
     },
   };
 
