@@ -164,10 +164,8 @@ export class Service extends BaseService {
 
     const healthy = conditions === EErrorConditions.HEALTHY;
     const notSynced = pnfDispatch
-      ? conditions === EErrorConditions.NOT_SYNCHRONIZED ||
-        conditions === EErrorConditions.OFFLINE ||
-        conditions === EErrorConditions.NO_RESPONSE
-      : conditions === EErrorConditions.NOT_SYNCHRONIZED;
+      ? this.dispatchNotSyncedConditions.includes(conditions)
+      : this.notSyncedConditions.includes(conditions);
     const dispatchFrontendDown = Boolean(pnfDispatch && frontend && notSynced);
 
     const { online: nodesOnline, total: nodesTotal } =
@@ -270,7 +268,21 @@ export class Service extends BaseService {
     colorLog(errorMessage, 'yellow');
   }
 
+  /** These conditions will trigger Node Nanny to remove the node from circulation. */
+  private notSyncedConditions = [
+    EErrorConditions.NOT_SYNCHRONIZED,
+    EErrorConditions.ERROR_RESPONSE,
+  ];
+
   /* ----- PNF Internal Only ----- */
+  /** These conditions will trigger Node Nanny to remove a dispatch node from circulation */
+  private dispatchNotSyncedConditions = [
+    ...this.notSyncedConditions,
+    EErrorConditions.OFFLINE,
+    EErrorConditions.NO_RESPONSE,
+  ];
+
+  /** Pager Duty alert will be sent if there is no dispatch service available through the dispatch HAProxy */
   private async urgentAlertDispatchFrontendIsDown(message: string): Promise<void> {
     await this.alert.createPagerDutyIncident({
       title: 'URGENT ALERT! Dispatch Frontend is down!',
