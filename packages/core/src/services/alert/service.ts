@@ -190,7 +190,9 @@ export class Service {
     const secondsToRecover = details?.secondsToRecover;
 
     const statusStr = `${name} is ${conditions}.`;
-    const errorMessageStr = error ? error.charAt(0).toUpperCase() + error.slice(1) : '';
+    const errorMessageStr = error
+      ? `Error Message: ${error.charAt(0).toUpperCase() + error.slice(1)}`
+      : '';
     const errorTimeStr = erroredAt
       ? this.getErrorTimeElapsedString(erroredAt, alertType)
       : '';
