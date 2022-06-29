@@ -177,7 +177,7 @@ export class Service {
 
   /* ----- Message String Methods ----- */
   getAlertMessage(
-    { conditions, name, height, details }: IRedisEvent,
+    { conditions, name, height, details, error }: IRedisEvent,
     alertType: EAlertTypes,
     nodesOnline: number,
     nodesTotal: number,
@@ -190,7 +190,8 @@ export class Service {
     const secondsToRecover = details?.secondsToRecover;
 
     const statusStr = `${name} is ${conditions}.`;
-    const countStr = erroredAt
+    const errorMessageStr = error ? error.charAt(0).toUpperCase() + error.slice(1) : '';
+    const errorTimeStr = erroredAt
       ? this.getErrorTimeElapsedString(erroredAt, alertType)
       : '';
     const heightStr = height
@@ -217,7 +218,8 @@ export class Service {
 
     return {
       message: [
-        countStr,
+        errorMessageStr,
+        errorTimeStr,
         heightStr,
         secondsToRecoverStr,
         badOracleStr,
@@ -235,11 +237,16 @@ export class Service {
     const erroredDate = new Date(erroredAt);
     const firstOccurrence = erroredDate.toUTCString();
     const seconds = (new Date(Date.now()).getTime() - erroredDate.getTime()) / 1000;
-    const desc = alertType === EAlertTypes.RESOLVED ? 'had' : 'has';
 
     const firstString = `First occurrence of this error was: ${firstOccurrence}.`;
-    const elapsedString =
-      seconds > 60 ? `\nError ${desc} been occurring for ${secondsToUnits(seconds)}` : '';
+    let elapsedString = '';
+    if (seconds >= (env('MONITOR_INTERVAL') * 2) / 1000) {
+      elapsedString =
+        alertType === EAlertTypes.RESOLVED
+          ? `\nError occurred for ${secondsToUnits(seconds)}.`
+          : `\nError has been occurring for ${secondsToUnits(seconds)}.`;
+    }
+
     return `${firstString}${elapsedString}`;
   }
 

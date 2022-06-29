@@ -64,6 +64,7 @@ export type IChainUpdate = {
 
 export type IHealthCheck = {
   details?: Maybe<IHealthResponseDetails>;
+  error?: Maybe<Scalars['String']>;
   height?: Maybe<IBlockHeight>;
   node?: Maybe<INode>;
 };
@@ -602,7 +603,7 @@ export type IGetHealthCheckQueryVariables = Exact<{
 }>;
 
 
-export type IGetHealthCheckQuery = { healthCheck: { node?: { status: string, conditions: string, deltaArray?: Array<number | null> | null } | null, height?: { internalHeight: number, delta?: number | null, externalHeight?: number | null } | null, details?: { noOracle?: boolean | null, badOracles?: Array<string | null> | null, nodeIsAheadOfPeer?: boolean | null, secondsToRecover?: number | null } | null } };
+export type IGetHealthCheckQuery = { healthCheck: { error?: string | null, height?: { internalHeight: number, delta?: number | null, externalHeight?: number | null } | null, details?: { noOracle?: boolean | null, badOracles?: Array<string | null> | null, nodeIsAheadOfPeer?: boolean | null, secondsToRecover?: number | null } | null, node?: { status: string, conditions: string, deltaArray?: Array<number | null> | null } | null } };
 
 
 export const CreateHostDocument = gql`
@@ -1791,11 +1792,6 @@ export type GetServerCountQueryResult = Apollo.QueryResult<IGetServerCountQuery,
 export const GetHealthCheckDocument = gql`
     query GetHealthCheck($id: ID!) {
   healthCheck: getHealthCheck(id: $id) {
-    node {
-      status
-      conditions
-      deltaArray
-    }
     height {
       internalHeight
       delta
@@ -1807,6 +1803,12 @@ export const GetHealthCheckDocument = gql`
       nodeIsAheadOfPeer
       secondsToRecover
     }
+    node {
+      status
+      conditions
+      deltaArray
+    }
+    error
   }
 }
     `;
