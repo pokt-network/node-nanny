@@ -137,14 +137,9 @@ export class Service extends BaseService {
     alertType: EAlertTypes,
   ): Promise<IRedisEventParams> {
     const event: IRedisEvent = JSON.parse(eventJson);
-    const { conditions, id, status } = event;
+    const { conditions, status } = event;
 
-    const update: FilterQuery<INode> = { status, conditions };
-    if (alertType === EAlertTypes.TRIGGER) {
-      update.erroredAt = Date.now();
-    }
-    await NodesModel.updateOne({ _id: id }, update);
-    const node = await this.getNode(id);
+    const node = await this.updateNodeOnEvent(event, alertType);
     const {
       automation,
       backend,
@@ -155,9 +150,6 @@ export class Service extends BaseService {
       dispatch,
       url,
     } = node;
-    if (erroredAt && alertType === EAlertTypes.RESOLVED) {
-      await NodesModel.updateOne({ _id: id }, { $unset: { erroredAt: 1 } });
-    }
 
     const pnfDispatch =
       env('PNF') && dispatch && chain.name === ESupportedBlockchains['POKT-DIS'];
@@ -199,6 +191,24 @@ export class Service extends BaseService {
       dispatchFrontendDown,
     };
     return parsedEvent;
+  }
+
+  private async updateNodeOnEvent(event: IRedisEvent, alertType: EAlertTypes) {
+    const { conditions, id, status } = event;
+
+    const update: FilterQuery<INode> = { status, conditions };
+    if (alertType === EAlertTypes.TRIGGER) {
+      const thresholdPeriod = env('MONITOR_INTERVAL') * env('ALERT_TRIGGER_THRESHOLD');
+      update.erroredAt = Date.now() - thresholdPeriod;
+    }
+    await NodesModel.updateOne({ _id: id }, update);
+    const node = await this.getNode(id);
+    const { erroredAt } = node;
+    if (erroredAt && alertType === EAlertTypes.RESOLVED) {
+      await NodesModel.updateOne({ _id: id }, { $unset: { erroredAt: 1 } });
+    }
+
+    return node;
   }
 
   private async sendMessage(

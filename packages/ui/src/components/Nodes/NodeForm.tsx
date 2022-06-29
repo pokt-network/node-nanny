@@ -26,6 +26,7 @@ import {
   Switch,
   TextField,
   Tooltip,
+  Typography,
 } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
@@ -42,7 +43,7 @@ import {
   useUpdateNodeMutation,
   useDeleteNodeMutation,
 } from 'types';
-import { ModalHelper, s, SnackbarHelper } from 'utils';
+import { generateCurlString, ModalHelper, s, SnackbarHelper } from 'utils';
 import Form from 'components/Form';
 import { NodeActionsState } from 'pages/Nodes';
 
@@ -894,6 +895,38 @@ export const NodeForm = ({
             ),
           }}
         />
+
+        {env('PNF') && selectedNode && read && (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              width: 'auto',
+              p: 2,
+              mt: 2,
+              mb: 2,
+              borderRadius: 2,
+              backgroundColor: 'background.default',
+              cursor: 'pointer',
+              '&:hover': {
+                background: '#2c435c',
+                transition: 'background 0.5s',
+              },
+            }}
+            onClick={() => {
+              navigator.clipboard.writeText(generateCurlString(selectedNode));
+              SnackbarHelper.open({
+                text: `cURL command for ${selectedNode.name} copied to clipboard!`,
+                type: 'info',
+              });
+            }}
+          >
+            <Typography align="center" variant="h5">
+              Click to copy cURL for Health Check
+            </Typography>
+          </Box>
+        )}
+
         {frontend && frontendExists && (
           <Alert severity="error">
             <AlertTitle>Frontend Record Exists</AlertTitle>

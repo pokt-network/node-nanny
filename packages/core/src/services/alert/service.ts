@@ -239,21 +239,12 @@ export class Service {
     const erroredDate = new Date(erroredAt);
     const firstOccurrence = erroredDate.toUTCString().replace('GMT', 'UTC');
     const seconds = (new Date(Date.now()).getTime() - erroredDate.getTime()) / 1000;
-    const secondsThreshold = (env('MONITOR_INTERVAL') * 2) / 1000;
 
     const firstString = `First occurrence of this error was: ${firstOccurrence}.`;
-    let elapsedString = '';
-    if (alertType === EAlertTypes.RESOLVED) {
-      elapsedString =
-        seconds < secondsThreshold
-          ? `\nError occurred for less than ${secondsThreshold} seconds.`
-          : `\nError occurred for ${secondsToUnits(seconds)}.`;
-    } else {
-      elapsedString =
-        seconds < secondsThreshold
-          ? ''
-          : `\nError has been occurring for ${secondsToUnits(seconds)}.`;
-    }
+    const elapsedString =
+      alertType === EAlertTypes.RESOLVED
+        ? `\nError occurred for ${secondsToUnits(seconds)}.`
+        : `\nError has been occurring for ${secondsToUnits(seconds)}.`;
 
     return `${firstString}${elapsedString}`;
   }
