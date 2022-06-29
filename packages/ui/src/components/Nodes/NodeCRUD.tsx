@@ -242,6 +242,7 @@ export const NodeCRUD = ({
             haProxyOnline={haProxyOnline}
           />
         )}
+
         <NodeForm
           read={type === 'info'}
           frontend={type === 'createFrontend'}
