@@ -130,7 +130,7 @@ describe('Event Service Tests', () => {
       expect(title).toEqual('[Triggered] - mainnet1/POKT/11 is NOT_SYNCHRONIZED.');
 
       expect(message).toContain('First occurrence of this error was');
-      expect(message).not.toContain('Error has been occurring for');
+      expect(message).toContain('Error has been occurring for');
       expect(message).toContain(
         'Block Height - Internal: 63583 / External: 63583 / Delta: 0',
       );
