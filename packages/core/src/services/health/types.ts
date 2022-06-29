@@ -5,22 +5,35 @@ export enum ENCResponse {
 }
 
 export enum ESupportedBlockchains {
+  ALG = 'ALG',
+  ALGTST = 'ALGTST',
   AVA = 'AVA',
   AVATST = 'AVATST',
-  ETH = 'ETH',
+  BOBA = 'BOBA',
   BSC = 'BSC',
   BSCTST = 'BSCTST',
-  POL = 'POL',
-  POLTST = 'POLTST',
+  ETH = 'ETH',
+  EVMOS = 'EVMOS',
+  FTM = 'FTM',
   FUS = 'FUS',
-  XDAI = 'XDAI',
-  RIN = 'RIN',
-  ROP = 'ROP',
+  GLMR = 'GLMR',
   GOE = 'GOE',
-  KOV = 'KOV',
   HEI = 'HEI',
-  POKT = 'POKT',
+  HEITST = 'HEITST',
+  HMY = 'HMY',
+  IOT = 'IOT',
+  MOVR = 'MOVR',
   NEAR = 'NEAR',
+  OEC = 'OEC',
+  OP = 'OP',
+  POKT = 'POKT',
+  POL = 'POL',
+  'POL-ARCHIVAL' = 'POL-ARCHIVAL',
+  'POL-MAINNET' = 'POL-MAINNET',
+  POLTST = 'POLTST',
+  RIN = 'RIN',
+  SOL = 'SOL',
+  XDAI = 'XDAI',
   /* PNF Internal only */
   'POKT-DIS' = 'POKT-DIS',
   'POKT-MAIN' = 'POKT-MAIN',
@@ -39,12 +52,21 @@ export enum ESupportedBlockchainTypes {
 }
 
 export enum EErrorConditions {
+  /** The node is online, responding and synced */
   HEALTHY = 'HEALTHY',
+  /** The node is not responding to a Netcat call */
   OFFLINE = 'OFFLINE',
+  /** The node is not responding to an RPC request or is timing out */
   NO_RESPONSE = 'NO_RESPONSE',
+  /** The node is behind by more than the chain allowance */
   NOT_SYNCHRONIZED = 'NOT_SYNCHRONIZED',
+  /** The node is responding but returning an error response to the RPC request */
+  ERROR_RESPONSE = 'ERROR_RESPONSE',
+  /** The node has no healthy oracles and insufficient peers */
   NO_PEERS = 'NO_PEERS',
+  /** The node is ahead of its peers */
   PEER_NOT_SYNCHRONIZED = 'PEER_NOT_SYNCHRONIZED',
+  /** This status is applied to a new node, before the first health check has completed */
   PENDING = 'PENDING',
 }
 
