@@ -1,7 +1,9 @@
+import { FilterQuery } from 'mongoose';
+
 import { AlertColor } from '../alert/types';
 import { Service as BaseService } from '../base-service/base-service';
 import { EErrorConditions, EErrorStatus, ESupportedBlockchains } from '../health/types';
-import { NodesModel } from '../../models';
+import { INode, NodesModel } from '../../models';
 import {
   EAlertTypes,
   IRedisEvent,
@@ -23,14 +25,8 @@ export class Service extends BaseService {
     let nodeName: string;
 
     try {
-      const {
-        node,
-        message,
-        notSynced,
-        status,
-        title,
-        dispatchFrontendDown,
-      } = await this.parseEvent(eventJson, EAlertTypes.TRIGGER);
+      const { node, message, notSynced, status, title, dispatchFrontendDown } =
+        await this.parseEvent(eventJson, EAlertTypes.TRIGGER);
       const { name, automation, chain, host, backend, frontend, muted } = node;
       nodeName = name;
 
@@ -66,14 +62,8 @@ export class Service extends BaseService {
     let nodeName: string;
 
     try {
-      const {
-        node,
-        message,
-        notSynced,
-        title,
-        nodesOnline,
-        dispatchFrontendDown,
-      } = await this.parseEvent(eventJson, EAlertTypes.RETRIGGER);
+      const { node, message, notSynced, title, nodesOnline, dispatchFrontendDown } =
+        await this.parseEvent(eventJson, EAlertTypes.RETRIGGER);
       const { name, automation, backend, chain, host, frontend, muted } = node;
       nodeName = name;
 
@@ -149,9 +139,25 @@ export class Service extends BaseService {
     const event: IRedisEvent = JSON.parse(eventJson);
     const { conditions, id, status } = event;
 
+    const update: FilterQuery<INode> = { status, conditions };
+    if (alertType === EAlertTypes.TRIGGER) {
+      update.erroredAt = Date.now();
+    }
+    await NodesModel.updateOne({ _id: id }, update);
     const node = await this.getNode(id);
-    await NodesModel.updateOne({ _id: node.id }, { status, conditions });
-    const { automation, backend, chain, frontend, loadBalancers, dispatch, url } = node;
+    const {
+      automation,
+      backend,
+      chain,
+      erroredAt,
+      frontend,
+      loadBalancers,
+      dispatch,
+      url,
+    } = node;
+    if (erroredAt && alertType === EAlertTypes.RESOLVED) {
+      await NodesModel.updateOne({ _id: id }, { $unset: { erroredAt: 1 } });
+    }
 
     const pnfDispatch =
       env('PNF') && dispatch && chain.name === ESupportedBlockchains['POKT-DIS'];
@@ -180,6 +186,7 @@ export class Service extends BaseService {
       nodesOnline,
       nodesTotal,
       frontend || backend,
+      erroredAt,
     );
 
     const parsedEvent: IRedisEventParams = {

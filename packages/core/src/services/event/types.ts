@@ -7,7 +7,6 @@ import { HealthTypes } from '../../types';
 
 export interface IRedisEvent extends HealthTypes.IHealthResponse {
   id: string;
-  count: number;
 }
 
 export interface IRotationParams {
