@@ -540,7 +540,7 @@ export type INodeQueryVariables = Exact<{
 }>;
 
 
-export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, basicAuth?: string | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number, chainId: string, hasOwnEndpoint: boolean, useOracles: boolean, responsePath: string, rpc?: string | null, endpoint?: string | null, healthyValue?: string | null }, host: { id: string, name: string } } };
+export type INodeQuery = { node: { id: string, backend?: string | null, frontend?: string | null, port: number, name: string, server?: string | null, url: string, muted: boolean, status: string, conditions: string, automation?: boolean | null, dispatch?: boolean | null, basicAuth?: string | null, erroredAt?: string | null, loadBalancers?: Array<{ id: string, name: string }> | null, chain: { id: string, name: string, type: string, allowance: number, chainId: string, hasOwnEndpoint: boolean, useOracles: boolean, responsePath: string, rpc?: string | null, endpoint?: string | null, healthyValue?: string | null }, host: { id: string, name: string } } };
 
 export type INodesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1369,6 +1369,7 @@ export const NodeDocument = gql`
       name
     }
     basicAuth
+    erroredAt
   }
 }
     `;
