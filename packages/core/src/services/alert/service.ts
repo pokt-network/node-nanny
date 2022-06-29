@@ -235,7 +235,7 @@ export class Service {
 
   private getErrorTimeElapsedString(erroredAt: string, alertType: EAlertTypes): string {
     const erroredDate = new Date(erroredAt);
-    const firstOccurrence = erroredDate.toUTCString();
+    const firstOccurrence = erroredDate.toUTCString().replace('GMT', 'UTC');
     const seconds = (new Date(Date.now()).getTime() - erroredDate.getTime()) / 1000;
 
     const firstString = `First occurrence of this error was: ${firstOccurrence}.`;
