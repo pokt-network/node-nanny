@@ -15,3 +15,7 @@ export const is = (count: number): string => (count === 1 ? 'is' : 'are');
 export const numWithCommas = (number: number | string): string => {
   return new Intl.NumberFormat().format(Number(number));
 };
+
+export function capitalizeFirstLetter(string: string): string {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
