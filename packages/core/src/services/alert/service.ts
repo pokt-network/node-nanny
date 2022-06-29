@@ -237,10 +237,13 @@ export class Service {
     const erroredDate = new Date(erroredAt);
     const firstOccurrence = erroredDate.toUTCString().replace('GMT', 'UTC');
     const seconds = (new Date(Date.now()).getTime() - erroredDate.getTime()) / 1000;
+    const secondsThreshold = (env('MONITOR_INTERVAL') * 2) / 1000;
 
     const firstString = `First occurrence of this error was: ${firstOccurrence}.`;
     let elapsedString = '';
-    if (seconds >= (env('MONITOR_INTERVAL') * 2) / 1000) {
+    if (seconds < secondsThreshold) {
+      elapsedString = `\nError occurred for less than ${secondsThreshold} seconds.`;
+    } else {
       elapsedString =
         alertType === EAlertTypes.RESOLVED
           ? `\nError occurred for ${secondsToUnits(seconds)}.`
