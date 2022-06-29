@@ -73,7 +73,7 @@ export class Service {
       rpcResponse = await this.checkNodeRPC(node);
       if (rpcResponse.data?.error) {
         const error = new Error(rpcResponse.data?.error?.message);
-        return this.healthResponse[EErrorConditions.NO_RESPONSE]({ name, error });
+        return this.healthResponse[EErrorConditions.ERROR_RESPONSE]({ name, error });
       }
     } catch (error) {
       return this.healthResponse[EErrorConditions.NO_RESPONSE]({ name, error });
@@ -313,6 +313,7 @@ export class Service {
     [EErrorConditions.OFFLINE]: (params) => this.getOffline(params),
     [EErrorConditions.NO_RESPONSE]: (params) => this.getNoResponse(params),
     [EErrorConditions.NOT_SYNCHRONIZED]: (params) => this.getNotSynced(params),
+    [EErrorConditions.ERROR_RESPONSE]: (params) => this.getErrorResponse(params),
     [EErrorConditions.NO_PEERS]: (params) => this.getNoPeers(params),
     [EErrorConditions.PEER_NOT_SYNCHRONIZED]: (params) => this.getPeersNotSynced(params),
     [EErrorConditions.PENDING]: null, // PENDING only used as initial status, not response.
@@ -378,6 +379,16 @@ export class Service {
 
     return healthResponse;
   };
+
+  private getErrorResponse = ({
+    name,
+    error,
+  }: IHealthResponseParams): IHealthResponse => ({
+    name,
+    status: EErrorStatus.ERROR,
+    conditions: EErrorConditions.ERROR_RESPONSE,
+    error: error.message,
+  });
 
   private getNoPeers = ({ name, error }: IHealthResponseParams): IHealthResponse => ({
     name,

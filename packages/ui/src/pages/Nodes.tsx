@@ -58,6 +58,7 @@ export function Nodes() {
       OFFLINE: 'Offline',
       NO_RESPONSE: 'No Response',
       NOT_SYNCHRONIZED: 'Not Synced',
+      ERROR_RESPONSE: 'RPC Error Response',
       NO_PEERS: 'No Peers',
       PEER_NOT_SYNCHRONIZED: 'Peer Not Synced',
       PENDING: 'Pending',
