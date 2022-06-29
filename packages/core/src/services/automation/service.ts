@@ -368,7 +368,7 @@ export class Service extends BaseService {
     const healthCheckParams = await healthService.getNodeOraclesAndPeers(node);
     const healthCheck = await healthService.checkNodeHealth(healthCheckParams);
 
-    const { status, conditions, height, details } = healthCheck;
+    const { status, conditions, height, details, error } = healthCheck;
     const { status: nodeStatus, conditions: nodeConditions, deltaArray } = node;
 
     if (status !== nodeStatus || conditions !== nodeConditions) {
@@ -376,7 +376,7 @@ export class Service extends BaseService {
     }
 
     const updatedNodeHealth = { status, conditions, deltaArray: deltaArray };
-    return { height, details, node: updatedNodeHealth as INode };
+    return { height, details, node: updatedNodeHealth as INode, error };
   }
 
   /* ----- Rotation Methods ----- */

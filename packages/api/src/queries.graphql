@@ -207,11 +207,6 @@ query GetServerCount($id: ID!) {
 
 query GetHealthCheck($id: ID!) {
   healthCheck: getHealthCheck(id: $id) {
-    node {
-      status
-      conditions
-      deltaArray
-    }
     height {
       internalHeight
       delta
@@ -223,5 +218,11 @@ query GetHealthCheck($id: ID!) {
       nodeIsAheadOfPeer
       secondsToRecover
     }
+    node {
+      status
+      conditions
+      deltaArray
+    }
+    error
   }
 }

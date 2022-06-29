@@ -88,6 +88,7 @@ const typeDefs = gql`
     height: BlockHeight
     details: HealthResponseDetails
     node: Node
+    error: String
   }
 
   type BlockHeight {
