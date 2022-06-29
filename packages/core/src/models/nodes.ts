@@ -22,6 +22,7 @@ export interface INode<Populated = true> {
   automation?: boolean;
   dispatch?: boolean;
   deltaArray?: number[];
+  erroredAt: string;
 }
 
 export const nodesSchema = new Schema<INode>(
@@ -50,6 +51,7 @@ export const nodesSchema = new Schema<INode>(
     automation: Boolean,
     dispatch: Boolean,
     deltaArray: [Number],
+    erroredAt: Date,
   },
   { timestamps: true },
 );

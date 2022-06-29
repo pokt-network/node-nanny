@@ -71,6 +71,7 @@ query Node($id: ID!) {
       name
     }
     basicAuth
+    erroredAt
   }
 }
 
@@ -110,6 +111,7 @@ query Nodes {
       name
     }
     basicAuth
+    erroredAt
   }
 }
 

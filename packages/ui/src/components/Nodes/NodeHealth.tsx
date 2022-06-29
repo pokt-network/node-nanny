@@ -5,7 +5,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 
 import { INode, IGetHealthCheckQuery, IGetServerCountQuery } from 'types';
-import { formatHeaderCell, numWithCommas, s } from 'utils';
+import { formatHeaderCell, getSeconds, numWithCommas, parseSeconds, s } from 'utils';
 
 interface NodeHealthProps {
   node: INode;
@@ -169,9 +169,7 @@ export const NodeHealth = ({
                   } else if (value === 0) {
                     displayValue = 'Delta is stuck';
                   } else {
-                    displayValue = `< ${numWithCommas(
-                      Math.floor(Number(value) / 60),
-                    )} minute${s(Math.floor(Number(value) / 60))}`;
+                    displayValue = `< ${parseSeconds(value as number)}`;
                   }
                 } else {
                   displayValue = value.toString();
@@ -192,6 +190,13 @@ export const NodeHealth = ({
               <Typography>
                 {healthCheckData.healthCheck.details.badOracles.join(', ')}
               </Typography>
+            </Box>
+          )}
+
+          {node.erroredAt && (
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography>Error Duration</Typography>
+              <Typography>{parseSeconds(getSeconds(node.erroredAt))}</Typography>
             </Box>
           )}
         </>
