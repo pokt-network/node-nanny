@@ -62,5 +62,5 @@ export function secondsToUnits(seconds: number): string {
   const hDisplay = h > 0 ? h + (h === 1 ? ' hour, ' : ' hours, ') : '';
   const mDisplay = m > 0 ? m + (m === 1 ? ' minute, ' : ' minutes, ') : '';
   const sDisplay = s > 0 ? s + (s === 1 ? ' second' : ' seconds') : '';
-  return dDisplay + hDisplay + mDisplay + sDisplay;
+  return (dDisplay + hDisplay + mDisplay + sDisplay).replace(/,\s*$/, '');
 }

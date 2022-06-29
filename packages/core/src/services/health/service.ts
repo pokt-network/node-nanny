@@ -33,7 +33,7 @@ export class Service {
 
   private initClient(): AxiosInstance {
     const headers = { 'Content-Type': 'application/json' };
-    const client = axios.create({ timeout: env('MONITOR_INTERVAL') / 2, headers });
+    const client = axios.create({ timeout: env('MONITOR_INTERVAL') * 0.75, headers });
     return client;
   }
 
@@ -71,6 +71,10 @@ export class Service {
     let rpcResponse: AxiosResponse<IRPCResult>;
     try {
       rpcResponse = await this.checkNodeRPC(node);
+      if (rpcResponse.data?.error) {
+        const error = new Error(rpcResponse.data?.error?.message);
+        return this.healthResponse[EErrorConditions.NO_RESPONSE]({ name, error });
+      }
     } catch (error) {
       return this.healthResponse[EErrorConditions.NO_RESPONSE]({ name, error });
     }
@@ -108,7 +112,7 @@ export class Service {
           });
         }
 
-        const notSynced = this.checkNodeNotSynced(delta, allowance, rpcResponse.data);
+        const notSynced = delta > allowance;
         if (!frontend && notSynced) {
           const secondsToRecover = await this.updateNotSynced(delta, node.id.toString());
           return this.healthResponse[EErrorConditions.NOT_SYNCHRONIZED]({
@@ -129,7 +133,9 @@ export class Service {
         });
       } catch (error) {
         const noPeers = error === EErrorConditions.NO_PEERS;
-        if (noPeers) return this.healthResponse[EErrorConditions.NO_PEERS]({ name });
+        if (noPeers) {
+          return this.healthResponse[EErrorConditions.NO_PEERS]({ name, error });
+        }
 
         const timeout = String(error).includes(`Error: timeout of`);
         if (timeout) {
@@ -286,15 +292,6 @@ export class Service {
     return peerHeights;
   }
 
-  /** Simple boolean to check if delta over allowance or response contains an error code */
-  private checkNodeNotSynced(
-    delta: number,
-    allowance: number,
-    response: IRPCResult,
-  ): boolean {
-    return Boolean(delta > allowance || response.error?.code);
-  }
-
   /** Gets the stored healthy value type from its string representation in the DB */
   private getHealthyValueType(stringValue: string): string | number | boolean {
     try {
@@ -382,10 +379,11 @@ export class Service {
     return healthResponse;
   };
 
-  private getNoPeers = ({ name }: IHealthResponseParams): IHealthResponse => ({
+  private getNoPeers = ({ name, error }: IHealthResponseParams): IHealthResponse => ({
     name,
     status: EErrorStatus.ERROR,
     conditions: EErrorConditions.NO_PEERS,
+    error: error.message,
   });
 
   private getPeersNotSynced = ({

@@ -72,6 +72,7 @@ export interface IHealthCheck {
   node: INode;
   height?: IBlockHeight;
   details?: IHealthResponseDetails;
+  error?: string;
 }
 
 export interface IHealthResponse {
