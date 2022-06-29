@@ -13,37 +13,38 @@ describe('Alert Service Tests', () => {
         EAlertTypes.TRIGGER,
       );
 
-      expect(messageString).toContain(
-        `Error has been occurring for 1 minute, 15 seconds`,
-      );
+      const [firstOccurrence, elapsed] = messageString.split('\n');
+
+      expect(firstOccurrence).toContain(`First occurrence of this error was`);
+      expect(elapsed).toEqual(`Error has been occurring for 1 minute, 15 seconds.`);
     });
 
-    test('Should return a string for an error event that occurred less than a minute ago', async () => {
-      const lessThanMinuteAgo = new Date(Date.now() - 1000 * 45).toUTCString();
+    test('Should return a string for an error event that occurred for less than two monitor intervals', async () => {
+      const lessThanTwoIntervals = new Date(Date.now() - 1000 * 10 - 1000).toUTCString();
 
       const messageString = alertService['getErrorTimeElapsedString'](
-        lessThanMinuteAgo,
+        lessThanTwoIntervals,
         EAlertTypes.TRIGGER,
       );
 
       const [firstOccurrence, elapsed] = messageString.split('\n');
-      expect(messageString).toContain(`First occurrence of this error was`);
-      expect(firstOccurrence).toBeTruthy();
-      expect(elapsed).toBeFalsy();
+
+      expect(firstOccurrence).toContain(`First occurrence of this error was`);
+      expect(elapsed).toEqual('Error occurred for less than 20 seconds.');
     });
 
     test('Should return a string for a resolved event', async () => {
-      const lessThanMinuteAgo = new Date(Date.now() - 1000 * 90).toUTCString();
+      const lessThanMinuteAgo = new Date(Date.now() - 1000 * 60).toUTCString();
 
       const messageString = alertService['getErrorTimeElapsedString'](
         lessThanMinuteAgo,
         EAlertTypes.RESOLVED,
       );
 
-      expect(messageString).toContain(`First occurrence of this error was`);
-      expect(messageString).toContain(
-        `Error had been occurring for 1 minute, 30 seconds`,
-      );
+      const [firstOccurrence, elapsed] = messageString.split('\n');
+
+      expect(firstOccurrence).toContain(`First occurrence of this error was`);
+      expect(elapsed).toEqual(`Error occurred for 1 minute.`);
     });
   });
 });

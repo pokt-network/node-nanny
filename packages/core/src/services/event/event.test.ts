@@ -89,7 +89,7 @@ describe('Event Service Tests', () => {
       expect(createdNode.name).toEqual('mainnet1/POKT/11');
       expect(title).toEqual('[Resolved] - mainnet1/POKT/11 is HEALTHY.');
       expect(message).toContain('First occurrence of this error was');
-      expect(message).toContain('Error had been occurring for 1 minute, 15 seconds');
+      expect(message).toContain('Error occurred for 1 minute, 15 seconds.');
       expect(message).toContain(
         'Block Height - Internal: 63583 / External: 63583 / Delta: 0',
       );
