@@ -5,7 +5,14 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 
 import { INode, IGetHealthCheckQuery, IGetServerCountQuery } from 'types';
-import { formatHeaderCell, getSeconds, numWithCommas, parseSeconds, s } from 'utils';
+import {
+  formatHeaderCell,
+  getSeconds,
+  numWithCommas,
+  parseSeconds,
+  s,
+  capitalizeFirstLetter,
+} from 'utils';
 
 interface NodeHealthProps {
   node: INode;
@@ -22,6 +29,8 @@ export const NodeHealth = ({
   loading,
   haProxyOnline,
 }: NodeHealthProps) => {
+  console.log({ healthCheckData });
+
   const getLastChangedDelta = useCallback((healthCheckData: IGetHealthCheckQuery) => {
     const deltaArray = healthCheckData?.healthCheck?.node?.deltaArray;
     if (!deltaArray?.length) return null;
@@ -189,6 +198,15 @@ export const NodeHealth = ({
               )}`}</Typography>
               <Typography>
                 {healthCheckData.healthCheck.details.badOracles.join(', ')}
+              </Typography>
+            </Box>
+          )}
+
+          {healthCheckData.healthCheck.error && (
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography>Error Message</Typography>
+              <Typography>
+                {capitalizeFirstLetter(healthCheckData.healthCheck.error)}
               </Typography>
             </Box>
           )}
