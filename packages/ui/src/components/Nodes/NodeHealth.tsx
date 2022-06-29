@@ -29,8 +29,6 @@ export const NodeHealth = ({
   loading,
   haProxyOnline,
 }: NodeHealthProps) => {
-  console.log({ healthCheckData });
-
   const getLastChangedDelta = useCallback((healthCheckData: IGetHealthCheckQuery) => {
     const deltaArray = healthCheckData?.healthCheck?.node?.deltaArray;
     if (!deltaArray?.length) return null;
