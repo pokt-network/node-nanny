@@ -241,12 +241,15 @@ export class Service {
 
     const firstString = `First occurrence of this error was: ${firstOccurrence}.`;
     let elapsedString = '';
-    if (seconds < secondsThreshold) {
-      elapsedString = `\nError occurred for less than ${secondsThreshold} seconds.`;
+    if (alertType === EAlertTypes.RESOLVED) {
+      elapsedString =
+        seconds < secondsThreshold
+          ? `\nError occurred for less than ${secondsThreshold} seconds.`
+          : `\nError occurred for ${secondsToUnits(seconds)}.`;
     } else {
       elapsedString =
-        alertType === EAlertTypes.RESOLVED
-          ? `\nError occurred for ${secondsToUnits(seconds)}.`
+        seconds < secondsThreshold
+          ? ''
           : `\nError has been occurring for ${secondsToUnits(seconds)}.`;
     }
 
