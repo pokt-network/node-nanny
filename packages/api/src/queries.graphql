@@ -110,6 +110,7 @@ query Nodes {
       name
     }
     basicAuth
+    erroredAt
   }
 }
 
