@@ -76,6 +76,7 @@ const typeDefs = gql`
     dispatch: Boolean
     basicAuth: String
     deltaArray: [Int]
+    erroredAt: String
   }
 
   type ServerCount {
