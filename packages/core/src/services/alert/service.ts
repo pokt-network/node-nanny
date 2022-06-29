@@ -251,8 +251,8 @@ export class Service {
       return 'Delta is stuck.';
     }
 
-    const minutesToRecover = Math.floor(secondsToRecover / 60);
-    return `Node is syncing; the estimated time to sync is approximately ${minutesToRecover} minutes.`;
+    const timeToRecover = secondsToUnits(secondsToRecover);
+    return `Node is syncing; the estimated time to sync is approximately ${timeToRecover}.`;
   }
 
   getRotationMessage(
