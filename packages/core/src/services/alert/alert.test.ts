@@ -30,7 +30,7 @@ describe('Alert Service Tests', () => {
       const [firstOccurrence, elapsed] = messageString.split('\n');
 
       expect(firstOccurrence).toContain(`First occurrence of this error was`);
-      expect(elapsed).toBeFalsy();
+      expect(elapsed).toEqual('Error occurred for less than 20 seconds.');
     });
 
     test('Should return a string for a resolved event', async () => {
