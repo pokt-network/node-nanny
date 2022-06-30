@@ -215,7 +215,7 @@ Notes
 
 Node Nanny automatically manages the availabilty of your blockchain nodes, pulling them in and out of rotation. This feature is only available on nodes configured to run through HAProxy.
 
-**In order to use the automation feature, ensure port 9999 on your load balancer Host is open to Node Nanny's IP.**
+💡 **In order to use the automation feature, ensure port 9999 on your load balancer Host is open to Node Nanny's IP.** 💡
 
 ## HAProxy
 
