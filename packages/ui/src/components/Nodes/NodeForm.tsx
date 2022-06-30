@@ -29,6 +29,7 @@ import {
   Typography,
 } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 import {
   IChain,
@@ -897,34 +898,37 @@ export const NodeForm = ({
         />
 
         {env('PNF') && selectedNode && read && (
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              width: 'auto',
-              p: 2,
-              mt: 2,
-              mb: 2,
-              borderRadius: 2,
-              backgroundColor: 'background.default',
-              cursor: 'pointer',
-              '&:hover': {
-                background: '#2c435c',
-                transition: 'background 0.5s',
-              },
-            }}
-            onClick={() => {
-              navigator.clipboard.writeText(generateCurlString(selectedNode));
+          <CopyToClipboard
+            text={generateCurlString(selectedNode)}
+            onCopy={async () => {
               SnackbarHelper.open({
                 text: `cURL command for ${selectedNode.name} copied to clipboard!`,
                 type: 'info',
               });
             }}
           >
-            <Typography align="center" variant="h5">
-              Click to copy cURL for Health Check
-            </Typography>
-          </Box>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                width: 'auto',
+                p: 2,
+                mt: 2,
+                mb: 2,
+                borderRadius: 2,
+                backgroundColor: 'background.default',
+                cursor: 'pointer',
+                '&:hover': {
+                  background: '#2c435c',
+                  transition: 'background 0.5s',
+                },
+              }}
+            >
+              <Typography align="center" variant="h5">
+                Click to copy cURL for Health Check
+              </Typography>
+            </Box>
+          </CopyToClipboard>
         )}
 
         {frontend && frontendExists && (
