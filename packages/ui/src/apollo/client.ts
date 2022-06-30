@@ -7,6 +7,8 @@ const port = env('BACKEND_PORT');
 const scheme = env('HTTPS') ? 'https' : 'http';
 const uri = `${scheme}://${hostname}:${port}`;
 
+console.log('DEBUG', { ENV: env('HTTPS'), hostname, port, scheme, uri });
+
 export default new ApolloClient({
   link: createHttpLink({ uri, credentials: 'include' }),
   cache: new InMemoryCache({
