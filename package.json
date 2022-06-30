@@ -3,11 +3,7 @@
   "description": "Blockchain monitoring and automation.",
   "repository": "https://github.com/pokt-foundation/node-nanny",
   "author": "Pascal VL<pascal@pokt.network>",
-<<<<<<< HEAD
-  "version": "1.0.0-beta.22",
-=======
   "version": "1.0.0-dev.22",
->>>>>>> 357a376665b3d737b7b78bee23dd70a965612186
   "license": "MIT",
   "scripts": {
     "build": "turbo run build",
