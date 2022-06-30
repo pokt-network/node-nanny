@@ -37,6 +37,7 @@ const ENV_VARS: { [variable: string]: () => string | number | boolean } = {
 
   MONITOR_TEST: () => Boolean(process.env.MONITOR_TEST === '1' || false),
   PNF: () => Boolean(process.env.PNF === '1' || false),
+  HTTPS: () => Boolean(process.env.HTTPS === '1' || false),
 };
 
 export default function env<B extends IEnvVars>(
