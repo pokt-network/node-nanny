@@ -17,7 +17,7 @@ const ENV_VARS: { [variable: string]: () => string | number | boolean } = {
   BACKEND_PORT: () => Number(process.env.BACKEND_PORT || 4000),
 
   PNF: () => Boolean(process.env.REACT_APP_PNF === '1' || false),
-  HTTPS: () => Boolean(process.env.HTTPS === '1' || false),
+  HTTPS: () => Boolean(process.env.REACT_APP_HTTPS === '1' || false),
 };
 
 export const env = <B extends IEnvVars>(
