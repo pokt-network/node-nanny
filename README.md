@@ -49,7 +49,7 @@ The application is composed of the following main components:
 
 ## Supported Technologies
 
-The application is currently opinionated and works with the following technologies:
+The application currently works with the following technologies:
 
 - Load Balancer: [HAProxy](http://www.haproxy.org/)
 - Alerting: [Discord](https://discord.com/developers/docs/intro)
@@ -89,7 +89,7 @@ The bot will need the following permissions:
 
 - Create a `docker-compose.yml` file with the above contents from the example file.
 
-- _Database location: Ensure the filepath `/data/db` exists on your machine; this is where your inventory database will be located. If you would like to use a directory other than `/data/db` for your database location, you must set the `nn_db.volumes` property to the path you would like to store your inventory DB and logs._
+- _Database location: Ensure the filepath `/data/db` exists on your machine; this is where your inventory database will be located. If you would like to use a directory other than `/data/db` for your database location, you must set the `nn_db.volumes` property in the `docker-compose.yml` file to the path you would like to store your inventory DB and logs._
 
 ### 3. Set Environment Variables
 
@@ -114,6 +114,7 @@ You are now ready to start adding inventory data.
 Host and Node inventory is stored in an included database; this inventory is merely a set of records for monitoring and automation purposes.
 
 Node Nanny supports adding Host and Node data through the included UI; either one at a time via form input or as batches using CSV upload.
+If using CSV upload, column headers are required in the CSV file.
 
 ## 1. Chains/Oracles
 
