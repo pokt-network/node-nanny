@@ -104,6 +104,7 @@ export class Service {
           delta,
         };
 
+        /* PEER_NOT_SYNCHRONIZED Node Response */
         const nodeIsAheadOfPeer = delta + allowance < 0;
         if (nodeIsAheadOfPeer) {
           return this.healthResponse[EErrorConditions.PEER_NOT_SYNCHRONIZED]({
@@ -115,7 +116,7 @@ export class Service {
         /* NOT_SYNCHRONIZED Node Response */
         const notSynced = delta > allowance;
         if (notSynced) {
-          const healthResponse: IHealthResponseParams = {
+          const notSyncedParams: IHealthResponseParams = {
             name,
             height,
             badOracles,
@@ -126,9 +127,9 @@ export class Service {
               delta,
               node.id.toString(),
             );
-            healthResponse.secondsToRecover = secondsToRecover;
+            notSyncedParams.secondsToRecover = secondsToRecover;
           }
-          return this.healthResponse[EErrorConditions.NOT_SYNCHRONIZED](healthResponse);
+          return this.healthResponse[EErrorConditions.NOT_SYNCHRONIZED](notSyncedParams);
         }
 
         /* HEALTHY Node Response */
