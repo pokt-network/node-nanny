@@ -112,16 +112,23 @@ export class Service {
           });
         }
 
+        /* NOT_SYNCHRONIZED Node Response */
         const notSynced = delta > allowance;
-        if (!frontend && notSynced) {
-          const secondsToRecover = await this.updateNotSynced(delta, node.id.toString());
-          return this.healthResponse[EErrorConditions.NOT_SYNCHRONIZED]({
+        if (notSynced) {
+          const healthResponse: IHealthResponseParams = {
             name,
             height,
-            secondsToRecover,
             badOracles,
             noOracle,
-          });
+          };
+          if (!frontend) {
+            const secondsToRecover = await this.updateNotSynced(
+              delta,
+              node.id.toString(),
+            );
+            healthResponse.secondsToRecover = secondsToRecover;
+          }
+          return this.healthResponse[EErrorConditions.NOT_SYNCHRONIZED](healthResponse);
         }
 
         /* HEALTHY Node Response */
