@@ -455,8 +455,8 @@ export class Service {
       chain: chainQuery,
       _id: { $ne: new Types.ObjectId(nodeId) },
       frontend: null,
-      status: { $ne: EErrorStatus.ERROR },
     };
+    if (pnfMainInternal) $match.status = { $ne: EErrorStatus.ERROR };
     const $sample = { size: 20 };
 
     const peers = (await NodesModel.aggregate<INode>([{ $match }, { $sample }])).map(
