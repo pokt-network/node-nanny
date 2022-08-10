@@ -30,7 +30,7 @@ export enum PagerDutyDetails {
 }
 
 export enum PagerDutyServices {
-  CRITICAL = 'P01UMQB',
+  CRITICAL = 'PTHZLQ1',
   NODE_INFRA = 'PG93GUY',
 }
 
