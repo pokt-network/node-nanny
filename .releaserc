@@ -14,16 +14,16 @@
   "plugins": [
     "@semantic-release/commit-analyzer",
     [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "npm --no-git-tag-version version <%= nextRelease.version %>"
+      }
+    ],
+    [
       "@semantic-release/npm",
       {
         "npmPublish": true,
         "pkgRoot": "./packages/core/dist"
-      }
-    ],
-    [
-      "@semantic-release/exec",
-      {
-        "prepareCmd": "npm --no-git-tag-version version <%= nextRelease.version %>"
       }
     ],
     [
