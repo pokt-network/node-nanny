@@ -80,7 +80,7 @@ jobs:
   docker:
     if: needs.semantic-release.outputs.version
     name: Docker Build & Push
-    needs: [build-test, semantic-release]
+    needs: [build, semantic-release]
     timeout-minutes: 15
     runs-on: ubuntu-latest
     environment: CI
