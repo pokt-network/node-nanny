@@ -8,33 +8,8 @@ on:
       - completed
 
 jobs:
-  build:
-    name: Build
-    timeout-minutes: 15
-    runs-on: ubuntu-latest
-    environment: CI
-
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
-      - uses: pnpm/action-setup@v2.0.1
-        with:
-          version: 6
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16
-          cache: 'pnpm'
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-      - name: Build
-        run: pnpm build
-
   semantic-release:
     name: Semantic Release & Publish Core
-    needs: build
     timeout-minutes: 15
     runs-on: ubuntu-latest
     environment: CI
@@ -56,6 +31,7 @@ jobs:
       - name: Prepare core package for publish
         run: |
           pnpm install --no-frozen-lockfile
+          pnpm build
           cd ./packages/core
           find . -type f -name "*jest*" -delete
           find . -type f -name "*.test.*" -delete
