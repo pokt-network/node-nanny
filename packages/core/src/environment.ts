@@ -6,7 +6,10 @@ type IStringVars =
   | 'MONITOR_LOGGER'
   | 'MONITOR_TEST_DOMAIN'
   | 'PAGER_DUTY_API_KEY'
-  | 'REDIS_HOST';
+  | 'REDIS_HOST'
+  | 'PD_CRITICAL'
+  | 'PD_INFRA'
+  | 'PD_ID';
 type INumberVars =
   | 'ALERT_RETRIGGER_THRESHOLD'
   | 'ALERT_TRIGGER_THRESHOLD'

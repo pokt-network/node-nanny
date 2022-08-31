@@ -153,7 +153,7 @@ export class Service {
   async createPagerDutyIncident({
     title,
     details,
-    service = PagerDutyServices.CRITICAL,
+    service = env('PD_CRITICAL'),
     urgency = IncidentLevel.HIGH,
   }) {
     try {

@@ -1,3 +1,5 @@
+import env from '../../environment';
+
 interface SendMessageFields {
   name: string;
   value: string;
@@ -12,14 +14,8 @@ export interface SendMessageInput {
 export enum PagerDutyDetails {
   BODY_TYPE = 'incident_body',
   FROM = 'john@pokt.network',
-  SERVICE_ID = '***REMOVED***',
   SERVICE_TYPE = 'service_reference',
   TYPE = 'incident',
-}
-
-export enum PagerDutyServices {
-  CRITICAL = '***REMOVED***',
-  NODE_INFRA = '***REMOVED***',
 }
 
 export enum IncidentLevel {
