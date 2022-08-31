@@ -1,4 +1,3 @@
-export { Webhooks as DiscordChannel } from '../alert/types';
 export { EErrorConditions as BlockChainMonitorEvents } from '../health/types';
 export { ESupportedBlockchains } from '../health/types';
 

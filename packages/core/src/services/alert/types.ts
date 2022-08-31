@@ -1,15 +1,3 @@
-export enum Webhooks {
-  WEBHOOK_CRITICAL = '***REMOVED***',
-  WEBHOOK_NON_CRITICAL = '***REMOVED***',
-  WEBHOOK_LOGS = '***REMOVED***',
-  WEBHOOK_ERRORS = '***REMOVED***',
-  WEBHOOK_CRITICAL_TEST = '***REMOVED***',
-  WEBHOOK_NON_CRITICAL_TEST = '***REMOVED***',
-  WEBHOOK_LOGS_TEST = '***REMOVED***',
-  WEBHOOK_ERRORS_TEST = '***REMOVED***',
-  DATADOG_ALERTS = '***REMOVED***',
-}
-
 interface SendMessageFields {
   name: string;
   value: string;
