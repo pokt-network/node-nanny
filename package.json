@@ -3,7 +3,7 @@
   "description": "Blockchain monitoring and automation.",
   "repository": "https://github.com/pokt-foundation/node-nanny",
   "author": "Pascal VL<pascal@pokt.network>",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.27",
   "license": "MIT",
   "scripts": {
     "build": "turbo run build",
@@ -37,7 +37,6 @@
     "postinstall": "turbo run build --filter=@pokt-foundation/node-nanny-core"
   },
   "devDependencies": {
-    "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/commit-analyzer": "^9.0.2",
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",

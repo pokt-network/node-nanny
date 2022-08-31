@@ -1,14 +1,20 @@
-name: CI
+name: Build & Test
 
 on:
   pull_request:
     branches:
       - main
       - beta
+      - dev
+  push:
+    branches:
+      - main
+      - beta
+      - dev
 
 jobs:
   build-test:
-    name: Build and Test
+    name: Build & Test
     timeout-minutes: 15
     runs-on: ubuntu-latest
     environment: CI

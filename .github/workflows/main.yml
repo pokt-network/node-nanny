@@ -1,9 +1,11 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ['Build & Test']
+    branches: [main]
+    types:
+      - completed
 
 jobs:
   build-test:
@@ -76,7 +78,6 @@ jobs:
             @semantic-release/commit-analyzer
             @semantic-release/npm
             @semantic-release/git
-            @semantic-release/changelog
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
