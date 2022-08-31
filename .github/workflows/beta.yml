@@ -1,4 +1,4 @@
-name: CI
+name: Release
 
 on:
   workflow_run:
@@ -60,7 +60,6 @@ jobs:
         run: |
           pnpm install --no-frozen-lockfile
           cd ./packages/core
-          find . -type f -name "*jest*" -delete
           find . -type f -name "*.test.*" -delete
           pnpm prune --production
           cp ./package.json ./dist
@@ -71,7 +70,7 @@ jobs:
         with:
           extra_plugins: |
             @semantic-release/commit-analyzer
-            @semantic-release/npm
+            @semantic-release/git
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
