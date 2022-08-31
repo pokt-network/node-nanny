@@ -5,13 +5,7 @@ import { api as pagerDutyApi } from '@pagerduty/pdjs';
 import { INode, IWebhook, WebhookModel } from '../../models';
 import { AlertTypes } from '../../types';
 import { colorLog, is, s, secondsToUnits } from '../../utils';
-import {
-  AlertColor,
-  SendMessageInput,
-  PagerDutyDetails,
-  IncidentLevel,
-  PagerDutyServices,
-} from './types';
+import { AlertColor, SendMessageInput, PagerDutyDetails, IncidentLevel } from './types';
 import { EAlertTypes, IRedisEvent, IRotationParams } from '../event/types';
 
 import env from '../../environment';
