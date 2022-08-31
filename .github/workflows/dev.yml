@@ -52,7 +52,7 @@ jobs:
 
   docker:
     name: Docker Build & Push
-    needs: [build, semantic-release]
+    needs: [semantic-release]
     timeout-minutes: 15
     runs-on: ubuntu-latest
     environment: CI
