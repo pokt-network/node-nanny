@@ -88,6 +88,11 @@ export class Service extends BaseService {
         await this.toggleServer({ node, enable: false });
       }
 
+      /* (PNF Internal only) Send PagerDuty alert if a frontend is down */
+      if (env('PNF') && frontend && notSynced) {
+        await this.urgentAlertFrontendIsDown(chain.name, message);
+      }
+
       /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
       if (env('PNF') && dispatchFrontendDown) {
         await this.urgentAlertDispatchFrontendIsDown(message);
@@ -297,6 +302,14 @@ export class Service extends BaseService {
     await this.alert.createPagerDutyIncident({
       title: 'URGENT ALERT! Dispatch Frontend is down!',
       details: ["Dispatchers' HAProxy frontend is down!", message].join('\n'),
+    });
+  }
+
+  /** Pager Duty alert will be sent if there is no dispatch service available through the dispatch HAProxy */
+  private async urgentAlertFrontendIsDown(chainName: string, message: string): Promise<void> {
+    await this.alert.createPagerDutyIncident({
+      title: `URGENT ALERT! ${chainName} frontend is down!`,
+      details: [`${chainName} frontend is down!`, message].join('\n'),
     });
   }
 }
