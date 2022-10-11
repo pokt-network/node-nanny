@@ -195,6 +195,7 @@ export class Service extends BaseService {
       nodesOnline,
       nodesTotal,
       dispatchFrontendDown,
+      frontendDown
     };
     return parsedEvent;
   }
