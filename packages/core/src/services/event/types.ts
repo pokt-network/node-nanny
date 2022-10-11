@@ -32,6 +32,7 @@ export interface IRedisEventParams {
   nodesOnline: number;
   nodesTotal: number;
   dispatchFrontendDown?: boolean;
+  frontendDown?: boolean;
 }
 
 export enum PocketTypes {

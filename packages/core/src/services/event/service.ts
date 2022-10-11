@@ -62,7 +62,7 @@ export class Service extends BaseService {
     let nodeName: string;
 
     try {
-      const { node, message, notSynced, title, nodesOnline, dispatchFrontendDown } =
+      const { node, message, notSynced, title, nodesOnline, dispatchFrontendDown, frontendDown } =
         await this.parseEvent(eventJson, EAlertTypes.RETRIGGER);
       const { name, automation, backend, chain, host, frontend, muted } = node;
       nodeName = name;
@@ -86,6 +86,11 @@ export class Service extends BaseService {
     This covers the case where the only node in rotation was out of sync and its peers catch up. */
       if (automation && nodesOnline >= 2 && backend && !frontend && notSynced) {
         await this.toggleServer({ node, enable: false });
+      }
+
+      /* (PNF Internal only) Send PagerDuty alert if a frontend is down */
+      if (env('PNF') && frontendDown) {
+        await this.urgentAlertFrontendIsDown(chain.name, message);
       }
 
       /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
@@ -155,10 +160,11 @@ export class Service extends BaseService {
       env('PNF') && dispatch && chain.name === ESupportedBlockchains['POKT-DIS'];
 
     const healthy = conditions === EErrorConditions.HEALTHY;
-    const notSynced = pnfDispatch
-      ? this.dispatchNotSyncedConditions.includes(conditions)
+    const notSynced = (pnfDispatch || frontend)
+      ? this.frontendNotSyncedConditions.includes(conditions)
       : this.notSyncedConditions.includes(conditions);
     const dispatchFrontendDown = Boolean(pnfDispatch && frontend && notSynced);
+    const frontendDown = Boolean(frontend && notSynced);
 
     const { online: nodesOnline, total: nodesTotal } =
       automation && (frontend || backend)
@@ -285,8 +291,7 @@ export class Service extends BaseService {
   ];
 
   /* ----- PNF Internal Only ----- */
-  /** These conditions will trigger Node Nanny to remove a dispatch node from circulation */
-  private dispatchNotSyncedConditions = [
+  private frontendNotSyncedConditions = [
     ...this.notSyncedConditions,
     EErrorConditions.OFFLINE,
     EErrorConditions.NO_RESPONSE,
@@ -297,6 +302,14 @@ export class Service extends BaseService {
     await this.alert.createPagerDutyIncident({
       title: 'URGENT ALERT! Dispatch Frontend is down!',
       details: ["Dispatchers' HAProxy frontend is down!", message].join('\n'),
+    });
+  }
+
+  /** Pager Duty alert will be sent if there is no dispatch service available through the dispatch HAProxy */
+  private async urgentAlertFrontendIsDown(chainName: string, message: string): Promise<void> {
+    await this.alert.createPagerDutyIncident({
+      title: `URGENT ALERT! ${chainName} frontend is down!`,
+      details: [`${chainName} frontend is down!`, message].join('\n'),
     });
   }
 }
