@@ -147,7 +147,7 @@ export class Service {
   async createPagerDutyIncident({
     title,
     details,
-    service = env('PD_CRITICAL'),
+    service = env('PAGER_DUTY_SERVICE_ID'),
     urgency = IncidentLevel.HIGH,
   }) {
     try {
