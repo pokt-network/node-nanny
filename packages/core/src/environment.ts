@@ -6,8 +6,8 @@ type IStringVars =
   | 'MONITOR_LOGGER'
   | 'MONITOR_TEST_DOMAIN'
   | 'PAGER_DUTY_API_KEY'
+  | 'PAGER_DUTY_SERVICE_ID'
   | 'REDIS_HOST'
-  | 'PD_CRITICAL'
   | 'PD_INFRA'
   | 'PD_ID';
 type INumberVars =
@@ -29,6 +29,8 @@ const ENV_VARS: { [variable: string]: () => string | number | boolean } = {
   MONITOR_LOGGER: () => process.env.MONITOR_LOGGER,
   MONITOR_TEST_DOMAIN: () => process.env.MONITOR_TEST_DOMAIN,
   PAGER_DUTY_API_KEY: () => process.env.PAGER_DUTY_API_KEY,
+  PAGER_DUTY_SERVICE_ID: () => process.env.PAGER_DUTY_SERVICE_ID,
+
   REDIS_HOST: () => process.env.REDIS_HOST,
 
   ALERT_RETRIGGER_THRESHOLD: () => Number(process.env.ALERT_RETRIGGER_THRESHOLD || 60),
