@@ -89,7 +89,7 @@ export class Service extends BaseService {
       }
 
       /* (PNF Internal only) Send PagerDuty alert if a frontend is down */
-      if (env('PNF') && frontendDown) {
+      if (env('PNF') && frontendDown && !node.muted) {
         await this.urgentAlertFrontendIsDown(chain.name, message);
       }
 
