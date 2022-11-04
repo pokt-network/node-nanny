@@ -1,4 +1,5 @@
 FROM ubuntu:20.04
+LABEL description="Babysits your nodes, so you don't have to"
 
 WORKDIR /usr/src/node-nanny-backend
 
