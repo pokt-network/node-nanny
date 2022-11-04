@@ -92,8 +92,8 @@ export class Service extends BaseService {
       if (env('PNF') && frontendDown && !muted) {
         await this.urgentAlertFrontendIsDown(chain.name, message);
       }
-
-      /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down */
+     
+      /* (PNF Internal only) Send PagerDuty alert if Dispatcher HAProxy is down  */
       if (env('PNF') && dispatchFrontendDown) {
         await this.urgentAlertDispatchFrontendIsDown(message);
       }
