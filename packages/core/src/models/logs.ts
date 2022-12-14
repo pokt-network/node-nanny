@@ -16,7 +16,7 @@ export interface ILog {
 
 const logSchema = new Schema<ILog>(
   {
-    timestamp: { type: Schema.Types.Date, expiresAt: env('MONGO_MAX_LOG_DAYS') },
+    timestamp: { type: Schema.Types.Date, expires: env('MONGO_MAX_LOG_DAYS') },
     label: String,
     level: String,
     message: String,
