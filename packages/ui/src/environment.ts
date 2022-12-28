@@ -13,9 +13,7 @@ const ENV_VARS: { [variable: string]: () => string | number | boolean } = {
   MONITOR_LOGGER: () => process.env.REACT_APP_MONITOR_LOGGER,
   DATADOG_URL: () => process.env.REACT_APP_DATADOG_URL,
   DATADOG_IFRAME_URL: () => process.env.REACT_APP_DATADOG_IFRAME_URL,
-
-  BACKEND_PORT: () => Number(process.env.BACKEND_PORT || 4000),
-
+  BACKEND_PORT: () => Number(process.env.REACT_APP_BACKEND_PORT || 4000),
   PNF: () => Boolean(process.env.REACT_APP_PNF === '1' || false),
   HTTPS: () => Boolean(process.env.REACT_APP_HTTPS === '1' || false),
 };
